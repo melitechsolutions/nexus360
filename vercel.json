@@ -4,6 +4,5 @@
   "installCommand": "pnpm install",
   "env": {
     "NODE_ENV": "production"
-  },
-  "notes": "This app is a full-stack Express server. Vercel's serverless architecture won't run it. For proper deployment, use Railway.app, which supports persistent Node.js servers and includes built-in MySQL. See RAILWAY_DEPLOYMENT_GUIDE.md for setup instructions."
+  }
 }
