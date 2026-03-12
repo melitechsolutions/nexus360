@@ -57,7 +57,7 @@ export const notificationsRouter = router({
       }
 
       if (input.category) {
-        whereConditions.push(eq(notifications.category, input.category));
+        whereConditions.push(eq(notifications.type, input.category));
       }
 
       const results = await db
