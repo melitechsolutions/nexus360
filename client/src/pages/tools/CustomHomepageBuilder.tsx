@@ -754,8 +754,8 @@ export default function CustomHomepageBuilder() {
         description="Customize your dashboard homepage with widgets and cards"
         icon={<Layout className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
-          { label: "Tools", href: "/tools" },
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Settings", href: "/settings" },
           { label: "Homepage Builder" },
         ]}
       >
@@ -777,8 +777,8 @@ export default function CustomHomepageBuilder() {
       description="Customize your dashboard homepage with widgets and cards"
       icon={<Layout className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Tools", href: "/tools" },
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Settings", href: "/settings" },
         { label: "Homepage Builder" },
       ]}
     >

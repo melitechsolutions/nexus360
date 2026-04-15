@@ -7,7 +7,8 @@ import {
   int, 
   boolean, 
   datetime,
-  index
+  index,
+  decimal
 } from "drizzle-orm/mysql-core";
 
 /**
@@ -384,6 +385,7 @@ export type InsertSalaryIncrement = typeof salaryIncrements.$inferInsert;
  */
 export const lpos = mysqlTable("lpos", {
   id: varchar("id", { length: 64 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 64 }),
   lpoNumber: varchar("lpoNumber", { length: 50 }).notNull(),
   vendorId: varchar("vendorId", { length: 64 }).notNull(),
   description: text("description"),
@@ -517,6 +519,7 @@ export const serviceTemplates = mysqlTable(
   "serviceTemplates",
   {
     id: varchar("id", { length: 64 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 64 }),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
     category: varchar("category", { length: 100 }),
@@ -576,6 +579,7 @@ export const projectBudgets = mysqlTable(
   "projectBudgets",
   {
     id: varchar("id", { length: 64 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 64 }),
     projectId: varchar("projectId", { length: 64 }).notNull(),
     budgetedAmount: int("budgetedAmount").notNull(), // in cents
     spent: int("spent").default(0).notNull(), // in cents
@@ -602,6 +606,7 @@ export const departmentBudgets = mysqlTable(
   "departmentBudgets",
   {
     id: varchar("id", { length: 64 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 64 }),
     departmentId: varchar("departmentId", { length: 64 }).notNull(),
     year: int("year").notNull(), // e.g. 2024, 2025
     budgetedAmount: int("budgetedAmount").notNull(), // in cents
@@ -713,6 +718,7 @@ export const tickets = mysqlTable(
   "tickets",
   {
     id: varchar("id", { length: 64 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 64 }),
     clientId: varchar("clientId", { length: 64 }).notNull(),
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
@@ -776,6 +782,7 @@ export const suppliers = mysqlTable(
   "suppliers",
   {
     id: varchar("id", { length: 64 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 64 }),
     supplierNumber: varchar("supplierNumber", { length: 50 }).notNull().unique(),
     companyName: varchar("companyName", { length: 255 }).notNull(),
     registrationNumber: varchar("registrationNumber", { length: 100 }).unique(),
@@ -872,4 +879,144 @@ export const supplierAudits = mysqlTable(
   })
 );
 export type SupplierAudit = typeof supplierAudits.$inferSelect;
-export type InsertSupplierAudit = typeof supplierAudits.$inferInsert;   
+export type InsertSupplierAudit = typeof supplierAudits.$inferInsert;
+
+/**
+ * Quotes / Quotations
+ */
+export const quotes = mysqlTable(
+  "quotes",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    quoteNumber: varchar("quoteNumber", { length: 50 }).notNull(),
+    clientId: varchar("clientId", { length: 64 }).notNull(),
+    subject: varchar("subject", { length: 255 }),
+    description: text("description"),
+    status: mysqlEnum("status", [
+      "draft",
+      "sent",
+      "accepted",
+      "expired",
+      "declined",
+      "converted",
+    ])
+      .default("draft")
+      .notNull(),
+    subtotal: decimal("subtotal", { precision: 12, scale: 2 }).default("0"),
+    taxAmount: decimal("taxAmount", { precision: 12, scale: 2 }).default("0"),
+    total: decimal("total", { precision: 12, scale: 2 }).default("0"),
+    notes: text("notes"),
+    expirationDate: datetime("expirationDate"),
+    sentDate: timestamp("sentDate"),
+    acceptedDate: timestamp("acceptedDate"),
+    declinedDate: timestamp("declinedDate"),
+    convertedInvoiceId: varchar("convertedInvoiceId", { length: 64 }),
+    template: int("template").default(0),
+    createdBy: varchar("createdBy", { length: 64 }),
+    organizationId: varchar("organizationId", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow(),
+    updatedAt: timestamp("updatedAt").defaultNow(),
+  },
+  (table) => ({
+    clientIdx: index("quote_client_idx").on(table.clientId),
+    statusIdx: index("quote_status_idx").on(table.status),
+    orgIdx: index("quote_org_idx").on(table.organizationId),
+  })
+);
+export type Quote = typeof quotes.$inferSelect;
+export type InsertQuote = typeof quotes.$inferInsert;
+
+/**
+ * Quote line items
+ */
+export const lineItems = mysqlTable(
+  "lineItems",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    quoteId: varchar("quoteId", { length: 64 }).notNull(),
+    description: text("description"),
+    quantity: int("quantity").default(1),
+    unitPrice: decimal("unitPrice", { precision: 12, scale: 2 }).default("0"),
+    taxRate: decimal("taxRate", { precision: 5, scale: 2 }).default("0"),
+    total: decimal("total", { precision: 12, scale: 2 }).default("0"),
+    createdAt: timestamp("createdAt").defaultNow(),
+  },
+  (table) => ({
+    quoteIdx: index("li_quote_idx").on(table.quoteId),
+  })
+);
+export type LineItem = typeof lineItems.$inferSelect;
+export type InsertLineItem = typeof lineItems.$inferInsert;
+
+/**
+ * Quote activity / audit logs
+ */
+export const quoteLogs = mysqlTable(
+  "quoteLogs",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    quoteId: varchar("quoteId", { length: 64 }).notNull(),
+    action: varchar("action", { length: 100 }).notNull(),
+    description: text("description"),
+    userId: varchar("userId", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow(),
+  },
+  (table) => ({
+    quoteIdx: index("ql_quote_idx").on(table.quoteId),
+  })
+);
+export type QuoteLog = typeof quoteLogs.$inferSelect;
+export type InsertQuoteLog = typeof quoteLogs.$inferInsert;
+
+/**
+ * User table preferences — persists column visibility, column order, and page size per user per table
+ */
+export const userTablePreferences = mysqlTable(
+  "userTablePreferences",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    userId: varchar("userId", { length: 64 }).notNull(),
+    organizationId: varchar("organizationId", { length: 64 }),
+    tableName: varchar("tableName", { length: 100 }).notNull(),
+    visibleColumns: text("visibleColumns"), // JSON array of visible column keys
+    columnOrder: text("columnOrder"), // JSON array of column keys in order
+    pageSize: int("pageSize").default(25),
+    createdAt: timestamp("createdAt").defaultNow(),
+    updatedAt: timestamp("updatedAt").defaultNow(),
+  },
+  (table) => ({
+    userTableIdx: index("utp_user_table_idx").on(table.userId, table.tableName),
+    orgIdx: index("utp_org_idx").on(table.organizationId),
+  })
+);
+export type UserTablePreference = typeof userTablePreferences.$inferSelect;
+export type InsertUserTablePreference = typeof userTablePreferences.$inferInsert;
+
+/**
+ * Dedicated organization membership table.
+ * Tracks user-to-organization membership lifecycle separately from users.organizationId.
+ */
+export const organizationMembers = mysqlTable(
+  "organizationMembers",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 64 }).notNull(),
+    userId: varchar("userId", { length: 64 }).notNull(),
+    role: varchar("role", { length: 50 }),
+    status: mysqlEnum("status", ["active", "inactive", "invited", "removed"]).default("active").notNull(),
+    isActive: boolean("isActive").default(true).notNull(),
+    invitedBy: varchar("invitedBy", { length: 64 }),
+    joinedAt: datetime("joinedAt"),
+    leftAt: datetime("leftAt"),
+    createdAt: timestamp("createdAt").defaultNow(),
+    updatedAt: timestamp("updatedAt").defaultNow(),
+  },
+  (table) => ({
+    orgIdx: index("org_members_org_idx").on(table.organizationId),
+    userIdx: index("org_members_user_idx").on(table.userId),
+    orgUserIdx: index("org_members_org_user_idx").on(table.organizationId, table.userId),
+    statusIdx: index("org_members_status_idx").on(table.status),
+  })
+);
+export type OrganizationMember = typeof organizationMembers.$inferSelect;
+export type InsertOrganizationMember = typeof organizationMembers.$inferInsert;

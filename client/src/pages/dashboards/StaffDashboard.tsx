@@ -14,9 +14,11 @@ import {
   AlertCircle,
   Settings,
   ArrowRight,
+  User,
 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { trpc } from "@/lib/trpc";
+import { StatsCard } from "@/components/ui/stats-card";
 
 /**
  * StaffDashboard component
@@ -109,34 +111,24 @@ export default function StaffDashboard() {
   const recentAttendance = attendanceDataPlain?.slice(0, 5) || [];
 
   return (
-    <DashboardLayout
+    <ModuleLayout
       title="Staff Dashboard"
-      user={user}
-      onLogout={handleLogout}
+      description="Track your attendance, manage leave requests, and view assigned tasks"
+      icon={<User className="h-5 w-5" />}
+      breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Staff" }]}
+      actions={
+        <div className="flex gap-2">
+          <Button onClick={() => setLocation("/profile/settings")} variant="secondary" size="sm" className="gap-2">
+            <Settings className="w-4 h-4" />
+            My Settings
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setLocation("/crm-home")}>
+            Go to Main Dashboard
+          </Button>
+        </div>
+      }
     >
       <div className="space-y-8">
-        {/* Staff Welcome Section */}
-        <div className="bg-gradient-to-r from-cyan-600 to-blue-700 rounded-lg p-8 text-white">
-          <h1 className="text-4xl font-bold mb-2">My Dashboard</h1>
-          <p className="text-lg opacity-90 mb-4">
-            Track your attendance, manage leave requests, and view assigned tasks.
-          </p>
-          <div className="flex gap-4">
-            <Button 
-              onClick={() => setLocation("/profile/settings")}
-              className="gap-2 bg-white hover:bg-slate-100 text-cyan-700"
-            >
-              <Settings className="w-4 h-4" />
-              My Settings
-            </Button>
-            <Button 
-              className="bg-white text-slate-900 hover:bg-gray-100"
-              onClick={() => setLocation("/crm")}
-            >
-              Go to Main Dashboard
-            </Button>
-          </div>
-        </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -170,35 +162,16 @@ export default function StaffDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Attendance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{attendanceRate}%</div>
-              <p className="text-xs text-gray-500 mt-1">{presentDays} of {totalAttendance} days</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Attendance"
+            value={<>{attendanceRate}%</>}
+            description={<>{presentDays} of {totalAttendance} days</>}
+            color="border-l-purple-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Pending Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingLeaves}</div>
-              <p className="text-xs text-gray-500 mt-1">Leave requests</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Pending Requests" value={pendingLeaves} description="Leave requests" color="border-l-green-500" />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Projects</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{activeProjects}</div>
-              <p className="text-xs text-gray-500 mt-1">Active projects</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Projects" value={activeProjects} description="Active projects" color="border-l-blue-500" />
         </div>
 
         {/* Main Content Tabs */}
@@ -363,7 +336,7 @@ export default function StaffDashboard() {
                     <CardTitle>Leave Requests</CardTitle>
                     <CardDescription>Manage your leave requests</CardDescription>
                   </div>
-                  <Button onClick={() => setLocation("/leave/new")}>Request Leave</Button>
+                  <Button onClick={() => setLocation("/leave-management/create")}>Request Leave</Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -458,6 +431,6 @@ export default function StaffDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

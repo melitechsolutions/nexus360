@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debit Note Template</title>
+    <link rel="stylesheet" href="../styles/document-professional-template.css">
+</head>
+<body>
+    <div class="document-container">
+        
+        <!-- HEADER WITH BRANDING (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-header" style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+          <div class="company-info" style="flex: 1;">
+            <h1 class="company-name" data-field="companyName">[COMPANY_NAME]</h1>
+            <div class="company-contact">
+              <span class="company-tax-id" data-field="companyPin">Tax ID: [COMPANY_PIN]</span>
+              <span class="company-contact-item">[COMPANY_PHONE]</span>
+              <span class="company-contact-item">[COMPANY_EMAIL]</span>
+              <span class="company-contact-item">[COMPANY_ADDRESS]</span>
+            </div>
+          </div>
+          <div class="company-logo" style="flex-shrink: 0;">
+            <img src="[COMPANY_LOGO]" alt="Company Logo" style="max-height: 80px;">
+          </div>
+        </div>
+
+        <!-- DOCUMENT TITLE AND METADATA (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-header-section" style="display: flex; align-items: center; gap: 24px;">
+          <h1 class="document-title" style="flex: 1;">DEBIT NOTE</h1>
+          <div class="document-meta" style="display: flex; flex-direction: column; gap: 4px;">
+            <div class="meta-item"><span class="meta-label">Debit Note #:</span> <span class="meta-value" data-field="debitNoteNumber">[DN-00001]</span></div>
+            <div class="meta-item"><span class="meta-label">Date Issued:</span> <span class="meta-value" data-field="issueDate">[DD/MM/YYYY]</span></div>
+            <div class="meta-item"><span class="meta-label">Related Invoice:</span> <span class="meta-value" data-field="relatedInvoice">[INV-00001]</span></div>
+            <div class="meta-item"><span class="meta-label">Tax Rate:</span> <span class="meta-value">VAT 16% (Inclusive/Exclusive)</span></div>
+          </div>
+        </div>
+
+        <!-- SUPPLIER / VENDOR DETAILS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Supplier / Vendor Details</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Supplier Name:</strong> [Supplier Name]</div>
+                <div><strong>Company:</strong> [Company Name]</div>
+                <div><strong>Email:</strong> [supplier@email.com]</div>
+                <div><strong>Phone:</strong> [Phone Number]</div>
+                <div><strong>Address:</strong> [Supplier Address]</div>
+                <div><strong>Tax Registration #:</strong> [Tax Number]</div>
+            </div>
+        </div>
+
+        <!-- REASON FOR DEBIT NOTE SECTION -->
+        <div class="section">
+            <h2 class="section-title">Reason for Debit Note</h2>
+            <div class="section-content">
+                <p><strong>Reason:</strong> [Select: Quality Shortage / Price Adjustment / Damaged Goods / Underdelivery / Penalty Charge / Other]</p>
+                <p><strong>Details:</strong> [Provide brief description and details of the adjustment claimed]</p>
+            </div>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="section">
+            <h2 class="section-title">Items/Services Claimed</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Description</th>
+                        <th style="text-align: center;">Qty</th>
+                        <th style="text-align: right;">Unit Price</th>
+                        <th style="text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>[Item 1 Description]</td>
+                        <td style="text-align: center;">1</td>
+                        <td style="text-align: right;">KES 5,000.00</td>
+                        <td style="text-align: right;">KES 5,000.00</td>
+                    </tr>
+                    <tr>
+                        <td>[Item 2 Description]</td>
+                        <td style="text-align: center;">1</td>
+                        <td style="text-align: right;">KES 3,000.00</td>
+                        <td style="text-align: right;">KES 3,000.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TOTALS SECTION -->
+        <div class="section">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+                <div style="width: 300px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px; text-align: left;"><strong>Subtotal:</strong></td>
+                            <td style="padding: 8px; text-align: right;">KES 8,000.00</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px; text-align: left;"><strong>VAT (16%):</strong></td>
+                            <td style="padding: 8px; text-align: right;">KES 1,280.00</td>
+                        </tr>
+                        <tr style="border-bottom: 2px solid var(--primary-color); background-color: #f5f5f5;">
+                            <td style="padding: 8px; text-align: left;"><strong>Total Debit Amount Due:</strong></td>
+                            <td style="padding: 8px; text-align: right; font-weight: bold;">KES 9,280.00</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTLEMENT SECTION -->
+        <div class="section">
+            <h2 class="section-title">Settlement Instructions</h2>
+            <div class="section-content">
+                <p><strong>This debit note should be settled by:</strong></p>
+                <ul>
+                    <li>☐ Deducted from next supplier payment</li>
+                    <li>☐ Separate payment from supplier</li>
+                    <li>☐ Offset against our payment due to supplier</li>
+                </ul>
+                <p style="margin-top: 12px;"><strong>Payment Due Date:</strong> 30 days from issue date or as per agreement</p>
+            </div>
+        </div>
+
+        <!-- DEBIT NOTE TERMS & CONDITIONS SECTION -->
+        <div class="section">
+            <h2 class="section-title">Debit Note Terms & Conditions</h2>
+            <div class="section-content" style="font-size: 13px; line-height: 1.6; color: var(--secondary-color);">
+                <ol style="margin-left: 20px;">
+                    <li><strong>Claim Period:</strong> Debit note must be settled within 30 days of issue. Late payment may incur interest charges.</li>
+                    <li><strong>Supporting Documentation:</strong> Supplier has right to request supporting evidence for claim verification.</li>
+                    <li><strong>Dispute Resolution:</strong> Supplier must raise disputes within 14 days of debit note receipt.</li>
+                    <li><strong>Partial Settlement:</strong> Part payments do not constitute acceptance of liability for remaining claim.</li>
+                    <li><strong>Tax Implications:</strong> Debit note processed per KRA regulations for tax adjustment purposes.</li>
+                    <li><strong>Record Retention:</strong> Supporting documents retained for audit and verification purposes.</li>\n                    <li><strong>Reversal:</strong> Debit note may be reversed only with mutual written agreement if claim is found invalid.</li>\n                    <li><strong>Future Orders:</strong> Unresolved debit notes may affect approval of future purchase orders.</li>\n                </ol>\n            </div>\n        </div>\n\n        <!-- FOOTER (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+          <div class="footer-info" style="flex: 1;">
+            <span class="document-id" data-field="debitNoteNumber">DN: [DN-00001]</span>
+            <span class="document-date" data-field="issueDate">Issued: [DD/MM/YYYY]</span>
+            <span class="page-number">Page <span class="current-page">1</span> of <span class="total-pages">1</span></span>
+          </div>
+          <div class="footer-company" data-field="companyName">[COMPANY_NAME]</div>
+        </div>
+
+        <!-- Print Button (unified area, hidden in print) -->
+        <div class="no-print print-area" style="text-align: right; margin-top: 24px; padding: 16px;">
+          <button onclick="window.print()" class="print-btn">
+            Print Document
+          </button>
+        </div>
+    </div>
+
+</body>
+</html>

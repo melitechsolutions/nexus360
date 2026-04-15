@@ -1,4 +1,4 @@
-import { router, protectedProcedure, createFeatureRestrictedProcedure } from "../_core/trpc";
+import { router, protectedProcedure, createFeatureRestrictedProcedure, invalidateMaintenanceCache, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
 import * as db from "../db";
@@ -12,6 +12,22 @@ const settingsWriteProcedure = createFeatureRestrictedProcedure("admin:settings"
 const rolesManageProcedure = createFeatureRestrictedProcedure("admin:manage_roles");
 
 export const settingsRouter = router({
+  // Public maintenance status — accessible without auth for maintenance page display
+  getMaintenanceStatus: publicProcedure.query(async () => {
+    const database = await getDb();
+    if (!database) return { enabled: false, title: "", message: "", estimatedReturn: "", contactEmail: "" };
+    const results = await database.select().from(settings).where(eq(settings.category, "maintenance"));
+    const map: Record<string, string> = {};
+    results.forEach(s => { if (s.key) map[s.key] = s.value ?? ""; });
+    return {
+      enabled: map.maintenance_mode === "true" || map.maintenance_mode === "1",
+      title: map.maintenance_title || "Under Maintenance",
+      message: map.maintenance_message || "The system is currently undergoing scheduled maintenance. Please check back shortly.",
+      estimatedReturn: map.maintenance_estimated_return || "",
+      contactEmail: map.maintenance_contact_email || "",
+    };
+  }),
+
   // Roles management
   listRoles: rolesManageProcedure.query(async () => [
     { id: "1", roleName: "Admin", description: "Administrator role", permissions: ["*"] },
@@ -184,6 +200,27 @@ export const settingsRouter = router({
     const map: any = {};
     results.forEach(s => map[s.key] = s.value);
     return { companyName: map.companyName || 'Melitech CRM', currency: map.currency || 'KSH' };
+  }),
+
+  // Returns all frontend-relevant settings for any authenticated user
+  getPublicSettings: protectedProcedure.query(async () => {
+    const database = await getDb();
+    if (!database) return { general: {}, currency: {}, theme: {}, logos: {} };
+    const categories = ['general', 'currency', 'theme_settings', 'company_logos'];
+    const rows = await database.select().from(settings).where(
+      sql`${settings.category} IN (${sql.join(categories.map(c => sql`${c}`), sql`, `)})`
+    );
+    const result: Record<string, Record<string, string>> = {};
+    for (const cat of categories) result[cat] = {};
+    for (const row of rows) {
+      if (result[row.category]) result[row.category][row.key] = row.value ?? '';
+    }
+    return {
+      general: result['general'],
+      currency: result['currency'],
+      theme: result['theme_settings'],
+      logos: result['company_logos'],
+    };
   }),
 
   getBankReconciliation: settingsReadProcedure.query(async () => {
@@ -551,7 +588,7 @@ export const settingsRouter = router({
       const valueStr = String(input.value);
       const existing = await database.select().from(settings).where(and(eq(settings.category, 'user_pref'), eq(settings.key, prefKey))).limit(1);
       if (existing.length) {
-        await database.update(settings).set({ value: valueStr, updatedBy: ctx.user.id, updatedAt: new Date().toISOString() }).where(eq(settings.id, existing[0].id));
+        await database.update(settings).set({ value: valueStr, updatedBy: ctx.user.id, updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) }).where(eq(settings.id, existing[0].id));
       } else {
         await database.insert(settings).values({ id: uuidv4(), category: 'user_pref', key: prefKey, value: valueStr, description: `User preference: ${input.key}`, updatedBy: ctx.user.id });
       }
@@ -572,4 +609,50 @@ export const settingsRouter = router({
       return { success: true };
     }),
 
+  // Generic: get all settings for a given category as a key-value map
+  getByCategory: settingsReadProcedure
+    .input(z.object({ category: z.string() }))
+    .query(async ({ input }) => {
+      const database = await getDb();
+      if (!database) return {};
+      const results = await database.select().from(settings).where(eq(settings.category, input.category));
+      const map: Record<string, string> = {};
+      results.forEach(s => { if (s.key) map[s.key] = s.value ?? ""; });
+      return map;
+    }),
+
+  // Generic: update multiple settings for a given category in one call
+  updateByCategory: settingsWriteProcedure
+    .input(z.object({
+      category: z.string(),
+      values: z.record(z.string(), z.string()),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const database = await getDb();
+      if (!database) throw new Error("Database not available");
+      for (const [key, value] of Object.entries(input.values)) {
+        const existing = await database.select().from(settings)
+          .where(and(eq(settings.category, input.category), eq(settings.key, key)))
+          .limit(1);
+        if (existing.length > 0) {
+          await database.update(settings)
+            .set({ value: String(value), updatedBy: ctx.user.id })
+            .where(eq(settings.id, existing[0].id));
+        } else {
+          await database.insert(settings).values({
+            id: uuidv4(),
+            category: input.category,
+            key,
+            value: String(value),
+            description: '',
+            updatedBy: ctx.user.id,
+          });
+        }
+      }
+      // Invalidate maintenance mode cache when maintenance settings change
+      if (input.category === "maintenance" || input.category === "tweak_settings") {
+        invalidateMaintenanceCache();
+      }
+      return { success: true };
+    }),
 });

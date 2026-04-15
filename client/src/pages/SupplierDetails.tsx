@@ -1,21 +1,25 @@
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { CitySelect } from "@/components/LocationSelects";
-import { ArrowLeft, Loader2, Star, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Star, Save, Edit, Mail, Phone, MapPin, Globe, Truck } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { useFavorite } from "@/hooks/useFavorite";
 
 export default function SupplierDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
+  const { isStarred, toggleStar } = useFavorite("supplier", id || "");
 
   const { data: supplier, isLoading, refetch } = trpc.suppliers.getById.useQuery(id);
 
@@ -51,40 +55,43 @@ export default function SupplierDetailsPage() {
     updateMutation.mutate({
       id: id!,
       companyName: formData.companyName,
-      contactPerson: formData.contactPerson,
-      email: formData.email,
-      phone: formData.phone,
-      paymentTerms: formData.paymentTerms,
-      notes: formData.notes,
-      qualityRating: formData.qualityRating,
-      deliveryRating: formData.deliveryRating,
-      priceCompetitiveness: formData.priceCompetitiveness,
+      contactPerson: String(formData.contactPerson),
+      email: String(formData.email),
+      phone: formData.phone ? String(formData.phone) : undefined,
+      paymentTerms: formData.paymentTerms ? String(formData.paymentTerms) : undefined,
+      notes: formData.notes ? String(formData.notes) : undefined,
+      qualityRating: Number(formData.qualityRating),
+      deliveryRating: Number(formData.deliveryRating),
+      priceCompetitiveness: Number(formData.priceCompetitiveness),
     });
   };
 
+  const numericFields = new Set(["qualityRating", "deliveryRating", "priceCompetitiveness"]);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value === "" ? 0 : isNaN(Number(value)) ? value : Number(value),
+      [name]: numericFields.has(name)
+        ? value === "" ? 0 : isNaN(Number(value)) ? prev[name as keyof typeof prev] : Number(value)
+        : value,
     }));
   };
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Supplier Details" icon={<Truck className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Suppliers", href: "/suppliers"}, {label: "Details"}]} backLink={{label: "Suppliers", href: "/suppliers"}}>
         <div className="flex justify-center items-center h-96">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!supplier) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Supplier Details" icon={<Truck className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Suppliers", href: "/suppliers"}, {label: "Details"}]} backLink={{label: "Suppliers", href: "/suppliers"}}>
         <div className="text-center py-12">Supplier not found</div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
@@ -106,97 +113,98 @@ export default function SupplierDetailsPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigate("/suppliers")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold tracking-tight">{supplier.companyName}</h1>
-            <p className="text-muted-foreground">Supplier #{supplier.supplierNumber}</p>
+    <ModuleLayout title="Supplier Details" icon={<Truck className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Suppliers", href: "/suppliers"}, {label: "Details"}]} backLink={{label: "Suppliers", href: "/suppliers"}}>
+      <div className="space-y-4">
+        {/* Action bar */}
+        <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" onClick={toggleStar}><Star className={`h-4 w-4 ${isStarred ? "fill-amber-400 text-amber-400" : ""}`} /></Button>
+            <Button variant="ghost" size="icon" onClick={() => { if (supplier.email) window.location.href = `mailto:${supplier.email}`; }}><Mail className="h-4 w-4" /></Button>
+            {!isEditing ? (
+              <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}><Edit className="h-4 w-4" /></Button>
+            ) : null}
+        </div>
+
+        {/* Split Layout */}
+        <div className="flex gap-6">
+          {/* Left Sidebar */}
+          <div className="w-[320px] min-w-[320px] space-y-4">
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div>
+                  <h2 className="text-xl font-bold">{supplier.companyName}</h2>
+                  <p className="text-sm text-muted-foreground">#{supplier.supplierNumber}</p>
+                </div>
+                <Badge className={getStatusBadgeColor(supplier.qualificationStatus)}>
+                  {supplier.qualificationStatus.replace("_", " ")}
+                </Badge>
+                <Separator />
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Phone</p>
+                      <p className="font-medium">{supplier.phone || "—"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Email</p>
+                      <p className="font-medium">{supplier.email || "—"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Address</p>
+                      <p className="font-medium">{supplier.address || "—"}{supplier.city ? `, ${supplier.city}` : ""}</p>
+                    </div>
+                  </div>
+                  {supplier.website && (
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-muted-foreground">Website</p>
+                        <a href={supplier.website} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600">{supplier.website}</a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Ratings</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="text-muted-foreground">Quality</p>
+                      <p className={`font-bold ${getRatingColor(supplier.qualityRating)}`}>{supplier.qualityRating}/100</p>
+                    </div>
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="text-muted-foreground">Delivery</p>
+                      <p className={`font-bold ${getRatingColor(supplier.deliveryRating)}`}>{supplier.deliveryRating}/100</p>
+                    </div>
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="text-muted-foreground">Price</p>
+                      <p className={`font-bold ${getRatingColor(supplier.priceCompetitiveness)}`}>{supplier.priceCompetitiveness}/100</p>
+                    </div>
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="text-muted-foreground">Overall</p>
+                      <p className={`font-bold ${getRatingColor(supplier.averageRating)}`}>{supplier.averageRating}/100</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          {!isEditing && (
-            <Button onClick={() => setIsEditing(true)}>Edit</Button>
-          )}
-        </div>
 
-        {/* Overview Cards */}
-        <div className="grid grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Quality Rating</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Star className={`h-5 w-5 ${getRatingColor(supplier.qualityRating)}`} />
-                <span className={`text-2xl font-bold ${getRatingColor(supplier.qualityRating)}`}>
-                  {supplier.qualityRating}
-                </span>
-                <span className="text-muted-foreground text-sm">/100</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Delivery Rating</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Star className={`h-5 w-5 ${getRatingColor(supplier.deliveryRating)}`} />
-                <span className={`text-2xl font-bold ${getRatingColor(supplier.deliveryRating)}`}>
-                  {supplier.deliveryRating}
-                </span>
-                <span className="text-muted-foreground text-sm">/100</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Price Competitiveness</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Star className={`h-5 w-5 ${getRatingColor(supplier.priceCompetitiveness)}`} />
-                <span className={`text-2xl font-bold ${getRatingColor(supplier.priceCompetitiveness)}`}>
-                  {supplier.priceCompetitiveness}
-                </span>
-                <span className="text-muted-foreground text-sm">/100</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Overall Rating</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Star className={`h-5 w-5 ${getRatingColor(supplier.averageRating)}`} />
-                <span className={`text-2xl font-bold ${getRatingColor(supplier.averageRating)}`}>
-                  {supplier.averageRating}
-                </span>
-                <span className="text-muted-foreground text-sm">/100</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <Tabs defaultValue="details" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="contact">Contact Information</TabsTrigger>
-            <TabsTrigger value="bank">Bank Details</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-          </TabsList>
+          {/* Right Content */}
+          <div className="flex-1 min-w-0">
+            <Tabs defaultValue="details" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="contact">Contact</TabsTrigger>
+                <TabsTrigger value="bank">Bank Details</TabsTrigger>
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+              </TabsList>
 
           {/* Details Tab */}
           <TabsContent value="details">
@@ -482,13 +490,11 @@ export default function SupplierDetailsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="notes">{isEditing ? "Edit Notes" : "Notes"}</Label>
                   {isEditing ? (
-                    <textarea
-                      id="notes"
-                      name="notes"
+                    <RichTextEditor
                       value={formData.notes}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border rounded-md min-h-24"
+                      onChange={(html) => setFormData(prev => ({ ...prev, notes: html }))}
                       placeholder="Add internal notes about this supplier..."
+                      minHeight="100px"
                     />
                   ) : (
                     <p className="text-sm mt-1">{supplier.notes || "-"}</p>
@@ -520,7 +526,9 @@ export default function SupplierDetailsPage() {
             </Button>
           </div>
         )}
+          </div>
+        </div>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

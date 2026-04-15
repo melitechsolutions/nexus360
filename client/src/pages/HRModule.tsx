@@ -56,7 +56,7 @@ export default function HRModule() {
   return (
     <ModuleLayout
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
       ]}
       title="Human Resources"

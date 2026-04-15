@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Document Template</title>
+    <link rel="stylesheet" href="../styles/document-professional-template.css">
+</head>
+<body>
+    <div class="document-container" data-document-type="imprest">
+        
+        <!-- HEADER WITH BRANDING (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-header" style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+          <div class="company-info" style="flex: 1;">
+            <h1 class="company-name" data-field="companyName">[COMPANY_NAME]</h1>
+            <div class="company-contact">
+              <span class="company-tax-id" data-field="companyPin">Tax ID: [COMPANY_PIN]</span>
+              <span class="company-contact-item">[COMPANY_PHONE]</span>
+              <span class="company-contact-item">[COMPANY_EMAIL]</span>
+              <span class="company-contact-item">[COMPANY_ADDRESS]</span>
+            </div>
+          </div>
+          <div class="company-logo" style="flex-shrink: 0;">
+            <img src="[COMPANY_LOGO]" alt="Company Logo" style="max-height: 80px;">
+          </div>
+        </div>
+
+        <!-- DOCUMENT TITLE AND METADATA (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-header-section" style="display: flex; align-items: center; gap: 24px;">
+          <h1 class="document-title" style="flex: 1;">IMPREST ADVANCE REQUEST</h1>
+          <div class="document-meta" style="display: flex; flex-direction: column; gap: 4px;">
+            <div class="meta-item"><span class="meta-label">Request #:</span> <span class="meta-value" data-field="imprestNumber">[IMP-00001]</span></div>
+            <div class="meta-item"><span class="meta-label">Date:</span> <span class="meta-value" data-field="issueDate">[DD/MM/YYYY]</span></div>
+            <div class="meta-item"><span class="meta-label">Amount Requested:</span> <span class="meta-value" data-field="amount">[KES 0.00]</span></div>
+            <div class="meta-item"><span class="meta-label">Tax Rate:</span> <span class="meta-value">VAT 16% (Inclusive/Exclusive)</span></div>
+          </div>
+        </div>
+
+        <!-- EMPLOYEE / REQUESTOR DETAILS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Employee / Requestor Details</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Employee Name:</strong> [Employee Name]</div>
+                <div><strong>Employee ID:</strong> [Employee ID]</div>
+                <div><strong>Department:</strong> [Department Name]</div>
+                <div><strong>Designation:</strong> [Job Title]</div>
+                <div><strong>Email:</strong> [employee@email.com]</div>
+                <div><strong>Phone:</strong> [Phone Number]</div>
+            </div>
+        </div>
+        
+        <!-- IMPREST DETAILS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Imprest Details</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Amount Requested:</strong> KES [Amount]</div>
+                <div><strong>Purpose:</strong> [Business Purpose/Description]</div>
+                <div><strong>Destination:</strong> [Travel/Activity Location]</div>
+                <div><strong>Approved By:</strong> [Approver Name & Signature]</div>
+            </div>
+        </div>
+
+        <!-- CONTENT SECTIONS -->
+        <div class="section">
+            <h2 class="section-title">Description</h2>
+            <div class="section-content">
+                <p>Document content goes here. This template provides a professional, print-persistent format for all app documentation and reports.</p>
+            </div>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="section">
+            <h2 class="section-title">Items List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong>Website Development</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #636e72;">Web02 - Development Package</p>
+                        </td>
+                        <td>1</td>
+                        <td>KES 7,000.00</td>
+                        <td>KES 7,000.00</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Social Media Management</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #636e72;">SMM(Custom) - 22 posts on Facebook, Instagram, X and LinkedIn</p>
+                        </td>
+                        <td>1</td>
+                        <td>KES 4,000.00</td>
+                        <td>KES 4,000.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- HIGHLIGHT BOX -->
+        <div class="section">
+            <div class="highlight-box">
+                <div class="highlight-label">Total Amount Due</div>
+                <div class="highlight-value">KES 14,250.00</div>
+            </div>
+        </div>
+
+        <!-- IMPREST TERMS & CONDITIONS SECTION -->
+        <div class="section">
+            <h2 class="section-title">Imprest Advance Terms & Conditions</h2>
+            <div class="section-content" style="font-size: 13px; line-height: 1.6; color: var(--secondary-color);">
+                <ol style="margin-left: 20px;">
+                    <li><strong>Advance Amount:</strong> Advance provided for stated purpose only; must not be diverted to other uses.</li>
+                    <li><strong>Settlement Period:</strong> Must be settled within 60 days of receipt.</li>
+                    <li><strong>Documentation:</strong> Original receipts/invoices required for all expenses claimed.</li>
+                    <li><strong>Accountability:</strong> Recipient personally accountable for advance and all expenditures.</li>
+                    <li><strong>Unspent Balance:</strong> Any unspent balance must be refunded in full by settlement date.</li>
+                    <li><strong>Shortfall/Excess:</strong> Shortfall must be claimed separately with full supporting documents.</li>
+                    <li><strong>Recovery:</strong> Unaccounted imprest deducted from salary in subsequent payroll cycle.</li>
+                    <li><strong>Approval:</strong> Settled imprest requires finance and management approval before final adjustment.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- FOOTER (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+          <div class="footer-info" style="flex: 1;">
+            <span class="document-id" data-field="imprestNumber">Imprest: [IMP-00001]</span>
+            <span class="document-date" data-field="issueDate">Issued: [DD/MM/YYYY]</span>
+            <span class="page-number">Page <span class="current-page">1</span> of <span class="total-pages">1</span></span>
+          </div>
+          <div class="footer-company" data-field="companyName">[COMPANY_NAME]</div>
+        </div>
+
+        <!-- Print Button (unified area, hidden in print) -->
+        <div class="no-print print-area" style="text-align: right; margin-top: 24px; padding: 16px;">
+          <button onclick="window.print()" class="print-btn">
+            Print Document
+          </button>
+        </div>
+
+    </div>
+
+</body>
+</html>

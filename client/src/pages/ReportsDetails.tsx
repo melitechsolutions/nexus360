@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 // Using actions helpers for download/delete
-import { ArrowLeft, Edit2, Trash2, Download } from "lucide-react";
+import { ArrowLeft, Edit2, Trash2, Download, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { handleDownload as actionsHandleDownload, handleDelete as actionsHandleDelete } from "@/lib/actions";
 import { trpc } from "@/lib/trpc";
@@ -56,15 +56,18 @@ export default function ReportsDetails() {
   };
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Report Details"
+      description={report.name}
+      icon={<FileText className="h-6 w-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Reports", href: "/reports" },
+        { label: "Details" },
+      ]}
+      backLink={{ label: "Reports", href: "/reports" }}
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => setLocation("/reports")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold">Report Details</h1>
-        </div>
 
         {isLoading ? (
           <Card>
@@ -136,6 +139,6 @@ export default function ReportsDetails() {
 
         {/* Deletion handled by actions.handleDelete wrapper */}
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

@@ -1,10 +1,11 @@
 import { useRoute, useLocation } from "wouter";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { generateDocumentHTML } from "@/lib/documentTemplate";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -27,6 +28,13 @@ import {
   Phone,
   MapPin,
   Trash2,
+  ChevronRight,
+  FileText,
+  CreditCard,
+  Calendar,
+  Hash,
+  User,
+  Receipt,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import mutateAsync from "@/lib/mutationHelpers";
@@ -45,6 +53,9 @@ export default function ReceiptDetails() {
   const { data: lineItemsData = [] } = trpc.lineItems.getByDocumentId.useQuery({ documentId: receiptId, documentType: 'receipt' });
   const { data: clientsData = [] } = trpc.clients.list.useQuery();
   const { data: companyInfo } = trpc.settings.getCompanyInfo.useQuery();
+  const { data: bankPayData } = trpc.settings.getByCategory.useQuery({ category: "payment_bank" });
+  const { data: mpesaPayData } = trpc.settings.getByCategory.useQuery({ category: "payment_mpesa" });
+  const { data: docTemplatesData } = trpc.settings.getByCategory.useQuery({ category: "document_templates" });
 
   // Get client info
   const client = receiptData ? (clientsData as any[]).find((c: any) => c.id === (receiptData as any).clientId) : null;
@@ -136,13 +147,12 @@ export default function ReceiptDetails() {
       paymentMethod: receipt?.paymentMethod,
       referenceNumber: receipt?.referenceNumber,
       notes: receipt?.notes,
-      termsAndConditions: (receipt as any)?.termsAndConditions || 'Thank you for your payment.',
-      bankName: 'Kenya Commercial Bank',
-      bankBranch: 'Kitengela',
-      bankAccount: '1295660644',
-      bankAccountName: 'Melitech Solutions',
-      mpesaPaybill: '522522',
-      mpesaAccountNumber: '1295660644',
+      termsAndConditions: '',
+      bankDetailsHtml: bankPayData?.enabled === 'true' ? bankPayData?.details : undefined,
+      bankName: undefined,
+      mpesaPaybill: mpesaPayData?.enabled === 'true' ? mpesaPayData?.paybillNumber : undefined,
+      mpesaAccountNumber: mpesaPayData?.enabled === 'true' ? mpesaPayData?.paybillNumber : undefined,
+      customTemplateHtml: docTemplatesData?.receipt || undefined,
     });
 
     printWindow.document.write(html);
@@ -175,243 +185,285 @@ export default function ReceiptDetails() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Receipt Details" icon={<Receipt className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Receipts", href: "/receipts"}, {label: "Details"}]} backLink={{label: "Receipts", href: "/receipts"}}>
         <div className="flex items-center justify-center h-64">
           <p>Loading receipt...</p>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!receipt) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Receipt Details" icon={<Receipt className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Receipts", href: "/receipts"}, {label: "Details"}]} backLink={{label: "Receipts", href: "/receipts"}}>
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Receipt not found</p>
           <Button onClick={() => navigate("/receipts")}>Back to Receipts</Button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
     <>
-      <DashboardLayout>
-      <div className="print-area space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/receipts")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">{receipt.receiptNumber}</h1>
-              <p className="text-muted-foreground">Receipt for {receipt.client.name}</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" onClick={handlePrint}>
-              <Printer className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" onClick={handleDownload}>
-              <Download className="mr-2 h-4 w-4" />
-              Download
-            </Button>
-            <Button variant="outline" onClick={handleEmail}>
-              <Send className="mr-2 h-4 w-4" />
-              Send Email
-            </Button>
+      <ModuleLayout title="Receipt Details" icon={<Receipt className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Receipts", href: "/receipts"}, {label: "Details"}]} backLink={{label: "Receipts", href: "/receipts"}}>
+      <div className="space-y-6">
+        {/* Action Bar */}
+        <div className="flex items-center justify-end gap-2">
             <Button onClick={() => navigate(`/receipts/${receiptId}/edit`)}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit Receipt
+              Edit
             </Button>
-            <Button variant="destructive" onClick={() => actionsHandleDelete(receiptId, "receipt", () => mutateAsync(deleteMutation, receiptId))}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+            <Button variant="destructive" size="icon" onClick={() => actionsHandleDelete(receiptId, "receipt", () => mutateAsync(deleteMutation, receiptId))}>
+              <Trash2 className="h-4 w-4" />
             </Button>
-          </div>
         </div>
 
-        {/* Receipt Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-2xl">Receipt Details</CardTitle>
-                <CardDescription>Complete receipt information and payment details</CardDescription>
-              </div>
-              <Badge variant={getStatusVariant(receipt?.status || "pending")} className="gap-1 px-3 py-2">
-                {getStatusIcon(receipt?.status || "pending")}
-                {receipt?.status?.toUpperCase() || "PENDING"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* KRA PIN Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">KRA PIN</label>
-              <input
-                type="text"
-                placeholder="Enter KRA PIN"
-                value={kraPIN}
-                onChange={(e) => setKraPIN(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-
-            {/* Company & Client Info */}
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* From */}
-              <div className="space-y-3">
-                <h3 className="font-semibold text-sm text-muted-foreground">FROM</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-semibold">Melitech Solutions</span>
+        {/* Split Layout */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* LEFT SIDEBAR */}
+          <div className="w-full lg:w-80 shrink-0 space-y-4">
+            <Card>
+              <CardContent className="pt-6 space-y-5">
+                {/* Receipt Number + Status */}
+                <div className="text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <h2 className="text-xl font-bold">{receipt.receiptNumber}</h2>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="h-3 w-3" />
-                    info@melitechsolutions.co.ke
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Phone className="h-3 w-3" />
-                    +254 700 000 000
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-3 w-3" />
-                    Nairobi, Kenya
-                  </div>
+                  <Badge variant={getStatusVariant(receipt.status)} className="gap-1 px-3 py-1">
+                    {getStatusIcon(receipt.status)}
+                    {receipt.status.toUpperCase()}
+                  </Badge>
                 </div>
-              </div>
 
-              {/* To */}
-              <div className="space-y-3">
-                <h3 className="font-semibold text-sm text-muted-foreground">RECEIVED FROM</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-semibold">{receipt?.client?.name || "Client"}</span>
+                <Separator />
+
+                {/* Key Fields */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Client</p>
+                      <p className="text-sm font-medium truncate">{receipt.client.name}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="h-3 w-3" />
-                    {receipt?.client?.email || "No email"}
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Date</p>
+                      <p className="text-sm font-medium">{new Date(receipt.issueDate).toLocaleDateString()}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Phone className="h-3 w-3" />
-                    {receipt?.client?.phone || "No phone"}
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Amount</p>
+                      <p className="text-sm font-bold text-green-600">KES {receipt.total.toLocaleString()}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-3 w-3" />
-                    {receipt?.client?.address || "No address"}
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Payment Method</p>
+                      <p className="text-sm font-medium">{receipt.paymentMethod}</p>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Receipt Meta */}
-            <div className="grid gap-4 md:grid-cols-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Receipt Number</p>
-                <p className="text-sm font-semibold">{receipt?.receiptNumber || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Receipt Date</p>
-                <p className="text-sm font-semibold">{receipt?.issueDate ? new Date(receipt.issueDate).toLocaleDateString() : "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Payment Method</p>
-                <p className="text-sm font-semibold">{receipt?.paymentMethod || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Reference Number</p>
-                <p className="text-sm font-semibold">{receipt.referenceNumber || "N/A"}</p>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Line Items */}
-            <div>
-              <h3 className="font-semibold mb-4">Items</h3>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Quantity</TableHead>
-                    <TableHead className="text-right">Rate</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Array.isArray(receipt?.items) && receipt.items.length > 0 ? (
-                    receipt.items.map((item: any, index: number) => (
-                      <TableRow key={item.id || `item-${index}`}>
-                        <TableCell>{item?.description || "N/A"}</TableCell>
-                        <TableCell className="text-right">{item?.quantity || 0}</TableCell>
-                        <TableCell className="text-right">KES {((item?.rate || 0) / 100).toLocaleString()}</TableCell>
-                        <TableCell className="text-right font-medium">
-                          KES {((item?.amount || 0) / 100).toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">
-                        No items
-                      </TableCell>
-                    </TableRow>
+                  {receipt.referenceNumber && (
+                    <div className="flex items-center gap-3">
+                      <Hash className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Reference</p>
+                        <p className="text-sm font-medium">{receipt.referenceNumber}</p>
+                      </div>
+                    </div>
                   )}
-                </TableBody>
-              </Table>
-            </div>
-
-            <Separator />
-
-            {/* Totals */}
-            <div className="flex justify-end">
-              <div className="w-full max-w-sm space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">KES {(receipt?.subtotal || 0).toLocaleString()}</span>
                 </div>
-                {(receipt?.tax || 0) > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tax (16% VAT)</span>
-                    <span className="font-medium">KES {(receipt?.tax || 0).toLocaleString()}</span>
-                  </div>
-                )}
-                {(receipt?.discount || 0) > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Discount</span>
-                    <span className="font-medium text-green-600">
-                      -KES {(receipt?.discount || 0).toLocaleString()}
-                    </span>
-                  </div>
-                )}
+
                 <Separator />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total Amount Received</span>
-                  <span>KES {(receipt?.total || 0).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Notes */}
-            {receipt?.notes && (
-              <>
-                <Separator />
-                <div>
-                  <h3 className="font-semibold mb-2">Notes</h3>
-                  <p className="text-sm text-muted-foreground">{receipt?.notes}</p>
+                {/* KRA PIN Input */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">KRA PIN</label>
+                  <input
+                    type="text"
+                    placeholder="Enter KRA PIN"
+                    value={kraPIN}
+                    onChange={(e) => setKraPIN(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+
+                <Separator />
+
+                {/* Action Buttons */}
+                <div className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start" onClick={handlePrint}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print Receipt
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" onClick={handleDownload}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PDF
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" onClick={handleEmail}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Email to Client
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* RIGHT CONTENT */}
+          <div className="flex-1 min-w-0">
+            <Tabs defaultValue="items" className="w-full">
+              <TabsList>
+                <TabsTrigger value="items">Items</TabsTrigger>
+                <TabsTrigger value="details">Details</TabsTrigger>
+              </TabsList>
+
+              {/* Items Tab */}
+              <TabsContent value="items" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Line Items</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Qty</TableHead>
+                          <TableHead className="text-right">Rate</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Array.isArray(receipt.items) && receipt.items.length > 0 ? (
+                          receipt.items.map((item: any, index: number) => (
+                            <TableRow key={item.id || `item-${index}`}>
+                              <TableCell>{item?.description || "N/A"}</TableCell>
+                              <TableCell className="text-right">{item?.quantity || 0}</TableCell>
+                              <TableCell className="text-right">KES {((item?.rate || 0) / 100).toLocaleString()}</TableCell>
+                              <TableCell className="text-right font-medium">
+                                KES {((item?.amount || 0) / 100).toLocaleString()}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center text-muted-foreground">
+                              No items
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+
+                    <Separator className="my-4" />
+
+                    {/* Totals */}
+                    <div className="flex justify-end">
+                      <div className="w-full max-w-sm space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Subtotal</span>
+                          <span className="font-medium">KES {(receipt.subtotal || 0).toLocaleString()}</span>
+                        </div>
+                        {(receipt.tax || 0) > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Tax (16% VAT)</span>
+                            <span className="font-medium">KES {(receipt.tax || 0).toLocaleString()}</span>
+                          </div>
+                        )}
+                        {(receipt.discount || 0) > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Discount</span>
+                            <span className="font-medium text-green-600">
+                              -KES {(receipt.discount || 0).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                        <Separator />
+                        <div className="flex justify-between text-lg font-bold">
+                          <span>Total Received</span>
+                          <span>KES {(receipt.total || 0).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Details Tab */}
+              <TabsContent value="details" className="space-y-4">
+                {/* Notes */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      {receipt.notes || "No notes added."}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Client Info */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Received From</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-semibold">{receipt.client.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Mail className="h-3 w-3" />
+                      {receipt.client.email || "No email"}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Phone className="h-3 w-3" />
+                      {receipt.client.phone || "No phone"}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      {receipt.client.address || "No address"}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Company Info */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">From</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-semibold">{companyInfo?.companyName || "Company"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Mail className="h-3 w-3" />
+                      {companyInfo?.companyEmail || ""}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Phone className="h-3 w-3" />
+                      {companyInfo?.companyPhone || ""}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      {companyInfo?.companyAddress || ""}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
-      </DashboardLayout>
+      </ModuleLayout>
     </>
   );
 }

@@ -4,241 +4,28 @@ import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Package, ArrowLeft } from "lucide-react";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 export default function CreateProduct() {
   const { allowed, isLoading } = useRequireFeature("products:create");
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
-  const [formData, setFormData] = useState({
-    productName: "",
-    description: "",
-    sku: "",
-    category: "",
-    unitPrice: "",
-    quantity: "",
-    status: "active",
-  });
-
-  // Fetch categories for dropdown
+  const [formData, setFormData] = useState({ productName: "", description: "", sku: "", category: "", unit: "pcs", unitPrice: "", costPrice: "", taxRate: "", quantity: "", minStockLevel: "", maxStockLevel: "", reorderLevel: "", reorderQuantity: "", supplier: "", location: "", imageUrl: "", status: "active" });
   const { data: categories = [] } = trpc.products.getCategories.useQuery();
-  
-  const createProductMutation = trpc.products.create.useMutation({
-    onSuccess: () => {
-      toast.success("Product created successfully!");
-      utils.products.list.invalidate();
-      navigate("/products");
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to create product: ${error.message}`);
-    },
-  });
-
-  if (isLoading) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
+  const createProductMutation = trpc.products.create.useMutation({ onSuccess: () => { toast.success("Product created successfully!"); utils.products.list.invalidate(); setFormData({ productName: "", description: "", sku: "", category: "", unit: "pcs", unitPrice: "", costPrice: "", taxRate: "", quantity: "", minStockLevel: "", maxStockLevel: "", reorderLevel: "", reorderQuantity: "", supplier: "", location: "", imageUrl: "", status: "active" }); navigate("/products"); }, onError: (error: any) => { toast.error(`Failed to create product: ${error.message}`); } });
+  if (isLoading) return (<div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>);
   if (!allowed) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.productName) {
-      toast.error("Product name is required");
-      return;
-    }
-
-    if (!formData.unitPrice || parseFloat(formData.unitPrice) <= 0) {
-      toast.error("Please enter a valid price");
-      return;
-    }
-
-    createProductMutation.mutate({
-      productName: formData.productName,
-      description: formData.description || undefined,
-      sku: formData.sku || undefined,
-      category: formData.category || undefined,
-      unitPrice: parseFloat(formData.unitPrice),
-      quantity: formData.quantity ? parseInt(formData.quantity) : 0,
-      status: formData.status as 'active' | 'inactive',
-    });
-  };
-
-  return (
-    <ModuleLayout
-      title="Create Product"
-      description="Add a new product to your catalog"
-      icon={<Package className="w-6 h-6" />}
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Products & Services", href: "/products" },
-        { label: "Create Product" },
-      ]}
-    >
-      <div className="max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create Product</CardTitle>
-            <CardDescription>
-              Enter the product details below to add a new product to your catalog
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="productName">Product Name *</Label>
-                <Input
-                  id="productName"
-                  placeholder="Enter product name"
-                  value={formData.productName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, productName: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Enter product description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows={4}
-                />
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="sku">SKU</Label>
-                  <Input
-                    id="sku"
-                    placeholder="e.g., PROD-001"
-                    value={formData.sku}
-                    onChange={(e) =>
-                      setFormData({ ...formData, sku: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, category: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select or type category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.length > 0 ? (
-                        categories.map((cat: string) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <>
-                          <SelectItem value="Electronics">Electronics</SelectItem>
-                          <SelectItem value="Software">Software</SelectItem>
-                          <SelectItem value="Hardware">Hardware</SelectItem>
-                          <SelectItem value="Services">Services</SelectItem>
-                          <SelectItem value="Accessories">Accessories</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="unitPrice">Unit Price (Ksh) *</Label>
-                  <Input
-                    id="unitPrice"
-                    type="number"
-                    placeholder="0.00"
-                    value={formData.unitPrice}
-                    onChange={(e) =>
-                      setFormData({ ...formData, unitPrice: e.target.value })
-                    }
-                    step="0.01"
-                    min="0"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantity</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    placeholder="0"
-                    value={formData.quantity}
-                    onChange={(e) =>
-                      setFormData({ ...formData, quantity: e.target.value })
-                    }
-                    min="0"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, status: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/products")}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createProductMutation.isPending}
-                >
-                  {createProductMutation.isPending
-                    ? "Creating..."
-                    : "Create Product"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </ModuleLayout>
-  );
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); if (!formData.productName) { toast.error("Product name is required"); return; } createProductMutation.mutate({ productName: formData.productName, description: formData.description || undefined, sku: formData.sku || undefined, category: formData.category || undefined, unit: formData.unit || undefined, unitPrice: formData.unitPrice ? parseFloat(formData.unitPrice) : undefined, costPrice: formData.costPrice ? parseFloat(formData.costPrice) : undefined, taxRate: formData.taxRate ? parseFloat(formData.taxRate) : undefined, quantity: formData.quantity ? parseInt(formData.quantity) : undefined, minStockLevel: formData.minStockLevel ? parseInt(formData.minStockLevel) : undefined, maxStockLevel: formData.maxStockLevel ? parseInt(formData.maxStockLevel) : undefined, reorderLevel: formData.reorderLevel ? parseInt(formData.reorderLevel) : undefined, reorderQuantity: formData.reorderQuantity ? parseInt(formData.reorderQuantity) : undefined, supplier: formData.supplier || undefined, location: formData.location || undefined, imageUrl: formData.imageUrl || undefined, status: formData.status as "active" | "inactive" }); };
+  const defaultCategories = ["Electronics", "Software", "Hardware", "Services", "Consulting", "Training", "Support", "Other"];
+  const displayCategories = categories.length > 0 ? categories : defaultCategories;
+  const defaultUnits = [{ value: "pcs", label: "Pieces" }, { value: "unit", label: "Unit" }, { value: "kg", label: "Kilogram" }, { value: "g", label: "Gram" }, { value: "l", label: "Liter" }, { value: "m", label: "Meter" }, { value: "box", label: "Box" }, { value: "pack", label: "Pack" }, { value: "roll", label: "Roll" }, { value: "set", label: "Set" }, { value: "pair", label: "Pair" }];
+  const f = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => setFormData((p) => ({ ...p, [field]: e.target.value }));
+  return (<ModuleLayout title="Create Product" description="Add a new product to your inventory" icon={<Package className="w-6 h-6" />} breadcrumbs={[{ label: "Dashboard", href: "/crm-home" }, { label: "Products", href: "/products" }, { label: "Create Product" }]}><form onSubmit={handleSubmit} className="space-y-6 max-w-5xl"><Card><CardHeader><CardTitle>Basic Information</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="productName">Product Name *</Label><Input id="productName" placeholder="Enter product name" value={formData.productName} onChange={f("productName")} /></div><div className="space-y-2"><Label htmlFor="sku">SKU</Label><Input id="sku" placeholder="e.g. PROD-001" value={formData.sku} onChange={f("sku")} /></div></div><div className="grid gap-4 md:grid-cols-2"><div className="space-y-2"><Label>Category</Label><Select value={formData.category} onValueChange={(v) => setFormData((p) => ({ ...p, category: v }))}><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent>{displayCategories.map((cat: string) => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}</SelectContent></Select></div><div className="space-y-2"><Label>Unit</Label><Select value={formData.unit} onValueChange={(v) => setFormData((p) => ({ ...p, unit: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{defaultUnits.map((u: { value: string; label: string }) => (<SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>))}</SelectContent></Select></div></div><div className="space-y-2"><Label>Description</Label><RichTextEditor value={formData.description} onChange={(val) => setFormData((p) => ({ ...p, description: val }))} placeholder="Describe the product — features, specifications, usage..." /></div></CardContent></Card><Card><CardHeader><CardTitle>Pricing</CardTitle></CardHeader><CardContent><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"><div className="space-y-2"><Label htmlFor="unitPrice">Unit Price (Ksh)</Label><Input id="unitPrice" type="number" placeholder="0.00" value={formData.unitPrice} onChange={f("unitPrice")} step="0.01" min="0" /></div><div className="space-y-2"><Label htmlFor="costPrice">Cost Price (Ksh)</Label><Input id="costPrice" type="number" placeholder="0.00" value={formData.costPrice} onChange={f("costPrice")} step="0.01" min="0" /></div><div className="space-y-2"><Label htmlFor="taxRate">Tax Rate (%)</Label><Input id="taxRate" type="number" placeholder="e.g. 16" value={formData.taxRate} onChange={f("taxRate")} step="0.01" min="0" max="100" /></div></div></CardContent></Card><Card><CardHeader><CardTitle>Inventory</CardTitle></CardHeader><CardContent><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"><div className="space-y-2"><Label htmlFor="quantity">Current Quantity</Label><Input id="quantity" type="number" placeholder="0" value={formData.quantity} onChange={f("quantity")} min="0" /></div><div className="space-y-2"><Label htmlFor="minStockLevel">Min Stock Level</Label><Input id="minStockLevel" type="number" placeholder="0" value={formData.minStockLevel} onChange={f("minStockLevel")} min="0" /></div><div className="space-y-2"><Label htmlFor="maxStockLevel">Max Stock Level</Label><Input id="maxStockLevel" type="number" placeholder="0" value={formData.maxStockLevel} onChange={f("maxStockLevel")} min="0" /></div></div><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4"><div className="space-y-2"><Label htmlFor="reorderLevel">Reorder Level</Label><Input id="reorderLevel" type="number" placeholder="0" value={formData.reorderLevel} onChange={f("reorderLevel")} min="0" /></div><div className="space-y-2"><Label htmlFor="reorderQuantity">Reorder Quantity</Label><Input id="reorderQuantity" type="number" placeholder="0" value={formData.reorderQuantity} onChange={f("reorderQuantity")} min="0" /></div><div className="space-y-2"><Label>Status</Label><Select value={formData.status} onValueChange={(v) => setFormData((p) => ({ ...p, status: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent></Select></div></div></CardContent></Card><Card><CardHeader><CardTitle>Supplier & Location</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="supplier">Supplier</Label><Input id="supplier" placeholder="Enter supplier name" value={formData.supplier} onChange={f("supplier")} /></div><div className="space-y-2"><Label htmlFor="location">Storage Location</Label><Input id="location" placeholder="e.g. Warehouse A, Shelf 3-B" value={formData.location} onChange={f("location")} /></div></div><div className="space-y-2"><Label htmlFor="imageUrl">Image URL</Label><Input id="imageUrl" placeholder="https://example.com/product.jpg" value={formData.imageUrl} onChange={f("imageUrl")} /></div></CardContent></Card><div className="flex gap-4"><Button type="button" variant="outline" onClick={() => navigate("/products")}><ArrowLeft className="mr-2 h-4 w-4" /> Cancel</Button><Button type="submit" disabled={createProductMutation.isPending}>{createProductMutation.isPending ? "Creating..." : "Create Product"}</Button></div></form></ModuleLayout>);
 }
-
-

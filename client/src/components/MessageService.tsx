@@ -128,7 +128,7 @@ export function MessageService({
   const [messageType, setMessageType] = useState<"email" | "sms">(
     type === "both" ? "email" : type
   );
-  const [templateId, setTemplateId] = useState("");
+  const [templateId, setTemplateId] = useState("__none__");
   const [recipients, setRecipients] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -216,7 +216,7 @@ export function MessageService({
   });
 
   const resetForm = () => {
-    setTemplateId("");
+    setTemplateId("__none__");
     setRecipients("");
     setSubject("");
     setMessage("");
@@ -261,13 +261,13 @@ export function MessageService({
           to: recipients,
           subject,
           html: message,
-          template: templateId || undefined,
+          template: templateId && templateId !== "__none__" ? templateId : undefined,
         });
       } else {
         sendSMSMutation.mutate({
           phoneNumber: recipients,
           message,
-          template: templateId || undefined,
+          template: templateId && templateId !== "__none__" ? templateId : undefined,
         });
       }
     } finally {
@@ -378,7 +378,7 @@ export function MessageService({
                     <SelectValue placeholder="Select a template" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Template</SelectItem>
+                    <SelectItem value="__none__">No Template</SelectItem>
                     {templates.map((tmpl) => (
                       <SelectItem key={tmpl.id} value={tmpl.id}>
                         {tmpl.name}

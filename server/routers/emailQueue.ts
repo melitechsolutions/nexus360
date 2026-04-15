@@ -4,6 +4,7 @@ import { getDb } from "../db";
 import { v4 as uuidv4 } from "uuid";
 import { sendEmail } from "../_core/mail";
 import { emailQueue, emailLog } from "../../drizzle/schema";
+import { eq, and, lte, or, sql, desc } from "drizzle-orm";
 
 /**
  * Queue an email for sending (with retry logic)
@@ -28,7 +29,7 @@ export async function queueEmail(input: {
 
   try {
     const queueId = uuidv4();
-    await db.insertEmailQueue({
+    await db.insert(emailQueue).values({
       id: queueId,
       recipientEmail: input.recipientEmail,
       recipientName: input.recipientName,
@@ -43,7 +44,7 @@ export async function queueEmail(input: {
       attempts: 0,
       maxAttempts: 3,
       metadata: input.metadata ? JSON.stringify(input.metadata) : null,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
     });
 
     console.log(`[EMAIL QUEUE] Queued email ${queueId} to ${input.recipientEmail}`);
@@ -66,8 +67,18 @@ export async function processEmailQueue() {
   }
 
   try {
-    // Get pending emails ready to send
-    const pendingEmails = await db.getEmailQueuePending();
+    // Get pending emails ready to send (pending or retrying with nextRetryAt <= now)
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const pendingEmails = await db
+      .select()
+      .from(emailQueue)
+      .where(
+        or(
+          eq(emailQueue.status, "pending"),
+          and(eq(emailQueue.status, "retrying"), lte(emailQueue.nextRetryAt, now))
+        )
+      )
+      .limit(50);
     let processed = 0;
     let failed = 0;
 
@@ -83,45 +94,51 @@ export async function processEmailQueue() {
 
         if (result.success) {
           // Mark as sent
-          await db.updateEmailQueueStatus(email.id, "sent", result.messageId || "");
+          await db.update(emailQueue).set({ status: "sent", sentAt: new Date().toISOString().replace('T', ' ').substring(0, 19) }).where(eq(emailQueue.id, email.id));
 
           // Log successful send
-          await db.insertEmailLog({
+          await db.insert(emailLog).values({
             id: uuidv4(),
             queueId: email.id,
             recipientEmail: email.recipientEmail,
             subject: email.subject,
             eventType: email.eventType,
             status: "sent",
-            messageId: result.messageId || "",
-            sentAt: new Date().toISOString(),
+            messageId: (result as any).messageId || "",
+            sentAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           });
 
           console.log(`[EMAIL QUEUE] Processed email ${email.id} to ${email.recipientEmail} - SUCCESS`);
           processed++;
         } else {
           // Handle retry
-          const attempts = email.attempts + 1;
-          if (attempts < email.maxAttempts) {
+          const attempts = (email.attempts || 0) + 1;
+          if (attempts < (email.maxAttempts || 3)) {
             // Schedule next retry (exponential backoff: 5min, 30min, 24hrs)
             const backoffMs = Math.pow(5, attempts) * 60000;
-            const nextRetry = new Date(Date.now() + backoffMs);
+            const nextRetry = new Date(Date.now() + backoffMs).toISOString().replace('T', ' ').substring(0, 19);
 
-            await db.updateEmailQueueRetry(email.id, attempts, nextRetry, result.error || "Send failed");
-            console.log(`[EMAIL QUEUE] Email ${email.id} will retry at ${nextRetry.toISOString()}`);
+            await db.update(emailQueue).set({
+              status: "retrying",
+              attempts,
+              lastAttemptAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+              nextRetryAt: nextRetry,
+              errorMessage: (result as any).error || "Send failed",
+            }).where(eq(emailQueue.id, email.id));
+            console.log(`[EMAIL QUEUE] Email ${email.id} will retry at ${nextRetry}`);
           } else {
             // Max retries exceeded
-            await db.updateEmailQueueStatus(email.id, "failed", result.error || "Max retries exceeded");
+            await db.update(emailQueue).set({ status: "failed", errorMessage: (result as any).error || "Max retries exceeded" }).where(eq(emailQueue.id, email.id));
 
-            await db.insertEmailLog({
+            await db.insert(emailLog).values({
               id: uuidv4(),
               queueId: email.id,
               recipientEmail: email.recipientEmail,
               subject: email.subject,
               eventType: email.eventType,
               status: "failed",
-              errorMessage: result.error,
-              sentAt: new Date().toISOString(),
+              errorMessage: (result as any).error,
+              sentAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             });
 
             console.log(`[EMAIL QUEUE] Email ${email.id} to ${email.recipientEmail} - FAILED after ${attempts} attempts`);
@@ -152,7 +169,12 @@ export const emailQueueRouter = router({
     }
 
     try {
-      const stats = await db.getEmailQueueStats();
+      const rows = await db
+        .select({ status: emailQueue.status, count: sql<number>`count(*)` })
+        .from(emailQueue)
+        .groupBy(emailQueue.status);
+      const stats: Record<string, number> = { pending: 0, failed: 0, sent: 0, retrying: 0 };
+      for (const r of rows) stats[r.status] = Number(r.count);
       return stats;
     } catch (error) {
       console.error("[EMAIL QUEUE] Error getting status:", error);
@@ -178,8 +200,20 @@ export const emailQueueRouter = router({
       }
 
       try {
-        const entries = await db.getEmailQueueEntries(input.status, input.limit, input.offset);
-        const total = await db.getEmailQueueCount(input.status);
+        const conditions: any[] = [];
+        if (input.status) conditions.push(eq(emailQueue.status, input.status));
+        const entries = await db
+          .select()
+          .from(emailQueue)
+          .where(conditions.length === 1 ? conditions[0] : undefined)
+          .orderBy(desc(emailQueue.createdAt))
+          .limit(input.limit)
+          .offset(input.offset);
+        const countResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(emailQueue)
+          .where(conditions.length === 1 ? conditions[0] : undefined);
+        const total = Number(countResult[0]?.count ?? 0);
         return { entries, total };
       } catch (error) {
         console.error("[EMAIL QUEUE] Error getting queue entries:", error);
@@ -192,7 +226,7 @@ export const emailQueueRouter = router({
    */
   processQueue: createFeatureRestrictedProcedure("communications:email_queue").mutation(async ({ ctx }) => {
     // Check admin/system role
-    if (ctx.user?.role !== "admin" && ctx.user?.role !== "system") {
+    if (ctx.user?.role !== "admin" && ctx.user?.role !== "super_admin" && ctx.user?.role !== "system") {
       throw new Error("Unauthorized - admin only");
     }
 
@@ -206,7 +240,7 @@ export const emailQueueRouter = router({
   retryEmail: createFeatureRestrictedProcedure("communications:email_queue")
     .input(z.object({ emailId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      if (ctx.user?.role !== "admin") {
+      if (ctx.user?.role !== "admin" && ctx.user?.role !== "super_admin") {
         throw new Error("Unauthorized - admin only");
       }
 
@@ -217,7 +251,9 @@ export const emailQueueRouter = router({
 
       try {
         // Reset to pending for retry
-        await db.updateEmailQueueStatus(input.emailId, "pending", "");
+        await db.update(emailQueue)
+          .set({ status: "pending", attempts: 0, errorMessage: null, nextRetryAt: null })
+          .where(eq(emailQueue.id, input.emailId));
         console.log(`[EMAIL QUEUE] Email ${input.emailId} marked for retry`);
         return { success: true };
       } catch (error) {
@@ -243,8 +279,20 @@ export const emailQueueRouter = router({
       }
 
       try {
-        const logs = await db.getEmailLogs(input.status, input.limit, input.offset);
-        const total = await db.getEmailLogCount(input.status);
+        const conditions: any[] = [];
+        if (input.status) conditions.push(eq(emailLog.status, input.status as any));
+        const logs = await db
+          .select()
+          .from(emailLog)
+          .where(conditions.length === 1 ? conditions[0] : undefined)
+          .orderBy(desc(emailLog.sentAt))
+          .limit(input.limit)
+          .offset(input.offset);
+        const countResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(emailLog)
+          .where(conditions.length === 1 ? conditions[0] : undefined);
+        const total = Number(countResult[0]?.count ?? 0);
         return { logs, total };
       } catch (error) {
         console.error("[EMAIL QUEUE] Error getting logs:", error);

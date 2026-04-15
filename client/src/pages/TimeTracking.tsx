@@ -35,6 +35,7 @@ import { formatDate } from "@/lib/utils";
 import { Plus, Trash2, Edit2, CheckCircle2, Clock, DollarSign, TrendingUp } from "lucide-react";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
 
 type TimeEntry = {
   id: string;
@@ -275,7 +276,7 @@ export default function TimeTracking() {
       description="Track project and task time for accurate billing"
       icon={<Clock className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Projects", href: "/projects" },
         { label: "Time Tracking" },
       ]}
@@ -442,49 +443,33 @@ export default function TimeTracking() {
       {/* Stats Cards */}
       {reportQuery.data && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Hours (30d)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(reportQuery.data.totalMinutes / 60).toFixed(1)}</div>
-              <p className="text-xs text-muted-foreground">{reportQuery.data.entryCount} entries</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Hours (30d)"
+            value={(reportQuery.data.totalMinutes / 60).toFixed(1)}
+            description={<>{reportQuery.data.entryCount} entries</>}
+            color="border-l-orange-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Billable Hours</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(reportQuery.data.billableMinutes / 60).toFixed(1)}</div>
-              <p className="text-xs text-muted-foreground">
-                {reportQuery.data.utilization}% utilization
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Billable Hours"
+            value={(reportQuery.data.billableMinutes / 60).toFixed(1)}
+            description={<>{reportQuery.data.utilization}% utilization</>}
+            color="border-l-purple-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Billable Amount</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">KES {((reportQuery.data?.totalAmount) || 0).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Across all entries</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Billable Amount"
+            value={<>KES {((reportQuery.data?.totalAmount) || 0).toLocaleString()}</>}
+            description="Across all entries"
+            color="border-l-green-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending Approval</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(reportQuery.data?.submittedCount) || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {(reportQuery.data?.draftCount) || 0} draft
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Pending Approval"
+            value={(reportQuery.data?.submittedCount) || 0}
+            description={<>{(reportQuery.data?.draftCount) || 0} draft</>}
+            color="border-l-blue-500"
+          />
         </div>
       )}
 

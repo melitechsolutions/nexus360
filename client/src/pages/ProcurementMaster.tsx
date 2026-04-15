@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Plus, ArrowRight } from "lucide-react";
 import { Truck, FileText, Wallet, DollarSign, Users } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
 
 interface ProcurementModule {
   id: string;
@@ -104,42 +105,23 @@ export default function ProcurementMaster() {
       description="Complete procurement operations including suppliers, purchase orders, imprests, and budget tracking"
       icon={<ShoppingCart className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Procurement" },
       ]}
     >
       <div className="space-y-8">
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Procurement Modules</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{procurementModules.length}</div>
-              <p className="text-xs text-gray-500 mt-1">Core modules available</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Procurement Modules"
+            value={procurementModules.length}
+            description="Core modules available"
+            color="border-l-purple-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Quick Access</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">6</div>
-              <p className="text-xs text-gray-500 mt-1">Modules with full CRUD</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Quick Access" value="6" description="Modules with full CRUD" color="border-l-green-500" />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Integration</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">✓</div>
-              <p className="text-xs text-gray-500 mt-1">Fully integrated</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Integration" value="✓" description="Fully integrated" color="border-l-blue-500" />
         </div>
 
         {/* Procurement Modules Grid */}

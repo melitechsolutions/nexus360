@@ -1,9 +1,8 @@
 import { useAuthWithPersistence } from "@/_core/hooks/useAuthWithPersistence";
-import { useLocation } from "wouter";
-import { useEffect } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import PaymentReports from "@/components/PaymentReports";
-import { Loader2, BarChart3 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * PaymentReportsPage
@@ -11,25 +10,14 @@ import { Loader2, BarChart3 } from "lucide-react";
  * Full-screen page for viewing payment reports with filters and exports
  */
 export default function PaymentReportsPage() {
-  const { user, loading, isAuthenticated, logout } = useAuthWithPersistence({
+  const { loading, isAuthenticated } = useAuthWithPersistence({
     redirectOnUnauthenticated: true,
   });
-  const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    if (!loading && isAuthenticated && user?.role) {
-      // Check if user has permission to view reports
-      // Add role check if needed in future
-    }
-  }, [loading, isAuthenticated, user, setLocation]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-          <p className="text-gray-600">Loading reports...</p>
-        </div>
+        <Spinner />
       </div>
     );
   }
@@ -38,34 +26,20 @@ export default function PaymentReportsPage() {
     return null;
   }
 
-  const handleLogout = async () => {
-    await logout();
-    setLocation("/login");
-  };
-
   return (
-    <DashboardLayout
+    <ModuleLayout
       title="Payment Reports"
-      user={user}
-      onLogout={handleLogout}
+      description="Analyze payment trends and generate detailed reports"
+      icon={<BarChart3 className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Accounting", href: "/accounting" },
+        { label: "Payment Reports" },
+      ]}
     >
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
-              <BarChart3 className="w-8 h-8" />
-              Payment Reports
-            </h1>
-            <p className="text-slate-600 dark:text-slate-300 mt-1">
-              Analyze payment trends and generate detailed reports
-            </p>
-          </div>
-        </div>
-
-        {/* Main Content */}
+      <div className="space-y-6 p-4 sm:p-6">
         <PaymentReports />
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

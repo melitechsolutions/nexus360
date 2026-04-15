@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ModuleLayout } from "@/components/ModuleLayout";
+import { WebsiteNav } from "@/pages/website/WebsiteNav";
+import { WebsiteFooter } from "@/pages/website/WebsiteFooter";
 import { HelpCircle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -148,16 +149,31 @@ export default function UserGuide() {
   const categories = Array.from(new Set(userGuides.map((g) => g.category)));
 
   return (
-    <ModuleLayout
-      title="User Guide"
-      description="Step-by-step guides to help you get the most out of Melitech CRM"
-      icon={<HelpCircle className="h-5 w-5" />}
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Help & Resources", href: "#" },
-        { label: "User Guide" },
-      ]}
-    >
+    <div className="min-h-screen bg-white text-gray-900">
+      <WebsiteNav />
+
+      {/* Hero */}
+      <section className="relative pt-32 pb-16 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/80 via-white to-white" />
+        <div className="absolute top-20 right-1/4 w-96 h-96 rounded-full bg-violet-100/40 blur-3xl" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 text-sm font-medium text-indigo-600 mb-6">
+            <HelpCircle className="w-3.5 h-3.5" />
+            Step-by-Step
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
+            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+              User Guide
+            </span>
+          </h1>
+          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            Step-by-step guides to help you get the most out of the CRM
+          </p>
+        </div>
+      </section>
+
+      {/* Content */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
       <div className="space-y-6">
         {/* Categories */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -269,6 +285,9 @@ export default function UserGuide() {
           </CardContent>
         </Card>
       </div>
-    </ModuleLayout>
+      </section>
+
+      <WebsiteFooter />
+    </div>
   );
 }

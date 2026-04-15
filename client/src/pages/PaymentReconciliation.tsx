@@ -49,6 +49,7 @@ import {
   CheckCircle2,
   TrendingUp,
 } from 'lucide-react';
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function PaymentReconciliation() {
   const [dateFrom, setDateFrom] = useState(
@@ -59,7 +60,7 @@ export default function PaymentReconciliation() {
   const [dateTo, setDateTo] = useState(
     new Date().toISOString().split('T')[0]
   );
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('__all__');
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [reverseDialogOpen, setReverseDialogOpen] = useState(false);
 
@@ -93,7 +94,7 @@ export default function PaymentReconciliation() {
     if (dateTo && paymentDate > dateTo) dateMatch = false;
     
     let methodMatch = true;
-    if (paymentMethod && payment.paymentMethod !== paymentMethod) methodMatch = false;
+    if (paymentMethod && paymentMethod !== '__all__' && payment.paymentMethod !== paymentMethod) methodMatch = false;
     
     return dateMatch && methodMatch;
   }) || [];
@@ -204,7 +205,7 @@ export default function PaymentReconciliation() {
                   <SelectValue placeholder="All methods" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All methods</SelectItem>
+                  <SelectItem value="__all__">All methods</SelectItem>
                   <SelectItem value="Cash">Cash</SelectItem>
                   <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
                   <SelectItem value="Cheque">Cheque</SelectItem>
@@ -225,30 +226,9 @@ export default function PaymentReconciliation() {
 
       {/* Statistics */}
       <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-gray-500 mb-1">Total Payments</p>
-              <p className="text-3xl font-bold">{stats.totalPayments}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-gray-500 mb-1">Total Amount</p>
-              <p className="text-3xl font-bold">KES {(stats.totalAmount / 100).toLocaleString()}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-sm text-gray-500 mb-1">Average Payment</p>
-              <p className="text-3xl font-bold">KES {(stats.avgAmount / 100).toLocaleString()}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard label="Total Payments" value={stats.totalPayments} color="border-l-purple-500" />
+        <StatsCard label="Total Amount" value={<>KES {(stats.totalAmount / 100).toLocaleString()}</>} color="border-l-green-500" />
+        <StatsCard label="Average Payment" value={<>KES {(stats.avgAmount / 100).toLocaleString()}</>} color="border-l-blue-500" />
       </div>
 
       {/* Payment Method Breakdown */}

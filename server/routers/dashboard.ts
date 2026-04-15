@@ -1,6 +1,6 @@
 import { router, protectedProcedure, createFeatureRestrictedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
-import { eq, and, gte, lte, desc } from "drizzle-orm";
+import { eq, and, gte, lte, lt, desc, inArray, sum, count, sql } from "drizzle-orm";
 import { z } from "zod";
 import { 
   projects, 
@@ -11,7 +11,8 @@ import {
   products, 
   services, 
   employees,
-  activityLog 
+  activityLog,
+  projectTasks,
 } from "../../drizzle/schema";
 
 export const dashboardRouter = router({
@@ -35,8 +36,8 @@ export const dashboardRouter = router({
       const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
       const monthStartStr = monthStart.toISOString();
-      const lastMonthStartStr = lastMonthStart.toISOString();
-      const lastMonthEndStr = lastMonthEnd.toISOString();
+      const lastMonthStartStr = lastMonthStart.toISOString().replace('T', ' ').substring(0, 19);
+      const lastMonthEndStr = lastMonthEnd.toISOString().replace('T', ' ').substring(0, 19);
 
       // Get total revenue (all payments)
       const allPayments = await db.select({ amount: payments.amount, status: payments.status }).from(payments).limit(10000);
@@ -182,8 +183,8 @@ export const dashboardRouter = router({
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      const monthStartStr = monthStart.toISOString();
-      const monthEndStr = monthEnd.toISOString();
+      const monthStartStr = monthStart.toISOString().replace('T', ' ').substring(0, 19);
+      const monthEndStr = monthEnd.toISOString().replace('T', ' ').substring(0, 19);
 
       const paymentsData = await db
         .select()
@@ -314,6 +315,183 @@ export const dashboardRouter = router({
         activeEmployees: 0,
         totalDepartments: 0,
       };
+    }
+  }),
+
+  /**
+   * Get calendar events for a given month (global – no org scope).
+   * Aggregates invoice due dates, project end dates, and task due dates.
+   */
+  getCalendarEvents: protectedProcedure
+    .input(z.object({
+      year: z.number().int().min(2000).max(2100),
+      month: z.number().int().min(1).max(12),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { events: [] };
+
+      try {
+        const padded = (n: number) => String(n).padStart(2, '0');
+        const startOfMonth = `${input.year}-${padded(input.month)}-01 00:00:00`;
+        const lastDay = new Date(input.year, input.month, 0).getDate();
+        const endOfMonth = `${input.year}-${padded(input.month)}-${padded(lastDay)} 23:59:59`;
+
+        const [monthInvoices, allProjects] = await Promise.all([
+          db.select().from(invoices).where(
+            and(
+              gte(invoices.dueDate, startOfMonth),
+              lte(invoices.dueDate, endOfMonth),
+            )
+          ).limit(500),
+          db.select().from(projects).limit(2000),
+        ]);
+
+        const projectsDueThisMonth = allProjects.filter((p) => {
+          if (!p.endDate) return false;
+          const d = String(p.endDate).slice(0, 10);
+          return d >= startOfMonth.slice(0, 10) && d <= endOfMonth.slice(0, 10);
+        });
+
+        const allProjectIds = allProjects.map((p) => p.id);
+        let tasksDue: any[] = [];
+        if (allProjectIds.length > 0) {
+          tasksDue = await db.select().from(projectTasks).where(
+            and(
+              inArray(projectTasks.projectId, allProjectIds),
+              gte(projectTasks.dueDate, startOfMonth),
+              lte(projectTasks.dueDate, endOfMonth),
+            )
+          ).limit(500);
+        }
+
+        const events: Array<{
+          id: string;
+          type: 'invoice' | 'project' | 'task';
+          title: string;
+          date: string;
+          status: string;
+          href: string;
+          color: string;
+        }> = [];
+
+        for (const inv of monthInvoices) {
+          events.push({
+            id: `inv_${inv.id}`,
+            type: 'invoice',
+            title: `Invoice ${inv.invoiceNumber} due`,
+            date: String(inv.dueDate).slice(0, 10),
+            status: inv.status,
+            href: `/invoices/${inv.id}`,
+            color: inv.status === 'paid' ? '#22c55e' : inv.status === 'overdue' ? '#ef4444' : '#3b82f6',
+          });
+        }
+
+        for (const proj of projectsDueThisMonth) {
+          events.push({
+            id: `proj_${proj.id}`,
+            type: 'project',
+            title: `${proj.name} deadline`,
+            date: String(proj.endDate!).slice(0, 10),
+            status: proj.status,
+            href: `/projects/${proj.id}`,
+            color: proj.status === 'completed' ? '#22c55e' : proj.status === 'on_hold' ? '#f59e0b' : '#a855f7',
+          });
+        }
+
+        for (const task of tasksDue) {
+          if (!task.dueDate) continue;
+          events.push({
+            id: `task_${task.id}`,
+            type: 'task',
+            title: task.title,
+            date: String(task.dueDate).slice(0, 10),
+            status: task.status,
+            href: `/projects/${task.projectId}`,
+            color: task.status === 'completed' ? '#22c55e' : task.priority === 'urgent' ? '#ef4444' : '#f97316',
+          });
+        }
+
+        return { events };
+      } catch (error) {
+        console.error('[dashboard.getCalendarEvents] Error:', error);
+        return { events: [] };
+      }
+    }),
+
+  // Monthly income vs expenses chart data (last 12 months)
+  monthlyChart: createFeatureRestrictedProcedure("dashboard:view")
+    .input(z.object({ year: z.number().optional() }).optional())
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return { months: [], year: new Date().getFullYear() };
+
+      try {
+        const year = input?.year || new Date().getFullYear();
+        const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const months = [];
+
+        for (let m = 0; m < 12; m++) {
+          const start = new Date(year, m, 1).toISOString().slice(0, 19).replace('T', ' ');
+          const end = new Date(year, m + 1, 0, 23, 59, 59).toISOString().slice(0, 19).replace('T', ' ');
+
+          const paymentsData = await db
+            .select({ amount: payments.amount })
+            .from(payments)
+            .where(and(gte(payments.paymentDate, start), lte(payments.paymentDate, end)))
+            .limit(1000);
+          const income = paymentsData.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+          const expensesData = await db
+            .select({ amount: expenses.amount })
+            .from(expenses)
+            .where(and(gte(expenses.expenseDate, start), lte(expenses.expenseDate, end)))
+            .limit(1000);
+          const expense = expensesData.reduce((sum, e) => sum + (e.amount || 0), 0);
+
+          months.push({ month: m + 1, name: monthNames[m], income, expense });
+        }
+
+        return { months, year };
+      } catch (error) {
+        console.error("Error fetching monthly chart data:", error);
+        return { months: [], year: input?.year || new Date().getFullYear() };
+      }
+    }),
+
+  // Financial summary cards (like crm.africa top stats)
+  financialSummary: createFeatureRestrictedProcedure("dashboard:view").query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return { paymentsToday: 0, paymentsMonth: 0, invoicesDue: 0, invoicesOverdue: 0 };
+
+    try {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 19).replace('T', ' ');
+      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString().slice(0, 19).replace('T', ' ');
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 19).replace('T', ' ');
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString().slice(0, 19).replace('T', ' ');
+      const todayStr = now.toISOString().replace('T', ' ').substring(0, 19).slice(0, 10);
+
+      const todayPay = await db.select({ amount: payments.amount }).from(payments)
+        .where(and(gte(payments.paymentDate, todayStart), lte(payments.paymentDate, todayEnd))).limit(500);
+      const paymentsToday = todayPay.reduce((s, p) => s + (p.amount || 0), 0);
+
+      const monthPay = await db.select({ amount: payments.amount }).from(payments)
+        .where(and(gte(payments.paymentDate, monthStart), lte(payments.paymentDate, monthEnd))).limit(1000);
+      const paymentsMonth = monthPay.reduce((s, p) => s + (p.amount || 0), 0);
+
+      const dueInv = await db.select({ total: invoices.total }).from(invoices)
+        .where(and(eq(invoices.status, 'sent'), gte(invoices.dueDate, todayStr))).limit(500);
+      const invoicesDue = dueInv.reduce((s, i) => s + (i.total || 0), 0);
+
+      const overdueInv = await db.select({ total: invoices.total }).from(invoices)
+        .where(and(inArray(invoices.status, ['sent', 'partial']), lte(invoices.dueDate, todayStr))).limit(500);
+      const invoicesOverdue = overdueInv.reduce((s, i) => s + (i.total || 0), 0);
+
+      return { paymentsToday, paymentsMonth, invoicesDue, invoicesOverdue };
+    } catch (error) {
+      console.error("Error fetching financial summary:", error);
+      return { paymentsToday: 0, paymentsMonth: 0, invoicesDue: 0, invoicesOverdue: 0 };
     }
   }),
 });

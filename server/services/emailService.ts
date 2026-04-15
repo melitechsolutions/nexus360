@@ -2,17 +2,12 @@
  * Email Service with Queue Management
  * Handles email queuing, retry logic, template rendering, and delivery tracking
  * 
- * Environment Variables Required:
- * - EMAIL_FROM: Sender email address
- * - SMTP_HOST: SMTP server host
- * - SMTP_PORT: SMTP server port
- * - SMTP_USER: SMTP authentication user
- * - SMTP_PASSWORD: SMTP authentication password
- * - SMTP_SECURE: true/false for TLS
+ * SMTP configuration is resolved from environment variables first,
+ * then falls back to database settings (Settings → Email).
  */
 
-import nodemailer, { Transporter } from 'nodemailer';
 import { TRPCError } from '@trpc/server';
+import { sendEmail } from '../_core/mail';
 import * as db from '../db';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -38,48 +33,10 @@ interface EmailTemplate {
 }
 
 class EmailService {
-  private transporter: Transporter | null = null;
   private emailFrom: string;
-  private isConfigured: boolean = false;
 
   constructor() {
-    this.emailFrom = process.env.EMAIL_FROM || 'noreply@melitechcrm.com';
-    this.initializeTransporter();
-  }
-
-  /**
-   * Initialize email transporter
-   */
-  private initializeTransporter() {
-    try {
-      const host = process.env.SMTP_HOST;
-      const port = parseInt(process.env.SMTP_PORT || '587');
-      const user = process.env.SMTP_USER;
-      const password = process.env.SMTP_PASSWORD;
-      const secure = process.env.SMTP_SECURE === 'true';
-
-      if (!host || !user || !password) {
-        console.warn('[Email] SMTP credentials not configured - email queueing will work but sending will fail');
-        this.isConfigured = false;
-        return;
-      }
-
-      this.transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure,
-        auth: {
-          user,
-          pass: password,
-        },
-      });
-
-      this.isConfigured = true;
-      console.log('[Email] Service initialized successfully');
-    } catch (error) {
-      console.error('[Email] Initialization error:', error);
-      this.isConfigured = false;
-    }
+    this.emailFrom = process.env.EMAIL_FROM || 'noreply@crm.local';
   }
 
   /**
@@ -126,22 +83,17 @@ class EmailService {
    * Send email immediately (bypasses queue)
    */
   async sendEmailImmediately(input: QueueEmailInput): Promise<{ success: boolean; messageId?: string }> {
-    if (!this.transporter || !this.isConfigured) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Email service is not configured',
-      });
-    }
-
     try {
-      const result = await this.transporter.sendMail({
-        from: this.emailFrom,
+      const result = await sendEmail({
         to: input.toEmail,
         subject: input.subject,
         html: input.htmlContent,
         text: input.plainTextContent,
-        attachments: input.attachments,
       });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send email');
+      }
 
       return { success: true, messageId: result.messageId };
     } catch (error) {
@@ -157,11 +109,6 @@ class EmailService {
    * Process email queue (background job)
    */
   async processEmailQueue(batchSize: number = 10): Promise<{ sent: number; failed: number }> {
-    if (!this.transporter || !this.isConfigured) {
-      console.warn('[Email] Email service not configured - skipping queue processing');
-      return { sent: 0, failed: 0 };
-    }
-
     try {
       const database = await db.getDb();
       if (!database) {
@@ -169,7 +116,7 @@ class EmailService {
       }
 
       const emailQueue = (await import('../../drizzle/schema')).emailQueue;
-      const { eq, and, lt } = await import('drizzle-orm');
+      const { eq, and, lt, or } = await import('drizzle-orm');
 
       // Get pending emails that are ready to retry
       const now = new Date();
@@ -196,21 +143,23 @@ class EmailService {
             .set({ status: 'sending' as any })
             .where(eq(emailQueue.id, email.id));
 
-          // Send email
-          const result = await this.transporter!.sendMail({
-            from: this.emailFrom,
+          // Send email via shared mail module (reads SMTP from env + DB settings)
+          const result = await sendEmail({
             to: email.toEmail,
             subject: email.subject,
             html: email.htmlContent,
             text: email.plainTextContent,
-            attachments: email.attachments as any,
           });
+
+          if (!result.success) {
+            throw new Error(result.error || 'Send failed');
+          }
 
           // Mark as sent
           await database.update(emailQueue)
             .set({
               status: 'sent' as any,
-              sentAt: new Date(),
+              sentAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             })
             .where(eq(emailQueue.id, email.id));
 
@@ -286,15 +235,10 @@ class EmailService {
    */
   getStatus() {
     return {
-      isConfigured: this.isConfigured,
+      isConfigured: true, // Config is resolved lazily from env + DB settings
       emailFrom: this.emailFrom,
     };
   }
-}
-
-// Helper function - logical OR for Drizzle
-function or(...conditions: any[]) {
-  return conditions.reduce((acc, cond) => acc || cond);
 }
 
 // Singleton instance

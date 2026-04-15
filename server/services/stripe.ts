@@ -11,18 +11,45 @@
 import Stripe from 'stripe';
 import { TRPCError } from '@trpc/server';
 import * as db from '../db';
+import { getDb } from '../db';
+import { settings } from '../../drizzle/schema';
+import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-if (!stripeSecretKey) {
-  console.warn('[Stripe] STRIPE_SECRET_KEY not configured - Stripe payments will be disabled');
+// Helper: read a Stripe setting from DB (category "payment_stripe")
+async function getStripeSetting(key: string): Promise<string | undefined> {
+  try {
+    const database = getDb();
+    const rows = await database.select().from(settings)
+      .where(and(eq(settings.category, "payment_stripe"), eq(settings.key, key)))
+      .limit(1);
+    return (rows[0]?.value as string) || undefined;
+  } catch { return undefined; }
 }
 
-const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+let stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+let stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+let stripe: Stripe | null = null;
+let stripeInitialized = false;
 
-const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
-  apiVersion: '2024-06-20',
-}) : null;
+async function getStripe(): Promise<Stripe | null> {
+  if (stripeInitialized) return stripe;
+  // If env var not set, try settings table
+  if (!stripeSecretKey) {
+    stripeSecretKey = await getStripeSetting("secretKey");
+  }
+  if (!stripeWebhookSecret) {
+    stripeWebhookSecret = await getStripeSetting("webhookSecret");
+  }
+  if (!stripeSecretKey) {
+    console.warn('[Stripe] STRIPE_SECRET_KEY not configured - Stripe payments will be disabled');
+    stripeInitialized = true;
+    return null;
+  }
+  stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' });
+  stripeInitialized = true;
+  return stripe;
+}
 
 interface CreatePaymentIntentInput {
   invoiceId: string;
@@ -45,7 +72,8 @@ interface PaymentIntentResult {
  * Create a new payment intent for an invoice
  */
 export async function createPaymentIntent(input: CreatePaymentIntentInput): Promise<PaymentIntentResult> {
-  if (!stripe) {
+  const stripeClient = await getStripe();
+  if (!stripeClient) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Stripe integration is not configured',
@@ -65,7 +93,7 @@ export async function createPaymentIntent(input: CreatePaymentIntentInput): Prom
     }
 
     // Create Stripe payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await stripeClient.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: currency.toLowerCase(),
       receipt_email: receiptEmail,
@@ -126,7 +154,8 @@ export async function createPaymentIntent(input: CreatePaymentIntentInput): Prom
  * Get payment intent status
  */
 export async function getPaymentIntentStatus(paymentIntentId: string) {
-  if (!stripe) {
+  const stripeClient = await getStripe();
+  if (!stripeClient) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Stripe integration is not configured',
@@ -134,7 +163,7 @@ export async function getPaymentIntentStatus(paymentIntentId: string) {
   }
 
   try {
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const paymentIntent = await stripeClient.paymentIntents.retrieve(paymentIntentId);
     return {
       id: paymentIntent.id,
       status: paymentIntent.status,
@@ -156,7 +185,8 @@ export async function getPaymentIntentStatus(paymentIntentId: string) {
  * Process refund for a payment
  */
 export async function processRefund(chargeId: string, amount?: number) {
-  if (!stripe) {
+  const stripeClient = await getStripe();
+  if (!stripeClient) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Stripe integration is not configured',
@@ -164,7 +194,7 @@ export async function processRefund(chargeId: string, amount?: number) {
   }
 
   try {
-    const refund = await stripe.refunds.create({
+    const refund = await stripeClient.refunds.create({
       charge: chargeId,
       amount: amount ? Math.round(amount * 100) : undefined,
     });
@@ -188,7 +218,8 @@ export async function processRefund(chargeId: string, amount?: number) {
  * Get payment methods for a customer
  */
 export async function getPaymentMethods(stripeCustomerId: string) {
-  if (!stripe) {
+  const stripeClient = await getStripe();
+  if (!stripeClient) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Stripe integration is not configured',
@@ -196,7 +227,7 @@ export async function getPaymentMethods(stripeCustomerId: string) {
   }
 
   try {
-    const paymentMethods = await stripe.paymentMethods.list({
+    const paymentMethods = await stripeClient.paymentMethods.list({
       customer: stripeCustomerId,
       type: 'card',
     });
@@ -224,7 +255,8 @@ export async function handleWebhookEvent(
   body: Buffer,
   signature: string
 ): Promise<{ processed: boolean; eventType?: string; invoiceId?: string }> {
-  if (!stripe || !stripeWebhookSecret) {
+  const stripeClient = await getStripe();
+  if (!stripeClient || !stripeWebhookSecret) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Stripe webhook is not configured',
@@ -232,7 +264,7 @@ export async function handleWebhookEvent(
   }
 
   try {
-    const event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret);
+    const event = stripeClient.webhooks.constructEvent(body, signature, stripeWebhookSecret);
     const database = await db.getDb();
     if (!database) {
       throw new Error('Database connection lost');
@@ -319,7 +351,7 @@ export async function handleWebhookEvent(
 
     // Mark event as processed
     await database.update(stripeWebhookEvents)
-      .set({ processed: 1, processedAt: new Date() })
+      .set({ processed: 1, processedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) })
       .where(eq(stripeWebhookEvents.stripeEventId, event.id));
 
     return { processed: true, eventType: event.type, invoiceId };
@@ -332,11 +364,12 @@ export async function handleWebhookEvent(
 /**
  * Get Stripe API status
  */
-export function getStripeStatus() {
+export async function getStripeStatus() {
+  const stripeClient = await getStripe();
   return {
-    isConfigured: !!stripe,
+    isConfigured: !!stripeClient,
     hasWebhookSecret: !!stripeWebhookSecret,
-    environment: process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') ? 'test' : 'production',
+    environment: stripeSecretKey?.startsWith('sk_test_') ? 'test' : 'production',
   };
 }
 

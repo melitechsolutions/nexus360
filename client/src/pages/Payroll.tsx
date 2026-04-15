@@ -22,12 +22,14 @@ import {
   Clock,
   AlertCircle,
   Edit2,
+  Eye,
   Trash2,
   FileDown,
   Loader2,
   FileText,
 } from "lucide-react";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
 
 interface PayrollRecord {
   id: string;
@@ -282,7 +284,7 @@ export default function Payroll() {
       description="Process and manage employee salaries"
       icon={<DollarSign className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Payroll" },
       ]}
@@ -301,45 +303,28 @@ export default function Payroll() {
 
         {/* Statistics Cards */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Gross Pay</CardTitle>
-              <DollarSign className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(totalGrossPay / 100).toLocaleString()}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Gross Pay"
+            value={<>Ksh {(totalGrossPay / 100).toLocaleString()}</>}
+            icon={<DollarSign className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Deductions</CardTitle>
-              <DollarSign className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(totalDeductions / 100).toLocaleString()}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Deductions"
+            value={<>Ksh {(totalDeductions / 100).toLocaleString()}</>}
+            icon={<DollarSign className="h-5 w-5" />}
+            color="border-l-red-500"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Net Pay</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(totalNetPay / 100).toLocaleString()}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Net Pay"
+            value={<>Ksh {(totalNetPay / 100).toLocaleString()}</>}
+            icon={<DollarSign className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Paid</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{paidCount}</div>
-            </CardContent>
-          </Card>
+          <StatsCard label="Paid" value={paidCount} icon={<CheckCircle2 className="h-5 w-5" />} color="border-l-purple-500" />
         </div>
 
         {/* Bulk Actions Toolbar */}
@@ -573,6 +558,10 @@ export default function Payroll() {
                       </Badge>
                     </div>
                     <div className="flex flex-col gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setLocation(`/payroll/${record.id}`)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
                       {record.status !== "paid" && (
                         <Button size="sm" onClick={() => handleMarkPaid(record.id)}>
                           Mark Paid

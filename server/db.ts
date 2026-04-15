@@ -1,4 +1,4 @@
-import { eq, desc, and, gte, lte, sql, or, like, inArray } from "drizzle-orm";
+import { eq, desc, and, gte, lte, sql, or, like, inArray, isNotNull } from "drizzle-orm";
 import { drizzle as drizzleMySql } from "drizzle-orm/mysql2";
 import { migrate as drizzleMigrate } from "drizzle-orm/mysql2/migrator";
 import * as mysql from "mysql2/promise";
@@ -13,7 +13,10 @@ import {
   estimateItems,
   invoices,
   invoiceItems,
+  receipts,
   payments,
+  paymentMethods,
+  billingNotifications,
   expenses,
   accounts,
   journalEntries,
@@ -39,7 +42,13 @@ import {
   departments,
   budgets,
   subscriptions,
+  pricingPlans,
+  organizations,
+  organizationFeatures,
+  tenantMessages,
+  pricingTierFeatures,
 } from "../drizzle/schema";
+import { organizationMembers } from "../drizzle/schema-extended";
 import { v4 } from "uuid";
 
 // Insert/DTO types are not exported from generated schema in this repo.
@@ -89,6 +98,11 @@ export function __resetDbForTests() {
   _db = null;
 }
 
+/** Expose the underlying mysql2 pool for raw SQL queries */
+export function getPool() {
+  return _pool;
+}
+
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   // primary path: MySQL via DATABASE_URL
@@ -105,19 +119,28 @@ export async function getDb() {
       }
       _db = drizzleMySql(_pool);
       console.log("[Database] ✅ Drizzle connection created successfully");
-      
-      // Run migrations automatically on first connection
+
+      // In production, migrations are executed before app start by init scripts.
+      const shouldRunRuntimeMigrations =
+        process.env.NODE_ENV !== 'production' || process.env.RUN_DRIZZLE_MIGRATIONS === 'true';
+
+      // Run migrations automatically on first connection (unless explicitly skipped)
       if (!_migrationsRun && _db && process.env.NODE_ENV !== 'test') {
-        try {
-          console.log("[Database] Running migrations...");
-          await drizzleMigrate(_db, { migrationsFolder: "./drizzle/migrations" });
+        if (shouldRunRuntimeMigrations) {
+          try {
+            console.log("[Database] Running migrations...");
+            await drizzleMigrate(_db, { migrationsFolder: "./drizzle/migrations" });
+            _migrationsRun = true;
+            console.log("[Database] ✅ Migrations completed successfully");
+          } catch (migrationError) {
+            console.error("[Database] ⚠️  Migration error (continuing anyway):",
+              migrationError instanceof Error ? migrationError.message : migrationError);
+            // Don't fail startup if migrations have issues - tables might already exist
+            _migrationsRun = true;
+          }
+        } else {
           _migrationsRun = true;
-          console.log("[Database] ✅ Migrations completed successfully");
-        } catch (migrationError) {
-          console.error("[Database] ⚠️  Migration error (continuing anyway):", 
-            migrationError instanceof Error ? migrationError.message : migrationError);
-          // Don't fail startup if migrations have issues - tables might already exist
-          _migrationsRun = true;
+          console.log("[Database] Skipping runtime drizzle migrations in production");
         }
       }
     } catch (error) {
@@ -213,7 +236,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     }
 
     if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date().toISOString();
+      updateSet.lastSignedIn = new Date().toISOString().replace('T', ' ').substring(0, 19);
     }
 
     await db.insert(users).values(values).onDuplicateKeyUpdate({
@@ -237,13 +260,17 @@ export async function getUser(id: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getUserById(id: string) {
+  return getUser(id);
+}
+
 export async function getAllUsers() {
   const db = await getDb();
   if (!db) return [];
   return await db.select().from(users).orderBy(desc(users.createdAt));
 }
 
-export async function updateUser(id: string, data: Partial<InsertUser>) {
+export async function updateUser(id: string, data: Partial<InsertUser> & { isActive?: boolean | number; department?: string | null; passwordHash?: string | null }) {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot update user: database not available");
@@ -258,12 +285,21 @@ export async function updateUser(id: string, data: Partial<InsertUser>) {
     if (data.loginMethod !== undefined) updateSet.loginMethod = data.loginMethod;
     if (data.role !== undefined) updateSet.role = data.role;
     if (data.lastSignedIn !== undefined) updateSet.lastSignedIn = data.lastSignedIn;
+    if (data.department !== undefined) updateSet.department = data.department;
+    if (data.isActive !== undefined) updateSet.isActive = typeof data.isActive === 'boolean' ? (data.isActive ? 1 : 0) : data.isActive;
+    if (data.passwordHash !== undefined) updateSet.passwordHash = data.passwordHash;
+    if (data.phone !== undefined) updateSet.phone = data.phone;
+    if (data.company !== undefined) updateSet.company = data.company;
+    if (data.position !== undefined) updateSet.position = data.position;
+    if (data.photoUrl !== undefined) updateSet.photoUrl = data.photoUrl;
     
     if (Object.keys(updateSet).length === 0) {
-      return; // Nothing to update
+      return getUser(id); // Nothing to update, return current user
     }
     
     await db.update(users).set(updateSet).where(eq(users.id, id));
+    const updated = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return updated[0] ?? null;
   } catch (error) {
     console.error("[Database] Failed to update user:", error);
     throw error;
@@ -297,13 +333,40 @@ export async function createNotification(notification: Omit<InsertNotification, 
   const notificationData = { ...(notification as any), id } as any;
   
   await db.insert(notifications).values(notificationData);
-  
-  // Broadcast notification to user via websocket
+
+  // Backward-compatible websocket broadcast (no-op if websocket server is not wired).
   try {
     const { broadcastNotification } = await import("../server/websocket/notificationBroadcaster");
-    await broadcastNotification(notification.userId, notificationData);
+    await broadcastNotification(notification.userId, notificationData as any);
   } catch (error) {
     console.warn("Could not broadcast notification, websocket may not be available:", error);
+  }
+
+  // Primary real-time channel: SSE broadcast to org/user stream.
+  try {
+    const { notifyOrg, notifyUser } = await import("./sse");
+    const [targetUser] = await db
+      .select({ id: users.id, organizationId: users.organizationId })
+      .from(users)
+      .where(eq(users.id, notification.userId))
+      .limit(1);
+
+    const event = {
+      id,
+      type: "info" as const,
+      title: (notification as any).title || "Notification",
+      body: (notification as any).message || "You have a new update",
+      href: (notification as any).actionUrl || undefined,
+      timestamp: new Date().toISOString(),
+    };
+
+    if (targetUser?.organizationId) {
+      notifyOrg(targetUser.organizationId, event);
+    } else {
+      notifyUser(notification.userId, event);
+    }
+  } catch (error) {
+    console.warn("Could not broadcast notification over SSE:", error);
   }
   
   return id;
@@ -341,7 +404,7 @@ export async function markNotificationAsRead(notificationId: string) {
   
   await db
     .update(notifications)
-    .set({ readAt: new Date().toISOString() })
+    .set({ readAt: new Date().toISOString().replace('T', ' ').substring(0, 19) })
     .where(eq(notifications.id, notificationId));
 }
 
@@ -351,7 +414,7 @@ export async function markAllNotificationsAsRead(userId: string) {
   
   await db
     .update(notifications)
-    .set({ readAt: new Date().toISOString() })
+    .set({ readAt: new Date().toISOString().replace('T', ' ').substring(0, 19) })
     .where(and(
       eq(notifications.recipientId, userId),
       isNull(notifications.readAt)
@@ -419,7 +482,7 @@ export async function updateProject(id: string, data: Partial<InsertProject>) {
   
   await db
   .update(projects)
-  .set({ ...data, updatedAt: new Date().toISOString() })
+  .set({ ...data, updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) })
   .where(eq(projects.id, id));
 }
 
@@ -458,7 +521,7 @@ export async function updateProjectTask(id: string, data: Partial<InsertProjectT
   
   await db
   .update(projectTasks)
-  .set({ ...data, updatedAt: new Date().toISOString() })
+  .set({ ...data, updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) })
   .where(eq(projectTasks.id, id));
 }
 
@@ -488,6 +551,10 @@ export async function getClient(id: string) {
   return result.length > 0 ? result[0] : null;
 }
 
+export async function getClientById(id: string) {
+  return getClient(id);
+}
+
 export async function getAllClients() {
   const db = await getDb();
   if (!db) return [];
@@ -501,7 +568,7 @@ export async function updateClient(id: string, data: Partial<InsertClient>) {
   
   await db
     .update(clients)
-    .set({ ...data, updatedAt: new Date().toISOString() })
+    .set({ ...data, updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) })
     .where(eq(clients.id, id));
 }
 
@@ -549,13 +616,23 @@ export async function getInvoicesByClient(clientId: string) {
     .orderBy(desc(invoices.createdAt));
 }
 
+export async function getClientInvoices(clientId: string, status?: string) {
+  const list = await getInvoicesByClient(clientId);
+  if (!status) return list;
+  return list.filter((invoice: any) => invoice?.status === status);
+}
+
+export async function getInvoiceById(id: string) {
+  return getInvoice(id);
+}
+
 export async function updateInvoice(id: string, data: Partial<InsertInvoice>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
   await db
     .update(invoices)
-    .set({ ...data, updatedAt: new Date().toISOString() })
+    .set({ ...data, updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) })
     .where(eq(invoices.id, id));
 }
 
@@ -602,7 +679,7 @@ export async function updateEstimate(id: string, data: Partial<InsertEstimate>) 
   
   await db
     .update(estimates)
-    .set({ ...data, updatedAt: new Date().toISOString() })
+    .set({ ...data, updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) })
     .where(eq(estimates.id, id));
 }
 
@@ -626,6 +703,60 @@ export async function getPaymentsByInvoice(invoiceId: string) {
     .from(payments)
     .where(eq(payments.invoiceId, invoiceId))
     .orderBy(desc(payments.paymentDate));
+}
+
+export async function getPaymentMethods(clientId: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(paymentMethods)
+    .where(and(eq(paymentMethods.clientId, clientId), eq(paymentMethods.isActive, 1)))
+    .orderBy(desc(paymentMethods.createdAt));
+}
+
+export async function createPaymentMethod(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(paymentMethods).values(data);
+  const result = await db
+    .select()
+    .from(paymentMethods)
+    .where(eq(paymentMethods.id, data.id))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : data;
+}
+
+export async function createReceiptFromInvoice(invoiceId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const invoice = await getInvoice(invoiceId);
+  if (!invoice) return null;
+
+  const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+  const receiptId = `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const receiptNumber = `REC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 100000)).padStart(5, '0')}`;
+
+  const payload: any = {
+    id: receiptId,
+    organizationId: (invoice as any).organizationId ?? null,
+    receiptNumber,
+    clientId: (invoice as any).clientId,
+    paymentId: null,
+    amount: Number((invoice as any).paidAmount ?? (invoice as any).total ?? 0),
+    paymentMethod: 'other',
+    receiptDate: now,
+    notes: `Auto-generated from invoice ${(invoice as any).invoiceNumber ?? invoiceId}`,
+    createdBy: (invoice as any).createdBy ?? null,
+    createdAt: now,
+  };
+
+  await db.insert(receipts).values(payload);
+  return payload;
 }
 
 // ============= ACTIVITY LOG =============
@@ -727,7 +858,7 @@ export async function setSetting(
         category: category || existing.category,
         description: description || existing.description,
         updatedBy,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       })
       .where(eq(settings.key, key));
     
@@ -741,7 +872,7 @@ export async function setSetting(
       category,
       description,
       updatedBy,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
     } as any);
     
     return id;
@@ -778,6 +909,11 @@ function getDefaultPrefix(documentType: string): string {
     expense: 'EXP-',
     payment: 'PAY-',
     project: 'PROJ-',
+    contract: 'CON-',
+    quotation: 'QUO-',
+    purchase_order: 'LPO-',
+    credit_note: 'CN-',
+    debit_note: 'DN-',
   };
   
   return prefixes[documentType] || 'DOC-';
@@ -944,7 +1080,7 @@ export async function getNextDocumentNumberWithFormat(documentType: string): Pro
         await db.execute(`
           CREATE TABLE IF NOT EXISTS documentNumberFormats (
             id VARCHAR(64) PRIMARY KEY,
-            documentType ENUM('invoice','estimate','receipt','proposal','expense') NOT NULL,
+            documentType ENUM('invoice','estimate','receipt','proposal','expense','payment','contract','quotation','purchase_order','project','credit_note','debit_note') NOT NULL,
             prefix VARCHAR(50) NOT NULL DEFAULT '',
             padding INT NOT NULL DEFAULT 6,
             separator VARCHAR(5) DEFAULT '-',
@@ -1122,9 +1258,9 @@ export async function getRoles() {
     console.error("Error fetching roles:", error);
     // Return default roles if query fails
     return [
-      { id: "1", userId: null, role: 'admin', roleName: "Admin", description: "Administrator role", isActive: 1, assignedBy: null, createdAt: new Date().toISOString() },
-      { id: "2", userId: null, role: 'staff', roleName: "Staff", description: "Staff role", isActive: 1, assignedBy: null, createdAt: new Date().toISOString() },
-      { id: "3", userId: null, role: 'client', roleName: "Client", description: "Client role", isActive: 1, assignedBy: null, createdAt: new Date().toISOString() },
+      { id: "1", userId: null, role: 'admin', roleName: "Admin", description: "Administrator role", isActive: 1, assignedBy: null, createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
+      { id: "2", userId: null, role: 'staff', roleName: "Staff", description: "Staff role", isActive: 1, assignedBy: null, createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
+      { id: "3", userId: null, role: 'client', roleName: "Client", description: "Client role", isActive: 1, assignedBy: null, createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
     ];
   }
 }
@@ -1138,19 +1274,19 @@ export async function getPermissions() {
     // Permissions are managed via RBAC middleware instead
     // Return default permissions on request
     return [
-      { id: "1", name: "View", permissionName: "view", description: "View records", category: "general", resource: "*", action: "view", createdAt: new Date().toISOString() },
-      { id: "2", name: "Create", permissionName: "create", description: "Create records", category: "general", resource: "*", action: "create", createdAt: new Date().toISOString() },
-      { id: "3", name: "Edit", permissionName: "edit", description: "Edit records", category: "general", resource: "*", action: "edit", createdAt: new Date().toISOString() },
-      { id: "4", name: "Delete", permissionName: "delete", description: "Delete records", category: "general", resource: "*", action: "delete", createdAt: new Date().toISOString() },
+      { id: "1", name: "View", permissionName: "view", description: "View records", category: "general", resource: "*", action: "view", createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
+      { id: "2", name: "Create", permissionName: "create", description: "Create records", category: "general", resource: "*", action: "create", createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
+      { id: "3", name: "Edit", permissionName: "edit", description: "Edit records", category: "general", resource: "*", action: "edit", createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
+      { id: "4", name: "Delete", permissionName: "delete", description: "Delete records", category: "general", resource: "*", action: "delete", createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
     ];
   } catch (error) {
     console.error("Error fetching permissions:", error);
     // Return default permissions if query fails
     return [
-      { id: "1", name: "View", permissionName: "view", description: "View records", category: "general", resource: "*", action: "view", createdAt: new Date().toISOString() },
-      { id: "2", name: "Create", permissionName: "create", description: "Create records", category: "general", resource: "*", action: "create", createdAt: new Date().toISOString() },
-      { id: "3", name: "Edit", permissionName: "edit", description: "Edit records", category: "general", resource: "*", action: "edit", createdAt: new Date().toISOString() },
-      { id: "4", name: "Delete", permissionName: "delete", description: "Delete records", category: "general", resource: "*", action: "delete", createdAt: new Date().toISOString() },
+      { id: "1", name: "View", permissionName: "view", description: "View records", category: "general", resource: "*", action: "view", createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
+      { id: "2", name: "Create", permissionName: "create", description: "Create records", category: "general", resource: "*", action: "create", createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
+      { id: "3", name: "Edit", permissionName: "edit", description: "Edit records", category: "general", resource: "*", action: "edit", createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
+      { id: "4", name: "Delete", permissionName: "delete", description: "Delete records", category: "general", resource: "*", action: "delete", createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19) },
     ];
   }
 }
@@ -1267,7 +1403,7 @@ export async function setPasswordResetToken(userId: string, token: string): Prom
     await db.update(users)
       .set({ 
         passwordResetToken: token,
-        passwordResetExpiresAt: expiresAt.toISOString()
+        passwordResetExpiresAt: expiresAt.toISOString().replace('T', ' ').substring(0, 19)
       })
       .where(eq(users.id, userId));
   } catch (error) {
@@ -1333,6 +1469,47 @@ export async function clearPasswordResetToken(userId: string): Promise<void> {
 
 // ============= SUBSCRIPTION UTILITIES =============
 
+export async function getAvailablePlans(tier?: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const baseRows = await db
+    .select()
+    .from(pricingPlans)
+    .where(eq(pricingPlans.isActive, 1))
+    .orderBy(pricingPlans.displayOrder, pricingPlans.planName);
+
+  if (!tier) return baseRows;
+  return baseRows.filter((plan: any) => plan?.tier === tier);
+}
+
+export async function getPricingPlan(id: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(pricingPlans)
+    .where(eq(pricingPlans.id, id))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createSubscription(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(subscriptions).values(data);
+  const result = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.id, data.id))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : data;
+}
+
 /**
  * Get client created by a specific user
  * Used for subscription status checks during login
@@ -1376,6 +1553,242 @@ export async function getClientSubscription(clientId: string) {
     console.error("[Database] Failed to get client subscription:", error);
     return null;
   }
+}
+
+export async function getSubscriptionById(id: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.id, id))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function updateSubscription(id: string, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(subscriptions)
+    .set({ ...(data as any), updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) })
+    .where(eq(subscriptions.id, id));
+
+  return getSubscriptionById(id);
+}
+
+export async function getAllSubscriptions() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(subscriptions)
+    .orderBy(desc(subscriptions.createdAt));
+}
+
+export async function getOrganizationSubscription(organizationId: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.organizationId, organizationId))
+    .orderBy(desc(subscriptions.createdAt))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createBillingNotification(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(billingNotifications).values(data);
+  return data;
+}
+
+// ============= ORGANIZATION / MULTI-TENANCY HELPERS =============
+
+export async function getAllOrganizations() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(organizations).limit(500);
+}
+
+export async function getOrganization(id: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const [org] = await db.select().from(organizations).where(eq(organizations.id, id)).limit(1);
+  return org ?? null;
+}
+
+export async function getOrganizationBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const [org] = await db.select().from(organizations).where(eq(organizations.slug, slug)).limit(1);
+  return org ?? null;
+}
+
+export async function createOrganization(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  await db.insert(organizations).values(data);
+  return data;
+}
+
+export async function updateOrganization(id: string, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  await db.update(organizations).set(data).where(eq(organizations.id, id));
+  const [updated] = await db.select().from(organizations).where(eq(organizations.id, id)).limit(1);
+  return updated;
+}
+
+export async function deleteOrganization(id: string) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  await db.delete(organizationFeatures).where(eq(organizationFeatures.organizationId, id));
+  await db.delete(organizations).where(eq(organizations.id, id));
+}
+
+export async function getOrganizationFeatures(orgId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(organizationFeatures).where(eq(organizationFeatures.organizationId, orgId));
+}
+
+export async function setOrganizationFeature(organizationId: string, featureKey: string, isEnabled: boolean, config?: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const existing = await db.select().from(organizationFeatures)
+    .where(and(eq(organizationFeatures.organizationId, organizationId), eq(organizationFeatures.featureKey, featureKey)))
+    .limit(1);
+  if (existing.length > 0) {
+    const updateSet: any = { isEnabled: isEnabled ? 1 : 0 };
+    if (config !== undefined && config !== null) updateSet.config = config;
+    await db.update(organizationFeatures).set(updateSet)
+      .where(and(eq(organizationFeatures.organizationId, organizationId), eq(organizationFeatures.featureKey, featureKey)));
+  } else {
+    const insertValues: any = {
+      id: `orgfeat_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      organizationId,
+      featureKey,
+      isEnabled: isEnabled ? 1 : 0,
+    };
+    if (config !== undefined && config !== null) insertValues.config = config;
+    await db.insert(organizationFeatures).values(insertValues);
+  }
+}
+
+export async function getUsersByOrganization(orgId: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(users).where(eq(users.organizationId, orgId)).limit(500);
+}
+
+export async function assignUserToOrganization(userId: string, orgId: string | null) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  await db.update(users).set({ organizationId: orgId } as any).where(eq(users.id, userId));
+
+  // Keep dedicated org-members table in sync for admin management.
+  if (orgId) {
+    const [u] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    await db.insert(organizationMembers).values({
+      id: `om_${userId}`,
+      organizationId: orgId,
+      userId,
+      role: u?.role || "user",
+      status: "active",
+      isActive: true,
+      joinedAt: new Date(),
+    } as any).onDuplicateKeyUpdate({
+      set: {
+        organizationId: orgId,
+        role: u?.role || "user",
+        status: "active",
+        isActive: true,
+        leftAt: null,
+        updatedAt: new Date(),
+      },
+    });
+  } else {
+    await db
+      .update(organizationMembers)
+      .set({ status: "removed", isActive: false, leftAt: new Date(), updatedAt: new Date() } as any)
+      .where(eq(organizationMembers.userId, userId));
+  }
+}
+
+export async function getAllTenantSuperAdmins() {
+  const db = await getDb();
+  if (!db) return [];
+  // Only return org-scoped super_admins — exclude Melitech platform admins (no organizationId)
+  return db.select().from(users)
+    .where(and(eq(users.role, 'super_admin'), isNotNull(users.organizationId)))
+    .limit(100);
+}
+
+export async function getPricingTierFeatures(tier: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pricingTierFeatures).where(eq(pricingTierFeatures.tier, tier));
+}
+
+export async function getAllPricingTierFeatures() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pricingTierFeatures).limit(1000);
+}
+
+export async function setPricingTierFeature(tier: string, featureKey: string, isEnabled: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const existing = await db.select().from(pricingTierFeatures)
+    .where(and(eq(pricingTierFeatures.tier, tier), eq(pricingTierFeatures.featureKey, featureKey)))
+    .limit(1);
+  if (existing.length > 0) {
+    await db.update(pricingTierFeatures).set({ isEnabled: isEnabled ? 1 : 0 })
+      .where(and(eq(pricingTierFeatures.tier, tier), eq(pricingTierFeatures.featureKey, featureKey)));
+  } else {
+    await db.insert(pricingTierFeatures).values({
+      id: `ptf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      tier, featureKey, isEnabled: isEnabled ? 1 : 0,
+    });
+  }
+}
+
+export async function bulkSetPricingTierFeatures(tier: string, features: Record<string, boolean>) {
+  await Promise.all(Object.entries(features).map(([key, enabled]) => setPricingTierFeature(tier, key, enabled)));
+}
+
+export async function createTenantMessage(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  await db.insert(tenantMessages).values(data);
+  return data;
+}
+
+export async function getTenantMessages(filters?: any) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tenantMessages).orderBy(desc(tenantMessages.createdAt)).limit(filters?.limit ?? 100);
+}
+
+export async function markTenantMessageRead(messageId: string) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  await db.update(tenantMessages).set({ isRead: 1 }).where(eq(tenantMessages.id, messageId));
 }
 
 

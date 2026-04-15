@@ -1,11 +1,16 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { Plus } from "lucide-react";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import DocumentForm from "@/components/forms/DocumentForm";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 
 export default function CreateEstimate() {
+  const companyInfo = useCompanyInfo();
+  const { data: bankData } = trpc.settings.getByCategory.useQuery({ category: "payment_bank" });
+  const { data: mpesaData } = trpc.settings.getByCategory.useQuery({ category: "payment_mpesa" });
   const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
   const [estimateNumber, setEstimateNumber] = useState<string>("");
@@ -140,15 +145,21 @@ export default function CreateEstimate() {
 3. Quotation is valid for 45 days from date of generation.
 4. Payment of 75% is expected before commencement of the project.`;
 
-  const defaultPaymentDetails = `Bank: Kenya Commercial Bank
-Branch: Kitengela
-Acc.: 1295660644
-Acc. Name: Melitech Solutions
+  const bankMap: Record<string, string> = {};
+  if (Array.isArray(bankData)) bankData.forEach((r: any) => { if (r.key) bankMap[r.key] = r.value ?? ''; });
+  else if (bankData && typeof bankData === 'object') Object.assign(bankMap, bankData);
+  const mpesaMap: Record<string, string> = {};
+  if (Array.isArray(mpesaData)) mpesaData.forEach((r: any) => { if (r.key) mpesaMap[r.key] = r.value ?? ''; });
+  else if (mpesaData && typeof mpesaData === 'object') Object.assign(mpesaMap, mpesaData);
 
-or
-
-Mpesa Paybill: 522522
-Acc. Number: 1295660644`;
+  const defaultPaymentDetails = [
+    bankMap.bankName && `Bank: ${bankMap.bankName}`,
+    bankMap.branch && `Branch: ${bankMap.branch}`,
+    bankMap.accountNumber && `Acc.: ${bankMap.accountNumber}`,
+    bankMap.accountName && `Acc. Name: ${bankMap.accountName}`,
+    mpesaMap.paybillNumber && `\nor\n\nMpesa Paybill: ${mpesaMap.paybillNumber}`,
+    mpesaMap.accountNumber && `Acc. Number: ${mpesaMap.accountNumber}`,
+  ].filter(Boolean).join('\n') || 'Payment details not configured';
 
   const initialData = useMemo(() => ({ 
     documentNumber: estimateNumber,
@@ -157,7 +168,17 @@ Acc. Number: 1295660644`;
   }), [estimateNumber, defaultTerms, defaultPaymentDetails]);
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Create Estimate"
+      description="Create a new estimate for a client"
+      icon={<Plus className="w-6 h-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Estimates", href: "/estimates" },
+        { label: "Create" },
+      ]}
+      backLink={{ label: "Estimates", href: "/estimates" }}
+    >
       <DocumentForm 
         type="estimate"
         mode="create"
@@ -167,6 +188,6 @@ Acc. Number: 1295660644`;
         isLoading={isLoadingNumber}
         isSaving={createEstimateMutation.isPending}
       />
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

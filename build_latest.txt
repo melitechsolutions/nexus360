@@ -1,0 +1,1013 @@
+ Image melitech_crm-app Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 647B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 4.32kB 0.1s done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/node:22-alpine
+#3 DONE 2.6s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 402B 0.0s done
+#4 DONE 0.1s
+
+#5 [internal] load build context
+#5 DONE 0.0s
+
+#6 [builder 1/7] FROM docker.io/library/node:22-alpine@sha256:4d64b49e6c891c8fc821007cb1cdc6c0db7773110ac2c34bf2e6960adef62ed3
+#6 resolve docker.io/library/node:22-alpine@sha256:4d64b49e6c891c8fc821007cb1cdc6c0db7773110ac2c34bf2e6960adef62ed3 0.1s done
+#6 DONE 0.1s
+
+#7 [builder 2/7] WORKDIR /app
+#7 CACHED
+
+#5 [internal] load build context
+#5 transferring context: 1.24MB 1.2s done
+#5 DONE 1.2s
+
+#8 [builder 3/7] COPY patches ./patches
+#8 DONE 0.1s
+
+#9 [builder 4/7] COPY package.json pnpm-lock.yaml ./
+#9 DONE 0.5s
+
+#10 [stage-1  3/18] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/
+#10 ...
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 ...
+
+#10 [stage-1  3/18] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/
+#10 11.53 
+#10 11.53 added 1 package in 9s
+#10 11.53 
+#10 11.53 1 package is looking for funding
+#10 11.53   run `npm fund` for details
+#10 11.53 npm notice
+#10 11.53 npm notice New major version of npm available! 10.9.7 -> 11.12.1
+#10 11.53 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.12.1
+#10 11.53 npm notice To update run: npm install -g npm@11.12.1
+#10 11.53 npm notice
+#10 DONE 13.6s
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 9.873 
+#11 9.873 added 1 package in 9s
+#11 9.873 
+#11 9.873 1 package is looking for funding
+#11 9.873   run `npm fund` for details
+#11 9.876 npm notice
+#11 9.876 npm notice New major version of npm available! 10.9.7 -> 11.12.1
+#11 9.876 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.12.1
+#11 9.876 npm notice To update run: npm install -g npm@11.12.1
+#11 9.876 npm notice
+#11 ...
+
+#12 [stage-1  4/18] RUN apk add --no-cache netcat-openbsd
+#12 3.119 (1/3) Installing libmd (1.1.0-r0)
+#12 3.217 (2/3) Installing libbsd (0.12.2-r0)
+#12 3.310 (3/3) Installing netcat-openbsd (1.234.1-r0)
+#12 3.403 Executing busybox-1.37.0-r30.trigger
+#12 3.425 OK: 11.0 MiB in 21 packages
+#12 DONE 3.5s
+
+#13 [stage-1  5/18] COPY patches ./patches
+#13 DONE 0.2s
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 ...
+
+#14 [stage-1  6/18] COPY package.json pnpm-lock.yaml ./
+#14 DONE 0.1s
+
+#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#15 ...
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 17.11 Lockfile is up to date, resolution step is skipped
+#11 17.32 Progress: resolved 1, reused 0, downloaded 0, added 0
+#11 17.73 Packages: +668
+#11 17.73 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#11 18.41 Progress: resolved 668, reused 0, downloaded 0, added 0
+#11 19.43 Progress: resolved 668, reused 0, downloaded 25, added 0
+#11 20.45 Progress: resolved 668, reused 0, downloaded 38, added 19
+#11 21.45 Progress: resolved 668, reused 0, downloaded 50, added 36
+#11 22.45 Progress: resolved 668, reused 0, downloaded 65, added 65
+#11 ...
+
+#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#15 7.412 Lockfile is up to date, resolution step is skipped
+#15 7.879 Progress: resolved 1, reused 0, downloaded 0, added 0
+#15 8.485 Packages: +668
+#15 8.485 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#15 8.888 Progress: resolved 668, reused 0, downloaded 0, added 0
+#15 9.885 Progress: resolved 668, reused 0, downloaded 6, added 0
+#15 10.89 Progress: resolved 668, reused 0, downloaded 32, added 6
+#15 11.89 Progress: resolved 668, reused 0, downloaded 49, added 24
+#15 11.93 ÔÇëWARNÔÇë Tarball download average speed 28 KiB/s (size 43 KiB) is below 50 KiB/s: https://registry.npmjs.org/node-fetch/-/node-fetch-2.7.0.tgz (GET)
+#15 12.90 Progress: resolved 668, reused 0, downloaded 62, added 28
+#15 13.91 Progress: resolved 668, reused 0, downloaded 101, added 52
+#15 14.95 Progress: resolved 668, reused 0, downloaded 143, added 94
+#15 15.96 Progress: resolved 668, reused 0, downloaded 164, added 159
+#15 16.97 Progress: resolved 668, reused 0, downloaded 185, added 182
+#15 17.98 Progress: resolved 668, reused 0, downloaded 207, added 202
+#15 ...
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 23.65 Progress: resolved 668, reused 0, downloaded 80, added 80
+#11 24.66 Progress: resolved 668, reused 0, downloaded 98, added 97
+#11 25.67 Progress: resolved 668, reused 0, downloaded 115, added 115
+#11 26.67 Progress: resolved 668, reused 0, downloaded 131, added 130
+#11 27.73 Progress: resolved 668, reused 0, downloaded 150, added 147
+#11 28.74 Progress: resolved 668, reused 0, downloaded 173, added 173
+#11 29.74 Progress: resolved 668, reused 0, downloaded 188, added 188
+#11 30.73 Progress: resolved 668, reused 0, downloaded 206, added 206
+#11 31.74 Progress: resolved 668, reused 0, downloaded 218, added 217
+#11 32.06 ÔÇëWARNÔÇë Tarball download average speed 28 KiB/s (size 31 KiB) is below 50 KiB/s: https://registry.npmjs.org/bcryptjs/-/bcryptjs-3.0.3.tgz (GET)
+#11 32.77 Progress: resolved 668, reused 0, downloaded 236, added 228
+#11 33.77 Progress: resolved 668, reused 0, downloaded 247, added 236
+#11 ...
+
+#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#15 18.98 Progress: resolved 668, reused 0, downloaded 218, added 214
+#15 20.04 Progress: resolved 668, reused 0, downloaded 225, added 220
+#15 21.12 Progress: resolved 668, reused 0, downloaded 234, added 224
+#15 22.13 Progress: resolved 668, reused 0, downloaded 244, added 232
+#15 23.13 Progress: resolved 668, reused 0, downloaded 256, added 256
+#15 24.16 Progress: resolved 668, reused 0, downloaded 272, added 271
+#15 24.30 ÔÇëWARNÔÇë Tarball download average speed 32 KiB/s (size 122 KiB) is below 50 KiB/s: https://registry.npmjs.org/@trpc/react-query/-/react-query-11.12.0.tgz (GET)
+#15 25.16 Progress: resolved 668, reused 0, downloaded 281, added 281
+#15 25.33 ÔÇëWARNÔÇë Tarball download average speed 37 KiB/s (size 87 KiB) is below 50 KiB/s: https://registry.npmjs.org/aws-ssl-profiles/-/aws-ssl-profiles-1.1.2.tgz (GET)
+#15 26.18 Progress: resolved 668, reused 0, downloaded 285, added 281
+#15 27.18 Progress: resolved 668, reused 0, downloaded 295, added 285
+#15 28.21 Progress: resolved 668, reused 0, downloaded 304, added 295
+#15 ...
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 34.78 Progress: resolved 668, reused 0, downloaded 253, added 242
+#11 35.80 Progress: resolved 668, reused 0, downloaded 270, added 252
+#11 36.88 Progress: resolved 668, reused 0, downloaded 272, added 255
+#11 37.47 ÔÇëWARNÔÇë Tarball download average speed 44 KiB/s (size 185 KiB) is below 50 KiB/s: https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.7.2.tgz (GET)
+#11 37.89 Progress: resolved 668, reused 0, downloaded 281, added 259
+#11 38.89 Progress: resolved 668, reused 0, downloaded 301, added 282
+#11 39.95 Progress: resolved 668, reused 0, downloaded 310, added 310
+#11 40.73 ÔÇëWARNÔÇë Tarball download average speed 44 KiB/s (size 146 KiB) is below 50 KiB/s: https://registry.npmjs.org/async/-/async-3.2.6.tgz (GET)
+#11 41.00 Progress: resolved 668, reused 0, downloaded 315, added 313
+#11 41.46 ÔÇëWARNÔÇë Tarball download average speed 3 KiB/s (size 6 KiB) is below 50 KiB/s: https://registry.npmjs.org/lodash.uniq/-/lodash.uniq-4.5.0.tgz (GET)
+#11 42.00 Progress: resolved 668, reused 0, downloaded 317, added 314
+#11 43.03 Progress: resolved 668, reused 0, downloaded 323, added 315
+#11 44.06 Progress: resolved 668, reused 0, downloaded 325, added 316
+#11 ...
+
+#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#15 29.27 Progress: resolved 668, reused 0, downloaded 312, added 310
+#15 30.29 Progress: resolved 668, reused 0, downloaded 316, added 313
+#15 31.32 Progress: resolved 668, reused 0, downloaded 319, added 313
+#15 32.31 Progress: resolved 668, reused 0, downloaded 323, added 314
+#15 33.32 Progress: resolved 668, reused 0, downloaded 332, added 318
+#15 34.36 Progress: resolved 668, reused 0, downloaded 333, added 318
+#15 35.44 Progress: resolved 668, reused 0, downloaded 351, added 324
+#15 36.48 Progress: resolved 668, reused 0, downloaded 366, added 330
+#15 37.49 Progress: resolved 668, reused 0, downloaded 386, added 348
+#15 38.65 Progress: resolved 668, reused 0, downloaded 390, added 384
+#15 ...
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 45.49 Progress: resolved 668, reused 0, downloaded 326, added 316
+#11 46.54 Progress: resolved 668, reused 0, downloaded 330, added 317
+#11 47.62 Progress: resolved 668, reused 0, downloaded 331, added 317
+#11 48.62 Progress: resolved 668, reused 0, downloaded 350, added 328
+#11 49.63 Progress: resolved 668, reused 0, downloaded 383, added 356
+#11 50.64 Progress: resolved 668, reused 0, downloaded 397, added 391
+#11 51.65 Progress: resolved 668, reused 0, downloaded 403, added 398
+#11 52.70 Progress: resolved 668, reused 0, downloaded 407, added 399
+#11 53.89 Progress: resolved 668, reused 0, downloaded 412, added 401
+#11 54.89 Progress: resolved 668, reused 0, downloaded 416, added 405
+#11 ...
+
+#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#15 39.71 Progress: resolved 668, reused 0, downloaded 400, added 389
+#15 40.27 ÔÇëWARNÔÇë Tarball download average speed 40 KiB/s (size 42 KiB) is below 50 KiB/s: https://registry.npmjs.org/text-segmentation/-/text-segmentation-1.0.3.tgz (GET)
+#15 40.77 Progress: resolved 668, reused 0, downloaded 405, added 393
+#15 42.00 Progress: resolved 668, reused 0, downloaded 406, added 393
+#15 43.00 Progress: resolved 668, reused 0, downloaded 414, added 397
+#15 44.00 Progress: resolved 668, reused 0, downloaded 421, added 401
+#15 45.00 Progress: resolved 668, reused 0, downloaded 424, added 401
+#15 46.04 Progress: resolved 668, reused 0, downloaded 428, added 404
+#15 47.06 Progress: resolved 668, reused 0, downloaded 441, added 409
+#15 48.08 Progress: resolved 668, reused 0, downloaded 449, added 409
+#15 49.12 Progress: resolved 668, reused 0, downloaded 461, added 414
+#15 50.12 Progress: resolved 668, reused 0, downloaded 473, added 419
+#15 ...
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 55.97 Progress: resolved 668, reused 0, downloaded 417, added 405
+#11 56.92 Progress: resolved 668, reused 0, downloaded 419, added 405
+#11 57.92 Progress: resolved 668, reused 0, downloaded 423, added 405
+#11 58.95 Progress: resolved 668, reused 0, downloaded 425, added 406
+#11 59.95 Progress: resolved 668, reused 0, downloaded 427, added 408
+#11 60.95 Progress: resolved 668, reused 0, downloaded 445, added 414
+#11 61.96 Progress: resolved 668, reused 0, downloaded 455, added 417
+#11 62.96 Progress: resolved 668, reused 0, downloaded 469, added 423
+#11 63.96 Progress: resolved 668, reused 0, downloaded 473, added 425
+#11 64.97 Progress: resolved 668, reused 0, downloaded 478, added 426
+#11 66.11 Progress: resolved 668, reused 0, downloaded 479, added 426
+#11 ...
+
+#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#15 51.12 Progress: resolved 668, reused 0, downloaded 483, added 423
+#15 52.12 Progress: resolved 668, reused 0, downloaded 486, added 442
+#15 52.78 ÔÇëWARNÔÇë Tarball download average speed 4 KiB/s (size 5 KiB) is below 50 KiB/s: https://registry.npmjs.org/word/-/word-0.3.0.tgz (GET)
+#15 53.03 ÔÇëWARNÔÇë Tarball download average speed 4 KiB/s (size 8 KiB) is below 50 KiB/s: https://registry.npmjs.org/estree-walker/-/estree-walker-2.0.2.tgz (GET)
+#15 53.12 Progress: resolved 668, reused 0, downloaded 488, added 451
+#15 54.05 ÔÇëWARNÔÇë Tarball download average speed 11 KiB/s (size 21 KiB) is below 50 KiB/s: https://registry.npmjs.org/picomatch/-/picomatch-4.0.3.tgz (GET)
+#15 54.13 Progress: resolved 668, reused 0, downloaded 490, added 453
+#15 54.29 ÔÇëWARNÔÇë Tarball download average speed 16 KiB/s (size 30 KiB) is below 50 KiB/s: https://registry.npmjs.org/esbuild/-/esbuild-0.27.3.tgz (GET)
+#15 55.47 Progress: resolved 668, reused 0, downloaded 491, added 453
+#15 56.47 Progress: resolved 668, reused 0, downloaded 494, added 454
+#15 57.48 Progress: resolved 668, reused 0, downloaded 502, added 457
+#15 58.49 Progress: resolved 668, reused 0, downloaded 516, added 506
+#15 59.49 Progress: resolved 668, reused 0, downloaded 535, added 535
+#15 60.49 Progress: resolved 668, reused 0, downloaded 549, added 549
+#15 61.49 Progress: resolved 668, reused 0, downloaded 564, added 564
+#15 ...
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 67.17 Progress: resolved 668, reused 0, downloaded 491, added 429
+#11 68.11 ÔÇëWARNÔÇë Tarball download average speed 18 KiB/s (size 30 KiB) is below 50 KiB/s: https://registry.npmjs.org/esbuild/-/esbuild-0.27.3.tgz (GET)
+#11 68.22 Progress: resolved 668, reused 0, downloaded 495, added 439
+#11 69.46 Progress: resolved 668, reused 0, downloaded 495, added 440
+#11 69.84 ÔÇëWARNÔÇë Tarball download average speed 45 KiB/s (size 84 KiB) is below 50 KiB/s: https://registry.npmjs.org/lightningcss/-/lightningcss-1.31.1.tgz (GET)
+#11 70.48 Progress: resolved 668, reused 0, downloaded 500, added 442
+#11 71.48 Progress: resolved 668, reused 0, downloaded 508, added 477
+#11 72.49 Progress: resolved 668, reused 0, downloaded 515, added 496
+#11 73.50 Progress: resolved 668, reused 0, downloaded 527, added 515
+#11 74.50 Progress: resolved 668, reused 0, downloaded 539, added 539
+#11 75.51 Progress: resolved 668, reused 0, downloaded 551, added 551
+#11 76.51 Progress: resolved 668, reused 0, downloaded 564, added 563
+#11 77.51 Progress: resolved 668, reused 0, downloaded 576, added 576
+#11 ...
+
+#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#15 62.50 Progress: resolved 668, reused 0, downloaded 572, added 572
+#15 63.50 Progress: resolved 668, reused 0, downloaded 577, added 577
+#15 63.73 ÔÇëWARNÔÇë Tarball download average speed 2 KiB/s (size 3 KiB) is below 50 KiB/s: https://registry.npmjs.org/isexe/-/isexe-2.0.0.tgz (GET)
+#15 64.50 Progress: resolved 668, reused 0, downloaded 582, added 582
+#15 65.55 Progress: resolved 668, reused 0, downloaded 587, added 587
+#15 65.56 ÔÇëWARNÔÇë Tarball download average speed 6 KiB/s (size 6 KiB) is below 50 KiB/s: https://registry.npmjs.org/tw-animate-css/-/tw-animate-css-1.4.0.tgz (GET)
+#15 66.55 Progress: resolved 668, reused 0, downloaded 594, added 594
+#15 67.55 Progress: resolved 668, reused 0, downloaded 600, added 600
+#15 68.77 Progress: resolved 668, reused 0, downloaded 604, added 604
+#15 69.21 ÔÇëWARNÔÇë Tarball download average speed 23 KiB/s (size 29 KiB) is below 50 KiB/s: https://registry.npmjs.org/esbuild/-/esbuild-0.21.5.tgz (GET)
+#15 69.74 ÔÇëWARNÔÇë Tarball download average speed 29 KiB/s (size 78 KiB) is below 50 KiB/s: https://registry.npmjs.org/chai/-/chai-5.3.3.tgz (GET)
+#15 69.77 Progress: resolved 668, reused 0, downloaded 610, added 609
+#15 70.77 Progress: resolved 668, reused 0, downloaded 620, added 619
+#15 ...
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 78.51 Progress: resolved 668, reused 0, downloaded 579, added 579
+#11 79.51 Progress: resolved 668, reused 0, downloaded 580, added 580
+#11 79.61 ÔÇëWARNÔÇë Tarball download average speed 15 KiB/s (size 33 KiB) is below 50 KiB/s: https://registry.npmjs.org/fraction.js/-/fraction.js-5.3.4.tgz (GET)
+#11 80.08 ÔÇëWARNÔÇë Tarball download average speed 34 KiB/s (size 38 KiB) is below 50 KiB/s: https://registry.npmjs.org/esbuild-register/-/esbuild-register-3.6.0.tgz (GET)
+#11 80.17 ÔÇëWARNÔÇë Tarball download average speed 42 KiB/s (size 74 KiB) is below 50 KiB/s: https://registry.npmjs.org/@drizzle-team/brocli/-/brocli-0.10.2.tgz (GET)
+#11 80.18 ÔÇëWARNÔÇë Tarball download average speed 18 KiB/s (size 49 KiB) is below 50 KiB/s: https://registry.npmjs.org/json5/-/json5-2.2.3.tgz (GET)
+#11 80.54 Progress: resolved 668, reused 0, downloaded 588, added 588
+#11 81.57 ÔÇëWARNÔÇë Tarball download average speed 23 KiB/s (size 26 KiB) is below 50 KiB/s: https://registry.npmjs.org/source-map-support/-/source-map-support-0.5.21.tgz (GET)
+#11 81.57 Progress: resolved 668, reused 0, downloaded 593, added 593
+#11 82.57 Progress: resolved 668, reused 0, downloaded 606, added 605
+#11 83.75 Progress: resolved 668, reused 0, downloaded 617, added 617
+#11 84.75 Progress: resolved 668, reused 0, downloaded 625, added 624
+#11 85.23 ÔÇëWARNÔÇë Tarball download average speed 31 KiB/s (size 78 KiB) is below 50 KiB/s: https://registry.npmjs.org/chai/-/chai-5.3.3.tgz (GET)
+#11 85.75 Progress: resolved 668, reused 0, downloaded 643, added 643
+#11 86.78 Progress: resolved 668, reused 0, downloaded 649, added 649
+#11 ...
+
+#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#15 71.81 Progress: resolved 668, reused 0, downloaded 623, added 623
+#15 72.81 Progress: resolved 668, reused 0, downloaded 628, added 628
+#15 73.94 Progress: resolved 668, reused 0, downloaded 637, added 636
+#15 75.22 Progress: resolved 668, reused 0, downloaded 640, added 639
+#15 78.10 Progress: resolved 668, reused 0, downloaded 640, added 640
+#15 79.14 Progress: resolved 668, reused 0, downloaded 645, added 641
+#15 80.31 ÔÇëWARNÔÇë Tarball download average speed 13 KiB/s (size 17 KiB) is below 50 KiB/s: https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz (GET)
+#15 80.33 Progress: resolved 668, reused 0, downloaded 649, added 642
+#15 81.36 Progress: resolved 668, reused 0, downloaded 656, added 650
+#15 82.36 Progress: resolved 668, reused 0, downloaded 663, added 663
+#15 ...
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 87.89 Progress: resolved 668, reused 0, downloaded 654, added 653
+#11 88.89 Progress: resolved 668, reused 0, downloaded 659, added 659
+#11 90.39 Progress: resolved 668, reused 0, downloaded 660, added 659
+#11 91.52 Progress: resolved 668, reused 0, downloaded 660, added 660
+#11 92.64 Progress: resolved 668, reused 0, downloaded 661, added 661
+#11 96.74 Progress: resolved 668, reused 0, downloaded 662, added 661
+#11 97.73 Progress: resolved 668, reused 0, downloaded 663, added 663
+#11 99.40 Progress: resolved 668, reused 0, downloaded 664, added 663
+#11 100.4 Progress: resolved 668, reused 0, downloaded 665, added 665
+#11 101.5 ÔÇëWARNÔÇë Tarball download average speed 38 KiB/s (size 742 KiB) is below 50 KiB/s: https://registry.npmjs.org/vite/-/vite-5.4.21.tgz (GET)
+#11 104.4 Progress: resolved 668, reused 0, downloaded 666, added 665
+#11 ...
+
+#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#15 88.84 Progress: resolved 668, reused 0, downloaded 664, added 663
+#15 89.54 Progress: resolved 668, reused 0, downloaded 668, added 668, done
+#15 91.56 
+#15 91.56 dependencies:
+#15 91.56 + @anthropic-ai/sdk 0.24.3
+#15 91.56 + @aws-sdk/client-s3 3.1006.0
+#15 91.56 + @aws-sdk/s3-request-presigner 3.1006.0
+#15 91.56 + @radix-ui/react-accordion 1.2.12
+#15 91.56 + @radix-ui/react-alert-dialog 1.1.15
+#15 91.56 + @radix-ui/react-aspect-ratio 1.1.8
+#15 91.56 + @radix-ui/react-avatar 1.1.11
+#15 91.56 + @radix-ui/react-checkbox 1.3.3
+#15 91.56 + @radix-ui/react-collapsible 1.1.12
+#15 91.56 + @radix-ui/react-context-menu 2.2.16
+#15 91.56 + @radix-ui/react-dialog 1.1.15
+#15 91.56 + @radix-ui/react-dropdown-menu 2.1.16
+#15 91.56 + @radix-ui/react-hover-card 1.1.15
+#15 91.56 + @radix-ui/react-icons 1.3.2
+#15 91.56 + @radix-ui/react-label 2.1.8
+#15 91.56 + @radix-ui/react-menubar 1.1.16
+#15 91.56 + @radix-ui/react-navigation-menu 1.2.14
+#15 91.56 + @radix-ui/react-popover 1.1.15
+#15 91.56 + @radix-ui/react-progress 1.1.8
+#15 91.56 + @radix-ui/react-radio-group 1.3.8
+#15 91.56 + @radix-ui/react-scroll-area 1.2.10
+#15 91.56 + @radix-ui/react-select 2.2.6
+#15 91.56 + @radix-ui/react-separator 1.1.8
+#15 91.56 + @radix-ui/react-slider 1.3.6
+#15 91.56 + @radix-ui/react-slot 1.2.4
+#15 91.56 + @radix-ui/react-switch 1.2.6
+#15 91.56 + @radix-ui/react-tabs 1.1.13
+#15 91.56 + @radix-ui/react-toggle 1.1.10
+#15 91.56 + @radix-ui/react-toggle-group 1.1.11
+#15 91.56 + @radix-ui/react-tooltip 1.2.8
+#15 91.56 + @stripe/react-stripe-js 2.9.0
+#15 91.56 + @stripe/stripe-js 8.9.0
+#15 91.56 + @tanstack/react-query 5.90.21
+#15 91.56 + @trpc/client 11.12.0
+#15 91.56 + @trpc/react-query 11.12.0
+#15 91.56 + @trpc/server 11.12.0
+#15 91.56 + axios 1.13.6
+#15 91.56 + bcryptjs 3.0.3
+#15 91.56 + class-variance-authority 0.7.1
+#15 91.56 + clsx 2.1.1
+#15 91.56 + cmdk 1.1.1
+#15 91.56 + cookie 1.1.1
+#15 91.56 + cookie-parser 1.4.7
+#15 91.56 + cron 3.5.0
+#15 91.56 + csurf 1.11.0
+#15 91.56 + date-fns 4.1.0
+#15 91.56 + dotenv 17.3.1
+#15 91.56 + drizzle-orm 0.44.7
+#15 91.56 + embla-carousel-react 8.6.0
+#15 91.56 + exceljs 4.4.0
+#15 91.56 + express 4.22.1
+#15 91.56 + express-rate-limit 7.5.1
+#15 91.56 + framer-motion 12.35.2
+#15 91.56 + input-otp 1.4.2
+#15 91.56 + jose 6.1.0
+#15 91.56 + jspdf 3.0.4
+#15 91.56 + jspdf-autotable 5.0.7
+#15 91.56 + lucide-react 0.453.0
+#15 91.56 + mysql2 3.19.1
+#15 91.56 + nanoid 5.1.6
+#15 91.56 + next-themes 0.4.6
+#15 91.56 + nodemailer 6.10.1
+#15 91.56 + react 18.3.1
+#15 91.56 + react-day-picker 9.14.0
+#15 91.56 + react-dom 18.3.1
+#15 91.56 + react-hook-form 7.71.2
+#15 91.56 + react-resizable-panels 3.0.6
+#15 91.56 + recharts 2.15.4
+#15 91.56 + sanitize-html 2.17.1
+#15 91.56 + sonner 2.0.7
+#15 91.56 + stripe 15.12.0
+#15 91.56 + superjson 1.13.3
+#15 91.56 + tailwind-merge 3.5.0
+#15 91.56 + tailwindcss-animate 1.0.7
+#15 91.56 + uuid 13.0.0
+#15 91.56 + vaul 1.1.2
+#15 91.56 + wouter 3.9.0
+#15 91.56 + xlsx 0.18.5
+#15 91.56 + zod 4.3.6
+#15 91.56 
+#15 91.56 devDependencies:
+#15 91.56 + @builder.io/vite-plugin-jsx-loc 0.1.1
+#15 91.56 + @tailwindcss/typography 0.5.19
+#15 91.56 + @tailwindcss/vite 4.2.1
+#15 91.56 + @types/express 4.17.21
+#15 91.56 + @types/node 24.12.0
+#15 91.56 + @types/nodemailer 6.4.23
+#15 91.56 + @types/react 18.3.28
+#15 91.56 + @types/react-dom 18.3.7
+#15 91.56 + @vitejs/plugin-react 5.1.4
+#15 91.56 + add 2.0.6
+#15 91.56 + autoprefixer 10.4.27
+#15 91.56 + cross-env 10.1.0
+#15 91.56 + drizzle-kit 0.31.9
+#15 91.56 + esbuild 0.25.12
+#15 91.56 + pnpm 10.32.1
+#15 91.56 + postcss 8.5.8
+#15 91.56 + prettier 3.8.1
+#15 91.56 + tailwindcss 4.2.1
+#15 91.56 + tsx 4.21.0
+#15 91.56 + tw-animate-css 1.4.0
+#15 91.56 + typescript 5.9.3
+#15 91.56 + vite 7.3.1
+#15 91.56 + vitest 2.1.9
+#15 91.56 
+#15 91.64 Done in 1m 25.6s using pnpm v10.33.0
+#15 DONE 93.8s
+
+#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
+#11 104.7 Progress: resolved 668, reused 0, downloaded 668, added 668, done
+#11 106.2 
+#11 106.2 dependencies:
+#11 106.2 + @anthropic-ai/sdk 0.24.3
+#11 106.2 + @aws-sdk/client-s3 3.1006.0
+#11 106.2 + @aws-sdk/s3-request-presigner 3.1006.0
+#11 106.2 + @radix-ui/react-accordion 1.2.12
+#11 106.2 + @radix-ui/react-alert-dialog 1.1.15
+#11 106.2 + @radix-ui/react-aspect-ratio 1.1.8
+#11 106.2 + @radix-ui/react-avatar 1.1.11
+#11 106.2 + @radix-ui/react-checkbox 1.3.3
+#11 106.2 + @radix-ui/react-collapsible 1.1.12
+#11 106.2 + @radix-ui/react-context-menu 2.2.16
+#11 106.2 + @radix-ui/react-dialog 1.1.15
+#11 106.2 + @radix-ui/react-dropdown-menu 2.1.16
+#11 106.2 + @radix-ui/react-hover-card 1.1.15
+#11 106.2 + @radix-ui/react-icons 1.3.2
+#11 106.2 + @radix-ui/react-label 2.1.8
+#11 106.2 + @radix-ui/react-menubar 1.1.16
+#11 106.2 + @radix-ui/react-navigation-menu 1.2.14
+#11 106.2 + @radix-ui/react-popover 1.1.15
+#11 106.2 + @radix-ui/react-progress 1.1.8
+#11 106.2 + @radix-ui/react-radio-group 1.3.8
+#11 106.2 + @radix-ui/react-scroll-area 1.2.10
+#11 106.2 + @radix-ui/react-select 2.2.6
+#11 106.2 + @radix-ui/react-separator 1.1.8
+#11 106.2 + @radix-ui/react-slider 1.3.6
+#11 106.2 + @radix-ui/react-slot 1.2.4
+#11 106.2 + @radix-ui/react-switch 1.2.6
+#11 106.2 + @radix-ui/react-tabs 1.1.13
+#11 106.2 + @radix-ui/react-toggle 1.1.10
+#11 106.2 + @radix-ui/react-toggle-group 1.1.11
+#11 106.2 + @radix-ui/react-tooltip 1.2.8
+#11 106.2 + @stripe/react-stripe-js 2.9.0
+#11 106.2 + @stripe/stripe-js 8.9.0
+#11 106.2 + @tanstack/react-query 5.90.21
+#11 106.2 + @trpc/client 11.12.0
+#11 106.2 + @trpc/react-query 11.12.0
+#11 106.2 + @trpc/server 11.12.0
+#11 106.2 + axios 1.13.6
+#11 106.2 + bcryptjs 3.0.3
+#11 106.2 + class-variance-authority 0.7.1
+#11 106.2 + clsx 2.1.1
+#11 106.2 + cmdk 1.1.1
+#11 106.2 + cookie 1.1.1
+#11 106.2 + cookie-parser 1.4.7
+#11 106.2 + cron 3.5.0
+#11 106.2 + csurf 1.11.0
+#11 106.2 + date-fns 4.1.0
+#11 106.2 + dotenv 17.3.1
+#11 106.2 + drizzle-orm 0.44.7
+#11 106.2 + embla-carousel-react 8.6.0
+#11 106.2 + exceljs 4.4.0
+#11 106.2 + express 4.22.1
+#11 106.2 + express-rate-limit 7.5.1
+#11 106.2 + framer-motion 12.35.2
+#11 106.2 + input-otp 1.4.2
+#11 106.2 + jose 6.1.0
+#11 106.2 + jspdf 3.0.4
+#11 106.2 + jspdf-autotable 5.0.7
+#11 106.2 + lucide-react 0.453.0
+#11 106.2 + mysql2 3.19.1
+#11 106.2 + nanoid 5.1.6
+#11 106.2 + next-themes 0.4.6
+#11 106.2 + nodemailer 6.10.1
+#11 106.2 + react 18.3.1
+#11 106.2 + react-day-picker 9.14.0
+#11 106.2 + react-dom 18.3.1
+#11 106.2 + react-hook-form 7.71.2
+#11 106.2 + react-resizable-panels 3.0.6
+#11 106.2 + recharts 2.15.4
+#11 106.2 + sanitize-html 2.17.1
+#11 106.2 + sonner 2.0.7
+#11 106.2 + stripe 15.12.0
+#11 106.2 + superjson 1.13.3
+#11 106.2 + tailwind-merge 3.5.0
+#11 106.2 + tailwindcss-animate 1.0.7
+#11 106.2 + uuid 13.0.0
+#11 106.2 + vaul 1.1.2
+#11 106.2 + wouter 3.9.0
+#11 106.2 + xlsx 0.18.5
+#11 106.2 + zod 4.3.6
+#11 106.2 
+#11 106.2 devDependencies:
+#11 106.2 + @builder.io/vite-plugin-jsx-loc 0.1.1
+#11 106.2 + @tailwindcss/typography 0.5.19
+#11 106.2 + @tailwindcss/vite 4.2.1
+#11 106.2 + @types/express 4.17.21
+#11 106.2 + @types/node 24.12.0
+#11 106.2 + @types/nodemailer 6.4.23
+#11 106.2 + @types/react 18.3.28
+#11 106.2 + @types/react-dom 18.3.7
+#11 106.2 + @vitejs/plugin-react 5.1.4
+#11 106.2 + add 2.0.6
+#11 106.2 + autoprefixer 10.4.27
+#11 106.2 + cross-env 10.1.0
+#11 106.2 + drizzle-kit 0.31.9
+#11 106.2 + esbuild 0.25.12
+#11 106.2 + pnpm 10.32.1
+#11 106.2 + postcss 8.5.8
+#11 106.2 + prettier 3.8.1
+#11 106.2 + tailwindcss 4.2.1
+#11 106.2 + tsx 4.21.0
+#11 106.2 + tw-animate-css 1.4.0
+#11 106.2 + typescript 5.9.3
+#11 106.2 + vite 7.3.1
+#11 106.2 + vitest 2.1.9
+#11 106.2 
+#11 106.3 Done in 1m 30.6s using pnpm v10.33.0
+#11 DONE 109.4s
+
+#16 [builder 6/7] COPY . .
+#16 DONE 5.9s
+
+#17 [builder 7/7] RUN pnpm build
+#17 1.585 
+#17 1.585 > melitech_crm@1.0.0 build /app
+#17 1.585 > vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+#17 1.585 
+#17 3.018 vite v7.3.1 building client environment for production...
+#17 3.453 transforming...
+#17 47.02 Ô£ô 3325 modules transformed.
+#17 51.04 rendering chunks...
+#17 54.80 computing gzip size...
+#17 56.85 ../dist/public/index.html                                        3.50 kB Ôöé gzip:   1.54 kB
+#17 56.85 ../dist/public/assets/index-ByCUgfMs.css                       322.62 kB Ôöé gzip:  40.47 kB
+#17 56.86 ../dist/public/assets/trpc-BtMdyOBT.js                           0.07 kB Ôöé gzip:   0.08 kB
+#17 56.86 ../dist/public/assets/check-DkBjGDHe.js                          0.12 kB Ôöé gzip:   0.14 kB
+#17 56.86 ../dist/public/assets/chevron-down-DC4NpllI.js                   0.12 kB Ôöé gzip:   0.14 kB
+#17 56.86 ../dist/public/assets/chevron-left-QYLNEmxJ.js                   0.13 kB Ôöé gzip:   0.14 kB
+#17 56.86 ../dist/public/assets/chevron-right-BV9acSZt.js                  0.13 kB Ôöé gzip:   0.14 kB
+#17 56.86 ../dist/public/assets/circle-CwaCP37e.js                         0.13 kB Ôöé gzip:   0.13 kB
+#17 56.86 ../dist/public/assets/play-DBjWoyKn.js                           0.13 kB Ôöé gzip:   0.15 kB
+#17 56.86 ../dist/public/assets/plus-Bjc323Ip.js                           0.15 kB Ôöé gzip:   0.15 kB
+#17 56.86 ../dist/public/assets/x-B7uFnMRT.js                              0.15 kB Ôöé gzip:   0.15 kB
+#17 56.86 ../dist/public/assets/filter-DqB245Nn.js                         0.16 kB Ôöé gzip:   0.16 kB
+#17 56.86 ../dist/public/assets/arrow-right-BGIdgKkC.js                    0.16 kB Ôöé gzip:   0.16 kB
+#17 56.86 ../dist/public/assets/arrow-left-DSBrJ2dA.js                     0.16 kB Ôöé gzip:   0.16 kB
+#17 56.86 ../dist/public/assets/arrow-up-right-hKuUx_s5.js                 0.16 kB Ôöé gzip:   0.16 kB
+#17 56.86 ../dist/public/assets/circle-check-D6x7PaFX.js                   0.17 kB Ôöé gzip:   0.17 kB
+#17 56.86 ../dist/public/assets/message-square-CxNN1P1K.js                 0.18 kB Ôöé gzip:   0.17 kB
+#17 56.86 ../dist/public/assets/clock-BANNJoE1.js                          0.18 kB Ôöé gzip:   0.17 kB
+#17 56.86 ../dist/public/assets/chart-line-DRD5M42y.js                     0.18 kB Ôöé gzip:   0.17 kB
+#17 56.86 ../dist/public/assets/circle-check-big-DWYGfx8U.js               0.19 kB Ôöé gzip:   0.18 kB
+#17 56.86 ../dist/public/assets/user-DH2RhtFs.js                           0.19 kB Ôöé gzip:   0.18 kB
+#17 56.86 ../dist/public/assets/smartphone-DvhTW5bs.js                     0.19 kB Ôöé gzip:   0.18 kB
+#17 56.86 ../dist/public/assets/index-Buuflw2q.js                          0.20 kB Ôöé gzip:   0.17 kB
+#17 56.86 ../dist/public/assets/trending-up-DhSeP5iV.js                    0.20 kB Ôöé gzip:   0.18 kB
+#17 56.86 ../dist/public/assets/lock-BKVZxchW.js                           0.20 kB Ôöé gzip:   0.19 kB
+#17 56.86 ../dist/public/assets/circle-x-CuOn5FWW.js                       0.20 kB Ôöé gzip:   0.18 kB
+#17 56.86 ../dist/public/assets/trending-down-ChdzbHnk.js                  0.20 kB Ôöé gzip:   0.18 kB
+#17 56.86 ../dist/public/assets/star-BEdYzzVu.js                           0.21 kB Ôöé gzip:   0.18 kB
+#17 56.86 ../dist/public/assets/format-Bqc2RC1t.js                         0.21 kB Ôöé gzip:   0.18 kB
+#17 56.86 ../dist/public/assets/mail-CDfv3-4Z.js                           0.21 kB Ôöé gzip:   0.20 kB
+#17 56.86 ../dist/public/assets/dollar-sign-DrjGyeVb.js                    0.22 kB Ôöé gzip:   0.19 kB
+#17 56.86 ../dist/public/assets/square-check-big-D-b9o5gE.js               0.22 kB Ôöé gzip:   0.19 kB
+#17 56.86 ../dist/public/assets/target-Dz-T1hkt.js                         0.22 kB Ôöé gzip:   0.16 kB
+#17 56.86 ../dist/public/assets/umbrella-CYLNhyoe.js                       0.23 kB Ôöé gzip:   0.19 kB
+#17 56.86 ../dist/public/assets/ellipsis-vertical-C-66Hwtv.js              0.23 kB Ôöé gzip:   0.17 kB
+#17 56.86 ../dist/public/assets/index-KP1k0B00.js                          0.23 kB Ôöé gzip:   0.17 kB
+#17 56.86 ../dist/public/assets/pen-B7aMPhVq.js                            0.23 kB Ôöé gzip:   0.20 kB
+#17 56.86 ../dist/public/assets/copy-C4I2qxml.js                           0.23 kB Ôöé gzip:   0.21 kB
+#17 56.86 ../dist/public/assets/circle-help-UZGzE7bq.js                    0.24 kB Ôöé gzip:   0.20 kB
+#17 56.86 ../dist/public/assets/menu-DU-yDbsv.js                           0.24 kB Ôöé gzip:   0.17 kB
+#17 56.86 ../dist/public/assets/globe-BUKivwjH.js                          0.24 kB Ôöé gzip:   0.19 kB
+#17 56.86 ../dist/public/assets/percent-CVoqrVRS.js                        0.24 kB Ôöé gzip:   0.19 kB
+#17 56.86 ../dist/public/assets/arrow-up-down-CL4qKrDO.js                  0.24 kB Ôöé gzip:   0.19 kB
+#17 56.86 ../dist/public/assets/database-D04qm7N6.js                       0.24 kB Ôöé gzip:   0.20 kB
+#17 56.86 ../dist/public/assets/heart-BW6Q5w8X.js                          0.24 kB Ôöé gzip:   0.21 kB
+#17 56.86 ../dist/public/assets/circle-alert-DyxXJ5BO.js                   0.25 kB Ôöé gzip:   0.19 kB
+#17 56.86 ../dist/public/assets/external-link-CVP4mobD.js                  0.25 kB Ôöé gzip:   0.20 kB
+#17 56.86 ../dist/public/assets/skeleton-C8HZl-qc.js                       0.25 kB Ôöé gzip:   0.21 kB
+#17 56.86 ../dist/public/assets/users-round-Cn3GE067.js                    0.25 kB Ôöé gzip:   0.22 kB
+#17 56.86 ../dist/public/assets/spinner-DxhyuBd5.js                        0.25 kB Ôöé gzip:   0.21 kB
+#17 56.86 ../dist/public/assets/user-check-2Xo18ick.js                     0.25 kB Ôöé gzip:   0.22 kB
+#17 56.86 ../dist/public/assets/eye-BwO7YtQ_.js                            0.25 kB Ôöé gzip:   0.20 kB
+#17 56.86 ../dist/public/assets/calendar-BlfQczev.js                       0.25 kB Ôöé gzip:   0.20 kB
+#17 56.86 ../dist/public/assets/upload-BWFnPVIu.js                         0.25 kB Ôöé gzip:   0.22 kB
+#17 56.86 ../dist/public/assets/map-pin-BT_34lEk.js                        0.26 kB Ôöé gzip:   0.22 kB
+#17 56.86 ../dist/public/assets/zap-C5YLcnm0.js                            0.26 kB Ôöé gzip:   0.21 kB
+#17 56.86 ../dist/public/assets/wrench-BVuIkfU8.js                         0.26 kB Ôöé gzip:   0.21 kB
+#17 56.86 ../dist/public/assets/key-DpwZ8fCA.js                            0.26 kB Ôöé gzip:   0.22 kB
+#17 56.86 ../dist/public/assets/file-check-CbBtm-rw.js                     0.26 kB Ôöé gzip:   0.20 kB
+#17 56.86 ../dist/public/assets/shield-DhU5oZHv.js                         0.27 kB Ôöé gzip:   0.23 kB
+#17 56.86 ../dist/public/assets/chart-pie-WBIeoq1n.js                      0.27 kB Ôöé gzip:   0.22 kB
+#17 56.86 ../dist/public/assets/award-2CmDVW1H.js                          0.27 kB Ôöé gzip:   0.23 kB
+#17 56.86 ../dist/public/assets/pencil-C3NGKA0i.js                         0.27 kB Ôöé gzip:   0.23 kB
+#17 56.86 ../dist/public/assets/house-pQ9nye0d.js                          0.29 kB Ôöé gzip:   0.22 kB
+#17 56.86 ../dist/public/assets/send-DKVuUmiV.js                           0.29 kB Ôöé gzip:   0.23 kB
+#17 56.86 ../dist/public/assets/folder-open-BQk8VLAf.js                    0.29 kB Ôöé gzip:   0.22 kB
+#17 56.86 ../dist/public/assets/file-up-CmzA1jsI.js                        0.30 kB Ôöé gzip:   0.21 kB
+#17 56.86 ../dist/public/assets/zoom-in-zRycR5vp.js                        0.30 kB Ôöé gzip:   0.21 kB
+#17 56.86 ../dist/public/assets/file-down-W66OhEd2.js                      0.30 kB Ôöé gzip:   0.21 kB
+#17 56.86 ../dist/public/assets/user-plus-D5s7NKXI.js                      0.31 kB Ôöé gzip:   0.23 kB
+#17 56.86 ../dist/public/assets/LineChart-C6ohHbh5.js                      0.31 kB Ôöé gzip:   0.23 kB
+#17 56.86 ../dist/public/assets/AreaChart-CzBzjOGW.js                      0.31 kB Ôöé gzip:   0.23 kB
+#17 56.86 ../dist/public/assets/square-pen-DWJfau1K.js                     0.32 kB Ôöé gzip:   0.24 kB
+#17 56.86 ../dist/public/assets/printer-DblyBUNb.js                        0.32 kB Ôöé gzip:   0.24 kB
+#17 56.86 ../dist/public/assets/refresh-cw-ergwVwaF.js                     0.32 kB Ôöé gzip:   0.23 kB
+#17 56.86 ../dist/public/assets/ticket-CgsN4pUz.js                         0.32 kB Ôöé gzip:   0.21 kB
+#17 56.86 ../dist/public/assets/tag-DkH4U5lj.js                            0.32 kB Ôöé gzip:   0.25 kB
+#17 56.86 ../dist/public/assets/save-DlBkB_vl.js                           0.32 kB Ôöé gzip:   0.23 kB
+#17 56.86 ../dist/public/assets/file-text-CXo-BTJJ.js                      0.33 kB Ôöé gzip:   0.22 kB
+#17 56.86 ../dist/public/assets/layout-grid-p8uGQi0b.js                    0.34 kB Ôöé gzip:   0.19 kB
+#17 56.86 ../dist/public/assets/BarChart-C3TquFKi.js                       0.35 kB Ôöé gzip:   0.25 kB
+#17 56.86 ../dist/public/assets/trash-2-BLd9Ghvg.js                        0.35 kB Ôöé gzip:   0.25 kB
+#17 56.86 ../dist/public/assets/layers-ClpUA31G.js                         0.36 kB Ôöé gzip:   0.24 kB
+#17 56.86 ../dist/public/assets/grip-vertical-CyfH-six.js                  0.37 kB Ôöé gzip:   0.20 kB
+#17 56.86 ../dist/public/assets/file-spreadsheet-B-0AbG-L.js               0.37 kB Ôöé gzip:   0.23 kB
+#17 56.86 ../dist/public/assets/package-BjZp0Ft2.js                        0.38 kB Ôöé gzip:   0.26 kB
+#17 56.86 ../dist/public/assets/phone-BVQaMA9i.js                          0.39 kB Ôöé gzip:   0.25 kB
+#17 56.86 ../dist/public/assets/shield-off-D4C259DO.js                     0.40 kB Ôöé gzip:   0.28 kB
+#17 56.86 ../dist/public/assets/eye-off-BxHb8pp7.js                        0.43 kB Ôöé gzip:   0.27 kB
+#17 56.86 ../dist/public/assets/activityLog-BEX8_GA1.js                    0.43 kB Ôöé gzip:   0.31 kB
+#17 56.86 ../dist/public/assets/ComposedChart-DS3zpSln.js                  0.45 kB Ôöé gzip:   0.29 kB
+#17 56.86 ../dist/public/assets/index-Cnr-3F8p.js                          0.46 kB Ôöé gzip:   0.34 kB
+#17 56.86 ../dist/public/assets/sparkles-Y78zPwyK.js                       0.51 kB Ôöé gzip:   0.30 kB
+#17 56.86 ../dist/public/assets/textarea-BslxGMnV.js                       0.51 kB Ôöé gzip:   0.36 kB
+#17 56.86 ../dist/public/assets/calculator-D4ZPnPBa.js                     0.53 kB Ôöé gzip:   0.28 kB
+#17 56.86 ../dist/public/assets/input-BHwo7w4i.js                          0.61 kB Ôöé gzip:   0.39 kB
+#17 56.86 ../dist/public/assets/palette-D0-B3yHF.js                        0.61 kB Ôöé gzip:   0.34 kB
+#17 56.86 ../dist/public/assets/label-Cy_urW05.js                          0.64 kB Ôöé gzip:   0.42 kB
+#17 56.86 ../dist/public/assets/usePermissions-CaTL0Dg3.js                 0.67 kB Ôöé gzip:   0.40 kB
+#17 56.86 ../dist/public/assets/server-BX8Ppi1n.js                         0.78 kB Ôöé gzip:   0.35 kB
+#17 56.86 ../dist/public/assets/badge-Cn98bHjn.js                          0.81 kB Ôöé gzip:   0.43 kB
+#17 56.86 ../dist/public/assets/healthScore-hLzRzKdj.js                    0.89 kB Ôöé gzip:   0.52 kB
+#17 56.86 ../dist/public/assets/alert-CuvedGZd.js                          1.21 kB Ôöé gzip:   0.58 kB
+#17 56.86 ../dist/public/assets/settings-CWX1GA4b.js                       1.38 kB Ôöé gzip:   0.57 kB
+#17 56.86 ../dist/public/assets/DeleteConfirmationModal-1dehp8Kd.js        1.46 kB Ôöé gzip:   0.54 kB
+#17 56.86 ../dist/public/assets/ModuleLayout-ClJSE7zN.js                   1.46 kB Ôöé gzip:   0.60 kB
+#17 56.86 ../dist/public/assets/users-D9bm5eng.js                          1.62 kB Ôöé gzip:   0.71 kB
+#17 56.86 ../dist/public/assets/designSystem-BjMWY9N5.js                   1.76 kB Ôöé gzip:   0.66 kB
+#17 56.86 ../dist/public/assets/useAuthWithPersistence-Bg_3R1Nu.js         1.76 kB Ôöé gzip:   0.79 kB
+#17 56.86 ../dist/public/assets/card-BlSUuXC2.js                           1.84 kB Ôöé gzip:   0.59 kB
+#17 56.86 ../dist/public/assets/RoleBasedDashboard-Yp6w0Lyg.js             1.88 kB Ôöé gzip:   0.69 kB
+#17 56.86 ../dist/public/assets/table-M_XDmbF8.js                          2.01 kB Ôöé gzip:   0.60 kB
+#17 56.86 ../dist/public/assets/progress-wYR6mNOx.js                       2.09 kB Ôöé gzip:   1.01 kB
+#17 56.86 ../dist/public/assets/NotFound-BKgNI--0.js                       2.15 kB Ôöé gzip:   0.82 kB
+#17 56.86 ../dist/public/assets/stats-card-BCaIEt2C.js                     2.23 kB Ôöé gzip:   0.83 kB
+#17 56.86 ../dist/public/assets/Messages-CRv3MgJg.js                       2.41 kB Ôöé gzip:   1.05 kB
+#17 56.86 ../dist/public/assets/PageHeader-Dhm7Rn1V.js                     2.63 kB Ôöé gzip:   0.87 kB
+#17 56.87 ../dist/public/assets/switch-BuUTAQTv.js                         2.67 kB Ôöé gzip:   1.30 kB
+#17 56.87 ../dist/public/assets/OrgBreadcrumb-CtH44Usv.js                  2.68 kB Ôöé gzip:   0.86 kB
+#17 56.87 ../dist/public/assets/actions-T54mEXgZ.js                        3.31 kB Ôöé gzip:   1.36 kB
+#17 56.87 ../dist/public/assets/SmsQueue-DcOLCDgR.js                       3.53 kB Ôöé gzip:   1.41 kB
+#17 56.87 ../dist/public/assets/OrgModulePage-DQOitan6.js                  3.83 kB Ôöé gzip:   1.53 kB
+#17 56.87 ../dist/public/assets/CreateReceipt-CpceusSB.js                  3.91 kB Ôöé gzip:   1.65 kB
+#17 56.87 ../dist/public/assets/button-B73lvpt_.js                         4.02 kB Ôöé gzip:   1.79 kB
+#17 56.87 ../dist/public/assets/checkbox-BGN2yOtI.js                       4.26 kB Ôöé gzip:   1.82 kB
+#17 56.87 ../dist/public/assets/FunnelAnalysis-B3q9BRyN.js                 4.50 kB Ôöé gzip:   1.62 kB
+#17 56.87 ../dist/public/assets/CreateEstimate-Dzewrg4s.js                 4.51 kB Ôöé gzip:   1.91 kB
+#17 56.87 ../dist/public/assets/CohortAnalysis-D6iOWQZQ.js                 4.77 kB Ôöé gzip:   1.43 kB
+#17 56.87 ../dist/public/assets/CreateInvoice-CH4tI5Sf.js                  4.84 kB Ôöé gzip:   2.02 kB
+#17 56.87 ../dist/public/assets/ActionButtons-CsM10xSM.js                  4.98 kB Ôöé gzip:   1.04 kB
+#17 56.87 ../dist/public/assets/data-table-controls-DZxBZpbQ.js            5.15 kB Ôöé gzip:   1.55 kB
+#17 56.87 ../dist/public/assets/Login-BwG-vh2Q.js                          5.30 kB Ôöé gzip:   1.75 kB
+#17 56.87 ../dist/public/assets/alert-dialog-DMhzdgmw.js                   5.32 kB Ôöé gzip:   1.80 kB
+#17 56.87 ../dist/public/assets/popover-BeHqJZHE.js                        5.35 kB Ôöé gzip:   1.93 kB
+#17 56.87 ../dist/public/assets/Search-VycgXeDJ.js                         5.39 kB Ôöé gzip:   2.00 kB
+#17 56.87 ../dist/public/assets/BiTools-BJUxlBPS.js                        5.47 kB Ôöé gzip:   1.80 kB
+#17 56.87 ../dist/public/assets/EditReceipt-DDukOg-g.js                    5.50 kB Ôöé gzip:   2.05 kB
+#17 56.87 ../dist/public/assets/Sales-Dv10I7rO.js                          5.77 kB Ôöé gzip:   1.93 kB
+#17 56.87 ../dist/public/assets/CreateBudget-DIJkBQgw.js                   5.84 kB Ôöé gzip:   2.02 kB
+#17 56.87 ../dist/public/assets/EditEstimate-F10JqHxs.js                   5.87 kB Ôöé gzip:   2.12 kB
+#17 56.87 ../dist/public/assets/CreditNotes-BtqMhDdI.js                    5.98 kB Ôöé gzip:   1.95 kB
+#17 56.87 ../dist/public/assets/EditInvoice-auq4KVZD.js                    6.12 kB Ôöé gzip:   2.18 kB
+#17 56.87 ../dist/public/assets/EditBudget-CGKCh-Sv.js                     6.18 kB Ôöé gzip:   2.15 kB
+#17 56.87 ../dist/public/assets/EditLPO-BpPrglcD.js                        6.21 kB Ôöé gzip:   2.06 kB
+#17 56.87 ../dist/public/assets/ProductDetails-Cdy83aeK.js                 6.21 kB Ôöé gzip:   1.88 kB
+#17 56.87 ../dist/public/assets/ProcurementManagerDashboard-HzOVV-zC.js    6.23 kB Ôöé gzip:   1.57 kB
+#17 56.87 ../dist/public/assets/CreateDepartment-DkowrSNM.js               6.27 kB Ôöé gzip:   2.04 kB
+#17 56.87 ../dist/public/assets/EditDepartment-CkrhpEIh.js                 6.33 kB Ôöé gzip:   2.03 kB
+#17 56.87 ../dist/public/assets/ForgotPassword-DBRTGwYJ.js                 6.34 kB Ôöé gzip:   1.69 kB
+#17 56.87 ../dist/public/assets/ReportsDetails-B_pqD0gZ.js                 6.38 kB Ôöé gzip:   1.81 kB
+#17 56.87 ../dist/public/assets/Home-DqMKM3uz.js                           6.40 kB Ôöé gzip:   2.19 kB
+#17 56.87 ../dist/public/assets/DebitNotes-Bv92m_rZ.js                     6.43 kB Ôöé gzip:   1.95 kB
+#17 56.87 ../dist/public/assets/FinancialReports-vaW0XJLE.js               6.44 kB Ôöé gzip:   1.76 kB
+#17 56.87 ../dist/public/assets/GRN-DFNlQ14n.js                            6.53 kB Ôöé gzip:   2.06 kB
+#17 56.87 ../dist/public/assets/DepartmentDetails-Ch1DQ9dC.js              6.60 kB Ôöé gzip:   1.97 kB
+#17 56.87 ../dist/public/assets/ChartOfAccountsDetails-BbJp0rCv.js         6.63 kB Ôöé gzip:   1.86 kB
+#17 56.87 ../dist/public/assets/Quotations-Bo0Ue_b0.js                     6.69 kB Ôöé gzip:   1.93 kB
+#17 56.87 ../dist/public/assets/DeliveryNotes-DhJ37F4g.js                  6.81 kB Ôöé gzip:   1.91 kB
+#17 56.87 ../dist/public/assets/HRDetails-DgD3KZIY.js                      6.85 kB Ôöé gzip:   2.04 kB
+#17 56.87 ../dist/public/assets/WarrantyManagement-C-Xsl6Bq.js             6.86 kB Ôöé gzip:   1.93 kB
+#17 56.88 ../dist/public/assets/AssetManagement-ClDCeyi0.js                6.87 kB Ôöé gzip:   1.93 kB
+#17 56.88 ../dist/public/assets/ServiceDetails-uGoZuRm1.js                 6.88 kB Ôöé gzip:   1.94 kB
+#17 56.88 ../dist/public/assets/EmailQueue-DKaRzpCr.js                     6.94 kB Ôöé gzip:   2.21 kB
+#17 56.88 ../dist/public/assets/ContractManagement-BnzcXoMT.js             6.96 kB Ôöé gzip:   1.97 kB
+#17 56.88 ../dist/public/assets/ProjectAnalytics-Bsg7UhYx.js               7.08 kB Ôöé gzip:   2.12 kB
+#17 56.88 ../dist/public/assets/ChangePassword-nMpZ_rvY.js                 7.11 kB Ôöé gzip:   2.00 kB
+#17 56.88 ../dist/public/assets/accordion-zvz8vu_6.js                      7.26 kB Ôöé gzip:   2.61 kB
+#17 56.88 ../dist/public/assets/LocationSelects-udV4gB_6.js                7.45 kB Ôöé gzip:   2.57 kB
+#17 56.88 ../dist/public/assets/CreateAttendance-vx17cv3i.js               7.57 kB Ôöé gzip:   2.16 kB
+#17 56.88 ../dist/public/assets/ConversionAnalytics-B1NiEfWe.js            7.58 kB Ôöé gzip:   2.17 kB
+#17 56.88 ../dist/public/assets/CreateLeaveRequest-B5FfXk_x.js             7.60 kB Ôöé gzip:   2.17 kB
+#17 56.88 ../dist/public/assets/BankReconciliationDetails-kIkuQedO.js      7.61 kB Ôöé gzip:   1.87 kB
+#17 56.88 ../dist/public/assets/ServiceInvoices-DMtAVHNV.js                7.65 kB Ôöé gzip:   2.16 kB
+#17 56.88 ../dist/public/assets/AttendanceDetails-xIPKaXM8.js              7.67 kB Ôöé gzip:   2.16 kB
+#17 56.88 ../dist/public/assets/WorkOrders-B4zcEQjn.js                     7.71 kB Ôöé gzip:   2.24 kB
+#17 56.88 ../dist/public/assets/Activity-C9fljqQn.js                       7.80 kB Ôöé gzip:   2.73 kB
+#17 56.88 ../dist/public/assets/OpportunityDetails-CAyRAHgj.js             7.81 kB Ôöé gzip:   2.14 kB
+#17 56.88 ../dist/public/assets/PayrollDetails-DDm6I5Wx.js                 7.89 kB Ôöé gzip:   2.20 kB
+#17 56.88 ../dist/public/assets/CreateAllowance-DkoMlNR2.js                8.00 kB Ôöé gzip:   2.38 kB
+#17 56.88 ../dist/public/assets/LeaveManagementDetails-DFOfVhKW.js         8.00 kB Ôöé gzip:   2.22 kB
+#17 56.88 ../dist/public/assets/OrgAI-D_yE4whd.js                          8.09 kB Ôöé gzip:   2.83 kB
+#17 56.88 ../dist/public/assets/RevenueForecasting-kwdIY0E7.js             8.09 kB Ôöé gzip:   2.31 kB
+#17 56.88 ../dist/public/assets/Signup-DXfN4m9I.js                         8.19 kB Ôöé gzip:   2.11 kB
+#17 56.88 ../dist/public/assets/PaymentDetails-DG4KiUct.js                 8.23 kB Ôöé gzip:   2.30 kB
+#17 56.88 ../dist/public/assets/SalesReports-D-94rpT-.js                   8.30 kB Ôöé gzip:   2.21 kB
+#17 56.88 ../dist/public/assets/CreateService-BqgINNME.js                  8.40 kB Ôöé gzip:   2.47 kB
+#17 56.88 ../dist/public/assets/OrgActivity-DYh_qirl.js                    8.43 kB Ôöé gzip:   2.82 kB
+#17 56.88 ../dist/public/assets/SalesManagerDashboard-BLSeoYsi.js          8.44 kB Ôöé gzip:   1.84 kB
+#17 56.88 ../dist/public/assets/ServiceTemplates-CE_u3lFr.js               8.48 kB Ôöé gzip:   2.86 kB
+#17 56.88 ../dist/public/assets/CreateProduct-DpD7nt2P.js                  8.53 kB Ôöé gzip:   2.39 kB
+#17 56.88 ../dist/public/assets/EditAttendance-BjO7AYFi.js                 8.60 kB Ôöé gzip:   2.38 kB
+#17 56.88 ../dist/public/assets/OrgBudgets-BtGn8iIs.js                     8.63 kB Ôöé gzip:   2.53 kB
+#17 56.88 ../dist/public/assets/ResetPassword-ionIhUdH.js                  8.63 kB Ôöé gzip:   2.12 kB
+#17 56.88 ../dist/public/assets/Documentation-jpcXpHSs.js                  8.67 kB Ôöé gzip:   2.88 kB
+#17 56.88 ../dist/public/assets/OrgPayments-Bdzn3Guc.js                    8.77 kB Ôöé gzip:   2.50 kB
+#17 56.88 ../dist/public/assets/BankReconciliation-IqzemExU.js             8.79 kB Ôöé gzip:   2.38 kB
+#17 56.88 ../dist/public/assets/EditProduct-DmqM9WKC.js                    8.81 kB Ôöé gzip:   2.50 kB
+#17 56.88 ../dist/public/assets/OrgAttendance-DXEyYt9B.js                  8.99 kB Ôöé gzip:   2.51 kB
+#17 56.88 ../dist/public/assets/FinanceSettings-CqiFPNQi.js                9.03 kB Ôöé gzip:   2.09 kB
+#17 56.88 ../dist/public/assets/AdvancedAnalytics-CzjrfwE0.js              9.13 kB Ôöé gzip:   2.04 kB
+#17 56.88 ../dist/public/assets/ChurnPrediction-DWE9-Lsp.js                9.16 kB Ôöé gzip:   2.35 kB
+#17 56.88 ../dist/public/assets/DashboardBuilderPro-Bqm6J0bh.js            9.27 kB Ôöé gzip:   2.28 kB
+#17 56.88 ../dist/public/assets/CreateUser-Eh3gcvsK.js                     9.43 kB Ôöé gzip:   2.79 kB
+#17 56.88 ../dist/public/assets/Accounting-BaKeDhYt.js                     9.45 kB Ôöé gzip:   2.74 kB
+#17 56.88 ../dist/public/assets/EditUser-2BiUUnGy.js                       9.52 kB Ôöé gzip:   2.72 kB
+#17 56.88 ../dist/public/assets/CreateLPO-BhtbXbMK.js                      9.71 kB Ôöé gzip:   2.55 kB
+#17 56.88 ../dist/public/assets/ProcurementMaster-Cd9Z4qY2.js              9.85 kB Ôöé gzip:   2.48 kB
+#17 56.88 ../dist/public/assets/CreateDeduction-DSZcXthg.js               10.12 kB Ôöé gzip:   2.85 kB
+#17 56.88 ../dist/public/assets/ProjectsManagement-4xYDbSA3.js            10.18 kB Ôöé gzip:   2.89 kB
+#17 56.88 ../dist/public/assets/OrgLeave-cwwlx6tW.js                      10.19 kB Ôöé gzip:   2.90 kB
+#17 56.88 ../dist/public/assets/CreateSalaryStructure-CElG-IB4.js         10.30 kB Ôöé gzip:   2.63 kB
+#17 56.88 ../dist/public/assets/LeaveManagement-CMk8K7Eg.js               10.30 kB Ôöé gzip:   2.85 kB
+#17 56.88 ../dist/public/assets/EditLeave-B7FMx5-z.js                     10.32 kB Ôöé gzip:   2.71 kB
+#17 56.88 ../dist/public/assets/Profile-BV1RZLwV.js                       10.44 kB Ôöé gzip:   2.97 kB
+#17 56.88 ../dist/public/assets/ExpensesDetails-BU6zwwe1.js               10.49 kB Ôöé gzip:   2.74 kB
+#17 56.88 ../dist/public/assets/EditChartOfAccounts-Bc-AtMpV.js           10.51 kB Ôöé gzip:   2.84 kB
+#17 56.88 ../dist/public/assets/Calendar-BF9yiGNm.js                      10.63 kB Ôöé gzip:   3.07 kB
+#17 56.88 ../dist/public/assets/UserGuide-D4ub352r.js                     10.63 kB Ôöé gzip:   3.52 kB
+#17 56.88 ../dist/public/assets/EstimateDetails-ptC3E1ck.js               10.65 kB Ôöé gzip:   2.83 kB
+#17 56.88 ../dist/public/assets/Attendance-co6B0Ni5.js                    10.67 kB Ôöé gzip:   2.85 kB
+#17 56.88 ../dist/public/assets/OrgTickets-D7Wp6ecI.js                    10.67 kB Ôöé gzip:   2.91 kB
+#17 56.88 ../dist/public/assets/CreateOrder-1Ven2BuC.js                   10.70 kB Ôöé gzip:   2.92 kB
+#17 56.88 ../dist/public/assets/TaxComplianceReports-CdIR2s6k.js          10.73 kB Ôöé gzip:   2.21 kB
+#17 56.88 ../dist/public/assets/EditService-D1WVsPPv.js                   10.74 kB Ôöé gzip:   2.97 kB
+#17 56.88 ../dist/public/assets/CreatePayment-BopDS1s7.js                 10.77 kB Ôöé gzip:   3.14 kB
+#17 56.88 ../dist/public/assets/Area-xmjwHkdV.js                          10.79 kB Ôöé gzip:   3.98 kB
+#17 56.88 ../dist/public/assets/OrgContracts-CzexISpG.js                  10.88 kB Ôöé gzip:   3.06 kB
+#17 56.88 ../dist/public/assets/Budgets-DX2g1X6a.js                       10.92 kB Ôöé gzip:   3.11 kB
+#17 56.88 ../dist/public/assets/Line-HhHN8m-s.js                          10.94 kB Ôöé gzip:   4.20 kB
+#17 56.88 ../dist/public/assets/OrgProcurement-BI31sKNY.js                10.95 kB Ôöé gzip:   2.95 kB
+#17 56.88 ../dist/public/assets/Tools-DsezRuLN.js                         10.95 kB Ôöé gzip:   2.92 kB
+#17 56.88 ../dist/public/assets/OrgWorkOrders-hiZg2Irn.js                 10.96 kB Ôöé gzip:   2.90 kB
+#17 56.88 ../dist/public/assets/HR-D1_qhJdn.js                            10.98 kB Ôöé gzip:   3.18 kB
+#17 56.88 ../dist/public/assets/EnterpriseSettings-hw9vBoKW.js            11.01 kB Ôöé gzip:   2.90 kB
+#17 56.88 ../dist/public/assets/CustomFields-CTOsXMac.js                  11.06 kB Ôöé gzip:   2.80 kB
+#17 56.88 ../dist/public/assets/ClientPerformance-vW9JGQYh.js             11.11 kB Ôöé gzip:   2.94 kB
+#17 56.88 ../dist/public/assets/OrgAccounting-DTRK0JHi.js                 11.12 kB Ôöé gzip:   3.23 kB
+#17 56.88 ../dist/public/assets/EditOrder-ClCA4KOh.js                     11.13 kB Ôöé gzip:   3.03 kB
+#17 56.88 ../dist/public/assets/OrgHR-CiDcFduB.js                         11.15 kB Ôöé gzip:   3.16 kB
+#17 56.88 ../dist/public/assets/OrgCalendar-CXTFa7Nq.js                   11.21 kB Ôöé gzip:   3.07 kB
+#17 56.88 ../dist/public/assets/OrgInvoices-Br4n9Mzk.js                   11.29 kB Ôöé gzip:   3.05 kB
+#17 56.88 ../dist/public/assets/OrgCommunications-yOf72Ltj.js             11.30 kB Ôöé gzip:   2.86 kB
+#17 56.88 ../dist/public/assets/OrgProjects-CaaCZC3V.js                   11.32 kB Ôöé gzip:   3.06 kB
+#17 56.88 ../dist/public/assets/Services-Bxb0FPBA.js                      11.34 kB Ôöé gzip:   3.12 kB
+#17 56.88 ../dist/public/assets/Contact-2WA98b5r.js                       11.40 kB Ôöé gzip:   2.93 kB
+#17 56.88 ../dist/public/assets/EditOpportunity-BlEgAbdY.js               11.41 kB Ôöé gzip:   2.88 kB
+#17 56.88 ../dist/public/assets/StaffChat-HXS6b4iX.js                     11.68 kB Ôöé gzip:   3.61 kB
+#17 56.88 ../dist/public/assets/OrgExpenses-efvuJ5kw.js                   11.70 kB Ôöé gzip:   3.26 kB
+#17 56.88 ../dist/public/assets/CreateCreditNote-BThMxMvS.js              11.77 kB Ôöé gzip:   3.15 kB
+#17 56.88 ../dist/public/assets/Scatter-D2VmIghN.js                       11.79 kB Ôöé gzip:   3.77 kB
+#17 56.88 ../dist/public/assets/CreateBenefit-B2pjA2YL.js                 11.81 kB Ôöé gzip:   3.11 kB
+#17 56.88 ../dist/public/assets/Features-C4WVD9Ik.js                      11.81 kB Ôöé gzip:   3.79 kB
+#17 56.88 ../dist/public/assets/Payments-CWAFjqcp.js                      11.84 kB Ôöé gzip:   3.29 kB
+#17 56.88 ../dist/public/assets/CreateCommunication-BLaL6TGK.js           11.89 kB Ôöé gzip:   3.13 kB
+#17 56.88 ../dist/public/assets/OrgStaff-Bxmusqst.js                      11.90 kB Ôöé gzip:   3.11 kB
+#17 56.88 ../dist/public/assets/format-CVcwOLjT.js                        11.96 kB Ôöé gzip:   3.22 kB
+#17 56.88 ../dist/public/assets/Estimates-C9rhCqg-.js                     12.04 kB Ôöé gzip:   3.51 kB
+#17 56.88 ../dist/public/assets/Opportunities-pc7tS_2H.js                 12.09 kB Ôöé gzip:   3.19 kB
+#17 56.88 ../dist/public/assets/Security-BEibLoLb.js                      12.12 kB Ôöé gzip:   2.71 kB
+#17 56.88 ../dist/public/assets/EditClient-NX25rvDU.js                    12.13 kB Ôöé gzip:   2.94 kB
+#17 56.88 ../dist/public/assets/OrgCRM-JulQBL5S.js                        12.14 kB Ôöé gzip:   3.07 kB
+#17 56.88 ../dist/public/assets/Notifications-bG7a0wDn.js                 12.19 kB Ôöé gzip:   2.85 kB
+#17 56.88 ../dist/public/assets/Dashboard-BHqkH2ty.js                     12.26 kB Ôöé gzip:   2.76 kB
+#17 56.88 ../dist/public/assets/ProjectManagerDashboard-CYi58cbP.js       12.38 kB Ôöé gzip:   2.92 kB
+#17 56.88 ../dist/public/assets/documentTemplate-ejJ_KBhA.js              12.42 kB Ôöé gzip:   2.95 kB
+#17 56.88 ../dist/public/assets/EditProject-BWB7lnfv.js                   12.63 kB Ôöé gzip:   3.13 kB
+#17 56.88 ../dist/public/assets/MFA-B4w_bGNy.js                           12.68 kB Ôöé gzip:   3.37 kB
+#17 56.88 ../dist/public/assets/TermsAndConditions-DPekmV5W.js            12.87 kB Ôöé gzip:   3.03 kB
+#17 56.88 ../dist/public/assets/SystemHealth-DYD3_2eI.js                  12.94 kB Ôöé gzip:   2.57 kB
+#17 56.88 ../dist/public/assets/ICTDashboard-CeAMXrA2.js                  12.97 kB Ôöé gzip:   2.92 kB
+#17 56.88 ../dist/public/assets/ProcurementFormComponent-JpMv6OjS.js      13.21 kB Ôöé gzip:   2.37 kB
+#17 56.88 ../dist/public/assets/About-CdzSwPnK.js                         13.51 kB Ôöé gzip:   3.86 kB
+#17 56.88 ../dist/public/assets/Proposals-Bnu1g5Kw.js                     13.52 kB Ôöé gzip:   3.52 kB
+#17 56.88 ../dist/public/assets/IntegrationGuides-BuBGf_lf.js             13.53 kB Ôöé gzip:   4.06 kB
+#17 56.88 ../dist/public/assets/ExpenseBudgetReport-u0vH0N7t.js           13.96 kB Ôöé gzip:   3.54 kB
+#17 56.88 ../dist/public/assets/PerformanceReviews-hPzbsXh2.js            13.97 kB Ôöé gzip:   2.74 kB
+#17 56.88 ../dist/public/assets/AccountingManagement-DsFK52u0.js          14.05 kB Ôöé gzip:   3.08 kB
+#17 56.88 ../dist/public/assets/WebsiteFooter-D8UC7Cur.js                 14.11 kB Ôöé gzip:   3.54 kB
+#17 56.88 ../dist/public/assets/ActivityTrail-mcPhcp5U.js                 14.12 kB Ôöé gzip:   3.43 kB
+#17 56.88 ../dist/public/assets/Tasks-DWDxW9Af.js                         14.27 kB Ôöé gzip:   3.97 kB
+#17 56.88 ../dist/public/assets/FinancialDashboard-BRpoFpcK.js            14.42 kB Ôöé gzip:   3.43 kB
+#17 56.88 ../dist/public/assets/Departments-BmiZZ4Fu.js                   14.47 kB Ôöé gzip:   3.68 kB
+#17 56.88 ../dist/public/assets/Suppliers-DLStVYYi.js                     14.67 kB Ôöé gzip:   3.66 kB
+#17 56.88 ../dist/public/assets/EditPayment-Wf7ka0D3.js                   14.75 kB Ôöé gzip:   3.94 kB
+#17 56.88 ../dist/public/assets/JobGroups-Y7kikCh_.js                     14.93 kB Ôöé gzip:   3.34 kB
+#17 56.88 ../dist/public/assets/Subscriptions-DvsRFE5H.js                 14.96 kB Ôöé gzip:   3.89 kB
+#17 56.88 ../dist/public/assets/LPOs-DakH7Xlw.js                          14.98 kB Ôöé gzip:   4.22 kB
+#17 56.88 ../dist/public/assets/PrivacyPolicy-pLmFExVo.js                 15.06 kB Ôöé gzip:   3.32 kB
+#17 56.88 ../dist/public/assets/EditPayroll-DqzDndZ0.js                   15.06 kB Ôöé gzip:   3.97 kB
+#17 56.88 ../dist/public/assets/Reports-DS9NVZKM.js                       15.25 kB Ôöé gzip:   3.97 kB
+#17 56.88 ../dist/public/assets/BillingDashboard-BGGwSbZf.js              15.36 kB Ôöé gzip:   4.05 kB
+#17 56.88 ../dist/public/assets/HRAnalyticsPage-BFJ8Bdrz.js               15.44 kB Ôöé gzip:   3.14 kB
+#17 56.88 ../dist/public/assets/Invoices-CSCv-L-J.js                      15.60 kB Ôöé gzip:   4.31 kB
+#17 56.88 ../dist/public/assets/OrgApprovals-Eod_f0WM.js                  15.64 kB Ôöé gzip:   3.86 kB
+#17 56.88 ../dist/public/assets/OrgReports-C4G25VVq.js                    15.75 kB Ôöé gzip:   3.70 kB
+#17 56.88 ../dist/public/assets/CreateProject-CEzC4eEJ.js                 15.84 kB Ôöé gzip:   3.48 kB
+#17 56.88 ../dist/public/assets/Products-B4Wtfz5u.js                      15.90 kB Ôöé gzip:   3.64 kB
+#17 56.88 ../dist/public/assets/RecurringInvoices-DAQXWF4j.js             15.92 kB Ôöé gzip:   3.64 kB
+#17 56.88 ../dist/public/assets/Leads-BIFPXGBv.js                         16.08 kB Ôöé gzip:   4.14 kB
+#17 56.88 ../dist/public/assets/Pricing-CaUWfnRZ.js                       16.12 kB Ôöé gzip:   3.82 kB
+#17 56.88 ../dist/public/assets/CreatePurchaseOrder-CE-qlmjB.js           16.20 kB Ôöé gzip:   3.21 kB
+#17 56.88 ../dist/public/assets/Inventory-Cjk5tXU3.js                     16.37 kB Ôöé gzip:   4.04 kB
+#17 56.88 ../dist/public/assets/AccountantDashboard-DCARuevM.js           16.37 kB Ôöé gzip:   3.81 kB
+#17 56.88 ../dist/public/assets/ProjectMilestones-D_i1d0R2.js             16.60 kB Ôöé gzip:   3.85 kB
+#17 56.88 ../dist/public/assets/EmployeeDetails-D-GkHUQ-.js               16.70 kB Ôöé gzip:   3.59 kB
+#17 56.88 ../dist/public/assets/Payroll-XhN1pgtZ.js                       16.73 kB Ôöé gzip:   4.18 kB
+#17 56.88 ../dist/public/assets/Account-D0noRbyR.js                       16.73 kB Ôöé gzip:   3.68 kB
+#17 56.88 ../dist/public/assets/EnhancedReceiptManagement-DyPjL1me.js     16.77 kB Ôöé gzip:   4.27 kB
+#17 56.88 ../dist/public/assets/Orders-DwpULYJE.js                        16.78 kB Ôöé gzip:   4.32 kB
+#17 56.88 ../dist/public/assets/CreateImprest-Bw41LXKf.js                 16.83 kB Ôöé gzip:   3.64 kB
+#17 56.88 ../dist/public/assets/Receipts-CxZIFs8C.js                      16.87 kB Ôöé gzip:   4.76 kB
+#17 56.88 ../dist/public/assets/OverduePayments-S-E06TPL.js               16.91 kB Ôöé gzip:   3.65 kB
+#17 56.88 ../dist/public/assets/UnifiedModuleLayout-Chm2X79y.js           16.92 kB Ôöé gzip:   3.88 kB
+#17 56.88 ../dist/public/assets/ReportBuilder-Dw5Lx9Va.js                 16.95 kB Ôöé gzip:   3.83 kB
+#17 56.88 ../dist/public/assets/HRAnalytics-CE2CiCmw.js                   17.15 kB Ôöé gzip:   3.92 kB
+#17 56.88 ../dist/public/assets/OrgSalesPipeline-DqSlgX1r.js              17.19 kB Ôöé gzip:   4.28 kB
+#17 56.88 ../dist/public/assets/Demo-D5i07w_w.js                          17.31 kB Ôöé gzip:   4.23 kB
+#17 56.88 ../dist/public/assets/EditEmployee-BV5ueGM8.js                  17.32 kB Ôöé gzip:   4.13 kB
+#17 56.89 ../dist/public/assets/PaymentReconciliation-CGeXzBG5.js         17.60 kB Ôöé gzip:   4.01 kB
+#17 56.89 ../dist/public/assets/SystemSettings-Cw0gB4v3.js                17.70 kB Ôöé gzip:   3.95 kB
+#17 56.89 ../dist/public/assets/TroubleshootingGuide-Csub6cCw.js          17.71 kB Ôöé gzip:   5.42 kB
+#17 56.89 ../dist/public/assets/EditExpense-DqwnG5pM.js                   17.77 kB Ôöé gzip:   4.55 kB
+#17 56.89 ../dist/public/assets/KnowledgeBase-DznbWxTB.js                 17.85 kB Ôöé gzip:   4.72 kB
+#17 56.89 ../dist/public/assets/scroll-area-CrELlxzJ.js                   17.88 kB Ôöé gzip:   5.83 kB
+#17 56.89 ../dist/public/assets/UnifiedLanding-_q4uh1ix.js                17.93 kB Ôöé gzip:   4.07 kB
+#17 56.89 ../dist/public/assets/DepartmentPayrollReports-B-hZZMIv.js      18.01 kB Ôöé gzip:   3.97 kB
+#17 56.89 ../dist/public/assets/CreatePayroll-O3-CDVmj.js                 18.07 kB Ôöé gzip:   3.61 kB
+#17 56.89 ../dist/public/assets/OrgProjectDetail-BHuxIRJT.js              18.08 kB Ôöé gzip:   4.33 kB
+#17 56.89 ../dist/public/assets/Contacts-DmIfCNw5.js                      18.12 kB Ôöé gzip:   4.28 kB
+#17 56.89 ../dist/public/assets/ReceiptDetails-BDL3ze8V.js                18.16 kB Ôöé gzip:   4.02 kB
+#17 56.89 ../dist/public/assets/Roles-C6hj98bL.js                         18.28 kB Ôöé gzip:   4.20 kB
+#17 56.89 ../dist/public/assets/Imprests-DkjEpjwY.js                      18.35 kB Ôöé gzip:   4.68 kB
+#17 56.89 ../dist/public/assets/TimeTracking-DGkYoJFU.js                  18.57 kB Ôöé gzip:   4.42 kB
+#17 56.89 ../dist/public/assets/Integrations-DEsMiBTz.js                  18.60 kB Ôöé gzip:   4.57 kB
+#17 56.89 ../dist/public/assets/KPITracking-DtFFngSa.js                   18.75 kB Ôöé gzip:   4.15 kB
+#17 56.89 ../dist/public/assets/OrgSettings-B7h-W3zF.js                   18.80 kB Ôöé gzip:   4.11 kB
+#17 56.89 ../dist/public/assets/OrgLayout-D3otzsGH.js                     18.95 kB Ôöé gzip:   5.15 kB
+#17 56.89 ../dist/public/assets/StaffDashboard-BsgmQWD9.js                19.17 kB Ôöé gzip:   3.83 kB
+#17 56.89 ../dist/public/assets/Tickets-Bko001Cx.js                       19.57 kB Ôöé gzip:   4.52 kB
+#17 56.89 ../dist/public/assets/SalesPipeline-DvQG1euk.js                 19.62 kB Ôöé gzip:   4.62 kB
+#17 56.89 ../dist/public/assets/EnhancedChangePassword-BzTGiVeA.js        19.65 kB Ôöé gzip:   3.90 kB
+#17 56.89 ../dist/public/assets/Dashboard-Dn_3WlqE.js                     20.01 kB Ôöé gzip:   4.73 kB
+#17 56.89 ../dist/public/assets/ProcurementLPOs-ksYTptAD.js               20.03 kB Ôöé gzip:   3.77 kB
+#17 56.89 ../dist/public/assets/CreateOpportunity-DK1ZNvEy.js             20.10 kB Ôöé gzip:   4.36 kB
+#17 56.89 ../dist/public/assets/PaymentPlans-d1Q7pkVT.js                  20.35 kB Ôöé gzip:   4.40 kB
+#17 56.89 ../dist/public/assets/PaymentReports-yf6JCLT_.js                20.64 kB Ôöé gzip:   4.31 kB
+#17 56.89 ../dist/public/assets/ExecutiveDashboard-DUJgrgdv.js            20.88 kB Ôöé gzip:   4.39 kB
+#17 56.89 ../dist/public/assets/NotificationCenter-Be8_p1OV.js            20.89 kB Ôöé gzip:   4.40 kB
+#17 56.89 ../dist/public/assets/CustomReportBuilder-Dc16qk7f.js           21.04 kB Ôöé gzip:   4.67 kB
+#17 56.89 ../dist/public/assets/ClientPortal-BKUb6F32.js                  21.13 kB Ôöé gzip:   4.23 kB
+#17 56.89 ../dist/public/assets/WorkflowAutomation-obUDy5UN.js            21.29 kB Ôöé gzip:   4.52 kB
+#17 56.90 ../dist/public/assets/dropdown-menu-WO5OvWqp.js                 21.58 kB Ôöé gzip:   6.12 kB
+#17 56.90 ../dist/public/assets/Projects-D2-J5mOI.js                      21.68 kB Ôöé gzip:   4.66 kB
+#17 56.90 ../dist/public/assets/ProcurementImprests-DkNkbUKa.js           21.71 kB Ôöé gzip:   3.65 kB
+#17 56.90 ../dist/public/assets/select-NwLhDfC9.js                        21.94 kB Ôöé gzip:   7.42 kB
+#17 56.90 ../dist/public/assets/HRAnalyticsDashboard-DjGtqZpT.js          22.02 kB Ôöé gzip:   4.09 kB
+#17 56.90 ../dist/public/assets/DocumentForm-DAXl7c4j.js                  22.44 kB Ôöé gzip:   4.85 kB
+#17 56.90 ../dist/public/assets/purify-CovBOfck.js                        22.58 kB Ôöé gzip:   8.67 kB
+#17 56.90 ../dist/public/assets/OrgBilling-Czba6GCC.js                    22.71 kB Ôöé gzip:   5.03 kB
+#17 56.90 ../dist/public/assets/OrgDashboard-TLCj3vqo.js                  23.41 kB Ôöé gzip:   5.05 kB
+#17 56.90 ../dist/public/assets/SupplierDetails-CtuduFMW.js               23.47 kB Ôöé gzip:   3.92 kB
+#17 56.90 ../dist/public/assets/CreateClient-WwC8mDFT.js                  23.62 kB Ôöé gzip:   4.75 kB
+#17 56.90 ../dist/public/assets/SuperAdminPricingTiers-D_blCJWG.js        24.12 kB Ôöé gzip:   5.05 kB
+#17 56.90 ../dist/public/assets/ProcurementOrders-B-v1UTa6.js             24.17 kB Ôöé gzip:   4.17 kB
+#17 56.90 ../dist/public/assets/ProfessionalBudgeting-BNv2VnkO.js         24.19 kB Ôöé gzip:   4.98 kB
+#17 56.90 ../dist/public/assets/Forecasting-BVLRAOJJ.js                   24.28 kB Ôöé gzip:   4.67 kB
+#17 56.90 ../dist/public/assets/CreateExpense-CGm4-ia2.js                 24.39 kB Ôöé gzip:   5.99 kB
+#17 56.90 ../dist/public/assets/YAxis-BmSR-7EW.js                         24.41 kB Ôöé gzip:   6.26 kB
+#17 56.90 ../dist/public/assets/ThemeCustomization-D1RM81yA.js            25.03 kB Ôöé gzip:   5.08 kB
+#17 56.90 ../dist/public/assets/DashboardHome-CXv_SmqK.js                 25.11 kB Ôöé gzip:   5.89 kB
+#17 56.90 ../dist/public/assets/CreateEmployee-DJqSi2OI.js                25.15 kB Ôöé gzip:   5.25 kB
+#17 56.90 ../dist/public/assets/Communications-DjPd83Aj.js                25.15 kB Ôöé gzip:   4.95 kB
+#17 56.90 ../dist/public/assets/Expenses-DweiPCDE.js                      25.18 kB Ôöé gzip:   5.30 kB
+#17 56.90 ../dist/public/assets/AdminDashboard-zZRsMici.js                25.72 kB Ôöé gzip:   4.84 kB
+#17 56.90 ../dist/public/assets/PieChart-CBybEt2_.js                      26.03 kB Ôöé gzip:   7.07 kB
+#17 56.90 ../dist/public/assets/KenyanPayrollCalculator-C-rIRQuH.js       26.14 kB Ôöé gzip:   5.08 kB
+#17 56.90 ../dist/public/assets/AccountSettings-DhLxfJLt.js               27.22 kB Ôöé gzip:   4.93 kB
+#17 56.90 ../dist/public/assets/OrgClientDetail-NvR9vhYC.js               27.48 kB Ôöé gzip:   5.38 kB
+#17 56.90 ../dist/public/assets/Approvals-DeGuQ4Q0.js                     28.38 kB Ôöé gzip:   5.78 kB
+#17 56.90 ../dist/public/assets/index-rtEUQskg.js                         29.48 kB Ôöé gzip:  10.45 kB
+#17 56.90 ../dist/public/assets/CustomHomepageBuilder-Mv1Caa0b.js         30.44 kB Ôöé gzip:   6.80 kB
+#17 56.90 ../dist/public/assets/SuperAdminDashboard-DHoBt2RK.js           30.54 kB Ôöé gzip:   6.21 kB
+#17 56.90 ../dist/public/assets/Clients-B-yEwxj4.js                       30.57 kB Ôöé gzip:   6.52 kB
+#17 56.90 ../dist/public/assets/ChartOfAccounts-BZhX0Kt2.js               30.59 kB Ôöé gzip:   5.86 kB
+#17 56.90 ../dist/public/assets/ImportExcel-DpawfJnp.js                   30.93 kB Ôöé gzip:   7.81 kB
+#17 56.90 ../dist/public/assets/BrandCustomization-P1Ah-yRx.js            31.80 kB Ôöé gzip:   5.86 kB
+#17 56.90 ../dist/public/assets/BackupManagement-h27h5edU.js              32.17 kB Ôöé gzip:   6.66 kB
+#17 56.90 ../dist/public/assets/AIHub-T5bVUvgb.js                         33.05 kB Ôöé gzip:   6.37 kB
+#17 56.90 ../dist/public/assets/InvoiceDetails-De6BgA8Z.js                35.24 kB Ôöé gzip:   7.04 kB
+#17 56.90 ../dist/public/assets/HRPayrollManagement-BkbYu_x4.js           35.87 kB Ôöé gzip:   6.41 kB
+#17 56.90 ../dist/public/assets/Employees-B0Vnk_jd.js                     36.11 kB Ôöé gzip:   7.89 kB
+#17 56.90 ../dist/public/assets/ClientDetails-BUXccst0.js                 45.61 kB Ôöé gzip:   7.60 kB
+#17 56.90 ../dist/public/assets/Settings-AD6Swi-1.js                      48.30 kB Ôöé gzip:   9.96 kB
+#17 56.90 ../dist/public/assets/HRDashboard-CSKndxh9.js                   51.76 kB Ôöé gzip:   8.48 kB
+#17 56.90 ../dist/public/assets/AdminManagement-DLLz5yyP.js               51.80 kB Ôöé gzip:   9.88 kB
+#17 56.90 ../dist/public/assets/LandingPage-CgtwfZM3.js                   54.10 kB Ôöé gzip:  10.96 kB
+#17 56.90 ../dist/public/assets/DashboardLayout-Bkd9WBHG.js               70.61 kB Ôöé gzip:  17.85 kB
+#17 56.90 ../dist/public/assets/MultiTenancy-Dtccnc-R.js                  72.33 kB Ôöé gzip:  13.98 kB
+#17 56.90 ../dist/public/assets/ProjectDetails-D11bJ0tt.js                76.83 kB Ôöé gzip:  12.43 kB
+#17 56.90 ../dist/public/assets/index.es-uQynnHD2.js                     159.98 kB Ôöé gzip:  53.58 kB
+#17 56.90 ../dist/public/assets/html2canvas-DXEQVQnt.js                  201.04 kB Ôöé gzip:  47.43 kB
+#17 56.90 ../dist/public/assets/generateCategoricalChart-CDxfumDS.js     359.97 kB Ôöé gzip: 101.00 kB
+#17 56.90 ../dist/public/assets/xlsx-BojT3SgY.js                         424.38 kB Ôöé gzip: 141.60 kB
+#17 56.90 ../dist/public/assets/TestPDFGeneration-xFcOdYm-.js            431.15 kB Ôöé gzip: 138.85 kB
+#17 56.90 ../dist/public/assets/index-B1R9DUGo.js                        473.68 kB Ôöé gzip: 132.18 kB
+#17 56.90 Ô£ô built in 53.75s
+#17 58.20 
+#17 58.20   dist/index.js  1.7mb ÔÜá´©Å
+#17 58.20 
+#17 58.20 ÔÜí Done in 443ms
+#17 DONE 59.3s
+
+#18 [stage-1  8/18] COPY --from=builder /app/dist ./dist
+#18 DONE 3.5s
+
+#19 [stage-1  9/18] COPY --from=builder /app/drizzle ./drizzle
+#19 DONE 0.4s
+
+#20 [stage-1 10/18] COPY --from=builder /app/drizzle.config.ts ./
+#20 DONE 0.2s
+
+#21 [stage-1 11/18] COPY --from=builder /app/server ./server
+#21 DONE 0.7s
+
+#22 [stage-1 12/18] COPY init-db.ts drizzle-migrate.ts ./
+#22 DONE 0.3s
+
+#23 [stage-1 13/18] COPY drizzle/meta ./drizzle/meta
+#23 DONE 0.2s
+
+#24 [stage-1 14/18] COPY drizzle/0*.sql ./drizzle/
+#24 DONE 0.1s
+
+#25 [stage-1 15/18] COPY drizzle/migrations/ ./drizzle/migrations/
+#25 DONE 0.2s
+
+#26 [stage-1 16/18] RUN cat > /app/start.sh << 'EOF'
+#26 DONE 0.4s
+
+#27 [stage-1 17/18] RUN chmod +x /app/start.sh
+#27 DONE 0.5s
+
+#28 [stage-1 18/18] RUN addgroup -g 1001 -S nodejs &&   adduser -S nodejs -u 1001 &&   mkdir -p /app/drizzle/meta &&   chown -R nodejs:nodejs /app/drizzle
+#28 DONE 1.0s
+
+#29 exporting to image
+#29 exporting layers
+#29 exporting layers 50.2s done
+#29 exporting manifest sha256:d9eadaf78cb295237a76232c8d616a40a79dbd8a81b6d79874c904df7b52e1b5 0.0s done
+#29 exporting config sha256:f8faf66c8e9defc03f0a4efd69ff7bbd013f6b55629ca2bc1964fd81b2b36640 0.0s done
+#29 exporting attestation manifest sha256:7e276b4691561f43eca487217f932621b7ae30153d9d38fde51b4ff5194d7a0c
+#29 exporting attestation manifest sha256:7e276b4691561f43eca487217f932621b7ae30153d9d38fde51b4ff5194d7a0c 0.1s done
+#29 exporting manifest list sha256:69b36379a6f748a3c2ca91561a46398b76966b3be5c0defa5e296ff7448243e7 0.1s done
+#29 naming to docker.io/library/melitech_crm-app:latest 0.0s done
+#29 unpacking to docker.io/library/melitech_crm-app:latest
+#29 unpacking to docker.io/library/melitech_crm-app:latest 59.5s done
+#29 DONE 110.2s
+
+#30 resolving provenance for metadata file
+#30 DONE 0.2s
+ Image melitech_crm-app Built 

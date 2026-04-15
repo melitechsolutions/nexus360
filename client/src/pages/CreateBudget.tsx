@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
-import DashboardLayout from "@/components/DashboardLayout";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, PiggyBank } from "lucide-react";
+import { Plus, PiggyBank } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useCurrencySettings } from "@/lib/currency";
 
 export default function CreateBudget() {
   const [, navigate] = useLocation();
@@ -18,6 +18,7 @@ export default function CreateBudget() {
   const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear().toString());
 
   const { data: departments } = trpc.departments.list.useQuery();
+  const { code: currencyCode } = useCurrencySettings();
   const createBudgetMutation = trpc.budgets.create.useMutation({
     onSuccess: () => {
       toast.success("Budget created successfully");
@@ -36,12 +37,12 @@ export default function CreateBudget() {
       return;
     }
 
-    const amountInCents = Math.round(parseFloat(amount) * 100);
+    const parsedAmount = Math.round(parseFloat(amount));
 
     createBudgetMutation.mutate({
       departmentId,
-      amount: amountInCents,
-      remaining: amountInCents,
+      amount: parsedAmount,
+      remaining: parsedAmount,
       fiscalYear: parseInt(fiscalYear),
     });
   };
@@ -53,26 +54,15 @@ export default function CreateBudget() {
     <ModuleLayout
       title="Create Budget"
       description="Set up a new departmental budget"
-      icon={<PiggyBank className="w-6 h-6" />}
+      icon={<Plus className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Budgets", href: "/budgets" },
-        { label: "Create Budget" },
+        { label: "Create" },
       ]}
+      backLink={{ label: "Budgets", href: "/budgets" }}
     >
       <div className="max-w-2xl">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate("/budgets")}
-          className="gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </Button>
-        <h1 className="text-3xl font-bold">Create Budget</h1>
-      </div>
 
       <Card>
         <CardHeader>
@@ -108,7 +98,7 @@ export default function CreateBudget() {
                 step="0.01"
               />
               <p className="text-sm text-gray-500">
-                {amount ? `≈ ${new Intl.NumberFormat("en-US", { style: "currency", currency: "KES" }).format(parseFloat(amount))}` : "Enter an amount"}
+                {amount ? `≈ ${new Intl.NumberFormat("en-US", { style: "currency", currency: currencyCode }).format(parseFloat(amount))}` : "Enter an amount"}
               </p>
             </div>
 

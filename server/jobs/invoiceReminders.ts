@@ -104,7 +104,7 @@ async function processInvoiceReminders() {
         and(
           eq(invoices.status, "sent" as any),
           // Due within next 24 hours
-          lt(invoices.dueDate, new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString())
+          lt(invoices.dueDate, new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 19))
         )
       )
       .limit(100);
@@ -155,7 +155,7 @@ async function processInvoiceReminders() {
           // Not paid or partial
           lt(invoices.paidAmount, invoices.total),
           // Past due date
-          lt(invoices.dueDate, now.toISOString())
+          lt(invoices.dueDate, now.toISOString().replace('T', ' ').substring(0, 19))
         )
       )
       .limit(100);
@@ -323,7 +323,7 @@ async function processRecurringInvoices() {
       .where(
         and(
           eq(recurringInvoices.isActive, 1),
-          lte(recurringInvoices.nextDueDate, now.toISOString())
+          lte(recurringInvoices.nextDueDate, now.toISOString().replace('T', ' ').substring(0, 19))
         )
       )
       .limit(100);
@@ -379,8 +379,8 @@ async function processRecurringInvoices() {
           recurringInvoiceId: recurring.id,
           title: template[0].title,
           status: "draft",
-          issueDate: now.toISOString(),
-          dueDate: nextDueDate.toISOString(),
+          issueDate: now.toISOString().replace('T', ' ').substring(0, 19),
+          dueDate: nextDueDate.toISOString().replace('T', ' ').substring(0, 19),
           subtotal: template[0].subtotal,
           taxAmount: template[0].taxAmount || 0,
           discountAmount: template[0].discountAmount || 0,
@@ -420,8 +420,8 @@ async function processRecurringInvoices() {
         await db
           .update(recurringInvoices)
           .set({
-            nextDueDate: nextDueDate.toISOString(),
-            lastGeneratedDate: now.toISOString(),
+            nextDueDate: nextDueDate.toISOString().replace('T', ' ').substring(0, 19),
+            lastGeneratedDate: now.toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(recurringInvoices.id, recurring.id));
 
@@ -511,8 +511,8 @@ async function processInstallmentReminders() {
       .where(
         and(
           eq(paymentPlanInstallments.status, "pending"),
-          gte(paymentPlanInstallments.dueDate, now.toISOString()),
-          lte(paymentPlanInstallments.dueDate, tomorrow.toISOString()),
+          gte(paymentPlanInstallments.dueDate, now.toISOString().replace('T', ' ').substring(0, 19)),
+          lte(paymentPlanInstallments.dueDate, tomorrow.toISOString().replace('T', ' ').substring(0, 19)),
           eq(paymentPlans.status, "active")
         )
       );
@@ -569,7 +569,7 @@ async function processInstallmentReminders() {
       .where(
         and(
           eq(paymentPlanInstallments.status, "pending"),
-          lte(paymentPlanInstallments.dueDate, overdueBefore.toISOString()),
+          lte(paymentPlanInstallments.dueDate, overdueBefore.toISOString().replace('T', ' ').substring(0, 19)),
           eq(paymentPlans.status, "active")
         )
       );
@@ -652,8 +652,8 @@ async function processMilestoneReminders() {
       .where(
         and(
           eq(projectMilestones.status, "planning"),
-          gte(projectMilestones.dueDate, now.toISOString()),
-          lte(projectMilestones.dueDate, tomorrow.toISOString())
+          gte(projectMilestones.dueDate, now.toISOString().replace('T', ' ').substring(0, 19)),
+          lte(projectMilestones.dueDate, tomorrow.toISOString().replace('T', ' ').substring(0, 19))
         )
       );
 
@@ -704,7 +704,7 @@ async function processMilestoneReminders() {
       .where(
         and(
           eq(projectMilestones.status, "in_progress"),
-          lte(projectMilestones.dueDate, now.toISOString())
+          lte(projectMilestones.dueDate, now.toISOString().replace('T', ' ').substring(0, 19))
         )
       );
 

@@ -1,281 +1,237 @@
 import { useState } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Lock, Eye, EyeOff, Shield, AlertTriangle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Shield, Loader2, AlertTriangle, Activity, Clock } from "lucide-react";
 
 export default function Security() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+  const [auditScope, setAuditScope] = useState<"full" | "permissions" | "encryption" | "access_logs">("full");
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordData({
-      ...passwordData,
-      [e.target.name]: e.target.value,
-    });
+  const dashboardQuery = trpc.securityCompliance.getSecurityDashboard.useQuery({});
+  const eventsQuery = trpc.advancedSecurity.listSecurityEvents.useQuery({});
+  const auditQuery = trpc.securityCompliance.performSecurityAudit.useQuery(
+    { scope: auditScope },
+    { enabled: false }
+  );
+
+  const handleRunAudit = () => {
+    auditQuery.refetch().then(() => {
+      toast.success("Security audit completed");
+    }).catch((e: any) => toast.error(e.message));
   };
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("New passwords do not match!");
-      return;
-    }
+  if (dashboardQuery.isLoading || eventsQuery.isLoading) {
+    return (
+      <ModuleLayout
+        title="Security"
+        description="Security dashboard, events, and audit"
+        icon={<Shield className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "Settings", href: "/settings" },
+          { label: "Security" },
+        ]}
+      >
+        <div className="flex justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </ModuleLayout>
+    );
+  }
 
-    if (passwordData.newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters long!");
-      return;
-    }
+  if (dashboardQuery.error) {
+    return (
+      <ModuleLayout
+        title="Security"
+        description="Security dashboard, events, and audit"
+        icon={<Shield className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "Settings", href: "/settings" },
+          { label: "Security" },
+        ]}
+      >
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg">Error: {dashboardQuery.error.message}</div>
+      </ModuleLayout>
+    );
+  }
 
-    setIsLoading(true);
-    try {
-      // Replace with real API call when available. Immediate success for now.
-      await Promise.resolve();
-      setIsLoading(false);
-      toast.success("Password updated successfully!");
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch (err) {
-      setIsLoading(false);
-      toast.error("Failed to update password");
-    }
-  };
-
-  const getPasswordStrength = (password: string) => {
-    if (password.length === 0) return { strength: 0, label: "" };
-    if (password.length < 6) return { strength: 25, label: "Weak", color: "bg-red-500" };
-    if (password.length < 10) return { strength: 50, label: "Fair", color: "bg-yellow-500" };
-    if (password.length < 14) return { strength: 75, label: "Good", color: "bg-blue-500" };
-    return { strength: 100, label: "Strong", color: "bg-green-500" };
-  };
-
-  const passwordStrength = getPasswordStrength(passwordData.newPassword);
+  const dashboard: any = dashboardQuery.data ?? {};
+  const summary: any = dashboard.summary ?? {};
+  const recentActivity: any[] = dashboard.recentActivity ?? [];
+  const events: any[] = (eventsQuery.data as any)?.events ?? [];
+  const auditData: any = auditQuery.data ?? null;
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Security"
+      description="Security dashboard, events, and audit"
+      icon={<Shield className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Settings", href: "/settings" },
+        { label: "Security" },
+      ]}
+    >
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Password & Security</h1>
-          <p className="text-muted-foreground">
-            Manage your password and security settings
-          </p>
-        </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Change Password */}
+        {/* Score & Summary */}
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Change Password
-              </CardTitle>
-              <CardDescription>Update your password regularly to keep your account secure</CardDescription>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Security Score</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handlePasswordChange} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Current Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={passwordData.currentPassword}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-                    >
-                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="newPassword"
-                      name="newPassword"
-                      type={showNewPassword ? "text" : "password"}
-                      value={passwordData.newPassword}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-                    >
-                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  {passwordData.newPassword && (
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Password strength:</span>
-                        <span className={`font-medium ${
-                          passwordStrength.strength < 50 ? "text-red-500" :
-                          passwordStrength.strength < 75 ? "text-yellow-500" :
-                          passwordStrength.strength < 100 ? "text-blue-500" :
-                          "text-green-500"
-                        }`}>
-                          {passwordStrength.label}
-                        </span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className={`h-full transition-all ${passwordStrength.color}`}
-                          style={{ width: `${passwordStrength.strength}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={passwordData.confirmPassword}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    Password must be at least 8 characters long and include a mix of letters, numbers, and symbols.
-                  </AlertDescription>
-                </Alert>
-
-                <Separator />
-
-                <Button type="submit" disabled={isLoading} className="w-full">
-                  {isLoading ? "Updating..." : "Update Password"}
-                </Button>
-              </form>
+              <p className="text-3xl font-bold">{dashboard.overallSecureScore ?? 0}</p>
             </CardContent>
           </Card>
-
-          {/* Security Recommendations */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Security Recommendations
-              </CardTitle>
-              <CardDescription>Best practices to keep your account secure</CardDescription>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Vulnerabilities</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex gap-3">
-                  <div className="mt-1">
-                    <div className="h-2 w-2 rounded-full bg-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Use a strong password</p>
-                    <p className="text-sm text-muted-foreground">
-                      Combine uppercase, lowercase, numbers, and symbols
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="mt-1">
-                    <div className="h-2 w-2 rounded-full bg-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Enable two-factor authentication</p>
-                    <p className="text-sm text-muted-foreground">
-                      Add an extra layer of security to your account
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="mt-1">
-                    <div className="h-2 w-2 rounded-full bg-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Change password regularly</p>
-                    <p className="text-sm text-muted-foreground">
-                      Update your password every 3-6 months
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="mt-1">
-                    <div className="h-2 w-2 rounded-full bg-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Don't reuse passwords</p>
-                    <p className="text-sm text-muted-foreground">
-                      Use unique passwords for different accounts
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="mt-1">
-                    <div className="h-2 w-2 rounded-full bg-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Be cautious of phishing</p>
-                    <p className="text-sm text-muted-foreground">
-                      Never share your password via email or messages
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-medium">Recent Security Activity</h4>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>• Last password change: Never</p>
-                  <p>• Last login: Today at 2:32 PM</p>
-                  <p>• Login location: Nairobi, Kenya</p>
-                </div>
-              </div>
+            <CardContent>
+              <p className="text-3xl font-bold">{summary.vulnerabilities ?? 0}</p>
+              <p className="text-xs text-red-600">{summary.criticalVulnerabilities ?? 0} critical</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Compliance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Badge variant={summary.complianceStatus === "compliant" ? "default" : "secondary"}>
+                {summary.complianceStatus ?? "—"}
+              </Badge>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">2FA Adoption</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{summary.twoFactorAdoption ?? 0}%</p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Audit */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Security Audit
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              <select
+                className="border rounded px-3 py-2 text-sm"
+                value={auditScope}
+                onChange={(e) => setAuditScope(e.target.value as any)}
+              >
+                <option value="full">Full Audit</option>
+                <option value="permissions">Permissions</option>
+                <option value="encryption">Encryption</option>
+                <option value="access_logs">Access Logs</option>
+              </select>
+              <Button onClick={handleRunAudit} disabled={auditQuery.isFetching}>
+                {auditQuery.isFetching ? "Running..." : "Run Audit"}
+              </Button>
+            </div>
+            {auditData && (
+              <div className="space-y-2">
+                <div className="flex gap-4 text-sm">
+                  <span>ID: <strong>{auditData.auditId ?? "—"}</strong></span>
+                  <span>Findings: <strong>{auditData.findingsCount ?? 0}</strong></span>
+                  <span>Critical: <strong className="text-red-600">{auditData.criticalCount ?? 0}</strong></span>
+                  <Badge>{auditData.status ?? "—"}</Badge>
+                </div>
+                {(auditData.findings ?? []).length > 0 && (
+                  <div className="border rounded-lg divide-y max-h-60 overflow-auto">
+                    {(auditData.findings ?? []).map((f: any) => (
+                      <div key={f.id} className="p-3 text-sm flex items-start gap-2">
+                        <Badge variant={f.severity === "critical" ? "destructive" : "secondary"} className="text-xs">
+                          {f.severity ?? "—"}
+                        </Badge>
+                        <div>
+                          <p className="font-medium">{f.title ?? "—"}</p>
+                          <p className="text-muted-foreground text-xs">{f.description ?? ""}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {(auditData.findings ?? []).length === 0 && (
+                  <p className="text-center text-gray-500 py-8">No findings.</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentActivity.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No data found.</p>
+            ) : (
+              <div className="border rounded-lg divide-y max-h-64 overflow-auto">
+                {recentActivity.map((a: any) => (
+                  <div key={a.id} className="p-3 flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">{a.type ?? "—"}</Badge>
+                      <span>{a.details ?? "—"}</span>
+                    </div>
+                    <span className="text-muted-foreground text-xs">{a.severity ?? "—"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Security Events */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Security Events
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {events.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No data found.</p>
+            ) : (
+              <div className="border rounded-lg divide-y max-h-72 overflow-auto">
+                {events.map((ev: any) => (
+                  <div key={ev.id} className="p-3 flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">{ev.eventType ?? "—"}</Badge>
+                      <span>{ev.action ?? "—"}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <Badge variant={ev.severity === "CRITICAL" ? "destructive" : "secondary"} className="text-xs">
+                        {ev.severity ?? "—"}
+                      </Badge>
+                      <span>{ev.createdAt ? new Date(ev.createdAt).toLocaleString() : "—"}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }
 

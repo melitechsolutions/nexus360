@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download, FileText } from "lucide-react";
+import { useCurrencySettings } from "@/lib/currency";
 
 interface PayrollBreakdown {
   basicSalary: number;
@@ -41,10 +42,12 @@ export function PayslipSummary({
   payroll,
   onDownload,
 }: PayslipSummaryProps) {
+  const { code: currencyCode } = useCurrencySettings();
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "KES",
+      currency: currencyCode,
       minimumFractionDigits: 2,
     }).format(value / 100);
   };

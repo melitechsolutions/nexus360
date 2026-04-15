@@ -36,8 +36,12 @@ import { DollarSign, TrendingUp, Users, Download, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
+import { useCurrencySettings } from "@/lib/currency";
 
 export default function DepartmentPayrollReports() {
+  const { code: currencyCode } = useCurrencySettings();
+
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [selectedDept, setSelectedDept] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState("all");
@@ -83,7 +87,7 @@ export default function DepartmentPayrollReports() {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "KES",
+      currency: currencyCode,
       minimumFractionDigits: 0,
     }).format(value);
   };
@@ -234,66 +238,40 @@ export default function DepartmentPayrollReports() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Gross Salary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <DollarSign className="h-6 w-6 text-blue-500" />
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">{formatCurrency(stats.totalGrossSalary)}</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Gross Salary"
+            value={<><DollarSign className="h-6 w-6 text-blue-500" /></>}
+            icon={<DollarSign className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Net Pay</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <TrendingUp className="h-6 w-6 text-green-500" />
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">{formatCurrency(stats.totalNetPay)}</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Net Pay"
+            value={<><TrendingUp className="h-6 w-6 text-green-500" /></>}
+            icon={<TrendingUp className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Deductions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <DollarSign className="h-6 w-6 text-red-500" />
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">{formatCurrency(stats.totalDeductions)}</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Deductions"
+            value={<><DollarSign className="h-6 w-6 text-red-500" /></>}
+            icon={<DollarSign className="h-5 w-5" />}
+            color="border-l-red-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Allowances</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <DollarSign className="h-6 w-6 text-amber-500" />
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">{formatCurrency(stats.totalAllowances)}</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Allowances"
+            value={<><DollarSign className="h-6 w-6 text-amber-500" /></>}
+            icon={<DollarSign className="h-5 w-5" />}
+            color="border-l-amber-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Employees Processed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <Users className="h-6 w-6 text-purple-500" />
-                {stats.employeeCount}
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">Avg: {formatCurrency(stats.avgNetPay)}</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Employees Processed"
+            value={<><Users className="h-6 w-6 text-purple-500" /> {stats.employeeCount}</>}
+            icon={<Users className="h-5 w-5" />}
+            color="border-l-purple-500"
+          />
         </div>
 
         {/* Charts */}

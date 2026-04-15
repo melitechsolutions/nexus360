@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Invoice Template</title>
+    <link rel="stylesheet" href="../styles/document-professional-template.css">
+</head>
+<body>
+    <div class="document-container">
+        
+        <!-- HEADER WITH BRANDING (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-header" style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+          <div class="company-info" style="flex: 1;">
+            <h1 class="company-name" data-field="companyName">[COMPANY_NAME]</h1>
+            <div class="company-contact">
+              <span class="company-tax-id" data-field="companyPin">Tax ID: [COMPANY_PIN]</span>
+              <span class="company-contact-item">[COMPANY_PHONE]</span>
+              <span class="company-contact-item">[COMPANY_EMAIL]</span>
+              <span class="company-contact-item">[COMPANY_ADDRESS]</span>
+            </div>
+          </div>
+          <div class="company-logo" style="flex-shrink: 0;">
+            <img src="[COMPANY_LOGO]" alt="Company Logo" style="max-height: 80px;">
+          </div>
+        </div>
+
+        <!-- DOCUMENT TITLE AND METADATA (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-header-section" style="display: flex; align-items: center; gap: 24px;">
+          <h1 class="document-title" style="flex: 1;">SERVICE INVOICE</h1>
+          <div class="document-meta" style="display: flex; flex-direction: column; gap: 4px;">
+            <div class="meta-item"><span class="meta-label">Invoice #:</span> <span class="meta-value" data-field="serviceInvoiceNumber">[SI-00001]</span></div>
+            <div class="meta-item"><span class="meta-label">Invoice Date:</span> <span class="meta-value" data-field="issueDate">[DD/MM/YYYY]</span></div>
+            <div class="meta-item"><span class="meta-label">Due Date:</span> <span class="meta-value" data-field="dueDate">[DD/MM/YYYY]</span></div>
+            <div class="meta-item"><span class="meta-label">Tax Rate:</span> <span class="meta-value">VAT 16% (Inclusive/Exclusive)</span></div>
+          </div>
+        </div>
+
+        <!-- BILL TO / CLIENT DETAILS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Bill To</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Client Name:</strong> [Client Name]</div>
+                <div><strong>Company:</strong> [Company Name]</div>\n                <div><strong>Contact Person:</strong> [Contact Name]</div>\n                <div><strong>Email:</strong> [client@email.com]</div>\n                <div><strong>Phone:</strong> [Phone Number]</div>\n                <div><strong>Address:</strong> [Billing Address]</div>\n                <div><strong>KRA PIN:</strong> [Tax Number]</div>\n            </div>\n        </div>\n\n        <!-- SERVICE PERIOD SECTION -->\n        <div class=\"section\">\n            <h2 class=\"section-title\">Service Period & Details</h2>\n            <div class=\"section-content\">\n                <p><strong>Service Period:</strong> [Start Date] to [End Date]</p>\n                <p><strong>Service Location:</strong> [Client Site/Location]</p>\n                <p><strong>Service Description:</strong> [Brief description of services rendered]</p>\n            </div>\n        </div>\n\n        <!-- TABLE SECTION -->\n        <div class=\"section\">\n            <h2 class=\"section-title\">Services Rendered</h2>\n            <table>\n                <thead>\n                    <tr>\n                        <th style=\"text-align: left;\">Service Description</th>\n                        <th style=\"text-align: center;\">Hours/Units</th>\n                        <th style=\"text-align: right;\">Rate</th>\n                        <th style=\"text-align: right;\">Amount</th>\n                    </tr>\n                </thead>\n                <tbody>\n                    <tr>\n                        <td>[Service 1: e.g., System Support/Maintenance]</td>\n                        <td style=\"text-align: center;\">8</td>\n                        <td style=\"text-align: right;\">KES 2,500</td>\n                        <td style=\"text-align: right;\">KES 20,000.00</td>\n                    </tr>\n                    <tr>\n                        <td>[Service 2: e.g., Consulting Hours]</td>\n                        <td style=\"text-align: center;\">5</td>\n                        <td style=\"text-align: right;\">KES 3,000</td>\n                        <td style=\"text-align: right;\">KES 15,000.00</td>\n                    </tr>\n                </tbody>\n            </table>\n        </div>\n\n        <!-- HIGHLIGHT BOX -->\n        <div class=\"section\">\n            <div style=\"display: flex; justify-content: flex-end; margin-bottom: 20px;\">\n                <div style=\"width: 300px;\">\n                    <table style=\"width: 100%; border-collapse: collapse; font-size: 14px;\">\n                        <tr style=\"border-bottom: 1px solid #ddd;\">\n                            <td style=\"padding: 8px; text-align: left;\"><strong>Subtotal:</strong></td>\n                            <td style=\"padding: 8px; text-align: right;\">KES 35,000.00</td>\n                        </tr>\n                        <tr style=\"border-bottom: 1px solid #ddd;\">\n                            <td style=\"padding: 8px; text-align: left;\"><strong>VAT (16%):</strong></td>\n                            <td style=\"padding: 8px; text-align: right;\">KES 5,600.00</td>\n                        </tr>\n                        <tr style=\"border-bottom: 2px solid var(--primary-color); background-color: #f5f5f5;\">\n                            <td style=\"padding: 8px; text-align: left;\"><strong>Total Due:</strong></td>\n                            <td style=\"padding: 8px; text-align: right; font-weight: bold;\">KES 40,600.00</td>\n                        </tr>\n                    </table>\n                </div>\n            </div>\n        </div>\n\n        <!-- NOTES SECTION -->\n        <div class=\"section\">\n            <h2 class=\"section-title\">Additional Notes</h2>\n            <div class=\"section-content\" style=\"border: 1px solid #ddd; padding: 12px; background-color: #fafafa;\">\n                <p style=\"margin: 0; min-height: 40px;\">[Any additional notes or service terms not captured above]</p>\n            </div>\n        </div>\n\n        <!-- SERVICE INVOICE TERMS & CONDITIONS SECTION -->\n        <div class=\"section\">\n            <h2 class=\"section-title\">Service Invoice Terms & Conditions</h2>\n            <div class=\"section-content\" style=\"font-size: 13px; line-height: 1.6; color: var(--secondary-color);\">\n                <ol style=\"margin-left: 20px;\">\n                    <li><strong>Payment Terms:</strong> Payment due within 30 days from invoice date.</li>\n                    <li><strong>Late Payment:</strong> 1.5% monthly interest charged on overdue amounts.</li>\n                    <li><strong>Service Acceptance:</strong> Services accepted as rendered unless written objection raised within 7 days.</li>\n                    <li><strong>Dispute Period:</strong> Disputes regarding service quality must be raised within 14 days of invoice date.</li>\n                    <li><strong>Warranty:</strong> Services warranted as professional and competent per industry standards.</li>\n                    <li><strong>Scope Changes:</strong> Additional services beyond agreed scope will be invoiced separately.</li>\n                    <li><strong>Confidentiality:</strong> All information obtained during service delivery treated as confidential.</li>\n                    <li><strong>Tax Compliance:</strong> Invoice issued as per tax regulations (KRA); applicable taxes included.</li>\n                </ol>\n            </div>\n        </div>\n\n        <!-- FOOTER (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+          <div class="footer-info" style="flex: 1;">
+            <span class="document-id" data-field="serviceInvoiceNumber">SI: [SI-00001]</span>
+            <span class="document-date" data-field="issueDate">Issued: [DD/MM/YYYY]</span>
+            <span class="page-number">Page <span class="current-page">1</span> of <span class="total-pages">1</span></span>
+          </div>
+          <div class="footer-company" data-field="companyName">[COMPANY_NAME]</div>
+        </div>
+
+        <!-- Print Button (unified area, hidden in print) -->
+        <div class="no-print print-area" style="text-align: right; margin-top: 24px; padding: 16px;">
+          <button onclick="window.print()" class="print-btn">
+            Print Document
+          </button>
+        </div>
+    </div>
+
+</body>
+</html>

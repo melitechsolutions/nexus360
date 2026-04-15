@@ -106,7 +106,7 @@ export const enhancedPaymentsRouter = router({
           notes: input.notes || null,
           status: 'completed',
           createdBy: ctx.user.id,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         } as any);
 
         // Update COA balance based on payment type
@@ -119,7 +119,7 @@ export const enhancedPaymentsRouter = router({
           .update(accounts)
           .set({
             balance: newBalance,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(accounts.id, input.accountId));
 
@@ -132,7 +132,7 @@ export const enhancedPaymentsRouter = router({
           .set({
             paidAmount: newPaidAmount,
             status: newInvoiceStatus,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(invoices.id, input.invoiceId));
 
@@ -305,7 +305,7 @@ export const enhancedPaymentsRouter = router({
           .update(accounts)
           .set({
             balance: newBalance,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(accounts.id, payment.accountId));
 
@@ -325,7 +325,7 @@ export const enhancedPaymentsRouter = router({
             .set({
               paidAmount: newPaidAmount,
               status: newInvoiceStatus,
-              updatedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             })
             .where(eq(invoices.id, payment.invoiceId));
         }
@@ -335,7 +335,7 @@ export const enhancedPaymentsRouter = router({
           .update(payments)
           .set({
             status: 'cancelled',
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(payments.id, input.paymentId));
 

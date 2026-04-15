@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
-import { APP_LOGO, APP_TITLE } from "@/const";
+import { Lock, Eye, EyeOff, CheckCircle2, Zap, ArrowLeft } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
 import { toast } from "sonner";
 
@@ -74,58 +73,89 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-destructive">Invalid Reset Link</CardTitle>
-            <CardDescription className="text-base mt-2">
-              This password reset link is invalid or has expired.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => setLocation("/forgot-password")}
-              className="w-full"
-            >
-              Request New Reset Link
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-violet-50">
+        <div className="p-4 sm:p-6">
+          <a href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Back to home
+          </a>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md shadow-xl border-gray-200">
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-200">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl text-destructive">Invalid Reset Link</CardTitle>
+              <CardDescription className="text-base mt-2">
+                This password reset link is invalid or has expired.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => setLocation("/forgot-password")}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200"
+              >
+                Request New Reset Link
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-green-500" />
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-violet-50">
+        <div className="p-4 sm:p-6">
+          <a href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Back to home
+          </a>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md shadow-xl border-gray-200">
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-8 w-8 text-green-500" />
+                </div>
               </div>
-            </div>
-            <CardTitle className="text-2xl">Password Reset Complete!</CardTitle>
-            <CardDescription className="text-base mt-2">
-              Your password has been successfully reset.
-              <br />
-              Redirecting to login...
-            </CardDescription>
-          </CardHeader>
-        </Card>
+              <CardTitle className="text-2xl">Password Reset Complete!</CardTitle>
+              <CardDescription className="text-base mt-2">
+                Your password has been successfully reset.
+                <br />
+                Redirecting to login...
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-violet-50">
+      <div className="p-4 sm:p-6">
+        <a href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+          <ArrowLeft className="h-4 w-4" />
+          Back to home
+        </a>
+      </div>
+      <div className="flex-1 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-xl border-gray-200">
         <CardHeader className="text-center">
-          {APP_LOGO && (
-            <div className="flex justify-center mb-4">
-              <img src={APP_LOGO} alt={APP_TITLE} className="h-16 w-auto" />
-            </div>
-          )}
+          <div className="flex justify-center mb-4">
+            <a href="/" className="flex items-center gap-3 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-200">
+                <Zap className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-900">Nexus<span className="text-indigo-600">360</span></span>
+            </a>
+          </div>
           <CardTitle className="text-2xl">Create New Password</CardTitle>
           <CardDescription className="text-base mt-2">
             Enter your new password below
@@ -207,7 +237,7 @@ export default function ResetPassword() {
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200"
               disabled={isLoading || !password || !confirmPassword || password !== confirmPassword}
             >
               {isLoading ? "Resetting Password..." : "Reset Password"}
@@ -224,6 +254,7 @@ export default function ResetPassword() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -2,16 +2,21 @@ import { router, protectedProcedure, createFeatureRestrictedProcedure } from "..
 import { z } from "zod";
 import { getDb } from "../db";
 import { opportunities } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
+import { triggerEventNotification } from "./emailNotifications";
 
 export const opportunitiesRouter = router({
   list: protectedProcedure
     .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const rows = await db.select().from(opportunities).limit(input?.limit || 50).offset(input?.offset || 0);
+      const orgId = ctx.user.organizationId;
+      const query = orgId
+        ? db.select().from(opportunities).where(eq(opportunities.organizationId, orgId))
+        : db.select().from(opportunities);
+      const rows = await (query as any).limit(input?.limit || 50).offset(input?.offset || 0);
       return rows.map((r: any) => ({
         ...r,
         // Back-compat aliases expected by frontend
@@ -24,10 +29,12 @@ export const opportunitiesRouter = router({
 
   getById: protectedProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
-      const result = await db.select().from(opportunities).where(eq(opportunities.id, input)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(opportunities.id, input), eq(opportunities.organizationId, orgId)) : eq(opportunities.id, input);
+      const result = await db.select().from(opportunities).where(where).limit(1);
       const row = result[0] || null;
       if (!row) return null;
       return {
@@ -41,10 +48,12 @@ export const opportunitiesRouter = router({
 
   byClient: protectedProcedure
     .input(z.object({ clientId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const result = await db.select().from(opportunities).where(eq(opportunities.clientId, input.clientId));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(opportunities.clientId, input.clientId), eq(opportunities.organizationId, orgId)) : eq(opportunities.clientId, input.clientId);
+      const result = await db.select().from(opportunities).where(where);
       return result;
     }),
 
@@ -52,8 +61,9 @@ export const opportunitiesRouter = router({
     .input(z.object({
       // Accept frontend-friendly fields and map them to DB columns
       proposalNumber: z.string().optional(),
-      clientId: z.string(),
-      title: z.string(),
+      clientId: z.string().optional().default(""),
+      name: z.string().optional(),
+      title: z.string().optional(),
       description: z.string().optional(),
       amount: z.number().optional(),
       value: z.number().optional(),
@@ -66,6 +76,9 @@ export const opportunitiesRouter = router({
       assignedTo: z.string().optional(),
       source: z.string().optional(),
       notes: z.string().optional(),
+      winReason: z.string().optional(),
+      lossReason: z.string().optional(),
+      actualCloseDate: z.date().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
@@ -74,10 +87,15 @@ export const opportunitiesRouter = router({
       const id = uuidv4();
       const insertData: any = {
         ...input,
+        // Support both `name` and `title` fields from different callers
+        title: input.title || (input as any).name || "Untitled",
+        clientId: input.clientId || "",
         // Map frontend-friendly fields to DB columns
-        value: input.amount ?? input.value,
+        value: input.amount ?? input.value ?? 0,
         expectedCloseDate: input.expectedCloseDate ? input.expectedCloseDate.toISOString() : (input.validUntil || undefined),
+        actualCloseDate: input.actualCloseDate ? input.actualCloseDate.toISOString() : undefined,
       };
+      delete (insertData as any).name;
 
       if (input.status) {
         insertData.stage = input.status;
@@ -86,9 +104,31 @@ export const opportunitiesRouter = router({
 
       await db.insert(opportunities).values({
         id,
+        organizationId: ctx.user.organizationId ?? null,
         ...insertData,
         createdBy: ctx.user.id,
       });
+
+      // Email notification
+      try {
+        if (ctx.user.email) {
+          const title = insertData.title || "Untitled";
+          await triggerEventNotification({
+            userId: ctx.user.id,
+            eventType: "opportunity_created",
+            recipientEmail: ctx.user.email,
+            recipientName: ctx.user.name,
+            subject: `New Opportunity: ${title}`,
+            htmlContent: `<h2>New Opportunity Created</h2><p>Opportunity <strong>${title}</strong> has been created.</p>${insertData.value ? `<p><strong>Value:</strong> KES ${insertData.value.toLocaleString()}</p>` : ''}<p><a href="/opportunities/${id}">View Opportunity</a></p>`,
+            entityType: "opportunity",
+            entityId: id,
+            actionUrl: `/opportunities/${id}`,
+          });
+        }
+      } catch (notifError) {
+        console.error("[Opportunities] Failed to send email notification:", notifError);
+      }
+
       return { id };
     }),
 
@@ -118,7 +158,6 @@ export const opportunitiesRouter = router({
       if (!db) throw new Error("Database not available");
       
       const { id, ...data } = input;
-      // fetch current opportunity to detect stage changes
       const existing = await db.select().from(opportunities).where(eq(opportunities.id, id)).limit(1);
       const oldStage = existing[0]?.stage;
       const updateData: any = {
@@ -140,7 +179,9 @@ export const opportunitiesRouter = router({
       delete updateData.amount;
       delete updateData.validUntil;
 
-      await db.update(opportunities).set(updateData).where(eq(opportunities.id, id));
+      const orgId = ctx.user.organizationId;
+      const updateWhere = orgId ? and(eq(opportunities.id, id), eq(opportunities.organizationId, orgId)) : eq(opportunities.id, id);
+      await db.update(opportunities).set(updateData).where(updateWhere);
 
       // If stage changed, trigger workflows
       const newStage = updateData.stage;
@@ -163,20 +204,24 @@ export const opportunitiesRouter = router({
 
   delete: createFeatureRestrictedProcedure("opportunities:delete")
     .input(z.string())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      await db.delete(opportunities).where(eq(opportunities.id, input));
+      const orgId = ctx.user.organizationId;
+      const deleteWhere = orgId ? and(eq(opportunities.id, input), eq(opportunities.organizationId, orgId)) : eq(opportunities.id, input);
+      await db.delete(opportunities).where(deleteWhere);
       return { success: true };
     }),
 
   byStage: protectedProcedure
     .input(z.object({ stage: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const result = await db.select().from(opportunities).where(eq(opportunities.stage, input.stage as any));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(opportunities.stage, input.stage as any), eq(opportunities.organizationId, orgId)) : eq(opportunities.stage, input.stage as any);
+      const result = await db.select().from(opportunities).where(where);
       return result;
     }),
 });

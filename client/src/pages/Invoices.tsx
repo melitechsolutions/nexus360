@@ -5,44 +5,27 @@ import { Spinner } from "@/components/ui/spinner";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { useUserLookup } from "@/hooks/useUserLookup";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  FileText,
-  Search,
-  Plus,
-  DollarSign,
-  Calendar,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Eye,
-  Edit,
-  Trash2,
-  Download,
-  ArrowUpDown,
-  Loader2,
-  Mail,
+  Eye, Edit, Trash2, ArrowUpDown, Loader2, Mail, Link2, Copy, CreditCard, RotateCcw, FolderOpen, Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { format } from "date-fns";
+import { PaginationControls, usePagination } from "@/components/ui/data-table-controls";
+import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
+import { SummaryStatCards, type SummaryCard } from "@/components/list-page/SummaryStatCards";
+import { TableColumnSettings, useColumnVisibility, type ColumnConfig } from "@/components/list-page/TableColumnSettings";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction, bulkEmailAction } from "@/components/list-page/EnhancedBulkActions";
+import { RowActionsMenu, actionIcons, type RowAction } from "@/components/list-page/RowActionsMenu";
 
 interface InvoiceDisplay {
   id: string;
@@ -63,15 +46,25 @@ interface InvoiceDisplay {
 type SortField = "invoiceNumber" | "client" | "amount" | "issueDate" | "dueDate" | "status";
 type SortOrder = "asc" | "desc";
 
-const iconMap = {
-  DollarSign,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-};
+const INVOICE_COLUMNS: ColumnConfig[] = [
+  { key: "id", label: "ID", defaultVisible: true },
+  { key: "date", label: "Date", defaultVisible: true },
+  { key: "dueDate", label: "Due Date", defaultVisible: true },
+  { key: "client", label: "Company Name", defaultVisible: true },
+  { key: "createdBy", label: "Created By", defaultVisible: true },
+  { key: "amount", label: "Amount", defaultVisible: true },
+  { key: "status", label: "Status", defaultVisible: true },
+  { key: "project", label: "Project", defaultVisible: false },
+  { key: "approvedBy", label: "Approved By", defaultVisible: false },
+  { key: "approvalDate", label: "Approval Date", defaultVisible: false },
+  { key: "contact", label: "Contact", defaultVisible: false },
+  { key: "tax", label: "Tax", defaultVisible: false },
+  { key: "balance", label: "Balance", defaultVisible: false },
+];
 
 export default function Invoices() {
   // CALL ALL HOOKS UNCONDITIONALLY AT TOP LEVEL
+  const { getUserName } = useUserLookup();
   const { allowed, isLoading } = useRequireFeature("accounting:invoices:view");
   const { allowed: canEmail, isLoading: emailLoading } = useRequireFeature("communications:email");
   const [, navigate] = useLocation();
@@ -81,6 +74,8 @@ export default function Invoices() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [isExporting, setIsExporting] = useState(false);
   const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
+  const { page, pageSize, setPage, setPageSize, paginate } = usePagination(25);
+  const { visibleColumns, toggleColumn, isVisible, pageSize: colPageSize, updatePageSize, reset } = useColumnVisibility(INVOICE_COLUMNS, "invoices");
 
   // Fetch real data from backend
   const { data: invoicesData = [], isLoading: isLoadingInvoices } = trpc.invoices.list.useQuery();
@@ -99,6 +94,17 @@ export default function Invoices() {
     },
   });
 
+  const bulkDeleteInvoicesMutation = trpc.invoices.bulkDelete.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.count} invoice(s) deleted`);
+      utils.invoices.list.invalidate();
+      setSelectedInvoices(new Set());
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete invoices");
+    },
+  });
+
   // email reminder mutation
   const sendReminderMutation = trpc.email.sendPaymentReminder.useMutation({
     onSuccess: () => {
@@ -108,6 +114,76 @@ export default function Invoices() {
       toast.error(err.message || "Failed to send reminder");
     },
   });
+
+  // Update (status/category) mutation
+  const updateInvoiceMutation = trpc.invoices.update.useMutation({
+    onSuccess: () => {
+      utils.invoices.list.invalidate();
+      toast.success("Invoice updated");
+    },
+    onError: (err) => toast.error(err.message || "Failed to update invoice"),
+  });
+
+  // Download PDF mutation
+  const downloadPDFMutation = trpc.invoices.downloadPDF.useMutation({
+    onSuccess: (data) => {
+      if (data?.success && data.data) {
+        const byteChars = atob(data.data);
+        const byteNumbers = new Array(byteChars.length).fill(0).map((_, i) => byteChars.charCodeAt(i));
+        const blob = new Blob([new Uint8Array(byteNumbers)], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = data.fileName || "invoice.pdf";
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("PDF downloaded");
+      }
+    },
+    onError: (err) => toast.error(err.message || "Failed to download PDF"),
+  });
+
+  // Clone invoice mutation
+  const cloneInvoiceMutation = trpc.invoices.create.useMutation({
+    onSuccess: (data) => {
+      utils.invoices.list.invalidate();
+      toast.success("Invoice cloned");
+      if (data?.id) navigate(`/invoices/${data.id}/edit`);
+    },
+    onError: (err) => toast.error(err.message || "Failed to clone invoice"),
+  });
+
+  // Create recurring mutation
+  const createRecurringMutation = trpc.invoices.payments.createRecurring.useMutation({
+    onSuccess: () => {
+      toast.success("Recurring invoice created");
+    },
+    onError: (err) => toast.error(err.message || "Failed to create recurring invoice"),
+  });
+
+  const handleCloneInvoice = (inv: any) => {
+    if (!inv.clientId) {
+      toast.error("Cannot clone invoice without a client");
+      return;
+    }
+    cloneInvoiceMutation.mutate({
+      clientId: inv.clientId,
+      title: `${inv.title || inv.invoiceNumber} (Copy)`,
+      status: "draft",
+      issueDate: new Date(),
+      dueDate: new Date(Date.now() + 30 * 86400000),
+      subtotal: inv.subtotal || inv.amount || 0,
+      taxAmount: inv.taxAmount || 0,
+      discountAmount: inv.discountAmount || 0,
+      total: inv.amount || 0,
+      notes: inv.notes || "",
+      terms: inv.terms || "",
+    });
+  };
+
+  const handleDownloadPDF = (invId: string) => {
+    downloadPDFMutation.mutate(invId);
+  };
 
   // NOW SAFE TO CHECK CONDITIONAL RETURNS (ALL HOOKS ALREADY CALLED)
   if (isLoading || emailLoading) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
@@ -193,33 +269,22 @@ export default function Invoices() {
     return result;
   })();
 
-  const stats = (() => {
-    const localeOptions = { minimumFractionDigits: 2 };
+  const pagedInvoices = paginate(filteredAndSortedInvoices);
+
+  const stats: SummaryCard[] = (() => {
+    const total = (invoices || []).reduce((sum, inv) => sum + inv.amount, 0);
+    const paid = (invoices || []).filter((inv) => inv.status === "paid").reduce((sum, inv) => sum + inv.amount, 0);
+    const pending = (invoices || []).filter((inv) => inv.status === "pending" || inv.status === "sent").reduce((sum, inv) => sum + inv.amount, 0);
+    const overdue = (invoices || []).filter((inv) => inv.status === "overdue").reduce((sum, inv) => sum + inv.amount, 0);
+    const paidCount = (invoices || []).filter((inv) => inv.status === "paid").length;
+    const pendingCount = (invoices || []).filter((inv) => inv.status === "pending" || inv.status === "sent").length;
+    const overdueCount = (invoices || []).filter((inv) => inv.status === "overdue").length;
+    const fmt = (v: number) => `Ksh ${v.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
     return [
-      {
-        title: "Total Invoiced",
-        value: `Ksh ${(invoices || []).reduce((sum, inv) => sum + inv.amount, 0).toLocaleString(undefined, localeOptions)}`,
-        description: "All time",
-        iconName: "DollarSign" as keyof typeof iconMap,
-      },
-      {
-        title: "Paid",
-        value: `Ksh ${(invoices || []).filter((inv) => inv.status === "paid").reduce((sum, inv) => sum + inv.amount, 0).toLocaleString(undefined, localeOptions)}`,
-        description: `${(invoices || []).filter((inv) => inv.status === "paid").length} invoices`,
-        iconName: "CheckCircle2" as keyof typeof iconMap,
-      },
-      {
-        title: "Pending",
-        value: `Ksh ${(invoices || []).filter((inv) => inv.status === "pending" || inv.status === "sent").reduce((sum, inv) => sum + inv.amount, 0).toLocaleString(undefined, localeOptions)}`,
-        description: `${(invoices || []).filter((inv) => inv.status === "pending" || inv.status === "sent").length} invoices`,
-        iconName: "Clock" as keyof typeof iconMap,
-      },
-      {
-        title: "Overdue",
-        value: `Ksh ${(invoices || []).filter((inv) => inv.status === "overdue").reduce((sum, inv) => sum + inv.amount, 0).toLocaleString(undefined, localeOptions)}`,
-        description: `${(invoices || []).filter((inv) => inv.status === "overdue").length} invoices`,
-        iconName: "AlertCircle" as keyof typeof iconMap,
-      },
+      { label: "Invoices", value: fmt(total), count: invoices.length, color: "blue" as const, progress: 100 },
+      { label: "Payments", value: fmt(paid), count: paidCount, color: "green" as const, progress: total > 0 ? (paid / total) * 100 : 0 },
+      { label: "Due", value: fmt(pending), count: pendingCount, color: "orange" as const, progress: total > 0 ? (pending / total) * 100 : 0 },
+      { label: "Overdue", value: fmt(overdue), count: overdueCount, color: "red" as const, progress: total > 0 ? (overdue / total) * 100 : 0 },
     ];
   })();
 
@@ -245,83 +310,65 @@ export default function Invoices() {
   return (
     <ModuleLayout
       title="Invoices"
-      description="Manage your invoices and track payments"
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "App", href: "/crm-home" },
+        { label: "Sales" },
         { label: "Invoices" },
       ]}
       actions={
-        <Button onClick={() => navigate("/invoices/create")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Invoice
-        </Button>
+        <ListPageToolbar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search"
+          onCreateClick={() => navigate("/invoices/create")}
+          createLabel="Create Invoice"
+          onExportClick={() => {
+            const csv = [
+              ["Invoice #", "Client", "Amount", "Date", "Due Date", "Status"].join(","),
+              ...filteredAndSortedInvoices.map(inv => [inv.invoiceNumber, inv.client, inv.amount, inv.issueDate, inv.dueDate, inv.status].join(","))
+            ].join("\n");
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a"); a.href = url; a.download = "invoices.csv"; a.click();
+            URL.revokeObjectURL(url);
+            toast.success("Exported invoices");
+          }}
+          onPrintClick={() => window.print()}
+        />
       }
     >
-      <div className="space-y-6">
-        {selectedInvoices.size > 0 && (
-          <div className="flex items-center space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                selectedInvoices.forEach((invId) => {
-                  const inv = invoices.find((i) => i.id === invId);
-                  if (inv && inv.clientEmail) {
-                    if (canEmail) sendReminderMutation.mutate({ invoiceId: invId, recipientEmail: inv.clientEmail });
-                  }
-                });
-              }}
-            >
-              <Mail className="mr-1 h-4 w-4" />
-              Send Reminders
-            </Button>
-          </div>
-        )}
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat) => {
-            const Icon = iconMap[stat.iconName];
-            return (
-              <Card key={stat.title}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+      <div className="space-y-4">
+        {/* Bulk Actions Bar */}
+        <EnhancedBulkActions
+          selectedCount={selectedInvoices.size}
+          onClear={() => setSelectedInvoices(new Set())}
+          actions={[
+            { id: "sendReminders", label: "Send Reminders", icon: <Mail className="h-3.5 w-3.5" />, onClick: () => { selectedInvoices.forEach((invId) => { const inv = pagedInvoices.find((i) => i.id === invId); if (inv && inv.clientEmail && canEmail) sendReminderMutation.mutate({ invoiceId: invId, recipientEmail: inv.clientEmail }); }); } },
+            bulkExportAction(selectedInvoices, pagedInvoices, INVOICE_COLUMNS, "invoices"),
+            bulkCopyIdsAction(selectedInvoices),
+            bulkEmailAction(navigate),
+            bulkDeleteAction(selectedInvoices, (ids) => bulkDeleteInvoicesMutation.mutate(ids)),
+          ]}
+        />
 
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex-1 flex gap-2 w-full md:w-auto">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search invoices..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="sent">Sent</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Summary Stat Cards */}
+        <SummaryStatCards cards={stats} />
+
+        {/* Filter Row */}
+        <div className="flex items-center gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40 h-9">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="sent">Sent</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="overdue">Overdue</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Table */}
@@ -330,110 +377,179 @@ export default function Invoices() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">
-                    {/* selection column */}
+                  <TableHead className="w-10">
                     <Checkbox
-                      checked={selectedInvoices.size === filteredAndSortedInvoices.length && filteredAndSortedInvoices.length > 0}
+                      checked={selectedInvoices.size === pagedInvoices.length && pagedInvoices.length > 0}
                       onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedInvoices(new Set(filteredAndSortedInvoices.map(i => i.id)));
-                        } else {
-                          setSelectedInvoices(new Set());
-                        }
+                        setSelectedInvoices(checked ? new Set(pagedInvoices.map(i => i.id)) : new Set());
                       }}
                     />
                   </TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => toggleSort("invoiceNumber") }>
-                    Invoice # {sortField === "invoiceNumber" && <ArrowUpDown className="inline h-4 w-4 ml-1" />}
+                  {isVisible("id") && (
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("invoiceNumber")}>
+                      <span className="inline-flex items-center gap-1 text-primary">ID <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("date") && (
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("issueDate")}>
+                      <span className="inline-flex items-center gap-1 text-primary">Date <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("dueDate") && (
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("dueDate")}>
+                      <span className="inline-flex items-center gap-1 text-primary">Due Date <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("client") && (
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("client")}>
+                      <span className="inline-flex items-center gap-1 text-primary">Company Name <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("createdBy") && (
+                    <TableHead className="cursor-pointer select-none">
+                      <span className="inline-flex items-center gap-1 text-primary">Created By <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("amount") && (
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("amount")}>
+                      <span className="inline-flex items-center gap-1 text-primary">Amount <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("status") && (
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("status")}>
+                      <span className="inline-flex items-center gap-1 text-primary">Status <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("project") && <TableHead>Project</TableHead>}
+                  {isVisible("approvedBy") && <TableHead>Approved By</TableHead>}
+                  {isVisible("approvalDate") && <TableHead>Approval Date</TableHead>}
+                  {isVisible("contact") && <TableHead>Contact</TableHead>}
+                  {isVisible("tax") && <TableHead>Tax</TableHead>}
+                  {isVisible("balance") && <TableHead>Balance</TableHead>}
+                  <TableHead className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      Action
+                      <TableColumnSettings
+                        columns={INVOICE_COLUMNS}
+                        visibleColumns={visibleColumns}
+                        onToggleColumn={toggleColumn}
+                        onReset={reset}
+                        pageSize={pageSize}
+                        onPageSizeChange={updatePageSize}
+                      />
+                    </div>
                   </TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => toggleSort("client") }>
-                    Client {sortField === "client" && <ArrowUpDown className="inline h-4 w-4 ml-1" />}
-                  </TableHead>
-                  <TableHead className="cursor-pointer text-right" onClick={() => toggleSort("amount") }>
-                    Amount {sortField === "amount" && <ArrowUpDown className="inline h-4 w-4 ml-1" />}
-                  </TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => toggleSort("issueDate") }>
-                    Date {sortField === "issueDate" && <ArrowUpDown className="inline h-4 w-4 ml-1" />}
-                  </TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Approved By</TableHead>
-                  <TableHead>Approval Date</TableHead>
-                  <TableHead>Created By</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingInvoices ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8">
+                    <TableCell colSpan={20} className="text-center py-8">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
                     </TableCell>
                   </TableRow>
                 ) : filteredAndSortedInvoices.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={20} className="text-center py-8 text-muted-foreground">
                       No invoices found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredAndSortedInvoices.map((inv) => (
+                  pagedInvoices.map((inv) => (
                     <TableRow key={inv.id}>
                       <TableCell>
                         <Checkbox
                           checked={selectedInvoices.has(inv.id)}
                           onCheckedChange={(checked) => {
-                            const newSet = new Set(selectedInvoices);
-                            if (checked) newSet.add(inv.id);
-                            else newSet.delete(inv.id);
-                            setSelectedInvoices(newSet);
+                            const s = new Set(selectedInvoices);
+                            checked ? s.add(inv.id) : s.delete(inv.id);
+                            setSelectedInvoices(s);
                           }}
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{inv.invoiceNumber}</TableCell>
-                      <TableCell>{inv.client}</TableCell>
-                      <TableCell className="text-right font-semibold">
-                        Ksh {inv.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </TableCell>
-                      <TableCell>{inv.issueDate}</TableCell>
+                      {isVisible("id") && (
+                        <TableCell>
+                          <button className="text-primary hover:underline font-medium" onClick={() => navigate(`/invoices/${inv.id}`)}>
+                            {inv.invoiceNumber}
+                          </button>
+                        </TableCell>
+                      )}
+                      {isVisible("date") && <TableCell>{inv.issueDate ? new Date(inv.issueDate).toLocaleDateString() : "-"}</TableCell>}
+                      {isVisible("dueDate") && <TableCell>{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "-"}</TableCell>}
+                      {isVisible("client") && (
+                        <TableCell>
+                          <button className="text-primary hover:underline" onClick={() => {/* navigate to client */}}>
+                            {inv.client}
+                          </button>
+                        </TableCell>
+                      )}
+                      {isVisible("createdBy") && (
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+                              {getUserName(inv.createdBy).charAt(0)}
+                            </div>
+                            {getUserName(inv.createdBy)}
+                          </div>
+                        </TableCell>
+                      )}
+                      {isVisible("amount") && (
+                        <TableCell className="font-semibold">
+                          Ksh {inv.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </TableCell>
+                      )}
+                      {isVisible("status") && (
+                        <TableCell>
+                          <Badge variant="outline" className={getStatusColor(inv.status)}>
+                            {(inv.status || "draft").charAt(0).toUpperCase() + (inv.status || "draft").slice(1)}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {isVisible("project") && <TableCell>{inv.project || "---"}</TableCell>}
+                      {isVisible("approvedBy") && <TableCell className="text-sm text-muted-foreground">{getUserName(inv.approvedBy)}</TableCell>}
+                      {isVisible("approvalDate") && <TableCell className="text-sm text-muted-foreground">{inv.approvedAt || "---"}</TableCell>}
+                      {isVisible("contact") && <TableCell>---</TableCell>}
+                      {isVisible("tax") && <TableCell>---</TableCell>}
+                      {isVisible("balance") && <TableCell>---</TableCell>}
                       <TableCell>
-                        <Badge variant="outline" className={getStatusColor(inv.status)}>
-                          {(inv.status || 'draft').toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{inv.approvedBy || '-'}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{inv.approvedAt || '-'}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{inv.createdBy || '-'}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => navigate(`/invoices/${inv.id}`)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => navigate(`/invoices/${inv.id}/edit`)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          {(inv.status === "overdue" || inv.status === "pending" || inv.status === "sent") && inv.clientEmail && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => canEmail && sendReminderMutation.mutate({ invoiceId: inv.id, recipientEmail: inv.clientEmail! })}
-                              disabled={!canEmail || sendReminderMutation.isPending}
-                              title="Send payment reminder"
-                            >
-                              <Mail className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="icon" onClick={() => {
-                            if(confirm("Delete this invoice?")) deleteInvoiceMutation.mutate(inv.id);
-                          }}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <RowActionsMenu
+                          primaryActions={[
+                            { label: "Delete", icon: actionIcons.delete, onClick: () => { if (confirm("Delete this invoice?")) deleteInvoiceMutation.mutate(inv.id); }, variant: "destructive" },
+                            { label: "Edit", icon: actionIcons.edit, onClick: () => navigate(`/invoices/${inv.id}/edit`) },
+                            { label: "View", icon: actionIcons.view, onClick: () => navigate(`/invoices/${inv.id}`) },
+                          ]}
+                          menuActions={[
+                            { label: "Invoice URL", icon: <Link2 className="h-4 w-4" />, onClick: () => { navigator.clipboard.writeText(`${window.location.origin}/invoices/${inv.id}`); toast.success("URL copied"); } },
+                            { label: "Email To Client", icon: actionIcons.email, onClick: () => { if (inv.clientEmail && canEmail) sendReminderMutation.mutate({ invoiceId: inv.id, recipientEmail: inv.clientEmail }); }, hidden: !inv.clientEmail },
+                            { label: "Mark as Sent", icon: <Tag className="h-4 w-4" />, onClick: () => updateInvoiceMutation.mutate({ id: inv.id, status: "sent" }) },
+                            { label: "Mark as Paid", icon: <Tag className="h-4 w-4" />, onClick: () => updateInvoiceMutation.mutate({ id: inv.id, status: "paid" }) },
+                            { label: "Mark as Cancelled", icon: <Tag className="h-4 w-4" />, onClick: () => updateInvoiceMutation.mutate({ id: inv.id, status: "cancelled" }) },
+                            { label: "Add A New Payment", icon: <CreditCard className="h-4 w-4" />, onClick: () => navigate("/payments/create") },
+                            { label: "Clone Invoice", icon: <Copy className="h-4 w-4" />, onClick: () => handleCloneInvoice(inv) },
+                            { label: "Attach To A Project", icon: <FolderOpen className="h-4 w-4" />, onClick: () => navigate(`/invoices/${inv.id}/edit`) },
+                            { label: "Set Recurring", icon: <RotateCcw className="h-4 w-4" />, onClick: () => { if (!inv.clientId) { toast.error("Cannot set recurring without a client"); return; } createRecurringMutation.mutate({ clientId: inv.clientId, templateInvoiceId: inv.id, frequency: "monthly", startDate: new Date().toISOString() }); } },
+                            { label: "View Payments", icon: actionIcons.view, onClick: () => navigate(`/payments`) },
+                            { label: "Download", icon: actionIcons.download, onClick: () => handleDownloadPDF(inv.id), separator: true },
+                          ]}
+                          showStar
+                          showDownload
+                          onDownload={() => handleDownloadPDF(inv.id)}
+                        />
                       </TableCell>
                     </TableRow>
                   ))
                 )}
               </TableBody>
             </Table>
+            <div className="px-2">
+              <PaginationControls
+                total={filteredAndSortedInvoices.length}
+                page={page}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -37,11 +37,21 @@ import {
   Trash2,
   Check,
   BarChart3,
+  Copy,
+  Mail,
+  Link,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { buildCommunicationComposePath } from "@/lib/communications";
 import mutateAsync from '@/lib/mutationHelpers';
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { downloadCSV } from "@/lib/export-utils";
+import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
+import { RowActionsMenu, actionIcons } from "@/components/list-page/RowActionsMenu";
+import { TableColumnSettings, useColumnVisibility, type ColumnConfig } from "@/components/list-page/TableColumnSettings";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction, bulkApproveAction, bulkEmailAction } from "@/components/list-page/EnhancedBulkActions";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,6 +60,7 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { StatsCard } from "@/components/ui/stats-card";
 
 interface Payment {
   id: string;
@@ -66,11 +77,24 @@ interface Payment {
 export default function Payments() {
   // CALL ALL HOOKS UNCONDITIONALLY AT TOP LEVEL
   const { allowed, isLoading } = useRequireFeature("accounting:payments:view");
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [methodFilter, setMethodFilter] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
+  const [selectedPayments, setSelectedPayments] = useState<Set<string>>(new Set());
+
+  const paymentColumns: ColumnConfig[] = [
+    { key: "receiptNumber", label: "Receipt #" },
+    { key: "client", label: "Client" },
+    { key: "amount", label: "Amount" },
+    { key: "method", label: "Method" },
+    { key: "status", label: "Status" },
+    { key: "date", label: "Date" },
+    { key: "reference", label: "Reference" },
+    { key: "invoice", label: "Invoice" },
+  ];
+  const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(paymentColumns, "payments");
 
   // Fetch real data from backend
   const { data: paymentsData = [], isLoading: isLoadingPayments } = trpc.payments.list.useQuery();
@@ -134,10 +158,26 @@ export default function Payments() {
     .filter((p) => p.status === "pending")
     .reduce((sum, p) => sum + p.amount, 0);
 
+  const toggleSelectPayment = (id: string) => {
+    setSelectedPayments((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedPayments.size === filteredPayments.length) {
+      setSelectedPayments(new Set());
+    } else {
+      setSelectedPayments(new Set(filteredPayments.map((p) => p.id)));
+    }
+  };
+
   return (
     <ModuleLayout
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Payments", href: "/payments" },
       ]}
       title="Payments"
@@ -147,111 +187,91 @@ export default function Payments() {
       <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Payments
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {totalAmount.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {payments.length} transactions
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Payments"
+            value={<>Ksh {totalAmount.toLocaleString()}</>}
+            description={<>{payments.length} transactions</>}
+            color="border-l-purple-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Completed
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {completedAmount.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {payments.filter((p) => p.status === "completed").length} completed
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Completed"
+            value={<>Ksh {completedAmount.toLocaleString()}</>}
+            description={<>{payments.filter((p) => p.status === "completed").length} completed</>}
+            color="border-l-green-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Pending
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {pendingAmount.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {payments.filter((p) => p.status === "pending").length} pending
-              </p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Pending"
+            value={<>Ksh {pendingAmount.toLocaleString()}</>}
+            description={<>{payments.filter((p) => p.status === "pending").length} pending</>}
+            color="border-l-blue-500"
+          />
         </div>
 
-        {/* Filters and Actions */}
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-          <div className="flex-1 flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by client or receipt..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <Select value={methodFilter} onValueChange={setMethodFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Payment Method" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Methods</SelectItem>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="mpesa">M-Pesa</SelectItem>
-                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                <SelectItem value="cheque">Cheque</SelectItem>
-                <SelectItem value="card">Card</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button
-            onClick={() => navigate("/payments/create")}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Record Payment
-          </Button>
-          <Button
-            onClick={() => navigate("/payments/reconciliation")}
-            variant="outline"
-            className="gap-2"
-          >
-            <BarChart3 className="h-4 w-4" />
-            Reconciliation
-          </Button>
-        </div>
+        {/* Toolbar */}
+        <ListPageToolbar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search by client or receipt..."
+          onCreateClick={() => navigate("/payments/create")}
+          createLabel="Record Payment"
+          onExportClick={() => downloadCSV(payments.map(p => ({ "Receipt #": p.receiptNumber, Client: p.client, Amount: p.amount, Method: p.method, Status: p.status, Date: p.date, Reference: p.reference })), "payments")}
+          onImportClick={() => toast.info("CSV import is available in Settings > Data Management")}
+          onPrintClick={() => window.print()}
+          filterContent={
+            <>
+              <Select value={methodFilter} onValueChange={setMethodFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Payment Method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Methods</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="mpesa">M-Pesa</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="card">Card</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={() => navigate("/payments/reconciliation")} variant="outline" size="sm" className="gap-1">
+                <BarChart3 className="h-3.5 w-3.5" /> Reconciliation
+              </Button>
+            </>
+          }
+        />
+
+        {/* Bulk Actions Bar */}
+        <EnhancedBulkActions
+          selectedCount={selectedPayments.size}
+          onClear={() => setSelectedPayments(new Set())}
+          actions={[
+            bulkApproveAction(selectedPayments, (ids) => ids.forEach(id => approvePaymentMutation.mutate({ id }))),
+            bulkExportAction(selectedPayments, payments, paymentColumns, "payments"),
+            bulkCopyIdsAction(selectedPayments),
+            bulkEmailAction(navigate),
+            bulkDeleteAction(selectedPayments, (ids) => ids.forEach(id => deletePaymentMutation.mutate(id))),
+          ]}
+        />
 
         {/* Payments Table */}
         <Card>
-          <CardHeader>
-            <CardTitle>Payment Transactions</CardTitle>
-            <CardDescription>
-              {filteredPayments.length} of {payments.length} payments
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <span className="text-sm text-muted-foreground">{filteredPayments.length} of {payments.length} payments</span>
+              <TableColumnSettings columns={paymentColumns} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} onReset={reset} pageSize={pageSize} onPageSizeChange={updatePageSize} />
+            </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Receipt #</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead className="w-10"><Checkbox checked={selectedPayments.size === filteredPayments.length && filteredPayments.length > 0} onCheckedChange={toggleSelectAll} /></TableHead>
+                    {isVisible("receiptNumber") && <TableHead>Receipt #</TableHead>}
+                    {isVisible("client") && <TableHead>Client</TableHead>}
+                    {isVisible("amount") && <TableHead>Amount</TableHead>}
+                    {isVisible("method") && <TableHead>Method</TableHead>}
+                    {isVisible("status") && <TableHead>Status</TableHead>}
+                    {isVisible("date") && <TableHead>Date</TableHead>}
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -270,74 +290,53 @@ export default function Payments() {
                     </TableRow>
                   ) : (
                     filteredPayments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-medium">{payment?.receiptNumber || "N/A"}</TableCell>
-                        <TableCell>{payment?.client || "N/A"}</TableCell>
-                        <TableCell>Ksh {(payment?.amount || 0).toLocaleString()}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {(payment?.method || "N/A").replace("_", " ").toUpperCase()}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              payment?.status === "completed"
-                                ? "default"
-                                : payment?.status === "pending"
-                                ? "secondary"
-                                : "destructive"
-                            }
-                            className="gap-1"
-                          >
-                            {payment?.status === "completed" && (
-                              <CheckCircle2 className="h-3 w-3" />
-                            )}
-                            {payment?.status === "pending" && (
-                              <Clock className="h-3 w-3" />
-                            )}
-                            {((payment?.status || "pending") as string).charAt(0).toUpperCase() +
-                              ((payment?.status || "pending") as string).slice(1)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{payment?.date || "N/A"}</TableCell>
+                      <TableRow key={payment.id} className={selectedPayments.has(payment.id) ? "bg-primary/5" : ""}>
+                        <TableCell><Checkbox checked={selectedPayments.has(payment.id)} onCheckedChange={() => toggleSelectPayment(payment.id)} /></TableCell>
+                        {isVisible("receiptNumber") && <TableCell className="font-medium">{payment?.receiptNumber || "N/A"}</TableCell>}
+                        {isVisible("client") && <TableCell>{payment?.client || "N/A"}</TableCell>}
+                        {isVisible("amount") && <TableCell>Ksh {(payment?.amount || 0).toLocaleString()}</TableCell>}
+                        {isVisible("method") && (
+                          <TableCell>
+                            <Badge variant="outline">
+                              {(payment?.method || "N/A").replace("_", " ").toUpperCase()}
+                            </Badge>
+                          </TableCell>
+                        )}
+                        {isVisible("status") && (
+                          <TableCell>
+                            <Badge
+                              variant={
+                                payment?.status === "completed"
+                                  ? "default"
+                                  : payment?.status === "pending"
+                                  ? "secondary"
+                                  : "destructive"
+                              }
+                              className="gap-1"
+                            >
+                              {payment?.status === "completed" && <CheckCircle2 className="h-3 w-3" />}
+                              {payment?.status === "pending" && <Clock className="h-3 w-3" />}
+                              {((payment?.status || "pending") as string).charAt(0).toUpperCase() +
+                                ((payment?.status || "pending") as string).slice(1)}
+                            </Badge>
+                          </TableCell>
+                        )}
+                        {isVisible("date") && <TableCell>{payment?.date ? new Date(payment.date).toLocaleDateString() : "N/A"}</TableCell>}
                         <TableCell className="text-right">
-                          <div className="flex gap-2 justify-end">
-                            {payment.status === "pending" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => approvePaymentMutation.mutate({ id: payment.id })}
-                                title="Approve Payment"
-                              >
-                                <Check className="h-4 w-4 text-green-500" />
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/payments/${payment.id}`)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/payments/${payment.id}/edit`)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedPaymentId(payment.id);
-                                setDeleteDialogOpen(true);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
+                          <RowActionsMenu
+                            primaryActions={[
+                              { label: "View", icon: actionIcons.view, onClick: () => navigate(`/payments/${payment.id}`) },
+                              { label: "Edit", icon: <Pencil className="h-4 w-4" />, onClick: () => navigate(`/payments/${payment.id}/edit`) },
+                              { label: "Delete", icon: actionIcons.delete, onClick: () => { setSelectedPaymentId(payment.id); setDeleteDialogOpen(true); }, variant: "destructive" },
+                            ]}
+                            menuActions={[
+                              ...(payment.status === "pending" ? [{ label: "Approve Payment", icon: <Check className="h-4 w-4" />, onClick: () => approvePaymentMutation.mutate({ id: payment.id }) }] : []),
+                              { label: "Download Receipt", icon: actionIcons.download, onClick: () => { navigate(`/payments/${payment.id}`); setTimeout(() => window.print(), 500); } },
+                              { label: "Email Receipt", icon: actionIcons.email, onClick: () => navigate(buildCommunicationComposePath(location, payment.clientEmail || "", `Payment Receipt ${payment.receiptNumber || payment.id}`)) },
+                              { label: "Duplicate Payment", icon: actionIcons.copy, onClick: () => navigate("/payments/create"), separator: true },
+                              { label: "Link to Invoice", icon: <Link className="h-4 w-4" />, onClick: () => navigate(`/payments/${payment.id}/edit`) },
+                            ]}
+                          />
                         </TableCell>
                       </TableRow>
                     ))

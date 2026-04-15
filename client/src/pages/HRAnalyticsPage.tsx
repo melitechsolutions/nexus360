@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { TrendingUp, Users, UserCheck, Briefcase, Calendar } from "lucide-react";
+import { BarChart3,  TrendingUp, Users, UserCheck, Briefcase, Calendar } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -18,10 +18,14 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { StatsCard } from "@/components/ui/stats-card";
+import { useCurrencySettings } from "@/lib/currency";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 export default function HRAnalyticsPage() {
+  const { code: currencyCode } = useCurrencySettings();
   const [selectedDept, setSelectedDept] = useState<string>("");
 
   // Fetch all analytics data
@@ -35,60 +39,43 @@ export default function HRAnalyticsPage() {
   const { data: salaryExpenseTrends } = trpc.hrAnalytics.getSalaryExpenseTrends.useQuery();
 
   return (
-    <div className="space-y-6 p-6">
+    <ModuleLayout
+      title="HR Analytics"
+      icon={<BarChart3 className="h-5 w-5" />}
+      breadcrumbs={[{ label: "Dashboard", href: "/crm-home" }, { label: "HR" }, { label: "HR Analytics" }]}
+    >
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">HR Analytics & Insights</h1>
-      </div>
+        </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Employees</p>
-                <p className="text-2xl font-bold">{performanceMetrics?.totalEmployees || 0}</p>
-              </div>
-              <Users className="w-8 h-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Total Employees"
+          value={performanceMetrics?.totalEmployees || 0}
+          icon={<Users className="h-5 w-5" />}
+          color="border-l-blue-500"
+        />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Active Employees</p>
-                <p className="text-2xl font-bold">{turnoverAnalysis?.active || 0}</p>
-              </div>
-              <UserCheck className="w-8 h-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Active Employees"
+          value={turnoverAnalysis?.active || 0}
+          icon={<UserCheck className="h-5 w-5" />}
+          color="border-l-green-500"
+        />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Turnover Rate</p>
-                <p className="text-2xl font-bold">{(turnoverAnalysis?.turnoverRate || 0).toFixed(1)}%</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Turnover Rate"
+          value={<>{(turnoverAnalysis?.turnoverRate || 0).toFixed(1)}%</>}
+          icon={<TrendingUp className="h-5 w-5" />}
+          color="border-l-orange-500"
+        />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Avg Attendance</p>
-                <p className="text-2xl font-bold">{(attendanceKPIs?.presentPercentage || 0).toFixed(1)}%</p>
-              </div>
-              <Calendar className="w-8 h-8 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Avg Attendance"
+          value={<>{(attendanceKPIs?.presentPercentage || 0).toFixed(1)}%</>}
+          icon={<Calendar className="h-5 w-5" />}
+          color="border-l-purple-500"
+        />
       </div>
 
       {/* Detailed Analytics Tabs */}
@@ -242,7 +229,7 @@ export default function HRAnalyticsPage() {
                     <div className="text-sm text-gray-600">
                       Avg Salary: {new Intl.NumberFormat("en-US", {
                         style: "currency",
-                        currency: "KES",
+                        currency: currencyCode,
                       }).format(dept.avgSalary)}
                     </div>
                   </div>
@@ -315,6 +302,6 @@ export default function HRAnalyticsPage() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </ModuleLayout>
   );
 }

@@ -3,40 +3,41 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
 import { v4 as uuidv4 } from "uuid";
+import { getDb } from "../db";
+import { deliveryNotes } from "../../drizzle/schema";
+import { eq, desc, sql } from "drizzle-orm";
 
-// Permission-restricted procedures
 const viewProcedure = createFeatureRestrictedProcedure("delivery_notes:view");
 const createProcedure = createFeatureRestrictedProcedure("delivery_notes:create");
 const editProcedure = createFeatureRestrictedProcedure("delivery_notes:edit");
 const deleteProcedure = createFeatureRestrictedProcedure("delivery_notes:delete");
 
-// In-memory storage
-const deliveryNotesStore: Map<string, any> = new Map();
-
 export const deliveryNotesRouter = router({
   list: viewProcedure
-    .input(z.object({ 
-      limit: z.number().optional(), 
+    .input(z.object({
+      limit: z.number().optional(),
       offset: z.number().optional(),
       status: z.string().optional(),
     }).optional())
     .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       try {
-        const notes = Array.from(deliveryNotesStore.values());
-        
-        let filtered = notes;
-        if (input?.status) {
-          filtered = filtered.filter(n => n.status === input.status);
-        }
-        
-        const offset = input?.offset || 0;
-        const limit = input?.limit || 50;
-        
-        return {
-          data: filtered.slice(offset, offset + limit),
-          total: filtered.length,
-        };
+        const conditions: any[] = [];
+        if (input?.status) conditions.push(eq(deliveryNotes.status, input.status as any));
+
+        const all = await db.select().from(deliveryNotes)
+          .where(conditions.length ? conditions[0] : undefined)
+          .orderBy(desc(deliveryNotes.createdAt))
+          .limit(input?.limit || 50)
+          .offset(input?.offset || 0);
+
+        const countResult = await db.select({ count: sql<number>`count(*)` }).from(deliveryNotes)
+          .where(conditions.length ? conditions[0] : undefined);
+
+        return { data: all, total: countResult[0]?.count || 0 };
       } catch (error) {
+        console.error("Error listing delivery notes:", error);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to fetch delivery notes" });
       }
     }),
@@ -44,12 +45,12 @@ export const deliveryNotesRouter = router({
   getById: viewProcedure
     .input(z.string())
     .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       try {
-        const note = deliveryNotesStore.get(input);
-        if (!note) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Delivery note not found" });
-        }
-        return note;
+        const result = await db.select().from(deliveryNotes).where(eq(deliveryNotes.id, input));
+        if (!result.length) throw new TRPCError({ code: "NOT_FOUND", message: "Delivery note not found" });
+        return result[0];
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to fetch delivery note" });
@@ -67,18 +68,25 @@ export const deliveryNotesRouter = router({
       notes: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       try {
         const id = uuidv4();
-        const note = {
+        await db.insert(deliveryNotes).values({
           id,
-          ...input,
-          createdBy: ctx.user.id,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        deliveryNotesStore.set(id, note);
-        return note;
+          dnNo: input.dnNo,
+          supplier: input.supplier,
+          orderId: input.orderId || null,
+          deliveryDate: input.deliveryDate,
+          items: input.items,
+          status: input.status,
+          notes: input.notes || null,
+          createdBy: ctx.user?.id || "",
+        });
+        const created = await db.select().from(deliveryNotes).where(eq(deliveryNotes.id, id));
+        return created[0] || { id, ...input };
       } catch (error) {
+        console.error("Error creating delivery note:", error);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create delivery note" });
       }
     }),
@@ -94,22 +102,24 @@ export const deliveryNotesRouter = router({
       notes: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       try {
-        const note = deliveryNotesStore.get(input.id);
-        if (!note) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Delivery note not found" });
-        }
+        const existing = await db.select().from(deliveryNotes).where(eq(deliveryNotes.id, input.id));
+        if (!existing.length) throw new TRPCError({ code: "NOT_FOUND", message: "Delivery note not found" });
 
-        const updated = {
-          ...note,
-          ...input,
-          id: note.id,
-          updatedBy: ctx.user.id,
-          updatedAt: new Date().toISOString(),
-        };
-        
-        deliveryNotesStore.set(input.id, updated);
-        return updated;
+        const { id, ...updates } = input;
+        const setObj: any = {};
+        if (updates.dnNo !== undefined) setObj.dnNo = updates.dnNo;
+        if (updates.supplier !== undefined) setObj.supplier = updates.supplier;
+        if (updates.deliveryDate !== undefined) setObj.deliveryDate = updates.deliveryDate;
+        if (updates.items !== undefined) setObj.items = updates.items;
+        if (updates.status !== undefined) setObj.status = updates.status;
+        if (updates.notes !== undefined) setObj.notes = updates.notes;
+
+        await db.update(deliveryNotes).set(setObj).where(eq(deliveryNotes.id, id));
+        const updated = await db.select().from(deliveryNotes).where(eq(deliveryNotes.id, id));
+        return updated[0];
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to update delivery note" });
@@ -119,12 +129,12 @@ export const deliveryNotesRouter = router({
   delete: deleteProcedure
     .input(z.string())
     .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       try {
-        const exists = deliveryNotesStore.has(input);
-        if (!exists) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Delivery note not found" });
-        }
-        deliveryNotesStore.delete(input);
+        const existing = await db.select().from(deliveryNotes).where(eq(deliveryNotes.id, input));
+        if (!existing.length) throw new TRPCError({ code: "NOT_FOUND", message: "Delivery note not found" });
+        await db.delete(deliveryNotes).where(eq(deliveryNotes.id, input));
         return { success: true };
       } catch (error) {
         if (error instanceof TRPCError) throw error;

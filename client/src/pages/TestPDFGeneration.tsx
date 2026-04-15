@@ -9,6 +9,7 @@ import {
 } from "@/lib/pdfGenerator";
 import { FileText, Receipt, FileCheck } from "lucide-react";
 import { toast } from "sonner";
+import { ModuleLayout } from "@/components/ModuleLayout";
 
 export default function TestPDFGeneration() {
   const handleGenerateInvoice = () => {
@@ -125,10 +126,13 @@ export default function TestPDFGeneration() {
   };
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="PDF Generation Test"
+      icon={<FileText className="h-5 w-5" />}
+      breadcrumbs={[{ label: "Dashboard", href: "/crm-home" }, { label: "Tools" }, { label: "PDF Generation Test" }]}
+    >
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">PDF Generation Testing</h1>
           <p className="text-muted-foreground">Generate sample PDFs for invoices, receipts, and quotations</p>
         </div>
 
@@ -213,7 +217,7 @@ export default function TestPDFGeneration() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }
 

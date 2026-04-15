@@ -292,7 +292,7 @@ export const permissionsRouter = router({
           action: "access",
           granted: input.granted ? 1 : 0,
           grantedBy: ctx.user.id,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         });
       }
 
@@ -306,25 +306,7 @@ export const permissionsRouter = router({
     .input(
       z.object({
         userId: z.string(),
-        permissions: z.preprocess(
-          (val) => {
-            // If it's already a record with boolean values, pass through
-            if (typeof val === 'object' && val !== null) {
-              const obj: Record<string, any> = {};
-              for (const [key, value] of Object.entries(val)) {
-                // Convert string values to boolean
-                if (typeof value === 'string') {
-                  obj[key] = value.toLowerCase() === 'true' || value === '1';
-                } else {
-                  obj[key] = Boolean(value);
-                }
-              }
-              return obj;
-            }
-            return val;
-          },
-          z.record(z.boolean())
-        ),
+        permissions: z.record(z.string(), z.coerce.boolean()),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -351,7 +333,7 @@ export const permissionsRouter = router({
           action: "access",
           granted: 1,
           grantedBy: ctx.user.id,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         }));
 
       if (permissionInserts.length > 0) {

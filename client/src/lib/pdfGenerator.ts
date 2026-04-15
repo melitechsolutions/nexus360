@@ -69,13 +69,18 @@ interface QuotationData {
 }
 
 const companyInfo: CompanyInfo = {
-  name: 'Melitech Solutions',
-  address: 'Nairobi, Kenya',
-  phone: '+254 XXX XXX XXX',
-  email: 'info@melitechsolutions.co.ke',
-  website: 'www.melitechsolutions.co.ke',
+  name: '',
+  address: '',
+  phone: '',
+  email: '',
+  website: '',
   logo: '/logo.png',
 };
+
+/** Call this once when settings are loaded to populate PDF company info */
+export function setCompanyInfo(info: Partial<CompanyInfo>) {
+  Object.assign(companyInfo, info);
+}
 
 // Helper function to add company header
 function addCompanyHeader(doc: jsPDF, title: string) {
@@ -126,7 +131,7 @@ function addFooter(doc: jsPDF) {
     pageHeight - 15,
     { align: 'center' }
   );
-  doc.text('Redefining Technology!!!', pageWidth / 2, pageHeight - 10, { align: 'center' });
+  doc.text(companyInfo.name || '', pageWidth / 2, pageHeight - 10, { align: 'center' });
 }
 
 export function generateInvoicePDF(data: InvoiceData): jsPDF {
@@ -416,5 +421,81 @@ export function generateQuotationPDF(data: QuotationData): jsPDF {
 // Export function to download PDF
 export function downloadPDF(doc: jsPDF, filename: string) {
   doc.save(filename);
+}
+
+interface DebitNoteData {
+  debitNoteNumber: string;
+  date: string;
+  supplier: {
+    name: string;
+  };
+  reason: string;
+  amount: number;
+  status: string;
+}
+
+export function generateDebitNotePDF(data: DebitNoteData): jsPDF {
+  const doc = new jsPDF();
+  let yPos = addCompanyHeader(doc, 'DEBIT NOTE');
+
+  // Debit note details
+  yPos += 10;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Debit Note No:', 15, yPos);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.debitNoteNumber, 60, yPos);
+
+  yPos += 6;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Date:', 15, yPos);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.date, 60, yPos);
+
+  yPos += 6;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Status:', 15, yPos);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.status.charAt(0).toUpperCase() + data.status.slice(1), 60, yPos);
+
+  // Supplier details
+  yPos += 15;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Issued To:', 15, yPos);
+  yPos += 6;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.supplier.name, 15, yPos);
+
+  // Reason
+  yPos += 15;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Reason:', 15, yPos);
+  yPos += 6;
+  doc.setFont('helvetica', 'normal');
+  const pageWidth = doc.internal.pageSize.width;
+  const splitReason = doc.splitTextToSize(data.reason, pageWidth - 30);
+  doc.text(splitReason, 15, yPos);
+  yPos += splitReason.length * 5;
+
+  // Amount box
+  yPos += 15;
+  const boxWidth = pageWidth - 30;
+  const boxHeight = 30;
+  doc.setDrawColor(220, 53, 69);
+  doc.setLineWidth(1);
+  doc.rect(15, yPos, boxWidth, boxHeight);
+
+  yPos += 15;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('Total Amount:', 20, yPos);
+  doc.setTextColor(220, 53, 69);
+  doc.text(`KES ${data.amount.toLocaleString()}`, 75, yPos);
+  doc.setTextColor(0);
+
+  addFooter(doc);
+  return doc;
 }
 

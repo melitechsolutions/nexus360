@@ -28,6 +28,7 @@ import {
   XCircle,
   DollarSign,
 } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function Services() {
   // CALL ALL HOOKS UNCONDITIONALLY AT TOP LEVEL
@@ -97,7 +98,7 @@ export default function Services() {
       description="Manage your service offerings and rates"
       icon={<Wrench className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Products & Services", href: "/services" },
         { label: "Services", href: "/services" },
       ]}
@@ -116,48 +117,25 @@ export default function Services() {
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Services</CardTitle>
-              <Wrench className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{services.length}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {services.filter((s: any) => s.isActive !== 0).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Rate</CardTitle>
-              <DollarSign className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                Ksh {services.length > 0 ? (services.reduce((sum: number, s: any) => sum + Number(s.hourlyRate || s.fixedPrice || 0), 0) / (services.length * 100)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-              <XCircle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {services.filter((s: any) => s.isActive === 0).length}
-              </div>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Services" value={services.length} icon={<Wrench className="h-5 w-5" />} color="border-l-orange-500" />
+          <StatsCard
+            label="Active"
+            value={services.filter((s: any) => s.isActive !== 0).length}
+            icon={<CheckCircle2 className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
+          <StatsCard
+            label="Avg Rate"
+            value={<>Ksh {services.length > 0 ? (services.reduce((sum: number, s: any) => sum + Number(s.hourlyRate || s.fixedPrice || 0), 0) / (services.length * 100)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}</>}
+            icon={<DollarSign className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
+          <StatsCard
+            label="Inactive"
+            value={services.filter((s: any) => s.isActive === 0).length}
+            icon={<XCircle className="h-5 w-5" />}
+            color="border-l-red-500"
+          />
         </div>
 
         {/* Services Table */}

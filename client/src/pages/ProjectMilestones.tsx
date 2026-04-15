@@ -31,9 +31,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDate } from "@/lib/utils";
-import { Plus, Trash2, Edit2, CheckCircle2 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { Plus, Trash2, Edit2, CheckCircle2, Flag } from "lucide-react";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
 
 type Milestone = {
   id: string;
@@ -220,50 +221,24 @@ export default function ProjectMilestones() {
   };
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Project Milestones"
+      icon={<Flag className="h-5 w-5" />}
+      description="Manage project phases and deliverables"
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Projects", href: "/projects" },
+        { label: "Milestones" },
+      ]}
+    >
       <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold">Project Milestones</h1>
-          <p className="text-gray-600">Manage project phases and deliverables</p>
-        </div>
-      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Milestones</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Avg Completion</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.avgCompletion}%</div>
-          </CardContent>
-        </Card>
+        <StatsCard label="Total Milestones" value={stats.total} color="border-l-orange-500" />
+        <StatsCard label="Completed" value={stats.completed} color="border-l-purple-500" />
+        <StatsCard label="In Progress" value={stats.inProgress} color="border-l-green-500" />
+        <StatsCard label="Avg Completion" value={<>{stats.avgCompletion}%</>} color="border-l-blue-500" />
       </div>
 
       {/* Create Button */}
@@ -526,6 +501,6 @@ export default function ProjectMilestones() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

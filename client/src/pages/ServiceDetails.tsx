@@ -2,13 +2,14 @@ import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { Edit, Trash2, Wrench } from "lucide-react";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import { useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import mutateAsync from '@/lib/mutationHelpers';
+import { RichTextDisplay } from "@/components/RichTextEditor";
 
 export default function ServiceDetails() {
   const { id } = useParams();
@@ -60,37 +61,55 @@ export default function ServiceDetails() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Service Details"
+        icon={<Wrench className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "Services", href: "/services" },
+          { label: "Details" },
+        ]}
+        backLink={{ label: "Services", href: "/services" }}
+      >
         <div className="flex items-center justify-center h-64">
           <p>Loading service...</p>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!service) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Service Details"
+        icon={<Wrench className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "Services", href: "/services" },
+          { label: "Details" },
+        ]}
+        backLink={{ label: "Services", href: "/services" }}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Service not found</p>
           <Button onClick={() => navigate("/services")}>Back to Services</Button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Service Details"
+      icon={<Wrench className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Services", href: "/services" },
+        { label: "Details" },
+      ]}
+      backLink={{ label: "Services", href: "/services" }}
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/services")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{service.name}</h1>
-            <p className="text-muted-foreground">{service.code}</p>
-          </div>
-        </div>
 
         <div className="flex gap-2">
           <Button onClick={handleEdit}>
@@ -131,7 +150,11 @@ export default function ServiceDetails() {
               </div>
               <div>
                 <label className="text-sm font-medium">Description</label>
-                <p className="text-muted-foreground">{service.description || "No description"}</p>
+                {service.description ? (
+                  <RichTextDisplay html={service.description} className="text-muted-foreground" />
+                ) : (
+                  <p className="text-muted-foreground">No description</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -146,6 +169,6 @@ export default function ServiceDetails() {
         title="Delete Service"
         description="Are you sure you want to delete this service? This action cannot be undone."
       />
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

@@ -30,15 +30,9 @@ export default defineConfig({
         manualChunks(id: string) {
           if (!id) return undefined;
           if (id.includes('node_modules')) {
-            // Prefer grouping known large libs into a dedicated chunk
+            // Only split out truly large standalone libs
             if (id.includes('html2canvas')) return 'html2canvas';
             if (id.includes('purify') || id.includes('purify.es')) return 'purify';
-            if (id.includes('@radix-ui')) return 'vendor-ui';
-            if (id.includes('@trpc')) return 'api-client';
-            if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
-            // Fallback: take the package name from the path
-            const parts = id.split('node_modules/')[1].split('/');
-            return parts[0];
           }
           return undefined;
         },

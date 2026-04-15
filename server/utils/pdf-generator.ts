@@ -1,8 +1,8 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getDb } from '../db';
-import { invoices, invoiceItems, clients } from '../../drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { invoices, invoiceItems, clients, settings } from '../../drizzle/schema';
+import { eq, and } from 'drizzle-orm';
 
 /**
  * Generate an invoice PDF buffer using professional template layout
@@ -43,6 +43,32 @@ export async function generateInvoicePDF(invoiceId: string): Promise<Buffer> {
     .from(invoiceItems)
     .where(eq(invoiceItems.invoiceId, invoiceId));
 
+  // Fetch company info from settings
+  const companyRows = await db.select().from(settings).where(eq(settings.category, 'company'));
+  const company: Record<string, string> = {};
+  companyRows.forEach(s => { if (s.key) company[s.key] = s.value ?? ''; });
+
+  // Fetch bank payment settings
+  const bankRows = await db.select().from(settings).where(eq(settings.category, 'payment_bank'));
+  const bankPay: Record<string, string> = {};
+  bankRows.forEach(s => { if (s.key) bankPay[s.key] = s.value ?? ''; });
+
+  // Fetch M-Pesa settings
+  const mpesaRows = await db.select().from(settings).where(eq(settings.category, 'payment_mpesa'));
+  const mpesaPay: Record<string, string> = {};
+  mpesaRows.forEach(s => { if (s.key) mpesaPay[s.key] = s.value ?? ''; });
+
+  // Fetch invoice settings (terms & conditions)
+  const invSettingsRows = await db.select().from(settings).where(eq(settings.category, 'invoice_settings'));
+  const invSettings: Record<string, string> = {};
+  invSettingsRows.forEach(s => { if (s.key) invSettings[s.key] = s.value ?? ''; });
+
+  // Fetch currency setting
+  const currRows = await db.select().from(settings).where(eq(settings.category, 'currency'));
+  const currMap: Record<string, string> = {};
+  currRows.forEach(s => { if (s.key) currMap[s.key] = s.value ?? ''; });
+  const cur = currMap.code || 'KES';
+
   // Create PDF document
   const doc = new jsPDF();
   let currentY = 15;
@@ -51,21 +77,21 @@ export async function generateInvoicePDF(invoiceId: string): Promise<Buffer> {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(20);
   doc.setTextColor(40, 40, 40);
-  doc.text('MELITECH SOLUTIONS', 20, currentY);
+  doc.text((company.name || 'Company Name').toUpperCase(), 20, currentY);
   
   currentY += 6;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.text('Redefining Technology!!!', 20, currentY);
+  if (company.tagline) doc.text(company.tagline, 20, currentY);
   
   currentY += 6;
   doc.setFontSize(9);
-  doc.text([
-    '+254 712 236 643 / +254 713 822 486',
-    'info@melitechsolutions.co.ke',
-    'P.O Box 85845 - 00200, Nairobi, Kenya'
-  ], 20, currentY);
+  const contactLines: string[] = [];
+  if (company.phone) contactLines.push(company.phone);
+  if (company.email) contactLines.push(company.email);
+  if (company.address) contactLines.push(company.address);
+  if (contactLines.length) doc.text(contactLines, 20, currentY);
 
   // Document type on right
   doc.setFont('helvetica', 'bold');
@@ -116,8 +142,8 @@ export async function generateInvoicePDF(invoiceId: string): Promise<Buffer> {
   const tableData = items.map((item) => [
     item.description || '',
     item.quantity.toString(),
-    `KES ${(item.unitPrice / 100).toFixed(2)}`,
-    `KES ${(item.total / 100).toFixed(2)}`,
+    `${cur} ${(item.unitPrice / 100).toFixed(2)}`,
+    `${cur} ${(item.total / 100).toFixed(2)}`,
   ]);
 
   autoTable(doc, {
@@ -164,20 +190,20 @@ export async function generateInvoicePDF(invoiceId: string): Promise<Buffer> {
   doc.setTextColor(80, 80, 80);
   
   doc.text('Subtotal:', 125, currentY + 2);
-  doc.text(`KES ${(invoice.subtotal / 100).toFixed(2)}`, 185, currentY + 2, { align: 'right' });
+  doc.text(`${cur} ${(invoice.subtotal / 100).toFixed(2)}`, 185, currentY + 2, { align: 'right' });
 
   let totalLineY = currentY + 2;
   
   if (invoice.taxAmount && invoice.taxAmount > 0) {
     totalLineY += 5;
     doc.text('Tax:', 125, totalLineY);
-    doc.text(`KES ${(invoice.taxAmount / 100).toFixed(2)}`, 185, totalLineY, { align: 'right' });
+    doc.text(`${cur} ${(invoice.taxAmount / 100).toFixed(2)}`, 185, totalLineY, { align: 'right' });
   }
 
   if (invoice.discountAmount && invoice.discountAmount > 0) {
     totalLineY += 5;
     doc.text('Discount:', 125, totalLineY);
-    doc.text(`-KES ${(invoice.discountAmount / 100).toFixed(2)}`, 185, totalLineY, { align: 'right' });
+    doc.text(`-${cur} ${(invoice.discountAmount / 100).toFixed(2)}`, 185, totalLineY, { align: 'right' });
   }
 
   totalLineY += 8;
@@ -191,7 +217,7 @@ export async function generateInvoicePDF(invoiceId: string): Promise<Buffer> {
   doc.setFontSize(12);
   doc.setTextColor(255, 255, 255);
   doc.text('Total:', 125, totalLineY + 1);
-  doc.text(`KES ${(invoice.total / 100).toFixed(2)}`, 185, totalLineY + 1, { align: 'right' });
+  doc.text(`${cur} ${(invoice.total / 100).toFixed(2)}`, 185, totalLineY + 1, { align: 'right' });
 
   currentY = totalLineY + 15;
 
@@ -220,12 +246,12 @@ export async function generateInvoicePDF(invoiceId: string): Promise<Buffer> {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 80);
-  doc.text([
-    'Bank: Kenya Commercial Bank',
-    'Branch: Kitengela',
-    'Account: 1295660644',
-    'Name: Melitech Solutions'
-  ], 25, currentY + 6);
+  const bankLines: string[] = [];
+  if (bankPay.bankName) bankLines.push(`Bank: ${bankPay.bankName}`);
+  if (bankPay.branch) bankLines.push(`Branch: ${bankPay.branch}`);
+  if (bankPay.accountNumber) bankLines.push(`Account: ${bankPay.accountNumber}`);
+  if (bankPay.accountName) bankLines.push(`Name: ${bankPay.accountName}`);
+  if (bankLines.length) doc.text(bankLines, 25, currentY + 6);
 
   // M-Pesa Box
   doc.setDrawColor(240, 240, 240);
@@ -239,10 +265,10 @@ export async function generateInvoicePDF(invoiceId: string): Promise<Buffer> {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 80);
-  doc.text([
-    'Paybill: 522522',
-    'Account: 1295660644'
-  ], 115, currentY + 6);
+  const mpesaLines: string[] = [];
+  if (mpesaPay.paybillNumber) mpesaLines.push(`Paybill: ${mpesaPay.paybillNumber}`);
+  if (mpesaPay.accountNumber) mpesaLines.push(`Account: ${mpesaPay.accountNumber}`);
+  if (mpesaLines.length) doc.text(mpesaLines, 115, currentY + 6);
 
   currentY += 40;
 
@@ -271,7 +297,7 @@ export async function generateInvoicePDF(invoiceId: string): Promise<Buffer> {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(80, 80, 80);
-  const defaultTerms = invoice.terms || `1. All prices are in Kenya Shillings (KES)
+  const defaultTerms = invoice.terms || invSettings.termsAndConditions || `1. All prices are in Kenya Shillings (KES)
 2. VAT charged where applicable
 3. Invoice valid for 7 days from date of generation
 4. Late payment may result in suspension of services`;
@@ -283,7 +309,7 @@ export async function generateInvoicePDF(invoiceId: string): Promise<Buffer> {
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(8);
   doc.setTextColor(120, 120, 120);
-  doc.text('This is a system generated invoice. For inquiries, contact info@melitechsolutions.co.ke', doc.internal.pageSize.width / 2, footerY, { align: 'center' });
+  doc.text(`This is a system generated invoice. For inquiries, contact ${company.email || ''}`, doc.internal.pageSize.width / 2, footerY, { align: 'center' });
 
   // Convert PDF to buffer
   const pdfOutput = doc.output('arraybuffer');

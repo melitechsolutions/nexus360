@@ -47,8 +47,8 @@ export const advancedReportingRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const startIso = input.startDate.toISOString();
-      const endIso = input.endDate.toISOString();
+      const startIso = input.startDate.toISOString().replace('T', ' ').substring(0, 19);
+      const endIso = input.endDate.toISOString().replace('T', ' ').substring(0, 19);
 
       // Get invoices in date range
       const invoiceData = await db
@@ -79,7 +79,7 @@ export const advancedReportingRouter = router({
       // Calculate trend (compare to previous period)
       const periodDays = input.endDate.getTime() - input.startDate.getTime();
       const previousStart = new Date(input.startDate.getTime() - periodDays);
-      const previousStartIso = previousStart.toISOString();
+      const previousStartIso = previousStart.toISOString().replace('T', ' ').substring(0, 19);
 
       const previousInvoices = await db
         .select()
@@ -87,7 +87,7 @@ export const advancedReportingRouter = router({
         .where(
           and(
             gte(invoices.invoiceDate, previousStartIso),
-            lte(invoices.invoiceDate, input.startDate.toISOString())
+            lte(invoices.invoiceDate, input.startDate.toISOString().replace('T', ' ').substring(0, 19))
           )
         );
 
@@ -120,8 +120,8 @@ export const advancedReportingRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const startIso = input.startDate.toISOString();
-      const endIso = input.endDate.toISOString();
+      const startIso = input.startDate.toISOString().replace('T', ' ').substring(0, 19);
+      const endIso = input.endDate.toISOString().replace('T', ' ').substring(0, 19);
 
       // Get revenue
       const invoiceData = await db
@@ -187,8 +187,8 @@ export const advancedReportingRouter = router({
       const db = await getDb();
       if (!db) return [];
 
-      const startIso = input.startDate.toISOString();
-      const endIso = input.endDate.toISOString();
+      const startIso = input.startDate.toISOString().replace('T', ' ').substring(0, 19);
+      const endIso = input.endDate.toISOString().replace('T', ' ').substring(0, 19);
 
       const clientData = await db.select().from(clients);
 
@@ -254,19 +254,19 @@ export const advancedReportingRouter = router({
       .where(
         and(
           eq(invoices.status, "pending"),
-          lt(invoices.dueDate, now.toISOString())
+          lt(invoices.dueDate, now.toISOString().replace('T', ' ').substring(0, 19))
         )
       );
 
     const monthlyInvoices = await db
       .select()
       .from(invoices)
-      .where(gte(invoices.invoiceDate, startOfMonth.toISOString()));
+      .where(gte(invoices.invoiceDate, startOfMonth.toISOString().replace('T', ' ').substring(0, 19)));
 
     const yearlyInvoices = await db
       .select()
       .from(invoices)
-      .where(gte(invoices.invoiceDate, startOfYear.toISOString()));
+      .where(gte(invoices.invoiceDate, startOfYear.toISOString().replace('T', ' ').substring(0, 19)));
 
     // Calculate metrics
     const monthlyRevenue = monthlyInvoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
@@ -334,8 +334,8 @@ export const advancedReportingRouter = router({
       const db = await getDb();
       if (!db) return [];
 
-      const startIso = input.startDate.toISOString();
-      const endIso = input.endDate.toISOString();
+      const startIso = input.startDate.toISOString().replace('T', ' ').substring(0, 19);
+      const endIso = input.endDate.toISOString().replace('T', ' ').substring(0, 19);
 
       const timeEntriesData = await db
         .select()

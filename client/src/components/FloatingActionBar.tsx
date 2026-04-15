@@ -37,6 +37,8 @@ interface FloatingActionBarProps {
   position?: "left" | "right";
   collapsed?: boolean;
   onItemClick?: (item: QuickAccessItem) => void;
+  sidebarOpen?: boolean;
+  sidebarExpanded?: boolean;
 }
 
 const DEFAULT_QUICK_ACCESS_ITEMS: QuickAccessItem[] = [
@@ -112,6 +114,8 @@ export function FloatingActionBar({
   position = "right",
   collapsed: initialCollapsed = true,
   onItemClick,
+  sidebarOpen = false,
+  sidebarExpanded = false,
 }: FloatingActionBarProps) {
   const [, navigate] = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -142,7 +146,9 @@ export function FloatingActionBar({
   const positionClasses =
     position === "right"
       ? "right-4 md:right-6"
-      : "left-4 md:left-6";
+      : sidebarExpanded
+        ? "left-[272px]"
+        : "left-20 lg:left-[80px]";
 
   return (
     <TooltipProvider>

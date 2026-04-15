@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 
 interface PasswordRequirements {
   minLength: boolean;
@@ -455,7 +455,17 @@ export default function EnhancedPasswordChange() {
 
   // Regular password change (not first login)
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Change Password"
+      description="Update your account password to keep your account secure"
+      icon={<Lock className="w-5 h-5" />}
+      backLink={{ label: "Account", href: "/account" }}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Account", href: "/account" },
+        { label: "Change Password" },
+      ]}
+    >
       <div className="max-w-2xl mx-auto py-8">
         <Card>
           <CardHeader>
@@ -575,6 +585,6 @@ export default function EnhancedPasswordChange() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

@@ -1,8 +1,9 @@
-import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, varchar, mysqlEnum, int, text, longtext, timestamp, datetime, tinyint, json, decimal } from "drizzle-orm/mysql-core"
+import { mysqlTable, mysqlSchema, AnyMySqlColumn, index, varchar, mysqlEnum, int, text, longtext, timestamp, datetime, tinyint, json, decimal, bigint, boolean } from "drizzle-orm/mysql-core"
 import { sql } from "drizzle-orm"
 
 export const accounts = mysqlTable("accounts", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     accountCode: varchar({ length: 50 }).notNull(),
     accountName: varchar({ length: 255 }).notNull(),
     accountType: mysqlEnum(['asset','liability','equity','revenue','expense','cost of goods sold','operating expense','capital expenditure','other income','other expense']).notNull(),
@@ -82,10 +83,12 @@ export const bankTransactions = mysqlTable("bankTransactions", {
 
 export const clients = mysqlTable("clients", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     companyName: varchar({ length: 255 }).notNull(),
     contactPerson: varchar({ length: 255 }),
     email: varchar({ length: 320 }),
     phone: varchar({ length: 50 }),
+    secondaryPhone: varchar({ length: 50 }),
     address: text(),
     city: varchar({ length: 100 }),
     country: varchar({ length: 100 }),
@@ -104,11 +107,14 @@ export const clients = mysqlTable("clients", {
     bankName: varchar({ length: 255 }),
     bankCode: varchar({ length: 50 }),
     branch: varchar({ length: 100 }),
+    bankAccountNumber: varchar({ length: 100 }),
     creditLimit: int(),
     paymentTerms: varchar({ length: 100 }),
     numberOfEmployees: int(),
     yearEstablished: int(),
     businessLicense: varchar({ length: 255 }),
+    leadSource: varchar({ length: 100 }),
+    currency: varchar({ length: 10 }),
 },
 (table) => [
     index("email_idx").on(table.email),
@@ -117,6 +123,7 @@ export const clients = mysqlTable("clients", {
 
 export const communicationLogs = mysqlTable("communicationLogs", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     type: mysqlEnum(['email','sms']).notNull(),
     recipient: varchar({ length: 320 }).notNull(),
     subject: varchar({ length: 500 }),
@@ -147,14 +154,19 @@ export const jobGroups = mysqlTable("jobGroups", {
 
 export const employees = mysqlTable("employees", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     userId: varchar({ length: 64 }),
     employeeNumber: varchar({ length: 50 }).notNull(),
     firstName: varchar({ length: 100 }).notNull(),
     lastName: varchar({ length: 100 }).notNull(),
     email: varchar({ length: 320 }),
     phone: varchar({ length: 50 }),
+    gender: mysqlEnum(['male','female','other']),
+    maritalStatus: mysqlEnum(['single','married','divorced','widowed']),
     dateOfBirth: datetime({ mode: 'string'}),
     hireDate: datetime({ mode: 'string'}).notNull(),
+    probationEndDate: datetime({ mode: 'string'}),
+    contractEndDate: datetime({ mode: 'string'}),
     department: varchar({ length: 100 }),
     position: varchar({ length: 100 }),
     jobGroupId: varchar({ length: 64 }).notNull(),
@@ -162,8 +174,15 @@ export const employees = mysqlTable("employees", {
     employmentType: mysqlEnum(['full_time','part_time','contract','intern','contractual','hourly','wage','temporary','seasonal']).default('full_time').notNull(),
     status: mysqlEnum(['active','on_leave','terminated','suspended']).default('active').notNull(),
     address: text(),
+    emergencyContactName: varchar({ length: 255 }),
+    emergencyContactRelationship: varchar({ length: 100 }),
+    emergencyContactPhone: varchar({ length: 50 }),
     emergencyContact: text(),
+    bankName: varchar({ length: 255 }),
+    bankBranch: varchar({ length: 255 }),
     bankAccountNumber: varchar({ length: 100 }),
+    nhifNumber: varchar({ length: 50 }),
+    nssfNumber: varchar({ length: 50 }),
     taxId: varchar({ length: 100 }),
     nationalId: varchar({ length: 100 }),
     photoUrl: varchar({ length: 500 }),
@@ -197,6 +216,7 @@ export const estimateItems = mysqlTable("estimateItems", {
 
 export const estimates = mysqlTable("estimates", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     estimateNumber: varchar({ length: 100 }).notNull(),
     clientId: varchar({ length: 64 }).notNull(),
     title: varchar({ length: 255 }),
@@ -244,13 +264,14 @@ export const proposals = mysqlTable("proposals", {
 
 export const expenses = mysqlTable("expenses", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     expenseNumber: varchar({ length: 100 }),
     category: varchar({ length: 100 }).notNull(),
     vendor: varchar({ length: 255 }),
     amount: int().notNull(),
     expenseDate: datetime({ mode: 'string'}).notNull(),
     paymentMethod: mysqlEnum(['cash','bank_transfer','cheque','card','other']),
-    receiptUrl: varchar({ length: 500 }),
+    receiptUrl: longtext(),
     description: text(),
     accountId: varchar({ length: 64 }),
     budgetAllocationId: varchar({ length: 64 }), // Link to budget allocation line
@@ -267,6 +288,33 @@ export const expenses = mysqlTable("expenses", {
     index("category_idx").on(table.category),
     index("status_idx").on(table.status),
     index("chart_of_account_idx").on(table.chartOfAccountId),
+]);
+
+export const recurringExpenses = mysqlTable("recurringExpenses", {
+    id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
+    category: varchar({ length: 100 }).notNull(),
+    vendor: varchar({ length: 255 }),
+    amount: int().notNull(),
+    description: text(),
+    paymentMethod: mysqlEnum(['cash','bank_transfer','cheque','card','other']),
+    frequency: mysqlEnum(['weekly','biweekly','monthly','quarterly','annually']).notNull(),
+    startDate: datetime({ mode: 'string'}).notNull(),
+    endDate: datetime({ mode: 'string'}),
+    nextDueDate: datetime({ mode: 'string'}).notNull(),
+    dayOfMonth: int().default(1),
+    reminderDaysBefore: int().default(3),
+    lastGeneratedDate: datetime({ mode: 'string'}),
+    isActive: tinyint().default(1).notNull(),
+    chartOfAccountId: int(),
+    createdBy: varchar({ length: 64 }),
+    createdAt: timestamp({ mode: 'string' }),
+    updatedAt: timestamp({ mode: 'string' }),
+},
+(table) => [
+    index("re_org_idx").on(table.organizationId),
+    index("re_next_due_idx").on(table.nextDueDate),
+    index("re_active_idx").on(table.isActive),
 ]);
 
 export const guestClients = mysqlTable("guestClients", {
@@ -313,6 +361,7 @@ export const invoiceItems = mysqlTable("invoiceItems", {
 
 export const invoices = mysqlTable("invoices", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     invoiceNumber: varchar({ length: 100 }).notNull(),
     clientId: varchar({ length: 64 }).notNull(),
     estimateId: varchar({ length: 64 }),
@@ -331,6 +380,9 @@ export const invoices = mysqlTable("invoices", {
     createdAt: timestamp({ mode: 'string' }),
     updatedAt: timestamp({ mode: 'string' }),
     paymentPlanId: varchar({ length: 64 }),
+    isAutoRecurring: tinyint().default(0),
+    recurringInvoiceId: varchar({ length: 64 }),
+    clientSubscriptionId: varchar({ length: 64 }),
 },
 (table) => [
     index("invoice_number_idx").on(table.invoiceNumber),
@@ -341,8 +393,10 @@ export const invoices = mysqlTable("invoices", {
 
 export const recurringInvoices = mysqlTable("recurringInvoices", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     clientId: varchar({ length: 64 }).notNull(),
     templateInvoiceId: varchar({ length: 64 }).notNull(),
+    clientSubscriptionId: varchar({ length: 64 }),
     frequency: mysqlEnum(['weekly','biweekly','monthly','quarterly','annually']).notNull(),
     startDate: datetime({ mode: 'string'}).notNull(),
     endDate: datetime({ mode: 'string'}),
@@ -392,6 +446,7 @@ export const journalEntryLines = mysqlTable("journalEntryLines", {
 
 export const leaveRequests = mysqlTable("leaveRequests", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     employeeId: varchar({ length: 64 }).notNull(),
     leaveType: mysqlEnum(['annual','sick','maternity','paternity','unpaid','other']).notNull(),
     startDate: datetime({ mode: 'string'}).notNull(),
@@ -413,6 +468,7 @@ export const leaveRequests = mysqlTable("leaveRequests", {
 
 export const opportunities = mysqlTable("opportunities", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     clientId: varchar({ length: 64 }).notNull(),
     title: varchar({ length: 255 }).notNull(),
     description: text(),
@@ -510,6 +566,7 @@ export const payroll = mysqlTable("payroll", {
 
 export const products = mysqlTable("products", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     name: varchar({ length: 255 }).notNull(),
     description: text(),
     sku: varchar({ length: 100 }),
@@ -539,7 +596,8 @@ export const products = mysqlTable("products", {
 
 export const projectTasks = mysqlTable("projectTasks", {
     id: varchar({ length: 64 }).primaryKey(),
-    projectId: varchar({ length: 64 }).notNull(),
+    projectId: varchar({ length: 64 }),
+    clientId: varchar({ length: 64 }),
     title: varchar({ length: 255 }).notNull(),
     description: text(),
     status: mysqlEnum(['todo','in_progress','review','completed','blocked']).default('todo').notNull(),
@@ -556,6 +614,10 @@ export const projectTasks = mysqlTable("projectTasks", {
     rejectionReason: longtext(),
     parentTaskId: varchar({ length: 64 }),
     order: int().default(0),
+    tags: text(),
+    targetDate: datetime({ mode: 'string'}),
+    billable: tinyint().default(1),
+    visibleToClient: tinyint().default(1),
     createdBy: varchar({ length: 64 }),
     createdAt: timestamp({ mode: 'string' }),
     updatedAt: timestamp({ mode: 'string' }),
@@ -570,6 +632,7 @@ export const projectTasks = mysqlTable("projectTasks", {
 
 export const projects = mysqlTable("projects", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     projectNumber: varchar({ length: 100 }).notNull(),
     name: varchar({ length: 255 }).notNull(),
     description: text(),
@@ -685,6 +748,7 @@ export const scheduledReminders = mysqlTable("scheduledReminders", {
 
 export const services = mysqlTable("services", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     name: varchar({ length: 255 }).notNull(),
     description: text(),
     category: varchar({ length: 100 }),
@@ -757,7 +821,7 @@ export const templates = mysqlTable("templates", {
 
 export const documentNumberFormats = mysqlTable("documentNumberFormats", {
     id: varchar({ length: 64 }).primaryKey(),
-    documentType: mysqlEnum(['invoice','estimate','receipt','proposal','expense','payment']).notNull(),
+    documentType: mysqlEnum(['invoice','estimate','receipt','proposal','expense','payment','contract','quotation','purchase_order','project','credit_note','debit_note']).notNull(),
     prefix: varchar({ length: 50 }).default('').notNull(),
     padding: int().default(6).notNull(),
     separator: varchar({ length: 5 }).default('-').notNull(),
@@ -775,17 +839,44 @@ export const defaultSettings = mysqlTable("defaultSettings", {
     createdAt: timestamp({ mode: 'string' }),
 });
 
-// NOTE: permissions table not in current DB schema - permissions are managed via RBAC middleware
-// export const permissions = mysqlTable("permissions", {
-//     id: varchar({ length: 64 }).primaryKey(),
-//     name: varchar({ length: 100 }),
-//     permissionName: varchar({ length: 100 }),
-//     description: text(),
-//     category: varchar({ length: 100 }),
-//     resource: varchar({ length: 100 }),
-//     action: varchar({ length: 50 }),
-//     createdAt: timestamp({ mode: 'string' }),
-// });
+// Permissions table for granular permission management
+export const permissions = mysqlTable("permissions", {
+    id: varchar({ length: 64 }).primaryKey(),
+    name: varchar({ length: 100 }),
+    permissionName: varchar({ length: 100 }),
+    description: text(),
+    category: varchar({ length: 100 }),
+    resource: varchar({ length: 100 }),
+    action: varchar({ length: 50 }),
+    isAdvanced: tinyint().default(0).notNull(),
+    createdAt: timestamp({ mode: 'string' }),
+},
+(table) => [
+    index("idx_permissions_category").on(table.category),
+    index("idx_permissions_resource").on(table.resource),
+]);
+
+// Custom roles for org-specific roles with granular permissions
+export const customRoles = mysqlTable("customRoles", {
+    id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
+    name: varchar({ length: 100 }).notNull(),
+    displayName: varchar({ length: 255 }).notNull(),
+    description: text(),
+    permissions: text(), // JSON array of permission feature strings
+    baseRole: mysqlEnum(['user','admin','staff','accountant','client','super_admin','project_manager','hr','ict_manager','procurement_manager','sales_manager']).default('staff'),
+    isAdvanced: tinyint().default(0).notNull(),
+    isSystem: tinyint().default(0).notNull(),
+    isActive: tinyint().default(1).notNull(),
+    createdBy: varchar({ length: 64 }),
+    createdAt: timestamp({ mode: 'string' }),
+    updatedAt: timestamp({ mode: 'string' }),
+},
+(table) => [
+    index("idx_customRoles_orgId").on(table.organizationId),
+    index("idx_customRoles_name").on(table.name),
+    index("idx_customRoles_active").on(table.isActive),
+]);
 
 export const userRoles = mysqlTable("userRoles", {
     id: varchar({ length: 64 }).primaryKey(),
@@ -807,6 +898,7 @@ export const rolePermissions = mysqlTable("rolePermissions", {
 
 export const receipts = mysqlTable("receipts", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     receiptNumber: varchar({ length: 100 }).notNull(),
     clientId: varchar({ length: 64 }).notNull(),
     paymentId: varchar({ length: 64 }),
@@ -820,13 +912,68 @@ export const receipts = mysqlTable("receipts", {
     createdAt: timestamp({ mode: 'string' }),
 });
 
+export const creditNotes = mysqlTable("creditNotes", {
+    id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
+    creditNoteNumber: varchar({ length: 100 }).notNull(),
+    clientId: varchar({ length: 64 }).notNull(),
+    clientName: varchar({ length: 255 }),
+    invoiceId: varchar({ length: 64 }),
+    issueDate: datetime({ mode: 'string' }).notNull(),
+    reason: mysqlEnum(['goods-returned','service-cancelled','discount','quality-issue','error','other']).notNull().default('other'),
+    subtotal: int().notNull().default(0),
+    taxAmount: int().notNull().default(0),
+    total: int().notNull().default(0),
+    status: mysqlEnum(['draft','approved','applied','void']).default('draft').notNull(),
+    notes: text(),
+    createdBy: varchar({ length: 64 }),
+    approvedBy: varchar({ length: 64 }),
+    approvedAt: datetime({ mode: 'string' }),
+    createdAt: timestamp({ mode: 'string' }),
+    updatedAt: timestamp({ mode: 'string' }),
+},
+(table) => [
+    index("credit_note_number_idx").on(table.creditNoteNumber),
+    index("client_idx").on(table.clientId),
+    index("status_idx").on(table.status),
+    index("invoice_idx").on(table.invoiceId),
+]);
+
+export const debitNotes = mysqlTable("debitNotes", {
+    id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
+    debitNoteNumber: varchar({ length: 100 }).notNull(),
+    supplierId: varchar({ length: 64 }).notNull(),
+    supplierName: varchar({ length: 255 }),
+    purchaseOrderId: varchar({ length: 64 }),
+    issueDate: datetime({ mode: 'string' }).notNull(),
+    reason: mysqlEnum(['quality-shortage','price-adjustment','damaged','underdelivery','penalty']).notNull().default('quality-shortage'),
+    subtotal: int().notNull().default(0),
+    taxAmount: int().notNull().default(0),
+    total: int().notNull().default(0),
+    status: mysqlEnum(['draft','approved','settled','void']).default('draft').notNull(),
+    notes: text(),
+    createdBy: varchar({ length: 64 }),
+    approvedBy: varchar({ length: 64 }),
+    approvedAt: datetime({ mode: 'string' }),
+    createdAt: timestamp({ mode: 'string' }),
+    updatedAt: timestamp({ mode: 'string' }),
+},
+(table) => [
+    index("debit_note_number_idx").on(table.debitNoteNumber),
+    index("supplier_idx").on(table.supplierId),
+    index("debit_status_idx").on(table.status),
+]);
+
 export const departments = mysqlTable("departments", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     name: varchar({ length: 255 }).notNull(),
     description: text(),
     headId: varchar({ length: 64 }),
     budget: int(),
     status: mysqlEnum(['active','inactive']).default('active'),
+    defaultRole: varchar({ length: 100 }),
     createdBy: varchar({ length: 64 }),
     createdAt: timestamp({ mode: 'string' }),
     updatedAt: timestamp({ mode: 'string' }),
@@ -834,6 +981,7 @@ export const departments = mysqlTable("departments", {
 
 export const budgets = mysqlTable("budgets", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     departmentId: varchar({ length: 64 }).notNull(),
     amount: int().notNull(),
     remaining: int().notNull(),
@@ -856,6 +1004,7 @@ export const budgets = mysqlTable("budgets", {
 
 export const attendance = mysqlTable("attendance", {
     id: varchar({ length: 64 }).primaryKey(),
+    organizationId: varchar({ length: 64 }),
     employeeId: varchar({ length: 64 }).notNull(),
     date: datetime().notNull(),
     status: mysqlEnum(['present','absent','late','leave']).default('present'),
@@ -910,7 +1059,7 @@ export const users = mysqlTable("users", {
     emailVerified: timestamp({ mode: 'string' }),
     loginMethod: varchar({ length: 50 }).default('local').notNull(),
     passwordHash: varchar({ length: 255 }),
-    role: mysqlEnum(['user','admin','staff','accountant','client','super_admin','project_manager','hr']).default('user').notNull(),
+    role: mysqlEnum(['user','admin','staff','accountant','client','super_admin','project_manager','hr','ict_manager','procurement_manager','sales_manager']).default('user').notNull(),
     createdAt: timestamp({ mode: 'string' }).defaultNow(),
     lastSignedIn: timestamp({ mode: 'string' }),
     department: varchar({ length: 100 }),
@@ -926,6 +1075,8 @@ export const users = mysqlTable("users", {
     city: varchar({ length: 100 }),
     country: varchar({ length: 100 }),
     photoUrl: longtext(),
+    organizationId: varchar({ length: 64 }),
+    customRoleId: varchar({ length: 64 }),
 });
 
 export const savedFilters = mysqlTable("savedFilters", {
@@ -951,12 +1102,13 @@ export const savedFilters = mysqlTable("savedFilters", {
 export const notifications = mysqlTable("notifications", {
     id: varchar({ length: 64 }).primaryKey(),
     userId: varchar({ length: 64 }).notNull(),
-    type: mysqlEnum(['payment','project','client','financial','system']).notNull(),
+    type: mysqlEnum(['info','success','warning','error','reminder','payment','project','client','financial','system']).notNull(),
     title: varchar({ length: 255 }).notNull(),
     message: text().notNull(),
+    category: varchar({ length: 50 }),
     entityType: varchar({ length: 50 }), // e.g., 'invoice', 'project', 'budget'
     entityId: varchar({ length: 64 }),
-    priority: mysqlEnum(['low','medium','high','critical']).default('medium').notNull(),
+    priority: mysqlEnum(['low','normal','medium','high','critical']).default('normal').notNull(),
     actionUrl: varchar({ length: 500 }), // Link to view the relevant entity
     isRead: tinyint().default(0).notNull(),
     readAt: timestamp({ mode: 'string' }),
@@ -997,6 +1149,56 @@ export const notificationPreferences = mysqlTable("notificationPreferences", {
     createdAt: timestamp({ mode: 'string' }),
     updatedAt: timestamp({ mode: 'string' }),
 });
+
+export const smsQueue = mysqlTable("smsQueue", {
+    id: varchar({ length: 64 }).primaryKey(),
+    phoneNumber: varchar({ length: 20 }).notNull(),
+    message: text().notNull(),
+    status: mysqlEnum(['pending','sending','delivered','failed']).default('pending').notNull(),
+    retryCount: int().default(0),
+    provider: varchar({ length: 50 }),
+    externalId: varchar({ length: 128 }),
+    error: text(),
+    failureReason: text(),
+    relatedEntityType: varchar({ length: 50 }),
+    relatedEntityId: varchar({ length: 64 }),
+    sentAt: timestamp({ mode: 'string' }),
+    nextRetryAt: timestamp({ mode: 'string' }),
+    organizationId: varchar({ length: 64 }),
+    createdBy: varchar({ length: 64 }),
+    createdAt: timestamp({ mode: 'string' }).defaultNow(),
+    updatedAt: timestamp({ mode: 'string' }).defaultNow(),
+},
+(table) => [
+    index("sms_status_idx").on(table.status),
+    index("sms_created_idx").on(table.createdAt),
+]);
+
+export const smsCustomerPreferences = mysqlTable("smsCustomerPreferences", {
+    id: varchar({ length: 64 }).primaryKey(),
+    phoneNumber: varchar({ length: 20 }).notNull(),
+    optedIn: boolean().default(true).notNull(),
+    marketingOptedIn: boolean().default(false).notNull(),
+    transactionalOptedIn: boolean().default(true).notNull(),
+    reminderPreferences: json(),
+    updatedAt: timestamp({ mode: 'string' }).defaultNow(),
+},
+(table) => [
+    index("sms_pref_phone_idx").on(table.phoneNumber),
+]);
+
+export const userFavorites = mysqlTable("userFavorites", {
+    id: varchar({ length: 64 }).primaryKey(),
+    userId: varchar({ length: 64 }).notNull(),
+    entityType: varchar({ length: 50 }).notNull(),
+    entityId: varchar({ length: 64 }).notNull(),
+    entityName: varchar({ length: 255 }),
+    createdAt: timestamp({ mode: 'string' }).defaultNow(),
+},
+(table) => [
+    index("fav_user_idx").on(table.userId),
+    index("fav_entity_idx").on(table.entityType, table.entityId),
+]);
 
 export const aiDocuments = mysqlTable("aiDocuments", {
     id: varchar({ length: 64 }).primaryKey(),
@@ -1098,7 +1300,7 @@ export const aiChatMessages = mysqlTable("aiChatMessages", {
 export const lineItems = mysqlTable("lineItems", {
     id: varchar({ length: 64 }).primaryKey(),
     documentId: varchar({ length: 64 }).notNull(),
-    documentType: mysqlEnum(['invoice','estimate','receipt']).notNull(),
+    documentType: mysqlEnum(['invoice','estimate','receipt','expense','credit_note','lpo']).notNull(),
     description: text().notNull(),
     quantity: int().notNull(),
     rate: int().notNull(),
@@ -1468,6 +1670,7 @@ export type InsertVacationRequest = typeof vacationRequests.$inferInsert;
 
 export const documents = mysqlTable("documents", {
   id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
   documentName: varchar({ length: 255 }).notNull(),
   documentType: mysqlEnum(['contract', 'agreement', 'proposal', 'template', 'invoice', 'receipt', 'other']).default('other'),
   fileUrl: varchar({ length: 500 }).notNull(),
@@ -1908,7 +2111,8 @@ export type InsertPricingPlan = typeof pricingPlans.$inferInsert;
 
 export const subscriptions = mysqlTable("subscriptions", {
   id: varchar({ length: 64 }).primaryKey(),
-  clientId: varchar({ length: 64 }).notNull(),
+  clientId: varchar({ length: 64 }),
+  organizationId: varchar({ length: 64 }),
   planId: varchar({ length: 64 }).notNull(),
   status: mysqlEnum(['trial', 'active', 'suspended', 'cancelled', 'expired']).default('trial').notNull(),
   billingCycle: mysqlEnum(['monthly', 'annual']).default('monthly').notNull(),
@@ -1926,6 +2130,7 @@ export const subscriptions = mysqlTable("subscriptions", {
   updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
 }, (table) => [
   index("idx_client_id").on(table.clientId),
+  index("idx_org_id").on(table.organizationId),
   index("idx_status").on(table.status),
   index("idx_renewal_date").on(table.renewalDate),
   index("idx_expiry_date").on(table.expiryDate),
@@ -1965,6 +2170,7 @@ export type InsertBillingInvoice = typeof billingInvoices.$inferInsert;
 
 export const payments = mysqlTable("payments", {
   id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
   invoiceId: varchar({ length: 64 }).notNull(),
   clientId: varchar({ length: 64 }).notNull(),
   accountId: varchar({ length: 64 }),
@@ -2208,6 +2414,121 @@ export const conversations = mysqlTable("conversations", {
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = typeof conversations.$inferInsert;
 
+// ── Organization / Multi-Tenancy Tables ─────────────────────────────────────
+
+export const organizations = mysqlTable("organizations", {
+  id: varchar({ length: 64 }).primaryKey(),
+  name: varchar({ length: 255 }).notNull(),
+  slug: varchar({ length: 100 }).notNull(),
+  plan: varchar({ length: 50 }).notNull().default('trial'),
+  isActive: tinyint().default(1).notNull(),
+  isArchived: tinyint().default(0).notNull(),
+  archivedAt: timestamp({ mode: 'string' }),
+  archivedBy: varchar({ length: 64 }),
+  maxUsers: int().default(10),
+  settings: json(),
+  logoUrl: longtext(),
+  domain: varchar({ length: 255 }),
+  contactEmail: varchar({ length: 320 }),
+  contactPhone: varchar({ length: 50 }),
+  address: text(),
+  country: varchar({ length: 100 }),
+  industry: varchar({ length: 100 }),
+  website: varchar({ length: 255 }),
+  taxId: varchar({ length: 100 }),
+  billingEmail: varchar({ length: 320 }),
+  timezone: varchar({ length: 100 }).default('Africa/Nairobi'),
+  currency: varchar({ length: 10 }).default('KES'),
+  description: text(),
+  employeeCount: int(),
+  registrationNumber: varchar({ length: 100 }),
+  paymentMethod: varchar({ length: 50 }),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_org_slug").on(table.slug),
+  index("idx_org_active").on(table.isActive),
+  index("idx_org_archived").on(table.isArchived),
+  index("idx_org_industry").on(table.industry),
+]);
+
+export type Organization = typeof organizations.$inferSelect;
+export type InsertOrganization = typeof organizations.$inferInsert;
+
+export const organizationFeatures = mysqlTable("organizationFeatures", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }).notNull(),
+  featureKey: varchar({ length: 100 }).notNull(),
+  isEnabled: tinyint().default(1).notNull(),
+  config: json(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_orgfeat_org").on(table.organizationId),
+  index("idx_orgfeat_key").on(table.featureKey),
+]);
+
+export type OrganizationFeature = typeof organizationFeatures.$inferSelect;
+export type InsertOrganizationFeature = typeof organizationFeatures.$inferInsert;
+
+// ============================================================================
+// ORGANIZATION USERS: Enterprise/Multitenancy User Management
+// ============================================================================
+
+export const organizationUsers = mysqlTable("organizationUsers", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }).notNull(),
+  name: varchar({ length: 255 }).notNull(),
+  email: varchar({ length: 320 }).notNull(),
+  role: mysqlEnum(['super_admin', 'admin', 'manager', 'staff', 'viewer', 'ict_manager', 'project_manager', 'hr', 'accountant', 'procurement_manager', 'sales_manager']).default('staff').notNull(),
+  position: varchar({ length: 100 }),
+  department: varchar({ length: 100 }),
+  phone: varchar({ length: 20 }),
+  photoUrl: longtext(),
+  isActive: tinyint().default(1).notNull(),
+  invitationSent: tinyint().default(0).notNull(),
+  invitationSentAt: timestamp({ mode: 'string' }),
+  invitationAcceptedAt: timestamp({ mode: 'string' }),
+  lastSignedIn: timestamp({ mode: 'string' }),
+  loginCount: int().default(0),
+  createdBy: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_orgusers_org").on(table.organizationId),
+  index("idx_orgusers_email").on(table.email),
+  index("idx_orgusers_role").on(table.role),
+  index("idx_orgusers_active").on(table.isActive),
+  index("idx_orgusers_created_by").on(table.createdBy),
+]);
+
+export type OrganizationUser = typeof organizationUsers.$inferSelect;
+export type InsertOrganizationUser = typeof organizationUsers.$inferInsert;
+
+export const tenantMessages = mysqlTable("tenantMessages", {
+  id: varchar({ length: 64 }).primaryKey(),
+  senderId: varchar({ length: 64 }).notNull(),
+  subject: varchar({ length: 500 }).notNull(),
+  content: longtext().notNull(),
+  priority: varchar({ length: 20 }).default('normal'),
+  targetType: varchar({ length: 20 }).default('all'),
+  targetOrgId: varchar({ length: 64 }),
+  targetUserId: varchar({ length: 64 }),
+  isRead: tinyint().default(0),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+}, (table) => [
+  index("idx_tmsg_sender").on(table.senderId),
+]);
+
+export const pricingTierFeatures = mysqlTable("pricingTierFeatures", {
+  id: varchar({ length: 64 }).primaryKey(),
+  tier: varchar({ length: 50 }).notNull(),
+  featureKey: varchar({ length: 100 }).notNull(),
+  isEnabled: tinyint().default(1).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+}, (table) => [
+  index("idx_ptf_tier").on(table.tier),
+]);
+
 export const conversationMembers = mysqlTable("conversationMembers", {
   id: varchar({ length: 64 }).primaryKey(),
   conversationId: varchar({ length: 64 }).notNull(),
@@ -2246,6 +2567,7 @@ export type InsertMessageReadReceipt = typeof messageReadReceipts.$inferInsert;
 
 export const tickets = mysqlTable("tickets", {
   id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
   ticketNumber: varchar({ length: 50 }).notNull().unique(),
   title: varchar({ length: 500 }).notNull(),
   description: longtext().notNull(),
@@ -2400,3 +2722,1090 @@ export const emailLogs = mysqlTable("emailLogs", {
 
 export type EmailLog = typeof emailLogs.$inferSelect;
 export type InsertEmailLog = typeof emailLogs.$inferInsert;
+
+// ─── Work Orders ──────────────────────────────────────────────
+export const workOrders = mysqlTable("workOrders", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
+  workOrderNumber: varchar({ length: 50 }).notNull(),
+  issueDate: varchar({ length: 30 }).notNull(),
+  description: text().notNull(),
+  assignedTo: varchar({ length: 200 }).notNull(),
+  priority: mysqlEnum(["low", "medium", "high", "critical"]).default("medium").notNull(),
+  startDate: varchar({ length: 30 }).notNull(),
+  targetEndDate: varchar({ length: 30 }).notNull(),
+  laborCost: int().default(0).notNull(),
+  serviceCost: int().default(0).notNull(),
+  total: int().default(0).notNull(),
+  notes: text(),
+  status: mysqlEnum(["draft", "open", "in-progress", "completed", "cancelled"]).default("draft").notNull(),
+  createdBy: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+});
+
+export type WorkOrder = typeof workOrders.$inferSelect;
+export type InsertWorkOrder = typeof workOrders.$inferInsert;
+
+export const workOrderMaterials = mysqlTable("workOrderMaterials", {
+  id: varchar({ length: 64 }).primaryKey(),
+  workOrderId: varchar({ length: 64 }).notNull(),
+  description: text().notNull(),
+  quantity: int().default(1).notNull(),
+  unitCost: int().default(0).notNull(),
+  total: int().default(0).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+}, (table) => [
+  index("idx_wom_workorder").on(table.workOrderId),
+]);
+
+export type WorkOrderMaterial = typeof workOrderMaterials.$inferSelect;
+export type InsertWorkOrderMaterial = typeof workOrderMaterials.$inferInsert;
+
+// ─── Service Invoices ─────────────────────────────────────────
+export const serviceInvoices = mysqlTable("serviceInvoices", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
+  serviceInvoiceNumber: varchar({ length: 50 }).notNull(),
+  issueDate: varchar({ length: 30 }).notNull(),
+  dueDate: varchar({ length: 30 }).notNull(),
+  clientId: varchar({ length: 64 }).notNull(),
+  clientName: varchar({ length: 200 }).notNull(),
+  serviceDescription: text().notNull(),
+  total: int().default(0).notNull(),
+  taxAmount: int().default(0).notNull(),
+  notes: text(),
+  status: mysqlEnum(["draft", "sent", "accepted", "paid", "cancelled"]).default("draft").notNull(),
+  createdBy: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_si_client").on(table.clientId),
+  index("idx_si_status").on(table.status),
+]);
+
+export type ServiceInvoice = typeof serviceInvoices.$inferSelect;
+export type InsertServiceInvoice = typeof serviceInvoices.$inferInsert;
+
+export const serviceInvoiceItems = mysqlTable("serviceInvoiceItems", {
+  id: varchar({ length: 64 }).primaryKey(),
+  serviceInvoiceId: varchar({ length: 64 }).notNull(),
+  description: text().notNull(),
+  quantity: int().default(1).notNull(),
+  unitPrice: int().default(0).notNull(),
+  total: int().default(0).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+}, (table) => [
+  index("idx_sii_invoice").on(table.serviceInvoiceId),
+]);
+
+export type ServiceInvoiceItem = typeof serviceInvoiceItems.$inferSelect;
+export type InsertServiceInvoiceItem = typeof serviceInvoiceItems.$inferInsert;
+
+// ─── Contacts ─────────────────────────────────────────────────
+export const contacts = mysqlTable("contacts", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
+  clientId: varchar({ length: 64 }),
+  salutation: varchar({ length: 20 }),
+  firstName: varchar({ length: 100 }).notNull(),
+  lastName: varchar({ length: 100 }).notNull(),
+  email: varchar({ length: 320 }),
+  phone: varchar({ length: 50 }),
+  mobile: varchar({ length: 50 }),
+  jobTitle: varchar({ length: 200 }),
+  department: varchar({ length: 200 }),
+  isPrimary: tinyint().default(0),
+  notes: text(),
+  address: text(),
+  city: varchar({ length: 100 }),
+  country: varchar({ length: 100 }),
+  postalCode: varchar({ length: 20 }),
+  linkedIn: varchar({ length: 500 }),
+  createdBy: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_contacts_client").on(table.clientId),
+  index("idx_contacts_email").on(table.email),
+]);
+
+export type Contact = typeof contacts.$inferSelect;
+export type InsertContact = typeof contacts.$inferInsert;
+
+// ─── Quotations (Procurement) ─────────────────────────────────
+export const quotations = mysqlTable("quotations", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
+  rfqNo: varchar({ length: 50 }).notNull(),
+  supplier: varchar({ length: 200 }).notNull(),
+  description: text(),
+  amount: int().default(0).notNull(),
+  dueDate: varchar({ length: 30 }),
+  status: mysqlEnum(["draft", "submitted", "under_review", "approved", "rejected"]).default("draft").notNull(),
+  createdBy: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_quot_status").on(table.status),
+  index("idx_quot_rfq").on(table.rfqNo),
+]);
+
+export type Quotation = typeof quotations.$inferSelect;
+export type InsertQuotation = typeof quotations.$inferInsert;
+
+// ─── Goods Received Notes (GRN) ──────────────────────────────
+export const grnRecords = mysqlTable("grnRecords", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
+  grnNo: varchar({ length: 50 }).notNull(),
+  supplier: varchar({ length: 200 }).notNull(),
+  invNo: varchar({ length: 50 }),
+  receivedDate: varchar({ length: 30 }).notNull(),
+  items: int().default(0).notNull(),
+  value: int().default(0).notNull(),
+  status: mysqlEnum(["accepted", "partial", "rejected", "pending"]).default("pending").notNull(),
+  notes: text(),
+  createdBy: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_grn_status").on(table.status),
+  index("idx_grn_supplier").on(table.supplier),
+]);
+
+export type GrnRecord = typeof grnRecords.$inferSelect;
+export type InsertGrnRecord = typeof grnRecords.$inferInsert;
+
+// ─── Delivery Notes ───────────────────────────────────────────
+export const deliveryNotes = mysqlTable("deliveryNotes", {
+  id: varchar({ length: 64 }).primaryKey(),
+  dnNo: varchar({ length: 50 }).notNull(),
+  supplier: varchar({ length: 200 }).notNull(),
+  orderId: varchar({ length: 64 }),
+  deliveryDate: varchar({ length: 30 }).notNull(),
+  items: int().default(0).notNull(),
+  status: mysqlEnum(["pending", "partial", "delivered", "cancelled"]).default("pending").notNull(),
+  notes: text(),
+  createdBy: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_dn_status").on(table.status),
+  index("idx_dn_order").on(table.orderId),
+]);
+
+export type DeliveryNote = typeof deliveryNotes.$inferSelect;
+export type InsertDeliveryNote = typeof deliveryNotes.$inferInsert;
+
+// ==================== ASSETS ====================
+export const assets = mysqlTable("assets", {
+  id: varchar({ length: 64 }).primaryKey(),
+  name: varchar({ length: 200 }).notNull(),
+  category: varchar({ length: 100 }).notNull(),
+  location: varchar({ length: 200 }).notNull(),
+  value: int().default(0).notNull(),
+  assignedTo: varchar({ length: 200 }),
+  serialNumber: varchar({ length: 100 }),
+  purchaseDate: varchar({ length: 30 }),
+  status: mysqlEnum(["active", "inactive", "maintenance", "disposed"]).default("active").notNull(),
+  notes: text(),
+  createdBy: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_assets_status").on(table.status),
+  index("idx_assets_category").on(table.category),
+]);
+
+export type Asset = typeof assets.$inferSelect;
+export type InsertAsset = typeof assets.$inferInsert;
+
+// ==================== CONTRACTS ====================
+export const contracts = mysqlTable("contracts", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
+  contractNumber: varchar({ length: 50 }),
+  name: varchar({ length: 200 }).notNull(),
+  vendor: varchar({ length: 200 }).notNull(),
+  startDate: varchar({ length: 30 }).notNull(),
+  endDate: varchar({ length: 30 }).notNull(),
+  value: int().default(0).notNull(),
+  status: mysqlEnum(["draft", "active", "expired", "terminated"]).default("draft").notNull(),
+  contractType: varchar({ length: 100 }),
+  description: text(),
+  notes: text(),
+  createdBy: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_contracts_status").on(table.status),
+  index("idx_contracts_vendor").on(table.vendor),
+]);
+
+export type Contract = typeof contracts.$inferSelect;
+export type InsertContract = typeof contracts.$inferInsert;
+
+// ==================== WARRANTIES ====================
+export const warranties = mysqlTable("warranties", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
+  product: varchar({ length: 200 }).notNull(),
+  vendor: varchar({ length: 200 }).notNull(),
+  expiryDate: varchar({ length: 30 }).notNull(),
+  coverage: varchar({ length: 500 }).notNull(),
+  status: mysqlEnum(["active", "expiring_soon", "expired"]).default("active").notNull(),
+  serialNumber: varchar({ length: 100 }),
+  claimTerms: text(),
+  notes: text(),
+  createdBy: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_warranties_status").on(table.status),
+  index("idx_warranties_vendor").on(table.vendor),
+]);
+
+export type Warranty = typeof warranties.$inferSelect;
+export type InsertWarranty = typeof warranties.$inferInsert;
+
+// ============ Notes ============
+export const notes = mysqlTable("notes", {
+  id: varchar({ length: 64 }).primaryKey(),
+  title: varchar({ length: 300 }).notNull(),
+  content: text(),
+  category: varchar({ length: 100 }).default("General").notNull(),
+  pinned: tinyint().default(0).notNull(),
+  favorite: tinyint().default(0).notNull(),
+  createdBy: varchar({ length: 64 }).notNull(),
+  organizationId: varchar({ length: 64 }),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_notes_created_by").on(table.createdBy),
+  index("idx_notes_category").on(table.category),
+]);
+
+export type Note = typeof notes.$inferSelect;
+export type InsertNote = typeof notes.$inferInsert;
+
+// ============ Custom Reports ============
+export const customReports = mysqlTable("custom_reports", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 100 }).notNull(),
+  dataSources: text("dataSources"),
+  layout: text("layout"),
+  format: mysqlEnum("format", ["PDF", "Excel", "CSV", "HTML"]).notNull().default("PDF"),
+  isTemplate: tinyint("isTemplate").notNull().default(0),
+  status: mysqlEnum("status", ["draft", "active", "archived"]).notNull().default("draft"),
+  owner: varchar("owner", { length: 200 }),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_custom_reports_category").on(table.category),
+  index("idx_custom_reports_status").on(table.status),
+]);
+
+export type CustomReport = typeof customReports.$inferSelect;
+export type InsertCustomReport = typeof customReports.$inferInsert;
+
+// ============ Smart Workflows (Advanced Automation) ============
+export const smartWorkflows = mysqlTable("smart_workflows", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  triggerType: varchar("triggerType", { length: 50 }).notNull().default("event"),
+  triggerConfig: text("triggerConfig"),
+  actions: text("actions"),
+  conditions: text("conditions"),
+  status: varchar("status", { length: 50 }).notNull().default("active"),
+  executionCount: int("executionCount").notNull().default(0),
+  lastExecuted: timestamp("lastExecuted", { mode: "string" }),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_sw_status").on(table.status),
+]);
+export type SmartWorkflow = typeof smartWorkflows.$inferSelect;
+export type InsertSmartWorkflow = typeof smartWorkflows.$inferInsert;
+
+// ============ Export Jobs (Advanced Export) ============
+export const exportJobs = mysqlTable("export_jobs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: varchar("name", { length: 200 }),
+  dataType: varchar("dataType", { length: 100 }).notNull(),
+  format: varchar("format", { length: 50 }).notNull().default("csv"),
+  filters: text("filters"),
+  status: varchar("status", { length: 50 }).notNull().default("processing"),
+  fileUrl: varchar("fileUrl", { length: 500 }),
+  fileSize: bigint("fileSize", { mode: "number" }),
+  rowsExported: int("rowsExported").default(0),
+  schedule: varchar("schedule", { length: 50 }),
+  recipients: text("recipients"),
+  expiresAt: timestamp("expiresAt", { mode: "string" }),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_ej_status").on(table.status),
+]);
+export type ExportJob = typeof exportJobs.$inferSelect;
+export type InsertExportJob = typeof exportJobs.$inferInsert;
+
+// ============ Security Events (Advanced Security) ============
+export const securityEvents = mysqlTable("security_events", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  eventType: varchar("eventType", { length: 100 }).notNull(),
+  action: varchar("action", { length: 200 }),
+  severity: varchar("severity", { length: 50 }).notNull().default("MEDIUM"),
+  resourceId: varchar("resourceId", { length: 200 }),
+  userId: varchar("userId", { length: 64 }),
+  details: text("details"),
+  status: varchar("status", { length: 50 }).notNull().default("LOGGED"),
+  ipAddress: varchar("ipAddress", { length: 100 }),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+}, (table) => [
+  index("idx_se_type").on(table.eventType),
+  index("idx_se_severity").on(table.severity),
+]);
+export type SecurityEvent = typeof securityEvents.$inferSelect;
+export type InsertSecurityEvent = typeof securityEvents.$inferInsert;
+
+// ============ AI Configurations (AI Agents + AIML) ============
+export const aiConfigurations = mysqlTable("ai_configurations", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  configType: varchar("configType", { length: 100 }).notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  model: varchar("model", { length: 100 }),
+  capabilities: text("capabilities"),
+  parameters: text("parameters"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  metrics: text("metrics"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_ac_type").on(table.configType),
+  index("idx_ac_status").on(table.status),
+]);
+export type AiConfiguration = typeof aiConfigurations.$inferSelect;
+export type InsertAiConfiguration = typeof aiConfigurations.$inferInsert;
+
+// ============ API Pricing Configs (API Monetization) ============
+export const apiPricingConfigs = mysqlTable("api_pricing_configs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  apiId: varchar("apiId", { length: 100 }),
+  name: varchar("name", { length: 200 }).notNull(),
+  pricingModel: varchar("pricingModel", { length: 50 }).notNull().default("FIXED"),
+  basePrice: decimal("basePrice", { precision: 12, scale: 2 }).default("0"),
+  currency: varchar("currency", { length: 10 }).notNull().default("USD"),
+  rateLimit: int("rateLimit").default(10000),
+  config: text("config"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_apc_status").on(table.status),
+]);
+export type ApiPricingConfig = typeof apiPricingConfigs.$inferSelect;
+export type InsertApiPricingConfig = typeof apiPricingConfigs.$inferInsert;
+
+// ============ ETL Jobs (Business Intelligence) ============
+export const etlJobs = mysqlTable("etl_jobs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  jobName: varchar("jobName", { length: 200 }).notNull(),
+  sourceSystem: varchar("sourceSystem", { length: 200 }),
+  targetTable: varchar("targetTable", { length: 200 }),
+  schedule: varchar("schedule", { length: 100 }),
+  status: varchar("status", { length: 50 }).notNull().default("PENDING"),
+  progress: int("progress").default(0),
+  recordsProcessed: int("recordsProcessed").default(0),
+  config: text("config"),
+  lastRun: timestamp("lastRun", { mode: "string" }),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_etl_status").on(table.status),
+]);
+export type EtlJob = typeof etlJobs.$inferSelect;
+export type InsertEtlJob = typeof etlJobs.$inferInsert;
+
+// ============ Container Deployments (Cloud Infrastructure) ============
+export const containerDeployments = mysqlTable("container_deployments", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  orchestrator: varchar("orchestrator", { length: 50 }),
+  serviceName: varchar("serviceName", { length: 200 }),
+  image: varchar("image", { length: 500 }),
+  replicas: int("replicas").default(1),
+  port: int("port"),
+  status: varchar("status", { length: 50 }).notNull().default("PENDING"),
+  config: text("config"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_cd_status").on(table.status),
+]);
+export type ContainerDeployment = typeof containerDeployments.$inferSelect;
+export type InsertContainerDeployment = typeof containerDeployments.$inferInsert;
+
+// ============ Custom Dashboards (Dashboard Builder) ============
+export const customDashboards = mysqlTable("custom_dashboards", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  layout: varchar("layout", { length: 50 }).notNull().default("grid"),
+  widgets: text("widgets"),
+  isPublic: tinyint("isPublic").notNull().default(0),
+  sharedWith: text("sharedWith"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_cdash_public").on(table.isPublic),
+]);
+export type CustomDashboard = typeof customDashboards.$inferSelect;
+export type InsertCustomDashboard = typeof customDashboards.$inferInsert;
+
+// ============ Webhook Configs (Developer Tools) ============
+export const webhookConfigs = mysqlTable("webhook_configs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: varchar("name", { length: 200 }),
+  eventType: varchar("eventType", { length: 200 }).notNull(),
+  targetUrl: varchar("targetUrl", { length: 500 }).notNull(),
+  secret: varchar("secret", { length: 200 }),
+  isActive: tinyint("isActive").notNull().default(1),
+  retryCount: int("retryCount").default(0),
+  lastTriggered: timestamp("lastTriggered", { mode: "string" }),
+  config: text("config"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_wc_active").on(table.isActive),
+]);
+export type WebhookConfig = typeof webhookConfigs.$inferSelect;
+export type InsertWebhookConfig = typeof webhookConfigs.$inferInsert;
+
+// ============ Email Calendar Sync ============
+export const emailCalendarSync = mysqlTable("email_calendar_sync", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  provider: varchar("provider", { length: 50 }).notNull(),
+  email: varchar("email", { length: 200 }),
+  title: varchar("title", { length: 200 }),
+  description: text("description"),
+  startTime: varchar("startTime", { length: 100 }),
+  endTime: varchar("endTime", { length: 100 }),
+  attendees: text("attendees"),
+  location: varchar("location", { length: 500 }),
+  syncStatus: varchar("syncStatus", { length: 50 }).notNull().default("pending"),
+  config: text("config"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_ecs_provider").on(table.provider),
+]);
+export type EmailCalendarSyncRecord = typeof emailCalendarSync.$inferSelect;
+export type InsertEmailCalendarSyncRecord = typeof emailCalendarSync.$inferInsert;
+
+// ============ Security Incidents (Enterprise Security) ============
+export const securityIncidents = mysqlTable("security_incidents", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  threatType: varchar("threatType", { length: 100 }).notNull(),
+  severity: varchar("severity", { length: 50 }).notNull().default("MEDIUM"),
+  source: varchar("source", { length: 200 }),
+  targetAsset: varchar("targetAsset", { length: 200 }),
+  status: varchar("status", { length: 50 }).notNull().default("DETECTED"),
+  details: text("details"),
+  scanConfig: text("scanConfig"),
+  resolvedAt: timestamp("resolvedAt", { mode: "string" }),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+}, (table) => [
+  index("idx_si_severity").on(table.severity),
+  index("idx_si_status").on(table.status),
+]);
+export type SecurityIncident = typeof securityIncidents.$inferSelect;
+export type InsertSecurityIncident = typeof securityIncidents.$inferInsert;
+
+// ============ Global Configs (Global Features) ============
+export const globalConfigs = mysqlTable("global_configs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  configType: varchar("configType", { length: 100 }).notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  region: varchar("region", { length: 100 }),
+  config: text("config"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_gc_type").on(table.configType),
+]);
+export type GlobalConfig = typeof globalConfigs.$inferSelect;
+export type InsertGlobalConfig = typeof globalConfigs.$inferInsert;
+
+// ============ Registered Devices (Mobile Responsive) ============
+export const registeredDevices = mysqlTable("registered_devices", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  deviceId: varchar("deviceId", { length: 200 }).notNull(),
+  deviceType: varchar("deviceType", { length: 50 }).notNull(),
+  pushToken: varchar("pushToken", { length: 500 }),
+  platform: varchar("platform", { length: 50 }),
+  appVersion: varchar("appVersion", { length: 50 }),
+  lastSync: timestamp("lastSync", { mode: "string" }),
+  syncConfig: text("syncConfig"),
+  userId: varchar("userId", { length: 64 }),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_rd_device").on(table.deviceId),
+  index("idx_rd_user").on(table.userId),
+]);
+export type RegisteredDevice = typeof registeredDevices.$inferSelect;
+export type InsertRegisteredDevice = typeof registeredDevices.$inferInsert;
+
+// ============ Mobile App Configs (Native Mobile Apps) ============
+export const mobileAppConfigs = mysqlTable("mobile_app_configs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  platform: varchar("platform", { length: 50 }).notNull(),
+  appVersion: varchar("appVersion", { length: 50 }),
+  bundleId: varchar("bundleId", { length: 200 }),
+  packageName: varchar("packageName", { length: 200 }),
+  config: text("config"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_mac_platform").on(table.platform),
+]);
+export type MobileAppConfig = typeof mobileAppConfigs.$inferSelect;
+export type InsertMobileAppConfig = typeof mobileAppConfigs.$inferInsert;
+
+// ============ Partner Deals (Partner Channel) ============
+export const partnerDeals = mysqlTable("partner_deals", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  partnerId: varchar("partnerId", { length: 64 }),
+  partnerName: varchar("partnerName", { length: 200 }),
+  dealName: varchar("dealName", { length: 200 }).notNull(),
+  customerId: varchar("customerId", { length: 64 }),
+  dealValue: decimal("dealValue", { precision: 15, scale: 2 }).default("0"),
+  tier: varchar("tier", { length: 50 }),
+  status: varchar("status", { length: 50 }).notNull().default("REGISTERED"),
+  commissionRate: decimal("commissionRate", { precision: 5, scale: 2 }).default("0"),
+  closureDate: varchar("closureDate", { length: 100 }),
+  config: text("config"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_pd_status").on(table.status),
+  index("idx_pd_partner").on(table.partnerId),
+]);
+export type PartnerDeal = typeof partnerDeals.$inferSelect;
+export type InsertPartnerDeal = typeof partnerDeals.$inferInsert;
+
+// ============ Performance Configs (Performance Optimization + Scaling) ============
+export const perfConfigs = mysqlTable("perf_configs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  configType: varchar("configType", { length: 100 }).notNull(),
+  name: varchar("name", { length: 200 }),
+  strategy: varchar("strategy", { length: 100 }),
+  config: text("config"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_pc_type").on(table.configType),
+]);
+export type PerfConfig = typeof perfConfigs.$inferSelect;
+export type InsertPerfConfig = typeof perfConfigs.$inferInsert;
+
+// ============ Backup Schedules (Sys Admin) ============
+export const backupSchedules = mysqlTable("backup_schedules", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: varchar("name", { length: 200 }),
+  backupType: varchar("backupType", { length: 50 }).notNull().default("FULL"),
+  schedule: varchar("schedule", { length: 100 }),
+  retentionDays: int("retentionDays").default(30),
+  status: varchar("status", { length: 50 }).notNull().default("SCHEDULED"),
+  lastRun: timestamp("lastRun", { mode: "string" }),
+  nextRun: timestamp("nextRun", { mode: "string" }),
+  config: text("config"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_bs_status").on(table.status),
+]);
+export type BackupSchedule = typeof backupSchedules.$inferSelect;
+export type InsertBackupSchedule = typeof backupSchedules.$inferInsert;
+
+// ============ Backup History (completed backup records) ============
+export const backupHistory = mysqlTable("backup_history", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  backupType: varchar("backupType", { length: 50 }).notNull().default("full"),
+  scope: varchar("scope", { length: 50 }).notNull().default("full"),
+  scopeEntityId: varchar("scopeEntityId", { length: 64 }),
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  tablesList: text("tablesList"),
+  recordCount: int("recordCount").default(0),
+  sizeBytes: int("sizeBytes").default(0),
+  fileName: varchar("fileName", { length: 500 }),
+  errorMessage: text("errorMessage"),
+  completedAt: timestamp("completedAt", { mode: "string" }),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+}, (table) => [
+  index("idx_bh_status").on(table.status),
+  index("idx_bh_scope").on(table.scope),
+  index("idx_bh_created").on(table.createdAt),
+]);
+export type BackupHistoryRecord = typeof backupHistory.$inferSelect;
+export type InsertBackupHistory = typeof backupHistory.$inferInsert;
+
+// ============ Integration Configs (Third-Party Integration) ============
+export const integrationConfigs = mysqlTable("integration_configs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  provider: varchar("provider", { length: 100 }).notNull(),
+  name: varchar("name", { length: 200 }),
+  service: varchar("service", { length: 100 }),
+  integrationType: varchar("integrationType", { length: 50 }),
+  config: text("config"),
+  status: varchar("status", { length: 20 }).default("inactive"),
+  isActive: tinyint("isActive").notNull().default(1),
+  lastSync: timestamp("lastSync", { mode: "string" }),
+  lastSyncAt: timestamp("lastSyncAt", { mode: "string" }),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_ic_provider").on(table.provider),
+  index("idx_ic_active").on(table.isActive),
+  index("idx_ic_status").on(table.status),
+]);
+export type IntegrationConfig = typeof integrationConfigs.$inferSelect;
+export type InsertIntegrationConfig = typeof integrationConfigs.$inferInsert;
+
+// ============ Design Configs (UI/UX Excellence) ============
+export const designConfigs = mysqlTable("design_configs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  configType: varchar("configType", { length: 100 }).notNull(),
+  name: varchar("name", { length: 200 }),
+  theme: varchar("theme", { length: 50 }),
+  config: text("config"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_dc_type").on(table.configType),
+]);
+export type DesignConfig = typeof designConfigs.$inferSelect;
+export type InsertDesignConfig = typeof designConfigs.$inferInsert;
+
+// ============ AI Insights ============
+export const aiInsights = mysqlTable("ai_insights", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  insightType: varchar("insightType", { length: 100 }).notNull(),
+  title: varchar("title", { length: 300 }),
+  description: text("description"),
+  confidence: decimal("confidence", { precision: 5, scale: 4 }).default("0"),
+  impact: varchar("impact", { length: 50 }).default("MEDIUM"),
+  trend: varchar("trend", { length: 50 }).default("neutral"),
+  recommendation: text("recommendation"),
+  entityType: varchar("entityType", { length: 100 }),
+  entityId: varchar("entityId", { length: 64 }),
+  period: varchar("period", { length: 50 }),
+  dataPayload: text("dataPayload"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_ai_type").on(table.insightType),
+  index("idx_ai_period").on(table.period),
+]);
+export type AiInsight = typeof aiInsights.$inferSelect;
+export type InsertAiInsight = typeof aiInsights.$inferInsert;
+
+// ============ Analytics Metrics ============
+export const analyticsMetrics = mysqlTable("analytics_metrics", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  metricName: varchar("metricName", { length: 200 }).notNull(),
+  metricType: varchar("metricType", { length: 100 }).notNull(),
+  value: decimal("value", { precision: 15, scale: 4 }).default("0"),
+  unit: varchar("unit", { length: 50 }),
+  period: varchar("period", { length: 50 }),
+  dimensions: text("dimensions"),
+  changePercent: decimal("changePercent", { precision: 10, scale: 2 }).default("0"),
+  benchmark: decimal("benchmark", { precision: 15, scale: 4 }),
+  dataPayload: text("dataPayload"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_am_name").on(table.metricName),
+  index("idx_am_type").on(table.metricType),
+]);
+export type AnalyticsMetric = typeof analyticsMetrics.$inferSelect;
+export type InsertAnalyticsMetric = typeof analyticsMetrics.$inferInsert;
+
+// ============ Cohort Analyses ============
+export const cohortAnalyses = mysqlTable("cohort_analyses", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  analysisType: varchar("analysisType", { length: 100 }).notNull(),
+  cohortType: varchar("cohortType", { length: 50 }),
+  name: varchar("name", { length: 200 }),
+  period: varchar("period", { length: 50 }),
+  dataPayload: text("dataPayload"),
+  retentionData: text("retentionData"),
+  funnelData: text("funnelData"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_ca_type").on(table.analysisType),
+  index("idx_ca_cohort").on(table.cohortType),
+]);
+export type CohortAnalysis = typeof cohortAnalyses.$inferSelect;
+export type InsertCohortAnalysis = typeof cohortAnalyses.$inferInsert;
+
+// ============ Executive Reports ============
+export const executiveReports = mysqlTable("executive_reports", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  reportType: varchar("reportType", { length: 100 }).notNull(),
+  title: varchar("title", { length: 300 }),
+  period: varchar("period", { length: 50 }),
+  horizon: varchar("horizon", { length: 50 }),
+  dataPayload: text("dataPayload"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  recipients: int("recipients").default(0),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_er_type").on(table.reportType),
+  index("idx_er_period").on(table.period),
+]);
+export type ExecutiveReport = typeof executiveReports.$inferSelect;
+export type InsertExecutiveReport = typeof executiveReports.$inferInsert;
+
+// ============ Collaboration Sessions ============
+export const collaborationSessions = mysqlTable("collaboration_sessions", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  sessionType: varchar("sessionType", { length: 100 }).notNull(),
+  documentId: varchar("documentId", { length: 64 }),
+  channelId: varchar("channelId", { length: 64 }),
+  userId: varchar("userId", { length: 64 }),
+  message: text("message"),
+  dataPayload: text("dataPayload"),
+  status: varchar("status", { length: 50 }).notNull().default("ACTIVE"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_cs_type").on(table.sessionType),
+  index("idx_cs_doc").on(table.documentId),
+]);
+export type CollaborationSession = typeof collaborationSessions.$inferSelect;
+export type InsertCollaborationSession = typeof collaborationSessions.$inferInsert;
+
+// ============ Compliance Records ============
+export const complianceRecords = mysqlTable("compliance_records", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  recordType: varchar("recordType", { length: 100 }).notNull(),
+  standard: varchar("standard", { length: 100 }),
+  score: int("score").default(0),
+  status: varchar("status", { length: 50 }).notNull().default("COMPLIANT"),
+  findings: text("findings"),
+  dataPayload: text("dataPayload"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_cr_type").on(table.recordType),
+  index("idx_cr_standard").on(table.standard),
+]);
+export type ComplianceRecord = typeof complianceRecords.$inferSelect;
+export type InsertComplianceRecord = typeof complianceRecords.$inferInsert;
+
+// ============================================================================
+// STAFF CHAT (Persistent Messages)
+// ============================================================================
+
+export const staffChatChannels = mysqlTable("staffChatChannels", {
+  id: varchar({ length: 64 }).primaryKey(),
+  name: varchar({ length: 100 }).notNull(),
+  type: varchar({ length: 20 }).notNull().default("team"), // general, team, private
+  description: varchar({ length: 255 }),
+  members: json().$type<string[]>().default([]),
+  createdBy: varchar({ length: 64 }).notNull(),
+  isActive: tinyint().default(1).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_scc_type").on(table.type),
+  index("idx_scc_created_by").on(table.createdBy),
+]);
+
+export type StaffChatChannel = typeof staffChatChannels.$inferSelect;
+export type InsertStaffChatChannel = typeof staffChatChannels.$inferInsert;
+
+export const staffChatMessages = mysqlTable("staffChatMessages", {
+  id: varchar({ length: 64 }).primaryKey(),
+  channelId: varchar({ length: 64 }).default("general"),
+  userId: varchar({ length: 64 }).notNull(),
+  userName: varchar({ length: 255 }).notNull(),
+  content: text().notNull(),
+  emoji: varchar({ length: 10 }),
+  replyToId: varchar({ length: 64 }),
+  replyToUser: varchar({ length: 255 }),
+  fileUrl: varchar({ length: 500 }),
+  fileName: varchar({ length: 255 }),
+  fileType: varchar({ length: 50 }),
+  isEdited: tinyint().default(0).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_scm_user_id").on(table.userId),
+  index("idx_scm_created_at").on(table.createdAt),
+  index("idx_scm_channel_id").on(table.channelId),
+]);
+
+export type StaffChatMessage = typeof staffChatMessages.$inferSelect;
+export type InsertStaffChatMessage = typeof staffChatMessages.$inferInsert;
+
+// ============ Canned Responses (Support) ============
+export const cannedResponses = mysqlTable("canned_responses", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 64 }),
+  category: varchar("category", { length: 100 }).notNull().default("General"),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  shortCode: varchar("shortCode", { length: 50 }),
+  createdBy: varchar("createdBy", { length: 64 }),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_cr_category").on(table.category),
+  index("idx_cr_org").on(table.organizationId),
+]);
+
+export type CannedResponse = typeof cannedResponses.$inferSelect;
+export type InsertCannedResponse = typeof cannedResponses.$inferInsert;
+
+// ============ Knowledge Base ============
+export const kbCategories = mysqlTable("kb_categories", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 64 }),
+  name: varchar("name", { length: 200 }).notNull(),
+  slug: varchar("slug", { length: 200 }).notNull(),
+  description: text("description"),
+  icon: varchar("icon", { length: 50 }).default("BookOpen"),
+  color: varchar("color", { length: 30 }).default("bg-blue-500"),
+  sortOrder: int("sortOrder").default(0),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_kbc_org").on(table.organizationId),
+  index("idx_kbc_slug").on(table.slug),
+]);
+
+export type KbCategory = typeof kbCategories.$inferSelect;
+export type InsertKbCategory = typeof kbCategories.$inferInsert;
+
+export const kbArticles = mysqlTable("kb_articles", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 64 }),
+  categoryId: varchar("categoryId", { length: 64 }).notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  content: text("content"),
+  excerpt: text("excerpt"),
+  status: varchar("status", { length: 20 }).default("published"),
+  featured: tinyint("featured").default(0),
+  readTime: int("readTime").default(3),
+  views: int("views").default(0),
+  tags: text("tags"),
+  createdBy: varchar("createdBy", { length: 64 }),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_kba_org").on(table.organizationId),
+  index("idx_kba_cat").on(table.categoryId),
+  index("idx_kba_status").on(table.status),
+]);
+
+export type KbArticle = typeof kbArticles.$inferSelect;
+export type InsertKbArticle = typeof kbArticles.$inferInsert;
+
+// ============ Warehouses & Stock Movements ============
+export const warehouses = mysqlTable("warehouses", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 64 }),
+  name: varchar("name", { length: 200 }).notNull(),
+  code: varchar("code", { length: 50 }),
+  address: text("address"),
+  contactPerson: varchar("contactPerson", { length: 200 }),
+  phone: varchar("phone", { length: 50 }),
+  status: varchar("status", { length: 20 }).default("active"),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "string" }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_wh_org").on(table.organizationId),
+]);
+
+export type Warehouse = typeof warehouses.$inferSelect;
+export type InsertWarehouse = typeof warehouses.$inferInsert;
+
+export const stockMovements = mysqlTable("stock_movements", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 64 }),
+  productId: varchar("productId", { length: 64 }).notNull(),
+  warehouseId: varchar("warehouseId", { length: 64 }),
+  type: varchar("type", { length: 30 }).notNull(),
+  quantity: int("quantity").notNull(),
+  referenceNo: varchar("referenceNo", { length: 100 }),
+  reason: text("reason"),
+  fromWarehouse: varchar("fromWarehouse", { length: 64 }),
+  toWarehouse: varchar("toWarehouse", { length: 64 }),
+  createdBy: varchar("createdBy", { length: 64 }),
+  createdAt: timestamp("createdAt", { mode: "string" }).defaultNow(),
+}, (table) => [
+  index("idx_sm_org").on(table.organizationId),
+  index("idx_sm_product").on(table.productId),
+  index("idx_sm_type").on(table.type),
+]);
+
+// ============ Client Subscriptions (Auto-Recurring Invoices) ============
+export const clientSubscriptions = mysqlTable("clientSubscriptions", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
+  clientId: varchar({ length: 64 }).notNull(),
+  name: varchar({ length: 255 }).notNull(),
+  description: text(),
+  status: mysqlEnum(['active', 'paused', 'cancelled', 'expired']).default('active').notNull(),
+  frequency: mysqlEnum(['weekly', 'biweekly', 'monthly', 'quarterly', 'annually']).notNull(),
+  amount: int().notNull(),
+  currency: varchar({ length: 10 }).default('KES'),
+  startDate: datetime({ mode: 'string' }).notNull(),
+  endDate: datetime({ mode: 'string' }),
+  nextBillingDate: datetime({ mode: 'string' }).notNull(),
+  lastBilledDate: datetime({ mode: 'string' }),
+  templateInvoiceId: varchar({ length: 64 }),
+  recurringInvoiceId: varchar({ length: 64 }),
+  autoSendInvoice: tinyint().default(1).notNull(),
+  totalBilled: int().default(0),
+  invoiceCount: int().default(0),
+  createdBy: varchar({ length: 64 }),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+}, (table) => [
+  index("idx_cs_org").on(table.organizationId),
+  index("idx_cs_client").on(table.clientId),
+  index("idx_cs_status").on(table.status),
+  index("idx_cs_next_billing").on(table.nextBillingDate),
+]);
+
+export type ClientSubscription = typeof clientSubscriptions.$inferSelect;
+export type InsertClientSubscription = typeof clientSubscriptions.$inferInsert;
+
+// ============================================================================
+// PHASE 21: ICT MANAGEMENT SYSTEM - System Health, Logs, Sessions
+// ============================================================================
+
+export const systemHealth = mysqlTable("systemHealth", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
+  cpuUsage: int().default(0),
+  cpuModel: varchar({ length: 255 }),
+  cpuCores: int().default(1),
+  cpuSpeed: varchar({ length: 50 }),
+  cpuTemperature: int().default(0),
+  memoryUsage: int().default(0),
+  memoryTotal: int().default(0),
+  memoryAvailable: int().default(0),
+  diskUsage: int().default(0),
+  diskTotal: int().default(0),
+  diskUsagePercent: int().default(0),
+  status: mysqlEnum(['healthy', 'warning', 'critical']).default('healthy').notNull(),
+  systemPlatform: varchar({ length: 100 }),
+  systemDistro: varchar({ length: 100 }),
+  systemRelease: varchar({ length: 50 }),
+  systemArch: varchar({ length: 50 }),
+  systemManufacturer: varchar({ length: 255 }),
+  systemUptime: int().default(0), // hours
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+}, (table) => [
+  index("idx_sh_org").on(table.organizationId),
+  index("idx_sh_status").on(table.status),
+  index("idx_sh_created_at").on(table.createdAt),
+]);
+
+export type SystemHealth = typeof systemHealth.$inferSelect;
+export type InsertSystemHealth = typeof systemHealth.$inferInsert;
+
+export const systemLogs = mysqlTable("systemLogs", {
+  id: varchar({ length: 64 }).primaryKey(),
+  organizationId: varchar({ length: 64 }),
+  userId: varchar({ length: 64 }),
+  severity: mysqlEnum(['debug', 'info', 'warning', 'error', 'critical']).default('info').notNull(),
+  message: text().notNull(),
+  context: text(), // JSON object for additional context
+  service: varchar({ length: 100 }), // service name: api, worker, auth, db, etc
+  action: varchar({ length: 100 }), // what action was performed
+  stackTrace: text(), // for errors
+  ipAddress: varchar({ length: 100 }),
+  userAgent: varchar({ length: 500 }),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+}, (table) => [
+  index("idx_sl_org").on(table.organizationId),
+  index("idx_sl_user").on(table.userId),
+  index("idx_sl_severity").on(table.severity),
+  index("idx_sl_service").on(table.service),
+  index("idx_sl_created_at").on(table.createdAt),
+]);
+
+export type SystemLog = typeof systemLogs.$inferSelect;
+export type InsertSystemLog = typeof systemLogs.$inferInsert;
+
+export const activeSessions = mysqlTable("activeSessions", {
+  id: varchar({ length: 64 }).primaryKey(),
+  userId: varchar({ length: 64 }).notNull(),
+  userEmail: varchar({ length: 320 }).notNull(),
+  organizationId: varchar({ length: 64 }),
+  ipAddress: varchar({ length: 100 }).notNull(),
+  userAgent: varchar({ length: 500 }).notNull(),
+  deviceType: varchar({ length: 50 }), // desktop, mobile, tablet
+  browser: varchar({ length: 100 }),
+  browserVersion: varchar({ length: 50 }),
+  operatingSystem: varchar({ length: 100 }),
+  osVersion: varchar({ length: 50 }),
+  tokenHash: varchar({ length: 255 }), // hash of session token
+  lastActivity: timestamp({ mode: 'string' }),
+  expiresAt: timestamp({ mode: 'string' }).notNull(),
+  createdAt: timestamp({ mode: 'string' }).defaultNow(),
+}, (table) => [
+  index("idx_as_user").on(table.userId),
+  index("idx_as_org").on(table.organizationId),
+  index("idx_as_expires_at").on(table.expiresAt),
+  index("idx_as_created_at").on(table.createdAt),
+]);
+
+export type ActiveSession = typeof activeSessions.$inferSelect;
+export type InsertActiveSession = typeof activeSessions.$inferInsert;

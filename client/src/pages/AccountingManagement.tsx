@@ -202,10 +202,9 @@ export default function AccountingManagement() {
     hasPermission("financial_reports_view") || ["super_admin", "admin", "accountant"].includes(user?.role || "");
 
   return (
-    <DashboardLayout>
-      <ModuleLayout
+    <ModuleLayout
         breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "Accounting", href: "/accounting" },
           { label: "Management", href: "/accounting/management" },
         ]}
@@ -318,7 +317,7 @@ export default function AccountingManagement() {
                     Open
                   </Button>
                   {module.canCreate && (
-                    <Button size="sm" variant="ghost" title="Create new">
+                    <Button size="sm" variant="ghost" title="Create new" onClick={() => navigate(`${module.href}/create`)}>
                       <Plus className="w-4 h-4" />
                     </Button>
                   )}
@@ -366,6 +365,5 @@ export default function AccountingManagement() {
           </CardContent>
         </Card>
       </ModuleLayout>
-    </DashboardLayout>
   );
 }

@@ -10,11 +10,13 @@ function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
 
-function SheetTrigger({
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
-  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
-}
+const SheetTrigger = React.forwardRef<
+  React.ComponentRef<typeof SheetPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Trigger>
+>(({ ...props }, ref) => {
+  return <SheetPrimitive.Trigger ref={ref} data-slot="sheet-trigger" {...props} />;
+});
+SheetTrigger.displayName = "SheetTrigger";
 
 function SheetClose({
   ...props

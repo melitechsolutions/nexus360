@@ -1,7 +1,7 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { expenses, accounts } from "../../drizzle/schema";
+import { expenses, accounts, lineItems, recurringExpenses } from "../../drizzle/schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import * as db from "../db";
@@ -75,15 +75,20 @@ export const expensesRouter = router({
       offset: z.number().optional(),
       status: z.string().optional(),
     }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const database = await getDb();
         if (!database) return [];
 
-        let query = database.select().from(expenses);
-        
+        const orgId = ctx.user.organizationId;
+        let query = orgId
+          ? database.select().from(expenses).where(eq(expenses.organizationId, orgId))
+          : database.select().from(expenses);
+
         if (input?.status) {
-          query = database.select().from(expenses).where(eq(expenses.status, input.status as any)) as any;
+          query = orgId
+            ? database.select().from(expenses).where(and(eq(expenses.organizationId, orgId), eq(expenses.status, input.status as any))) as any
+            : database.select().from(expenses).where(eq(expenses.status, input.status as any)) as any;
         }
 
         const results = await (query as any).limit(input?.limit || 100).offset(input?.offset || 0);
@@ -105,11 +110,17 @@ export const expensesRouter = router({
 
   getById: viewProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return null;
-      const result = await database.select().from(expenses).where(eq(expenses.id, input)).limit(1);
-      return result[0] || null;
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(expenses.id, input), eq(expenses.organizationId, orgId)) : eq(expenses.id, input);
+      const result = await database.select().from(expenses).where(where).limit(1);
+      if (!result[0]) return null;
+      // Fetch line items
+      const items = await database.select().from(lineItems)
+        .where(and(eq(lineItems.documentId, input), eq(lineItems.documentType, 'expense')));
+      return { ...result[0], items };
     }),
 
   create: createProcedure
@@ -126,6 +137,14 @@ export const expensesRouter = router({
       accountId: z.string().optional(),
       chartOfAccountId: z.number().int().nonnegative().optional(),
       budgetAllocationId: z.string().optional(),
+      items: z.array(z.object({
+        description: z.string().min(1),
+        quantity: z.number().int().positive(),
+        rate: z.number().positive(),
+        amount: z.number().positive(),
+        taxRate: z.number().optional(),
+        taxAmount: z.number().optional(),
+      })).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const database = await getDb();
@@ -160,6 +179,7 @@ export const expensesRouter = router({
           amount: input.amount,
           paymentMethod: input.paymentMethod || 'cash',
           status: input.status || 'pending',
+          organizationId: ctx.user.organizationId ?? null,
           createdBy: ctx.user.id,
           description: input.description || null,
           vendor: input.vendor || null,
@@ -172,6 +192,28 @@ export const expensesRouter = router({
         };
 
         await database.insert(expenses).values(values);
+
+        // Insert line items if provided
+        if (input.items && input.items.length > 0) {
+          const itemInserts = input.items.map((item, idx) => ({
+            id: uuidv4(),
+            documentId: id,
+            documentType: 'expense' as const,
+            description: item.description,
+            quantity: item.quantity,
+            rate: item.rate,
+            amount: item.amount,
+            taxRate: item.taxRate || 0,
+            taxAmount: item.taxAmount || 0,
+            lineNumber: idx + 1,
+            createdBy: ctx.user.id,
+            createdAt: now,
+            updatedAt: now,
+          }));
+          for (const itemInsert of itemInserts) {
+            await database.insert(lineItems).values(itemInsert);
+          }
+        }
 
         // Update COA balance if chartOfAccountId provided
         if (input.chartOfAccountId) {
@@ -217,7 +259,9 @@ export const expensesRouter = router({
       const database = await getDb();
       if (!database) throw new Error("Database not available");
 
-      const expense = await database.select().from(expenses).where(eq(expenses.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const ownerCheck = orgId ? and(eq(expenses.id, input.id), eq(expenses.organizationId, orgId)) : eq(expenses.id, input.id);
+      const expense = await database.select().from(expenses).where(ownerCheck).limit(1);
       if (!expense.length) throw new Error("Expense not found");
 
       const oldExpense = expense[0];
@@ -301,7 +345,9 @@ export const expensesRouter = router({
         await updateCOABalance(database, expense[0].chartOfAccountId, expense[0].amount, 'subtract');
       }
 
-      await database.delete(expenses).where(eq(expenses.id, input));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(expenses.id, input), eq(expenses.organizationId, orgId)) : eq(expenses.id, input);
+      await database.delete(expenses).where(where);
 
       // Log activity
       await db.logActivity({
@@ -339,7 +385,7 @@ export const expensesRouter = router({
       await database.update(expenses).set({
         status: "approved",
         approvedBy: ctx.user.id,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       } as any).where(eq(expenses.id, input.id));
 
       // Log activity
@@ -379,7 +425,7 @@ export const expensesRouter = router({
         status: "rejected",
         rejectedBy: ctx.user.id,
         rejectionReason: input.reason,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       } as any).where(eq(expenses.id, input.id));
 
       // Log activity
@@ -429,7 +475,7 @@ export const expensesRouter = router({
           await database.update(expenses).set({
             status: "approved",
             approvedBy: ctx.user.id,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any).where(eq(expenses.id, expenseId));
 
           results.approved++;
@@ -501,8 +547,8 @@ export const expensesRouter = router({
         await database
           .update(expenses)
           .set({
-            budgetAllocationId: input.budgetAllocationId,
-            updatedAt: new Date().toISOString(),
+            budgetAllocationId: input.budgetAllocationId ?? null,
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any)
           .where(eq(expenses.id, input.expenseId));
 
@@ -574,4 +620,170 @@ export const expensesRouter = router({
         return [];
       }
     }),
+
+  // ── Recurring Expenses ───────────────────────────────────────────────
+  createRecurringExpense: createProcedure
+    .input(z.object({
+      category: z.string(),
+      vendor: z.string().optional(),
+      amount: z.number(),
+      description: z.string().optional(),
+      paymentMethod: z.enum(['cash','bank_transfer','cheque','card','other']).optional(),
+      frequency: z.enum(['weekly','biweekly','monthly','quarterly','annually']),
+      startDate: z.string(),
+      endDate: z.string().optional(),
+      dayOfMonth: z.number().min(1).max(28).optional(),
+      reminderDaysBefore: z.number().min(0).max(30).optional(),
+      chartOfAccountId: z.number().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const database = await getDb();
+      if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      const id = uuidv4();
+      const startDate = new Date(input.startDate);
+      const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+      await database.insert(recurringExpenses).values({
+        id,
+        category: input.category,
+        vendor: input.vendor ?? null,
+        amount: input.amount,
+        description: input.description ?? null,
+        paymentMethod: input.paymentMethod ?? null,
+        frequency: input.frequency,
+        startDate: startDate.toISOString().replace('T', ' ').substring(0, 19),
+        endDate: input.endDate ? new Date(input.endDate).toISOString().replace('T', ' ').substring(0, 19) : null,
+        nextDueDate: startDate.toISOString().replace('T', ' ').substring(0, 19),
+        dayOfMonth: input.dayOfMonth ?? startDate.getDate(),
+        reminderDaysBefore: input.reminderDaysBefore ?? 3,
+        isActive: 1,
+        chartOfAccountId: input.chartOfAccountId ?? null,
+        createdBy: ctx.user.id,
+        createdAt: now as any,
+        updatedAt: now as any,
+      } as any);
+
+      const rows = await database.select().from(recurringExpenses).where(eq(recurringExpenses.id, id));
+      return rows[0];
+    }),
+
+  listRecurringExpenses: viewProcedure.query(async () => {
+    const database = await getDb();
+    if (!database) return [];
+    return database.select().from(recurringExpenses).orderBy(desc(recurringExpenses.createdAt));
+  }),
+
+  updateRecurringExpense: createProcedure
+    .input(z.object({
+      id: z.string(),
+      isActive: z.boolean().optional(),
+      amount: z.number().optional(),
+      endDate: z.string().optional(),
+      reminderDaysBefore: z.number().optional(),
+      frequency: z.enum(['weekly','biweekly','monthly','quarterly','annually']).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const database = await getDb();
+      if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      const updates: any = { updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) };
+      if (input.isActive !== undefined) updates.isActive = input.isActive ? 1 : 0;
+      if (input.amount !== undefined) updates.amount = input.amount;
+      if (input.endDate !== undefined) updates.endDate = new Date(input.endDate).toISOString().replace('T', ' ').substring(0, 19);
+      if (input.reminderDaysBefore !== undefined) updates.reminderDaysBefore = input.reminderDaysBefore;
+      if (input.frequency !== undefined) updates.frequency = input.frequency;
+
+      await database.update(recurringExpenses).set(updates).where(eq(recurringExpenses.id, input.id));
+      const rows = await database.select().from(recurringExpenses).where(eq(recurringExpenses.id, input.id));
+      return rows[0];
+    }),
+
+  deleteRecurringExpense: deleteProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const database = await getDb();
+      if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      await database.delete(recurringExpenses).where(eq(recurringExpenses.id, input.id));
+      return { success: true };
+    }),
+
+  getRecurringExpenseById: viewProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input }) => {
+      const database = await getDb();
+      if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      const rows = await database.select().from(recurringExpenses).where(eq(recurringExpenses.id, input.id)).limit(1);
+      if (!rows.length) throw new TRPCError({ code: "NOT_FOUND", message: "Recurring expense not found" });
+      return rows[0];
+    }),
+
+  toggleRecurringExpenseActive: createProcedure
+    .input(z.object({ id: z.string(), isActive: z.boolean() }))
+    .mutation(async ({ input }) => {
+      const database = await getDb();
+      if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+      const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+      await database.update(recurringExpenses)
+        .set({ isActive: input.isActive ? 1 : 0, updatedAt: now } as any)
+        .where(eq(recurringExpenses.id, input.id));
+      return { success: true };
+    }),
+
+  triggerRecurringExpenseGeneration: createProcedure
+    .input(z.string())
+    .mutation(async ({ ctx, input: recurringExpenseId }) => {
+      const database = await getDb();
+      if (!database) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+      // Fetch the recurring expense
+      const rows = await database.select().from(recurringExpenses).where(eq(recurringExpenses.id, recurringExpenseId)).limit(1);
+      if (!rows.length) throw new TRPCError({ code: "NOT_FOUND", message: "Recurring expense not found" });
+      const pattern = rows[0];
+
+      const now = new Date();
+      const nowStr = now.toISOString().replace('T', ' ').substring(0, 19);
+
+      // Generate next expense number
+      const expenseNumber = await generateNextExpenseNumber(database);
+      const newExpenseId = uuidv4();
+
+      // Create the expense from the recurring template
+      await database.insert(expenses).values({
+        id: newExpenseId,
+        organizationId: pattern.organizationId,
+        expenseNumber,
+        category: pattern.category,
+        vendor: pattern.vendor,
+        amount: pattern.amount,
+        expenseDate: nowStr,
+        paymentMethod: pattern.paymentMethod,
+        description: pattern.description ? `${pattern.description} (Auto-generated from recurring)` : 'Auto-generated from recurring expense',
+        chartOfAccountId: pattern.chartOfAccountId,
+        status: 'pending',
+        createdBy: ctx.user.id,
+        createdAt: nowStr as any,
+        updatedAt: nowStr as any,
+      } as any);
+
+      // Calculate next due date
+      const frequencyDays: Record<string, number> = {
+        weekly: 7, biweekly: 14, monthly: 30, quarterly: 90, annually: 365,
+      };
+      const daysToAdd = frequencyDays[pattern.frequency] || 30;
+      const nextDueDate = new Date(pattern.nextDueDate);
+      nextDueDate.setDate(nextDueDate.getDate() + daysToAdd);
+
+      // Update recurring expense
+      await database.update(recurringExpenses)
+        .set({
+          nextDueDate: nextDueDate.toISOString().replace('T', ' ').substring(0, 19),
+          lastGeneratedDate: nowStr,
+          updatedAt: nowStr,
+        } as any)
+        .where(eq(recurringExpenses.id, recurringExpenseId));
+
+      return { success: true, expenseId: newExpenseId, expenseNumber };
+    }),
+
 });

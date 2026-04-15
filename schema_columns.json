@@ -1,0 +1,544 @@
+{
+  "accounts": [
+    "id"
+  ],
+  "activityLog": [
+    "id"
+  ],
+  "auditLogs": [
+    "id"
+  ],
+  "bankAccounts": [
+    "id"
+  ],
+  "bankTransactions": [
+    "id"
+  ],
+  "clients": [
+    "id"
+  ],
+  "communicationLogs": [
+    "id"
+  ],
+  "jobGroups": [
+    "id"
+  ],
+  "employees": [
+    "id"
+  ],
+  "estimateItems": [
+    "id"
+  ],
+  "estimates": [
+    "id"
+  ],
+  "proposals": [
+    "id"
+  ],
+  "expenses": [
+    "id"
+  ],
+  "guestClients": [
+    "id"
+  ],
+  "inventoryTransactions": [
+    "id"
+  ],
+  "invoiceItems": [
+    "id"
+  ],
+  "invoices": [
+    "id"
+  ],
+  "recurringInvoices": [
+    "id"
+  ],
+  "journalEntries": [
+    "id"
+  ],
+  "journalEntryLines": [
+    "id"
+  ],
+  "leaveRequests": [
+    "id"
+  ],
+  "opportunities": [
+    "id"
+  ],
+  "paymentPlans": [
+    "id"
+  ],
+  "paymentPlanInstallments": [
+    "id"
+  ],
+  "payroll": [
+    "id"
+  ],
+  "products": [
+    "id"
+  ],
+  "projectTasks": [
+    "id"
+  ],
+  "projects": [
+    "id"
+  ],
+  "projectMilestones": [
+    "id"
+  ],
+  "timeEntries": [
+    "id"
+  ],
+  "reminders": [
+    "id"
+  ],
+  "scheduledReminders": [
+    "id"
+  ],
+  "services": [
+    "id"
+  ],
+  "settings": [
+    "id"
+  ],
+  "stockAlerts": [
+    "id"
+  ],
+  "systemSettings": [
+    "id"
+  ],
+  "templates": [
+    "id"
+  ],
+  "documentNumberFormats": [
+    "id"
+  ],
+  "defaultSettings": [
+    "id"
+  ],
+  "permissions": [],
+  "userRoles": [
+    "id"
+  ],
+  "rolePermissions": [
+    "id"
+  ],
+  "receipts": [
+    "id"
+  ],
+  "creditNotes": [
+    "id"
+  ],
+  "debitNotes": [
+    "id"
+  ],
+  "departments": [
+    "id"
+  ],
+  "budgets": [
+    "id"
+  ],
+  "attendance": [
+    "id"
+  ],
+  "userProjectAssignments": [
+    "id"
+  ],
+  "projectComments": [
+    "id"
+  ],
+  "staffTasks": [
+    "id"
+  ],
+  "userPermissions": [
+    "id"
+  ],
+  "users": [
+    "id"
+  ],
+  "savedFilters": [
+    "id"
+  ],
+  "notifications": [
+    "id"
+  ],
+  "notificationSettings": [
+    "id"
+  ],
+  "notificationPreferences": [
+    "id"
+  ],
+  "smsQueue": [
+    "id"
+  ],
+  "smsCustomerPreferences": [
+    "id"
+  ],
+  "userFavorites": [
+    "id"
+  ],
+  "aiDocuments": [
+    "id"
+  ],
+  "emailGenerationHistory": [
+    "id"
+  ],
+  "financialAnalytics": [
+    "id"
+  ],
+  "aiChatSessions": [
+    "id"
+  ],
+  "aiChatMessages": [
+    "id"
+  ],
+  "roles": [],
+  "lineItems": [
+    "id"
+  ],
+  "workflows": [
+    "id"
+  ],
+  "workflowTriggers": [
+    "id"
+  ],
+  "workflowActions": [
+    "id"
+  ],
+  "workflowExecutions": [
+    "id"
+  ],
+  "permission_metadata": [
+    "id"
+  ],
+  "dashboardLayouts": [
+    "id"
+  ],
+  "dashboardWidgets": [
+    "id"
+  ],
+  "dashboardWidgetData": [
+    "id"
+  ],
+  "permissionAuditLog": [
+    "id"
+  ],
+  "projectMetrics": [
+    "id"
+  ],
+  "clientHealthScores": [
+    "id"
+  ],
+  "performanceReviews": [
+    "id"
+  ],
+  "skillsMatrix": [
+    "id"
+  ],
+  "schedules": [
+    "id"
+  ],
+  "vacationRequests": [
+    "id"
+  ],
+  "documents": [
+    "id"
+  ],
+  "documentVersions": [
+    "id"
+  ],
+  "documentAccess": [
+    "id"
+  ],
+  "notificationRules": [
+    "id"
+  ],
+  "usageMetrics": [
+    "id"
+  ],
+  "expenseCategories": [
+    "id"
+  ],
+  "expenseReports": [
+    "id"
+  ],
+  "reimbursements": [
+    "id"
+  ],
+  "currencies": [
+    "id"
+  ],
+  "exchangeRates": [
+    "id"
+  ],
+  "taxRates": [
+    "id"
+  ],
+  "forecastModels": [
+    "id"
+  ],
+  "forecastResults": [
+    "id"
+  ],
+  "apiKeys": [
+    "id"
+  ],
+  "webhooks": [
+    "id"
+  ],
+  "integrationLogs": [
+    "id"
+  ],
+  "emailQueue": [
+    "id"
+  ],
+  "emailLog": [
+    "id"
+  ],
+  "invoiceReminders": [
+    "id"
+  ],
+  "pricingPlans": [
+    "id"
+  ],
+  "subscriptions": [
+    "id"
+  ],
+  "billingInvoices": [
+    "id"
+  ],
+  "payments": [
+    "id"
+  ],
+  "paymentMethods": [
+    "id"
+  ],
+  "billingUsageMetrics": [
+    "id"
+  ],
+  "billingNotifications": [
+    "id"
+  ],
+  "userDeletions": [
+    "id"
+  ],
+  "notificationTemplates": [
+    "id"
+  ],
+  "notificationBroadcasts": [
+    "id"
+  ],
+  "messages": [
+    "id"
+  ],
+  "conversations": [
+    "id"
+  ],
+  "organizations": [
+    "id"
+  ],
+  "organizationFeatures": [
+    "id"
+  ],
+  "organizationUsers": [
+    "id"
+  ],
+  "tenantMessages": [
+    "id"
+  ],
+  "pricingTierFeatures": [
+    "id"
+  ],
+  "conversationMembers": [
+    "id"
+  ],
+  "messageReadReceipts": [
+    "id"
+  ],
+  "tickets": [
+    "id"
+  ],
+  "ticketResponses": [
+    "id"
+  ],
+  "recurringInvoiceTemplates": [
+    "id"
+  ],
+  "automatedReceipts": [
+    "id"
+  ],
+  "emailCampaigns": [
+    "id"
+  ],
+  "emailLogs": [
+    "id"
+  ],
+  "workOrders": [
+    "id"
+  ],
+  "workOrderMaterials": [
+    "id"
+  ],
+  "serviceInvoices": [
+    "id"
+  ],
+  "serviceInvoiceItems": [
+    "id"
+  ],
+  "contacts": [
+    "id"
+  ],
+  "quotations": [
+    "id"
+  ],
+  "grnRecords": [
+    "id"
+  ],
+  "deliveryNotes": [
+    "id"
+  ],
+  "assets": [
+    "id"
+  ],
+  "contracts": [
+    "id"
+  ],
+  "warranties": [
+    "id"
+  ],
+  "notes": [
+    "id"
+  ],
+  "custom_reports": [
+    "id"
+  ],
+  "smart_workflows": [
+    "id"
+  ],
+  "export_jobs": [
+    "id"
+  ],
+  "security_events": [
+    "id"
+  ],
+  "ai_configurations": [
+    "id"
+  ],
+  "api_pricing_configs": [
+    "id"
+  ],
+  "etl_jobs": [
+    "id"
+  ],
+  "container_deployments": [
+    "id"
+  ],
+  "custom_dashboards": [
+    "id"
+  ],
+  "webhook_configs": [
+    "id"
+  ],
+  "email_calendar_sync": [
+    "id"
+  ],
+  "security_incidents": [
+    "id"
+  ],
+  "global_configs": [
+    "id"
+  ],
+  "registered_devices": [
+    "id"
+  ],
+  "mobile_app_configs": [
+    "id"
+  ],
+  "partner_deals": [
+    "id"
+  ],
+  "perf_configs": [
+    "id"
+  ],
+  "backup_schedules": [
+    "id"
+  ],
+  "backup_history": [
+    "id"
+  ],
+  "integration_configs": [
+    "id"
+  ],
+  "design_configs": [
+    "id"
+  ],
+  "ai_insights": [
+    "id"
+  ],
+  "analytics_metrics": [
+    "id"
+  ],
+  "cohort_analyses": [
+    "id"
+  ],
+  "executive_reports": [
+    "id"
+  ],
+  "collaboration_sessions": [
+    "id"
+  ],
+  "compliance_records": [
+    "id"
+  ],
+  "staffChatMessages": [
+    "id"
+  ],
+  "canned_responses": [
+    "id"
+  ],
+  "kb_categories": [
+    "id"
+  ],
+  "kb_articles": [
+    "id"
+  ],
+  "warehouses": [
+    "id"
+  ],
+  "stock_movements": [
+    "id"
+  ],
+  "salaryStructures": [
+    "id"
+  ],
+  "salaryAllowances": [
+    "id"
+  ],
+  "salaryDeductions": [
+    "id"
+  ],
+  "employeeBenefits": [
+    "id"
+  ],
+  "payrollDetails": [
+    "id"
+  ],
+  "payrollApprovals": [
+    "id"
+  ],
+  "employeeTaxInfo": [
+    "id"
+  ],
+  "salaryIncrements": [
+    "id"
+  ],
+  "lpos": [
+    "id"
+  ],
+  "imprests": [
+    "id"
+  ],
+  "imprestSurrenders": [
+    "id"
+  ]
+}

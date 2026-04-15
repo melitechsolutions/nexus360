@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,8 +27,13 @@ import {
   Clock,
   Umbrella,
   Award,
+  Star,
+  Trash2,
+  User,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { Separator } from "@/components/ui/separator";
+import { useFavorite } from "@/hooks/useFavorite";
 
 export default function EmployeeDetails() {
   const [, params] = useRoute("/employees/:id");
@@ -37,6 +42,7 @@ export default function EmployeeDetails() {
 
   // Fetch employee from backend
   const { data: employeeData, isLoading } = trpc.employees.getById.useQuery(employeeId);
+  const { isStarred, toggleStar } = useFavorite("employee", employeeId, (employeeData as any)?.name);
   const { data: jobGroupsData = [] } = trpc.jobGroups.list.useQuery();
 
   const jobGroup = jobGroupsData.find((jg: any) => jg.id === (employeeData as any)?.jobGroupId);
@@ -105,161 +111,125 @@ export default function EmployeeDetails() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Employee Details" icon={<User className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "HR", href: "/employees"}, {label: "Employees", href: "/employees"}, {label: "Details"}]} backLink={{label: "Employees", href: "/employees"}}>
         <div className="flex items-center justify-center h-64">
           <p>Loading employee...</p>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!employee) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Employee Details" icon={<User className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "HR", href: "/employees"}, {label: "Employees", href: "/employees"}, {label: "Details"}]} backLink={{label: "Employees", href: "/employees"}}>
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Employee not found</p>
           <Button onClick={() => navigate("/employees")}>Back to Employees</Button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header with Photo */}
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex items-start gap-6 flex-1">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/employees")} className="mt-1">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <Avatar className="h-32 w-32">
-              <AvatarImage src={employee?.photoUrl || undefined} alt={employee?.name} />
-              <AvatarFallback className="text-lg">
-                {employee?.name.charAt(0)}{employee?.name.split(' ')[1]?.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold tracking-tight">{employee?.name}</h1>
-              <p className="text-muted-foreground text-lg">{employee?.position}</p>
-              <p className="text-muted-foreground text-sm mt-1">{employee?.employeeId}</p>
-              <div className="mt-3 flex gap-2">
-                <Badge variant="default">{employee?.jobGroupName}</Badge>
-                <Badge variant="secondary">{employee?.employmentType?.replace('_', ' ').toUpperCase()}</Badge>
-                <Badge variant={employee?.status === "active" ? "default" : "secondary"}>
-                  {employee?.status}
-                </Badge>
-              </div>
-            </div>
+    <ModuleLayout title="Employee Details" icon={<User className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "HR", href: "/employees"}, {label: "Employees", href: "/employees"}, {label: "Details"}]} backLink={{label: "Employees", href: "/employees"}}>
+      <div className="space-y-4">
+        {/* Action bar */}
+        <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" onClick={toggleStar}><Star className={`h-4 w-4 ${isStarred ? "fill-amber-400 text-amber-400" : ""}`} /></Button>
+            <Button variant="ghost" size="icon" onClick={() => { const email = employee?.email; if (email) window.location.href = `mailto:${email}`; }}><Mail className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/employees/${employeeId}/edit`)}><Edit className="h-4 w-4" /></Button>
+        </div>
+
+        {/* Split Layout */}
+        <div className="flex gap-6">
+          {/* Left Sidebar */}
+          <div className="w-[320px] min-w-[320px] space-y-4">
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div className="flex flex-col items-center text-center">
+                  <Avatar className="h-24 w-24 mb-3">
+                    <AvatarImage src={employee?.photoUrl || undefined} alt={employee?.name} />
+                    <AvatarFallback className="text-lg">
+                      {employee?.name.charAt(0)}{employee?.name.split(' ')[1]?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <h2 className="text-xl font-bold">{employee?.name}</h2>
+                  <p className="text-sm text-muted-foreground">{employee?.position}</p>
+                  <p className="text-xs text-muted-foreground">{employee?.employeeId}</p>
+                </div>
+                <div className="flex gap-2 flex-wrap justify-center">
+                  <Badge variant="default">{employee?.jobGroupName}</Badge>
+                  <Badge variant="secondary">{employee?.employmentType?.replace('_', ' ').toUpperCase()}</Badge>
+                  <Badge variant={employee?.status === "active" ? "default" : "secondary"}>
+                    {employee?.status}
+                  </Badge>
+                </div>
+                <Separator />
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Department</p>
+                      <p className="font-medium">{employee.department}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Email</p>
+                      <p className="font-medium">{employee.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Phone</p>
+                      <p className="font-medium">{employee.phone}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Address</p>
+                      <p className="font-medium">{employee.address || "—"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Joined</p>
+                      <p className="font-medium">
+                        {new Date(employee.joinDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Compensation</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="text-muted-foreground">Salary</p>
+                      <p className="font-bold">Ksh {(employee.salary || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="text-muted-foreground">Leave Bal.</p>
+                      <p className="font-bold">14 days</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <Button variant="outline" onClick={() => navigate(`/employees/${employeeId}/edit`)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Employee
-          </Button>
-        </div>
 
-        {/* Overview Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Job Group</CardTitle>
-              <Award className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{employee.jobGroupName}</div>
-              <p className="text-xs text-muted-foreground">{employee.employmentType?.replace('_', ' ')}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Department</CardTitle>
-              <Briefcase className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{employee.department}</div>
-              <p className="text-xs text-muted-foreground">{employee.position}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Salary</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(employee.salary || 0).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Monthly</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Join Date</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {new Date(employee.joinDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {Math.floor((Date.now() - new Date(employee.joinDate).getTime()) / (1000 * 60 * 60 * 24 * 365))} years
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Leave Balance</CardTitle>
-              <Umbrella className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">14 days</div>
-              <p className="text-xs text-muted-foreground">Annual leave remaining</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Contact Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
-            <CardDescription>Employee contact details</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Email</p>
-                  <p className="text-sm text-muted-foreground">{employee.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Phone</p>
-                  <p className="text-sm text-muted-foreground">{employee.phone}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 md:col-span-2">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Address</p>
-                  <p className="text-sm text-muted-foreground">{employee.address}</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tabs for detailed information */}
-        <Tabs defaultValue="attendance" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="leave">Leave History</TabsTrigger>
-            <TabsTrigger value="payroll">Payroll</TabsTrigger>
-          </TabsList>
+          {/* Right Content */}
+          <div className="flex-1 min-w-0">
+            <Tabs defaultValue="attendance" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="attendance">Attendance</TabsTrigger>
+                <TabsTrigger value="leave">Leave History</TabsTrigger>
+                <TabsTrigger value="payroll">Payroll</TabsTrigger>
+              </TabsList>
 
           <TabsContent value="attendance" className="space-y-4">
             <Card>
@@ -372,8 +342,10 @@ export default function EmployeeDetails() {
             </Card>
           </TabsContent>
         </Tabs>
+          </div>
+        </div>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }
 

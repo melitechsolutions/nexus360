@@ -51,7 +51,7 @@ export default function ChangePasswordModal() {
           setLocation("/crm/client-portal");
           break;
         default:
-          setLocation("/crm");
+          setLocation("/crm-home");
       }
     },
     onError: (error) => {

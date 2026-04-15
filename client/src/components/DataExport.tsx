@@ -126,10 +126,9 @@ export function ExportModal({ documentType, selectedIds = [], onClose }: ExportM
               <Button
                 variant={selectedFormat === "pdf" ? "default" : "outline"}
                 onClick={() => setSelectedFormat("pdf")}
-                disabled
                 className="w-full"
               >
-                PDF (Coming Soon)
+                PDF
               </Button>
             </div>
           </div>

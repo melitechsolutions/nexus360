@@ -271,8 +271,8 @@ export function generateSpecialDocumentHTML(data: SpecialDocumentData): string {
                 ${logoHtml}
               </div>
               <div class="company-detail">Phone: ${data.companyPhone || '+254 712 236 643 / +254 713 822 486'}</div>
-              <div class="company-detail">Email: ${data.companyEmail || 'info@melitechsolutions.co.ke'}</div>
-              <div class="company-detail">Website: ${data.companyWebsite || 'www.melitechsolutions.co.ke'}</div>
+              <div class="company-detail">Email: ${data.companyEmail || ''}</div>
+              <div class="company-detail">Website: ${data.companyWebsite || ''}</div>
               <div class="company-detail">Address: ${data.companyAddress || 'Nairobi, Kenya'}</div>
             </div>
             <div class="doc-header">
@@ -376,7 +376,7 @@ export function generateSpecialDocumentHTML(data: SpecialDocumentData): string {
 
           <!-- FOOTER -->
           <div class="footer">
-            <p>This is a system generated ${documentTitle} and is digitally signed under Melitech Solutions.</p>
+            <p>This is a system generated ${documentTitle} and is digitally signed under ${data.companyName || 'the issuing company'}.</p>
             <p style="margin-top: 10px; font-size: 0.8em;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
           </div>
         </div>

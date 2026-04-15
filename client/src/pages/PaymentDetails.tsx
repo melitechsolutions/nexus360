@@ -2,14 +2,15 @@ import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash2, Download, Send } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ArrowLeft, Edit, Trash2, Download, Send, DollarSign } from "lucide-react";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import { useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import mutateAsync from '@/lib/mutationHelpers';
 import { format } from "date-fns";
+import { generateReceiptPDF } from "@/lib/pdfGenerator";
 
 export default function PaymentDetails() {
   const { id } = useParams();
@@ -66,42 +67,28 @@ export default function PaymentDetails() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Payment Details" icon={<DollarSign className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Payments", href: "/payments"}, {label: "Details"}]} backLink={{label: "Payments", href: "/payments"}}>
         <div className="flex items-center justify-center h-64">
           <p>Loading payment...</p>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!payment) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Payment Details" icon={<DollarSign className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Payments", href: "/payments"}, {label: "Details"}]} backLink={{label: "Payments", href: "/payments"}}>
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Payment not found</p>
           <Button onClick={() => navigate("/payments")}>Back to Payments</Button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout title="Payment Details" icon={<DollarSign className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Payments", href: "/payments"}, {label: "Details"}]} backLink={{label: "Payments", href: "/payments"}}>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/payments")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{payment.referenceNumber}</h1>
-            <p className="text-muted-foreground">{payment.client}</p>
-          </div>
-        </div>
-
         <div className="flex gap-2">
           <Button onClick={handleEdit}>
             <Edit className="mr-2 h-4 w-4" />
@@ -114,11 +101,32 @@ export default function PaymentDetails() {
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => {
+            const doc = generateReceiptPDF({
+              receiptNumber: payment.referenceNumber,
+              date: payment.date,
+              client: {
+                name: payment.client,
+                email: client?.email || "",
+              },
+              amount: payment.amount,
+              paymentMethod: payment.paymentMethod.replace("_", " ").toUpperCase(),
+              notes: payment.notes || undefined,
+            });
+            doc.save(`Receipt-${payment.referenceNumber}.pdf`);
+            toast.success("PDF downloaded");
+          }}>
             <Download className="mr-2 h-4 w-4" />
             Download
           </Button>
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const subject = encodeURIComponent(`Payment Receipt ${payment.referenceNumber}`);
+              const body = encodeURIComponent(`Receipt for ${payment.client}\nAmount: Ksh ${payment.amount.toLocaleString()}\nDate: ${payment.date}`);
+              window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+            }}
+          >
             <Send className="mr-2 h-4 w-4" />
             Send
           </Button>
@@ -151,7 +159,7 @@ export default function PaymentDetails() {
               </div>
               <div>
                 <label className="text-sm font-medium">Date</label>
-                <p className="text-muted-foreground">{payment?.date || "N/A"}</p>
+                <p className="text-muted-foreground">{payment?.date ? new Date(payment.date).toLocaleDateString() : "N/A"}</p>
               </div>
               {payment.reference && (
                 <div>
@@ -178,6 +186,6 @@ export default function PaymentDetails() {
         title="Delete Payment"
         description="Are you sure you want to delete this payment? This action cannot be undone."
       />
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

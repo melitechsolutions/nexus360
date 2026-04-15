@@ -41,6 +41,7 @@ import {
   Eye,
   RefreshCw,
 } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
 
 type CommunicationType = "email" | "sms" | "call" | "meeting" | "all";
 type CommunicationStatus = "pending" | "sent" | "failed" | "all";
@@ -383,7 +384,7 @@ export default function Communications() {
       description="Track and manage all communications with clients and team"
       icon={<MessageSquare className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Communications" },
       ]}
     >
@@ -565,15 +566,7 @@ export default function Communications() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 py-4 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Total Communications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground mt-1">All communications</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Communications" value={stats.total} description="All communications" color="border-l-blue-500" />
 
           <Card>
             <CardHeader className="pb-3">

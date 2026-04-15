@@ -26,6 +26,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
   Shield,
   Plus,
   Edit,
@@ -36,6 +44,7 @@ import {
   Unlock,
   CheckCircle2,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -47,9 +56,24 @@ interface Role {
   description?: string;
   permissions: string[];
   isSystem: boolean;
+  isCustom?: boolean;
+  isAdvanced?: boolean;
+  baseRole?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const SYSTEM_ROLES = [
+  { value: 'staff', label: 'Staff' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'accountant', label: 'Accountant' },
+  { value: 'hr', label: 'HR' },
+  { value: 'project_manager', label: 'Project Manager' },
+  { value: 'ict_manager', label: 'ICT Manager' },
+  { value: 'procurement_manager', label: 'Procurement Manager' },
+  { value: 'sales_manager', label: 'Sales Manager' },
+  { value: 'user', label: 'User' },
+];
 
 export default function Roles() {
   const [, navigate] = useLocation();
@@ -62,16 +86,29 @@ export default function Roles() {
     displayName: "",
     description: "",
     permissions: [] as string[],
+    baseRole: "staff" as string,
+    isAdvanced: false,
   });
 
   // Fetch roles from backend
   const { data: rolesData = [], isLoading, refetch } = trpc.roles.list.useQuery();
   const { data: permissionsData = [] } = trpc.roles.getPermissions.useQuery();
+  const { data: availableFeatures = [] } = trpc.roles.getAvailableFeatures.useQuery();
   const { data: userCounts = {} } = trpc.roles.getUserCounts.useQuery();
   const utils = trpc.useUtils();
 
-  // Mutations
-  const createRoleMutation = trpc.roles.create.useMutation({
+  // Use the feature-based permissions for custom roles
+  const featurePermissions = useMemo(() => {
+    const groups: Record<string, { key: string; label: string; isAdvanced: boolean }[]> = {};
+    availableFeatures.forEach((f: any) => {
+      if (!groups[f.category]) groups[f.category] = [];
+      groups[f.category].push(f);
+    });
+    return groups;
+  }, [availableFeatures]);
+
+  // Mutations - use custom role endpoints
+  const createRoleMutation = trpc.roles.createCustomRole.useMutation({
     onSuccess: () => {
       toast.success("Role created successfully!");
       setIsCreateOpen(false);
@@ -83,7 +120,7 @@ export default function Roles() {
     },
   });
 
-  const updateRoleMutation = trpc.roles.update.useMutation({
+  const updateRoleMutation = trpc.roles.updateCustomRole.useMutation({
     onSuccess: () => {
       toast.success("Role updated successfully!");
       setIsEditOpen(false);
@@ -96,7 +133,7 @@ export default function Roles() {
     },
   });
 
-  const deleteRoleMutation = trpc.roles.delete.useMutation({
+  const deleteRoleMutation = trpc.roles.deleteCustomRole.useMutation({
     onSuccess: () => {
       toast.success("Role deleted successfully!");
       refetch();
@@ -112,6 +149,8 @@ export default function Roles() {
       displayName: "",
       description: "",
       permissions: [],
+      baseRole: "staff",
+      isAdvanced: false,
     });
   };
 
@@ -129,6 +168,8 @@ export default function Roles() {
       displayName: formData.displayName,
       description: formData.description,
       permissions: formData.permissions,
+      baseRole: formData.baseRole as any,
+      isAdvanced: formData.isAdvanced,
     });
   };
 
@@ -139,6 +180,8 @@ export default function Roles() {
       displayName: role.displayName,
       description: role.description || "",
       permissions: role.permissions,
+      baseRole: role.baseRole || "staff",
+      isAdvanced: role.isAdvanced || false,
     });
     setIsEditOpen(true);
   };
@@ -150,6 +193,8 @@ export default function Roles() {
       displayName: formData.displayName,
       description: formData.description,
       permissions: formData.permissions,
+      baseRole: formData.baseRole as any,
+      isAdvanced: formData.isAdvanced,
     });
   };
 
@@ -214,7 +259,7 @@ export default function Roles() {
       description="Manage user roles and their permissions"
       icon={<Shield className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Settings", href: "/settings" },
         { label: "Roles" },
       ]}
@@ -330,28 +375,90 @@ export default function Roles() {
                           rows={2}
                         />
                       </div>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="baseRole">Base Role *</Label>
+                          <Select
+                            value={formData.baseRole}
+                            onValueChange={(value) => setFormData({ ...formData, baseRole: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select base role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SYSTEM_ROLES.map((r) => (
+                                <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-gray-500">
+                            Users with this role inherit base role access as a fallback
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Advanced Role</Label>
+                          <div className="flex items-center gap-3 pt-2">
+                            <Switch
+                              checked={formData.isAdvanced}
+                              onCheckedChange={(checked) => setFormData({ ...formData, isAdvanced: checked })}
+                            />
+                            <span className="text-sm text-muted-foreground">
+                              {formData.isAdvanced ? "Advanced permissions enabled" : "Standard permissions only"}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Advanced roles can access delete, approve, and management features
+                          </p>
+                        </div>
+                      </div>
                       <div className="space-y-2">
                         <Label>Permissions *</Label>
                         <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
-                          {Object.entries(groupedPermissions).map(([category, perms]) => (
-                            <div key={category} className="mb-4">
-                              <h4 className="font-medium text-sm mb-2">{category}</h4>
-                              <div className="grid grid-cols-2 gap-2">
-                                {Array.isArray(perms) && perms.map((perm: any) => (
-                                  <div key={perm.key} className="flex items-center space-x-2">
-                                    <Checkbox
-                                      id={perm.key}
-                                      checked={formData.permissions.includes(perm.key)}
-                                      onCheckedChange={() => togglePermission(perm.key)}
-                                    />
-                                    <label htmlFor={perm.key} className="text-sm cursor-pointer">
-                                      {perm.label}
-                                    </label>
-                                  </div>
-                                ))}
+                          {Object.keys(featurePermissions).length > 0
+                            ? Object.entries(featurePermissions).map(([category, perms]) => (
+                              <div key={category} className="mb-4">
+                                <h4 className="font-medium text-sm mb-2 flex items-center gap-1">{category}</h4>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {perms.map((perm) => {
+                                    const hidden = !formData.isAdvanced && perm.isAdvanced;
+                                    if (hidden) return null;
+                                    return (
+                                      <div key={perm.key} className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={perm.key}
+                                          checked={formData.permissions.includes(perm.key)}
+                                          onCheckedChange={() => togglePermission(perm.key)}
+                                        />
+                                        <label htmlFor={perm.key} className="text-sm cursor-pointer flex items-center gap-1">
+                                          {perm.label}
+                                          {perm.isAdvanced && <Sparkles className="h-3 w-3 text-amber-500" />}
+                                        </label>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))
+                            : Object.entries(groupedPermissions).map(([category, perms]) => (
+                              <div key={category} className="mb-4">
+                                <h4 className="font-medium text-sm mb-2">{category}</h4>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {Array.isArray(perms) && perms.map((perm: any) => (
+                                    <div key={perm.key} className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={perm.key}
+                                        checked={formData.permissions.includes(perm.key)}
+                                        onCheckedChange={() => togglePermission(perm.key)}
+                                      />
+                                      <label htmlFor={perm.key} className="text-sm cursor-pointer">
+                                        {perm.label}
+                                      </label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))
+                          }
                         </div>
                       </div>
                     </div>
@@ -379,6 +486,7 @@ export default function Roles() {
                   <TableRow>
                     <TableHead>Role</TableHead>
                     <TableHead>Description</TableHead>
+                    <TableHead>Base Role</TableHead>
                     <TableHead>Users</TableHead>
                     <TableHead>Permissions</TableHead>
                     <TableHead>Type</TableHead>
@@ -398,6 +506,16 @@ export default function Roles() {
                       </TableCell>
                       <TableCell className="max-w-xs truncate">
                         {role.description || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {role.isCustom && role.baseRole ? (
+                          <div className="flex items-center gap-1">
+                            <Badge variant="outline" className="capitalize">{role.baseRole}</Badge>
+                            {role.isAdvanced && <Sparkles className="h-3 w-3 text-amber-500" />}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -492,28 +610,84 @@ export default function Roles() {
                   rows={2}
                 />
               </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-baseRole">Base Role *</Label>
+                  <Select
+                    value={formData.baseRole}
+                    onValueChange={(value) => setFormData({ ...formData, baseRole: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select base role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SYSTEM_ROLES.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Advanced Role</Label>
+                  <div className="flex items-center gap-3 pt-2">
+                    <Switch
+                      checked={formData.isAdvanced}
+                      onCheckedChange={(checked) => setFormData({ ...formData, isAdvanced: checked })}
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {formData.isAdvanced ? "Advanced" : "Standard"}
+                    </span>
+                  </div>
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label>Permissions *</Label>
                 <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
-                  {Object.entries(groupedPermissions).map(([category, perms]) => (
-                    <div key={category} className="mb-4">
-                      <h4 className="font-medium text-sm mb-2">{category}</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {Array.isArray(perms) && perms.map((perm: any) => (
-                          <div key={perm.key} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`edit-${perm.key}`}
-                              checked={formData.permissions.includes(perm.key)}
-                              onCheckedChange={() => togglePermission(perm.key)}
-                            />
-                            <label htmlFor={`edit-${perm.key}`} className="text-sm cursor-pointer">
-                              {perm.label}
-                            </label>
-                          </div>
-                        ))}
+                  {Object.keys(featurePermissions).length > 0
+                    ? Object.entries(featurePermissions).map(([category, perms]) => (
+                      <div key={category} className="mb-4">
+                        <h4 className="font-medium text-sm mb-2 flex items-center gap-1">{category}</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {perms.map((perm) => {
+                            const hidden = !formData.isAdvanced && perm.isAdvanced;
+                            if (hidden) return null;
+                            return (
+                              <div key={perm.key} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`edit-${perm.key}`}
+                                  checked={formData.permissions.includes(perm.key)}
+                                  onCheckedChange={() => togglePermission(perm.key)}
+                                />
+                                <label htmlFor={`edit-${perm.key}`} className="text-sm cursor-pointer flex items-center gap-1">
+                                  {perm.label}
+                                  {perm.isAdvanced && <Sparkles className="h-3 w-3 text-amber-500" />}
+                                </label>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                    : Object.entries(groupedPermissions).map(([category, perms]) => (
+                      <div key={category} className="mb-4">
+                        <h4 className="font-medium text-sm mb-2">{category}</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {Array.isArray(perms) && perms.map((perm: any) => (
+                            <div key={perm.key} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`edit-${perm.key}`}
+                                checked={formData.permissions.includes(perm.key)}
+                                onCheckedChange={() => togglePermission(perm.key)}
+                              />
+                              <label htmlFor={`edit-${perm.key}`} className="text-sm cursor-pointer">
+                                {perm.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  }
                 </div>
               </div>
             </div>

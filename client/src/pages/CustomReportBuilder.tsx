@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Trash2, Play, Download, Loader } from "lucide-react";
+import { FileText,  Plus, Trash2, Play, Download, Loader } from "lucide-react";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
 import {
   BarChart,
@@ -222,10 +224,13 @@ export default function CustomReportBuilder() {
   const fields = currentTableSchema?.fields || [];
 
   return (
-    <div className="space-y-6 p-6">
+    <ModuleLayout
+      title="Custom Report Builder"
+      icon={<FileText className="h-5 w-5" />}
+      breadcrumbs={[{ label: "Dashboard", href: "/crm-home" }, { label: "Reports" }, { label: "Custom Report Builder" }]}
+    >
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Custom Report Builder</h1>
-      </div>
+        </div>
 
       <Tabs defaultValue="design" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
@@ -481,32 +486,32 @@ export default function CustomReportBuilder() {
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="border-b bg-gray-50">
-                        <tr>
+                    <Table className="w-full text-sm">
+                      <TableHeader className="border-b bg-gray-50">
+                        <TableRow>
                           {(reportConfig.selectedFields.length > 0 ? reportConfig.selectedFields : Object.keys(reportData[0] || {})).map((key: any) => (
-                            <th key={key} className="text-left py-2 px-4 font-medium">
+                            <TableHead key={key} className="text-left py-2 px-4 font-medium">
                               {typeof key === 'string' ? key.charAt(0).toUpperCase() + key.slice(1) : key}
-                            </th>
+                            </TableHead>
                           ))}
-                        </tr>
-                      </thead>
-                      <tbody>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {reportData.slice(0, 50).map((row, idx) => (
-                          <tr key={`row-${idx}`} className="border-b hover:bg-gray-50">
+                          <TableRow key={`row-${idx}`} className="border-b hover:bg-gray-50">
                             {(reportConfig.selectedFields.length > 0 ? reportConfig.selectedFields : Object.keys(row)).map((key: any) => (
-                              <td key={`${idx}-${key}`} className="py-2 px-4">
+                              <TableCell key={`${idx}-${key}`} className="py-2 px-4">
                                 {typeof row[key] === "string"
                                   ? row[key]
                                   : row[key] instanceof Date
                                   ? new Date(row[key]).toLocaleDateString()
                                   : JSON.stringify(row[key])}
-                              </td>
+                              </TableCell>
                             ))}
-                          </tr>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                   {reportData.length > 50 && (
                     <p className="text-sm text-gray-600 mt-2">
@@ -618,6 +623,6 @@ export default function CustomReportBuilder() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </ModuleLayout>
   );
 }

@@ -1,8 +1,24 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Plus } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { X, Plus, ChevronDown, ChevronUp, Building2 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 export interface LineItem {
   itemNumber: string;
@@ -22,6 +38,9 @@ interface ProcurementFormProps {
 }
 
 export function ProcurementFormComponent({ title, type, onSubmit }: ProcurementFormProps) {
+  const [supplierMode, setSupplierMode] = useState<"existing" | "manual">("manual");
+  const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
+  const { data: suppliersData } = trpc.suppliers?.list?.useQuery?.() ?? { data: undefined };
   const [formData, setFormData] = useState({
     documentNumber: "",
     supplier: "",
@@ -109,66 +128,63 @@ export function ProcurementFormComponent({ title, type, onSubmit }: ProcurementF
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Document Number *
-            </label>
+      <Card className="p-6">
+        <h2 className="text-xl font-bold mb-6">{title}</h2>
+
+        {/* Supplier Section */}
+        <div className="space-y-4 mb-6">
+          <div className="flex items-center justify-between">
+            <Label className="text-base font-semibold">Supplier / Vendor</Label>
+          </div>
+          <div className="grid gap-4">
+            <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+              <Label className="text-right text-sm">Supplier *</Label>
+              <Input
+                type="text"
+                value={formData.supplier}
+                onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                placeholder="Enter supplier / vendor name"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+              <Label className="text-right text-sm">Contact Person</Label>
+              <Input
+                type="text"
+                value={formData.supplierContact}
+                onChange={(e) => setFormData({ ...formData, supplierContact: e.target.value })}
+                placeholder="Contact person name"
+              />
+            </div>
+          </div>
+        </div>
+
+        <Separator className="my-4" />
+
+        {/* Document Details */}
+        <div className="grid gap-4">
+          <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+            <Label className="text-right text-sm">Document No.</Label>
             <Input
               type="text"
               value={formData.documentNumber}
-              onChange={(e) => setFormData({ ...formData, documentNumber: e.target.value })}
+              readOnly
+              className="bg-muted cursor-not-allowed font-mono max-w-xs"
               placeholder="Auto-generated"
-              disabled
-              className="bg-gray-100"
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Supplier/Vendor *
-            </label>
-            <Input
-              type="text"
-              value={formData.supplier}
-              onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-              placeholder="Select supplier"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Contact Person
-            </label>
-            <Input
-              type="text"
-              value={formData.supplierContact}
-              onChange={(e) => setFormData({ ...formData, supplierContact: e.target.value })}
-              placeholder="Contact person name"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Delivery Date *
-            </label>
+          <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+            <Label className="text-right text-sm">Delivery Date *</Label>
             <Input
               type="date"
               value={formData.deliveryDate}
               onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
               required
+              className="max-w-xs"
             />
           </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Delivery Address *
-            </label>
+          <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+            <Label className="text-right text-sm">Delivery Address *</Label>
             <Input
               type="text"
               value={formData.deliveryAddress}
@@ -177,38 +193,40 @@ export function ProcurementFormComponent({ title, type, onSubmit }: ProcurementF
               required
             />
           </div>
+        </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Notes
-            </label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Additional notes or special instructions"
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </CardContent>
+        <Separator className="my-4" />
+
+        {/* Additional Information - Collapsible */}
+        <Collapsible open={showAdditionalInfo} onOpenChange={setShowAdditionalInfo}>
+          <CollapsibleTrigger asChild>
+            <button type="button" className="flex items-center justify-between w-full py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <span>Additional Information</span>
+              {showAdditionalInfo ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-4 pt-3">
+            <div className="grid grid-cols-[140px_1fr] items-start gap-3">
+              <Label className="text-right text-sm pt-2">Notes</Label>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Additional notes or special instructions"
+                rows={3}
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
 
       {/* Line Items Section */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Line Items</CardTitle>
-          <Button
-            type="button"
-            onClick={addLineItem}
-            size="sm"
-            variant="outline"
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Add Item
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Line Items</h2>
+          <Button type="button" onClick={addLineItem} size="sm" variant="outline" className="gap-2">
+            <Plus className="h-4 w-4" />Add Item
           </Button>
-        </CardHeader>
-        <CardContent>
+        </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -324,39 +342,32 @@ export function ProcurementFormComponent({ title, type, onSubmit }: ProcurementF
           </div>
 
           {/* Summary Section */}
-          <div className="mt-6 space-y-2 border-t border-gray-200 dark:border-gray-700 pt-4">
-            <div className="flex justify-end gap-4">
-              <div className="w-64 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {subtotal.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Total Discount:</span>
-                  <span className="font-medium text-orange-600 dark:text-orange-400">
-                    -{totalDiscount.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-lg font-bold border-t border-gray-200 dark:border-gray-700 pt-2">
-                  <span className="text-gray-900 dark:text-white">Total Amount:</span>
-                  <span className="text-blue-600 dark:text-blue-400">{totalAmount.toFixed(2)}</span>
-                </div>
+          <div className="flex justify-end mt-6">
+            <div className="w-80 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal:</span>
+                <span className="font-mono">{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Total Discount:</span>
+                <span className="font-mono text-orange-500">-{totalDiscount.toFixed(2)}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between text-lg font-bold">
+                <span>Total Amount:</span>
+                <span className="font-mono text-primary">{totalAmount.toFixed(2)}</span>
               </div>
             </div>
           </div>
-        </CardContent>
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 justify-end">
-        <Button type="button" variant="outline">
-          Save as Draft
-        </Button>
-        <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-          Submit for Approval
-        </Button>
+      <div className="flex justify-between items-center">
+        <p className="text-xs text-muted-foreground"><strong>* Required</strong></p>
+        <div className="flex gap-2">
+          <Button type="button" variant="outline">Save as Draft</Button>
+          <Button type="submit">Submit for Approval</Button>
+        </div>
       </div>
     </form>
   );

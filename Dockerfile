@@ -76,6 +76,9 @@ COPY drizzle/meta ./drizzle/meta
 COPY drizzle/0*.sql ./drizzle/
 COPY drizzle/migrations/ ./drizzle/migrations/
 
+# Create uploads directory with proper permissions
+RUN mkdir -p /app/uploads && chmod 777 /app/uploads
+
 # Create startup script
 RUN cat > /app/start.sh << 'EOF'
 #!/bin/sh

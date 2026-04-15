@@ -108,11 +108,11 @@ export const projectManagementRouter = router({
         description: input.description,
         clientId: input.clientId,
         status: input.status,
-        startDate: input.startDate.toISOString(),
+        startDate: input.startDate.toISOString().replace('T', ' ').substring(0, 19),
         endDate: input.endDate?.toISOString(),
         budget: input.budget,
         createdBy: ctx.user.id,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       } as any);
 
       // Create milestones if provided
@@ -124,11 +124,11 @@ export const projectManagementRouter = router({
             projectId,
             name: milestone.name,
             description: milestone.description,
-            dueDate: milestone.dueDate.toISOString(),
+            dueDate: milestone.dueDate.toISOString().replace('T', ' ').substring(0, 19),
             deliverables: milestone.deliverables,
             percentage: milestone.percentage || Math.floor(((i + 1) / input.milestones.length) * 100),
             status: "pending",
-            createdAt: new Date().toISOString(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
         }
       }

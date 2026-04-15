@@ -303,7 +303,7 @@ export default function Receipts() {
       description="Manage payment receipts"
       icon={<Receipt className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Accounting", href: "/accounting" },
         { label: "Receipts", href: "/receipts" },
       ]}
@@ -516,7 +516,7 @@ export default function Receipts() {
                           <TableCell className="font-medium">{receipt.receiptNumber}</TableCell>
                           <TableCell>{receipt.client}</TableCell>
                           <TableCell>Ksh {(receipt.amount || 0).toLocaleString()}</TableCell>
-                          <TableCell>{receipt.date}</TableCell>
+                          <TableCell>{receipt.date ? new Date(receipt.date).toLocaleDateString() : "-"}</TableCell>
                           <TableCell>
                             <Badge className={PAYMENT_METHOD_COLORS[receipt.paymentMethod]}>
                               <MethodIcon className="h-3 w-3 mr-1" />

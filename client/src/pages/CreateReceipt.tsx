@@ -1,4 +1,5 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { Plus } from "lucide-react";
 import React, { useState, useEffect, useCallback } from "react";
 import DocumentForm from "@/components/forms/DocumentForm";
 import { useLocation } from "wouter";
@@ -135,7 +136,17 @@ export default function CreateReceipt() {
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Create Receipt"
+      description="Create a new receipt"
+      icon={<Plus className="w-6 h-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Receipts", href: "/receipts" },
+        { label: "Create" },
+      ]}
+      backLink={{ label: "Receipts", href: "/receipts" }}
+    >
       <DocumentForm 
         type="receipt"
         mode="create"
@@ -145,6 +156,6 @@ export default function CreateReceipt() {
         isLoading={isLoadingNumber}
         isSaving={createReceiptMutation.isPending}
       />
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

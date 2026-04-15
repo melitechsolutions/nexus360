@@ -105,7 +105,7 @@ export const imprestRouter = router({
               referenceType: 'imprest',
               referenceId: input.id,
               createdBy: '',
-              createdAt: new Date().toISOString(),
+              createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             } as any);
             await db.insert(journalEntryLines).values({
               id: uuidv4(),
@@ -114,7 +114,7 @@ export const imprestRouter = router({
               debit: input.amount || 0,
               credit: 0,
               description: `Expense for imprest ${input.id}`,
-              createdAt: new Date().toISOString(),
+              createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             } as any);
             await db.insert(journalEntryLines).values({
               id: uuidv4(),
@@ -123,7 +123,7 @@ export const imprestRouter = router({
               debit: 0,
               credit: input.amount || 0,
               description: `Accounts payable for imprest ${input.id}`,
-              createdAt: new Date().toISOString(),
+              createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             } as any);
           } catch (err) {
             console.warn('failed to create journal entry for imprest', err);

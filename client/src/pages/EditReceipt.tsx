@@ -1,5 +1,6 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DocumentForm from "@/components/forms/DocumentForm";
+import { Edit } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 import { toast } from "sonner";
 import { useRequireFeature } from "@/lib/permissions";
@@ -146,32 +147,60 @@ export default function EditReceipt() {
 
   if (!receiptId) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Edit Receipt"
+        icon={<Edit className="w-5 h-5" />}
+        backLink={{ label: "Receipts", href: "/receipts" }}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Receipts", href: "/receipts" },
+          { label: "Edit" },
+        ]}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Invalid receipt ID</p>
           <button onClick={() => setLocation("/receipts")} className="text-blue-500 hover:underline">
             Back to Receipts
           </button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!isLoadingReceiptData && !formData) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Edit Receipt"
+        icon={<Edit className="w-5 h-5" />}
+        backLink={{ label: "Receipts", href: "/receipts" }}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Receipts", href: "/receipts" },
+          { label: "Edit" },
+        ]}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Receipt not found</p>
           <button onClick={() => setLocation("/receipts")} className="text-blue-500 hover:underline">
             Back to Receipts
           </button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Edit Receipt"
+      description="Modify receipt details"
+      icon={<Edit className="w-5 h-5" />}
+      backLink={{ label: "Receipts", href: "/receipts" }}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Receipts", href: "/receipts" },
+        { label: "Edit" },
+      ]}
+    >
       <DocumentForm 
         type="receipt"
         mode="edit"
@@ -182,6 +211,6 @@ export default function EditReceipt() {
         isLoading={isLoading}
         isSaving={updateReceiptMutation.isPending || deleteReceiptMutation.isPending}
       />
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

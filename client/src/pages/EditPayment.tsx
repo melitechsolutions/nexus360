@@ -19,9 +19,11 @@ import { DollarSign, ArrowLeft, Loader2, Trash2, Download, Save } from "lucide-r
 import { APP_TITLE } from "@/const";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 
 export default function EditPayment() {
   const { allowed, isLoading } = useRequireFeature("accounting:payments:edit");
+  const companyInfo = useCompanyInfo();
   
   const params = useParams<{ id: string }>();
   const paymentId = params.id;
@@ -48,9 +50,6 @@ export default function EditPayment() {
   // Fetch related data
   const { data: invoices = [] } = trpc.invoices.list.useQuery();
   const { data: clients = [] } = trpc.clients.list.useQuery();
-  
-  if (isLoading) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
-  if (!allowed) return null;
 
   // Update form when payment data loads
   useEffect(() => {
@@ -160,10 +159,9 @@ export default function EditPayment() {
             </div>
             <div class="company-info">
               <strong>${APP_TITLE}</strong><br>
-              P.O. Box 12345-00100<br>
-              Nairobi, Kenya<br>
-              info@melitechsolutions.co.ke<br>
-              +254 700 000 000
+              ${companyInfo.address ? companyInfo.address + '<br>' : ''}
+              ${companyInfo.email ? companyInfo.email + '<br>' : ''}
+              ${companyInfo.phone || ''}
             </div>
           </div>
           
@@ -223,14 +221,17 @@ export default function EditPayment() {
     }
   }, [formData, clients, invoices, paymentId]);
 
-  if (isLoading) {
+  if (isLoading) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
+  if (!allowed) return null;
+
+  if (isLoadingPaymentData) {
     return (
       <ModuleLayout
         title="Edit Payment"
         description="Update payment details"
         icon={<DollarSign className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "Accounting", href: "/accounting" },
           { label: "Payments", href: "/payments" },
           { label: "Edit Payment" },
@@ -249,7 +250,7 @@ export default function EditPayment() {
       description="Update payment details"
       icon={<DollarSign className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Accounting", href: "/accounting" },
         { label: "Payments", href: "/payments" },
         { label: "Edit Payment" },

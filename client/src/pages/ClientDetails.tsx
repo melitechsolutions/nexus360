@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 // DeleteConfirmationModal removed; using browser confirm via actions
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import {
   Upload,
   Building2,
   User,
+  Users,
   Phone,
   Mail,
   MapPin,
@@ -37,10 +38,17 @@ import {
   AlertCircle,
   Edit,
   Trash2,
+  Star,
+  ExternalLink,
+  Globe,
+  Tag,
 } from "lucide-react";
 import { logDelete } from "@/lib/activityLog";
+import { RichTextDisplay } from "@/components/RichTextEditor";
 import { trpc } from "@/lib/trpc";
 import mutateAsync from "@/lib/mutationHelpers";
+import { computeHealthScore } from "@/lib/healthScore";
+import { useFavorite } from "@/hooks/useFavorite";
 
 export default function ClientDetails() {
   const params = useParams();
@@ -53,6 +61,17 @@ export default function ClientDetails() {
   const { data: clientData, isLoading } = trpc.clients.getById.useQuery(params.id as string, {
     enabled: !!params.id,
   });
+
+  // Fetch invoices and projects for health score
+  const { data: clientInvoices = [] } = trpc.invoices.byClient.useQuery(
+    { clientId: params.id as string },
+    { enabled: !!params.id }
+  );
+  const { data: clientProjects = [] } = trpc.projects.byClient.useQuery(
+    { clientId: params.id as string },
+    { enabled: !!params.id }
+  );
+
   const utils = trpc.useUtils();
   
   // Delete mutation - moved to component level
@@ -119,6 +138,9 @@ export default function ClientDetails() {
     mailingAddress: "",
     preferredContact: "email",
   });
+
+  const clientName = clientType === "corporate" ? corporateInfo.companyLegalName : `${personalInfo.firstName} ${personalInfo.lastName}`;
+  const { isStarred, toggleStar } = useFavorite("client", params.id as string, clientName);
 
   // Load client data when component mounts or clientData changes
   useEffect(() => {
@@ -211,7 +233,7 @@ export default function ClientDetails() {
   };
 
   const handleEdit = () => {
-    setLocation("/clients/edit");
+    setLocation(`/clients/${params.id}/edit`);
   };
 
   const onDelete = () => {
@@ -225,51 +247,159 @@ export default function ClientDetails() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setLocation("/clients")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {clientType === "corporate" ? corporateInfo.companyLegalName : `${personalInfo.firstName} ${personalInfo.lastName}`}
-              </h1>
-              <p className="text-muted-foreground">
-                Complete client profile and KYC information
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Badge variant="outline" className="gap-1">
-              <CheckCircle2 className="h-3 w-3 text-green-500" />
-              Verified
-            </Badge>
-            <Badge variant="secondary">Active</Badge>
-            <Button onClick={handleEdit} size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
-            <Button variant="destructive" onClick={() => setIsDeleteOpen(true)} size="sm">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
-          </div>
+    <ModuleLayout title="Client Details" icon={<Users className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Clients", href: "/clients"}, {label: "Details"}]} backLink={{label: "Clients", href: "/clients"}}>
+      <div className="space-y-4">
+        {/* Action bar */}
+        <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleStar}><Star className={`h-4 w-4 ${isStarred ? "fill-amber-400 text-amber-400" : ""}`} /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { if (contactInfo.email) window.location.href = `mailto:${contactInfo.email}`; else toast.error("No email address"); }}><Mail className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEdit}><Edit className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setIsDeleteOpen(true)}><Trash2 className="h-4 w-4" /></Button>
         </div>
 
-        <Tabs defaultValue="basic" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="basic">Basic Info</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-            <TabsTrigger value="personnel">Personnel</TabsTrigger>
-            <TabsTrigger value="financial">Financial</TabsTrigger>
-            <TabsTrigger value="risk">Risk & Compliance</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-          </TabsList>
+        {/* Split Layout: Left Sidebar + Right Content */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* LEFT SIDEBAR — Client Summary Panel */}
+          <div className="w-full lg:w-80 shrink-0 space-y-4">
+            <Card>
+              <CardContent className="p-5 space-y-4">
+                {/* Client Name & Badge */}
+                <div className="space-y-2">
+                  <h2 className="text-xl font-bold">
+                    {clientType === "corporate" ? corporateInfo.companyLegalName : `${personalInfo.firstName} ${personalInfo.lastName}`}
+                  </h2>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="secondary">{clientType === "corporate" ? "Corporate" : "Individual"}</Badge>
+                    <Badge className="bg-green-100 text-green-800">Active</Badge>
+                  </div>
+                </div>
 
-          {/* Basic Information Tab */}
-          <TabsContent value="basic" className="space-y-6">
+                <Separator />
+
+                {/* Key Fields */}
+                <div className="space-y-3 text-sm">
+                  {contactInfo.primaryPhone && (
+                    <div className="flex items-start gap-2">
+                      <Phone className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span>{contactInfo.primaryPhone}</span>
+                    </div>
+                  )}
+                  {contactInfo.email && (
+                    <div className="flex items-start gap-2">
+                      <Mail className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span className="break-all">{contactInfo.email}</span>
+                    </div>
+                  )}
+                  {contactInfo.physicalAddress && (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span>{contactInfo.physicalAddress}{contactInfo.city ? `, ${contactInfo.city}` : ""}</span>
+                    </div>
+                  )}
+                  {contactInfo.website && (
+                    <div className="flex items-start gap-2">
+                      <Globe className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span>{contactInfo.website}</span>
+                    </div>
+                  )}
+                  {corporateInfo.industry && (
+                    <div className="flex items-start gap-2">
+                      <Briefcase className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span>{corporateInfo.industry}</span>
+                    </div>
+                  )}
+                  {corporateInfo.kraPin && (
+                    <div className="flex items-start gap-2">
+                      <Tag className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+                      <span>KRA: {corporateInfo.kraPin}</span>
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Financial Summary */}
+                <div className="space-y-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Financials</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="p-2 rounded-md bg-muted/50">
+                      <p className="text-muted-foreground text-xs">Invoices</p>
+                      <p className="font-semibold">{clientInvoices.length}</p>
+                    </div>
+                    <div className="p-2 rounded-md bg-muted/50">
+                      <p className="text-muted-foreground text-xs">Projects</p>
+                      <p className="font-semibold">{clientProjects.length}</p>
+                    </div>
+                    <div className="p-2 rounded-md bg-muted/50">
+                      <p className="text-muted-foreground text-xs">Bank</p>
+                      <p className="font-semibold">{financialInfo.bankName || "—"}</p>
+                    </div>
+                    <div className="p-2 rounded-md bg-muted/50">
+                      <p className="text-muted-foreground text-xs">Terms</p>
+                      <p className="font-semibold">{financialInfo.paymentTerms || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Health Score Sidebar Card */}
+            {(clientInvoices.length > 0 || clientProjects.length > 0) && (() => {
+              const health = computeHealthScore(clientInvoices, clientProjects);
+              return (
+                <Card>
+                  <CardContent className="p-5 space-y-3">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Health Score</h3>
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex h-14 w-14 shrink-0 items-center justify-center">
+                        <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 60 60">
+                          <circle cx="30" cy="30" r="24" strokeWidth="6" fill="none" stroke="#e5e7eb" />
+                          <circle cx="30" cy="30" r="24" strokeWidth="6" fill="none"
+                            stroke={health.color}
+                            strokeDasharray={`${2 * Math.PI * 24}`}
+                            strokeDashoffset={`${2 * Math.PI * 24 * (1 - health.score / 100)}`}
+                            strokeLinecap="round" />
+                        </svg>
+                        <span className="text-lg font-bold z-10">{health.score}</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm" style={{ color: health.color }}>{health.label}</p>
+                        <p className="text-xs text-muted-foreground">Client Health</p>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      {health.breakdown.map((item) => (
+                        <div key={item.label} className="flex items-center gap-2 text-xs">
+                          <span className="w-16 text-muted-foreground shrink-0">{item.label}</span>
+                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${item.value}%`, background: item.color }} />
+                          </div>
+                          <span className="w-6 text-right text-muted-foreground">{item.value}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+          </div>
+
+          {/* RIGHT CONTENT — Tabbed Detail Area */}
+          <div className="flex-1 min-w-0">
+          <Tabs defaultValue="details" className="space-y-4">
+            <TabsList className="flex flex-wrap h-auto gap-1">
+              <TabsTrigger value="details" className="text-xs">Details</TabsTrigger>
+              <TabsTrigger value="contact" className="text-xs">Contact</TabsTrigger>
+              <TabsTrigger value="personnel" className="text-xs">Personnel</TabsTrigger>
+              <TabsTrigger value="financial" className="text-xs">Financial</TabsTrigger>
+              <TabsTrigger value="risk" className="text-xs">Risk & Compliance</TabsTrigger>
+              <TabsTrigger value="projects" className="text-xs">Projects</TabsTrigger>
+              <TabsTrigger value="invoices" className="text-xs">Invoices</TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs">Documents</TabsTrigger>
+            </TabsList>
+
+          {/* Details Tab (was Basic Info) */}
+          <TabsContent value="details" className="space-y-6">
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -977,11 +1107,81 @@ export default function ClientDetails() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Projects Tab */}
+          <TabsContent value="projects" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Projects ({clientProjects.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {clientProjects.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">No projects found for this client.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {(clientProjects as any[]).map((project: any) => (
+                      <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => setLocation(`/projects/${project.id}`)}>
+                        <div>
+                          <p className="font-medium">{project.name || project.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {project.status && <Badge variant="outline" className="mr-2 text-xs">{project.status}</Badge>}
+                            {project.startDate && `Started ${new Date(project.startDate).toLocaleDateString()}`}
+                          </p>
+                        </div>
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Invoices Tab */}
+          <TabsContent value="invoices" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Invoices ({clientInvoices.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {clientInvoices.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">No invoices found for this client.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {(clientInvoices as any[]).map((inv: any) => (
+                      <div key={inv.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => setLocation(`/invoices/${inv.id}`)}>
+                        <div>
+                          <p className="font-medium">{inv.invoiceNumber}</p>
+                          <p className="text-xs text-muted-foreground">
+                            <Badge variant={inv.status === "paid" ? "default" : "outline"} className="mr-2 text-xs">{inv.status}</Badge>
+                            Due {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "—"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-sm">{(inv.total || 0).toLocaleString()}</p>
+                          <ExternalLink className="h-3 w-3 text-muted-foreground inline" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
         </Tabs>
+          </div>{/* end right content */}
+        </div>{/* end split layout */}
       </div>
 
       {/* Deletion now uses actions.handleDelete wrapper which prompts and calls the TRPC handler */}
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }
 

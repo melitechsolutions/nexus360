@@ -54,10 +54,10 @@ export class NotificationTriggerService {
         entityType: payload.entityType,
         entityId: payload.entityId,
         actionUrl: payload.actionUrl,
-        expiresAt: payload.expiresAt?.toISOString(),
+        expiresAt: payload.expiresAt?.toISOString().replace('T', ' ').substring(0, 19),
         metadata: payload.metadata ? JSON.stringify(payload.metadata) : null,
         isRead: 0,
-        createdAt: now.toISOString(),
+        createdAt: now.toISOString().replace('T', ' ').substring(0, 19),
         readAt: null,
       };
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useUserLookup } from "@/hooks/useUserLookup";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -50,6 +51,7 @@ export function EditProjectTask({
   onSuccess,
   onCancel,
 }: EditProjectTaskProps) {
+  const { getUserName } = useUserLookup();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -97,7 +99,7 @@ export function EditProjectTask({
       if (formData.description !== (task.description || "")) submitData.description = formData.description;
       if (formData.priority !== task.priority) submitData.priority = formData.priority;
       if (formData.status !== task.status) submitData.status = formData.status;
-      if (formData.assignedTo !== (task.assignedTo || "")) submitData.assignedTo = formData.assignedTo || undefined;
+      if (formData.assignedTo !== (task.assignedTo || "")) submitData.assignedTo = (formData.assignedTo && formData.assignedTo !== "__unassigned__") ? formData.assignedTo : undefined;
       if (formData.dueDate !== (task.dueDate ? task.dueDate.split(" ")[0] : "")) {
         submitData.dueDate = formData.dueDate ? new Date(formData.dueDate) : undefined;
       }
@@ -247,7 +249,7 @@ export function EditProjectTask({
             {task.approvedBy && (
               <div>
                 <p className="font-medium">Approved By:</p>
-                <p>{task.approvedBy}</p>
+                <p>{getUserName(task.approvedBy) || task.approvedBy}</p>
               </div>
             )}
             {task.adminRemarks && (
@@ -353,7 +355,7 @@ export function EditProjectTask({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="__unassigned__">Unassigned</SelectItem>
                 {teamMembers.map((member) => (
                   <SelectItem key={member.id} value={member.id}>
                     {member.name}

@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useCurrencySettings } from "@/lib/currency";
 import {
   CheckCircle,
   XCircle,
@@ -39,6 +40,8 @@ import {
 } from "lucide-react";
 import { Card as ShadCard } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
+import { StatsCard } from "@/components/ui/stats-card";
+import { useUserLookup } from "@/hooks/useUserLookup";
 
 interface ApprovalItem {
   id: string;
@@ -57,6 +60,9 @@ interface ApprovalItem {
 }
 
 export default function Approvals() {
+  const { code: currencyCode } = useCurrencySettings();
+  const { getUserName } = useUserLookup();
+
   const [, navigate] = useLocation();
   const { allowed, isLoading: permissionLoading } = useRequireFeature("approvals:view");
   const [searchQuery, setSearchQuery] = useState("");
@@ -544,7 +550,7 @@ export default function Approvals() {
     if (!amount) return "-";
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "KES",
+      currency: currencyCode,
     }).format(amount);
   };
 
@@ -554,7 +560,7 @@ export default function Approvals() {
       description="Review and manage pending approvals for financial and administrative requests"
       icon={<CheckCircle className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Approvals" },
       ]}
     >
@@ -562,45 +568,13 @@ export default function Approvals() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Total Pending</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-              <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Pending" value={stats.pending} description="Awaiting approval" color="border-l-orange-500" />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Approved</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
-              <p className="text-xs text-muted-foreground mt-1">This month</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Approved" value={stats.approved} description="This month" color="border-l-purple-500" />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Rejected</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
-              <p className="text-xs text-muted-foreground mt-1">This month</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Rejected" value={stats.rejected} description="This month" color="border-l-green-500" />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Total</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground mt-1">All approvals</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total" value={stats.total} description="All approvals" color="border-l-blue-500" />
         </div>
 
         {/* Main Content */}
@@ -750,13 +724,13 @@ export default function Approvals() {
                           {formatCurrency(approval.amount)}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {approval.requestedBy}
+                          {getUserName(approval.requestedBy)}
                         </TableCell>
                         <TableCell className="text-sm">
                           {new Date(approval.requestedAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {approval.approvedBy || <span className="text-muted-foreground">-</span>}
+                          {approval.approvedBy ? getUserName(approval.approvedBy) : <span className="text-muted-foreground">-</span>}
                         </TableCell>
                         <TableCell className="text-sm">
                           {approval.approvedAt ? new Date(approval.approvedAt).toLocaleDateString() : <span className="text-muted-foreground">-</span>}
@@ -782,15 +756,21 @@ export default function Approvals() {
                               className="text-blue-600 hover:bg-blue-50"
                               onClick={() => {
                                 if (approval.type === "invoice") {
-                                  navigate(`/invoices/edit/${approval.referenceId}`);
+                                  navigate(`/invoices/${approval.referenceId}/edit`);
                                 } else if (approval.type === "expense") {
-                                  navigate(`/expenses/edit/${approval.referenceId}`);
+                                  navigate(`/expenses/${approval.referenceId}/edit`);
                                 } else if (approval.type === "payment") {
-                                  navigate(`/payments/edit/${approval.referenceId}`);
+                                  navigate(`/payments/${approval.referenceId}/edit`);
                                 } else if (approval.type === "purchase_order") {
-                                  navigate(`/purchase-orders/edit/${approval.referenceId}`);
+                                  navigate(`/lpos/${approval.referenceId}/edit`);
                                 } else if (approval.type === "leave_request") {
-                                  navigate(`/leave-requests/edit/${approval.referenceId}`);
+                                  navigate(`/leave-management/${approval.referenceId}/edit`);
+                                } else if (approval.type === "budget") {
+                                  navigate(`/budgets/${approval.referenceId}/edit`);
+                                } else if (approval.type === "lpo") {
+                                  navigate(`/lpos/${approval.referenceId}/edit`);
+                                } else if (approval.type === "imprest") {
+                                  navigate(`/imprests`);
                                 } else {
                                   toast.error("Edit not available for this type");
                                 }
@@ -911,7 +891,7 @@ export default function Approvals() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Raiser</p>
-                    <p className="font-medium">{selectedApproval.requestedBy}</p>
+                    <p className="font-medium">{getUserName(selectedApproval.requestedBy)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Requested At</p>
@@ -922,7 +902,7 @@ export default function Approvals() {
                   {selectedApproval.approvedBy && (
                     <div>
                       <p className="text-sm text-muted-foreground">Approver</p>
-                      <p className="font-medium">{selectedApproval.approvedBy}</p>
+                      <p className="font-medium">{getUserName(selectedApproval.approvedBy)}</p>
                     </div>
                   )}
                   {selectedApproval.approvedAt && (

@@ -27,17 +27,6 @@ services:
     networks:
       - melitech-network
 
-  # 1.5. Email Service (Mailhog for development)
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: melitech_crm_mailhog
-    restart: always
-    ports:
-      - "1025:1025"  # SMTP port
-      - "8025:8025"  # Web UI port (http://localhost:8025)
-    networks:
-      - melitech-network
- 
   # 2. Application Service (Backend + Frontend)
   app:
     build:
@@ -45,7 +34,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_APP_ID: melitech_crm
-        VITE_APP_TITLE: "Melitech Solutions"
+        VITE_APP_TITLE: "Nexus360"
         VITE_APP_LOGO: ""
     container_name: melitech_crm_app
     restart: always
@@ -63,23 +52,26 @@ services:
       
       # Application Configuration
       VITE_APP_ID: melitech_crm
-      VITE_APP_TITLE: "Melitech Solutions"
+      VITE_APP_TITLE: "Nexus360"
       VITE_APP_LOGO: ""
       
       # Owner Information
-      OWNER_EMAIL: admin@melitechsolutions.co.ke
-      OWNER_NAME: Administrator
+      OWNER_EMAIL: nexus360@gmail.com
+      OWNER_NAME: Nexus360 Admin
       OWNER_OPEN_ID: admin
       
       # Cookie Configuration for Docker HTTP environment
       COOKIE_SAME_SITE: "lax"
       COOKIE_SECURE: "false"
       
-      # Email Configuration (Mailhog for development)
-      SMTP_HOST: mailhog
-      SMTP_PORT: 1025
-      SMTP_FROM_EMAIL: no-reply@melitech.local
-      SMTP_FROM_NAME: "Melitech Solutions"
+      # Email Configuration (SMTP)
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-${SMTP_PASS:-}}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
       
       # Groq Integration (AI Hub - Free Tier Available)
       GROQ_API_KEY: ${GROQ_API_KEY}
@@ -88,8 +80,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      mailhog:
-        condition: service_started
     networks:
       - melitech-network
 # Define named networks for inter-container communication

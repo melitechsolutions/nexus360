@@ -12,6 +12,7 @@
  */
 
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
 import { ModuleLayout } from "@/components/ModuleLayout";
@@ -55,6 +56,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { exportToCsv } from "@/utils/exportCsv";
 
 interface RevenueData {
   month: string;
@@ -88,9 +90,6 @@ export default function BillingDashboard() {
   const { data: paymentsData = [], isLoading: paymentsLoading } = trpc.payments.list.useQuery({ limit: 1000 });
   const { data: expensesData = [], isLoading: expensesLoading } = trpc.expenses.list.useQuery({ limit: 1000 });
   const { data: clientsData = [] } = trpc.clients.list.useQuery();
-
-  if (permissionsLoading) return <Spinner className="w-8 h-8 mx-auto my-8" />;
-  if (!allowed) return null;
 
   // Calculate invoice metrics
   const invoiceMetrics: InvoiceMetrics = useMemo(() => {
@@ -136,7 +135,7 @@ export default function BillingDashboard() {
       trends.push({
         month: format(month, "MMM"),
         revenue: revenue / 100,
-        target: 50000, // Placeholder
+        target: revenue > 0 ? Math.round((revenue / 100) * 1.1) : 0,
         expenses: expenseAmount / 100,
       });
     }
@@ -166,7 +165,16 @@ export default function BillingDashboard() {
   const totalRevenue = revenueTrends.reduce((sum, m) => sum + m.revenue, 0);
   const totalExpenses = revenueTrends.reduce((sum, m) => sum + m.expenses, 0);
   const netProfit = totalRevenue - totalExpenses;
-  const averagePaymentTime = 15; // Placeholder
+  const averagePaymentTime = useMemo(() => {
+    const paidInvoices = Array.isArray(invoicesData) ? (invoicesData as any[]).filter((inv: any) => inv.status === "paid" && inv.paidAt && inv.createdAt) : [];
+    if (paidInvoices.length === 0) return 0;
+    const totalDays = paidInvoices.reduce((sum: number, inv: any) => {
+      const created = new Date(inv.createdAt).getTime();
+      const paid = new Date(inv.paidAt).getTime();
+      return sum + Math.max(0, (paid - created) / (1000 * 60 * 60 * 24));
+    }, 0);
+    return Math.round(totalDays / paidInvoices.length);
+  }, [invoicesData]);
   const collectionRate = invoiceMetrics.paid > 0 
     ? ((invoiceMetrics.paid / invoiceMetrics.total) * 100).toFixed(1)
     : "0";
@@ -211,10 +219,13 @@ export default function BillingDashboard() {
     },
   ];
 
+  if (permissionsLoading) return <Spinner className="w-8 h-8 mx-auto my-8" />;
+  if (!allowed) return null;
+
   return (
     <ModuleLayout
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Billing", href: "/billing" },
       ]}
       title="Billing Dashboard"
@@ -238,7 +249,23 @@ export default function BillingDashboard() {
             </Select>
           </div>
 
-          <Button variant="outline" disabled={isExporting}>
+          <Button
+            variant="outline"
+            disabled={isExporting}
+            onClick={() => {
+              setIsExporting(true);
+              try {
+                if (!revenueTrends.length) {
+                  toast.info("No billing data available to export");
+                  return;
+                }
+                exportToCsv(`billing-dashboard-${dateRange}`, revenueTrends);
+                toast.success("Billing report exported");
+              } finally {
+                setIsExporting(false);
+              }
+            }}
+          >
             {isExporting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

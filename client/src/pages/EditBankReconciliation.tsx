@@ -96,7 +96,7 @@ export default function EditBankReconciliation() {
         description="Update bank reconciliation record"
         icon={<Building className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "Accounting", href: "/accounting" },
           { label: "Bank Reconciliation", href: "/bank-reconciliation" },
           { label: "Edit Bank Reconciliation" },
@@ -115,7 +115,7 @@ export default function EditBankReconciliation() {
       description="Update bank reconciliation record"
       icon={<Building className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Accounting", href: "/accounting" },
         { label: "Bank Reconciliation", href: "/bank-reconciliation" },
         { label: "Edit Bank Reconciliation" },

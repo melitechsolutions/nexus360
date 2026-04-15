@@ -56,7 +56,7 @@ describe.skip("Email Router - Payment Reminder Integration", () => {
         total: 50000, // 500 KSh
         status: "overdue",
         issueDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        dueDate: dueDate.toISOString(),
+        dueDate: dueDate.toISOString().replace('T', ' ').substring(0, 19),
         description: "Test invoice for payment reminder",
       })
       .returning({ id: invoices.id });
@@ -311,7 +311,7 @@ describe("Email Router - Bulk Payment Reminders", () => {
             total: 10000 * (i + 1),
             status: "overdue",
             issueDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            dueDate: dueDate.toISOString(),
+            dueDate: dueDate.toISOString().replace('T', ' ').substring(0, 19),
             description: `Bulk test invoice ${i}`,
           })
           .returning({ id: invoices.id });

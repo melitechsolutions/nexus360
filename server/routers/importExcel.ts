@@ -1,7 +1,7 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
 import { z } from "zod";
-import { db } from "../db";
+import { getDb } from "../db";
 import { clients, employees, services } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -14,18 +14,18 @@ interface ImportRow {
 }
 
 const importClientSchema = z.object({
-  data: z.array(z.record(z.any())),
-  fieldMap: z.record(z.string()), // maps input fields to schema fields
+  data: z.array(z.record(z.string(), z.any())),
+  fieldMap: z.record(z.string(), z.string()), // maps input fields to schema fields
 });
 
 const importEmployeeSchema = z.object({
-  data: z.array(z.record(z.any())),
-  fieldMap: z.record(z.string()),
+  data: z.array(z.record(z.string(), z.any())),
+  fieldMap: z.record(z.string(), z.string()),
 });
 
 const importServiceSchema = z.object({
-  data: z.array(z.record(z.any())),
-  fieldMap: z.record(z.string()),
+  data: z.array(z.record(z.string(), z.any())),
+  fieldMap: z.record(z.string(), z.string()),
 });
 
 interface ImportResult {
@@ -42,6 +42,7 @@ export const importExcelRouter = router({
   importClients: importProcedure
     .input(importClientSchema)
     .mutation(async ({ input }) => {
+      const db = await getDb();
       const result: ImportResult = {
         success: 0,
         failed: 0,
@@ -88,8 +89,8 @@ export const importExcelRouter = router({
           // Insert client
           await db.insert(clients).values({
             ...mappedData,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
 
           result.success++;
@@ -108,6 +109,7 @@ export const importExcelRouter = router({
   importEmployees: importProcedure
     .input(importEmployeeSchema)
     .mutation(async ({ input }) => {
+      const db = await getDb();
       const result: ImportResult = {
         success: 0,
         failed: 0,
@@ -126,7 +128,7 @@ export const importExcelRouter = router({
             department: row[input.fieldMap.department] || "",
             position: row[input.fieldMap.position] || "",
             salary: parseInt(row[input.fieldMap.salary] || "0"),
-            startDate: row[input.fieldMap.startDate] ? new Date(row[input.fieldMap.startDate]) : new Date(),
+            startDate: row[input.fieldMap.startDate] ? new Date(row[input.fieldMap.startDate]) : new Date().toISOString().replace('T', ' ').substring(0, 19),
             status: "active",
           };
 
@@ -163,8 +165,8 @@ export const importExcelRouter = router({
             salary: mappedData.salary,
             startDate: mappedData.startDate,
             status: "active",
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
 
           result.success++;
@@ -183,6 +185,7 @@ export const importExcelRouter = router({
   importServices: importProcedure
     .input(importServiceSchema)
     .mutation(async ({ input }) => {
+      const db = await getDb();
       const result: ImportResult = {
         success: 0,
         failed: 0,
@@ -234,8 +237,8 @@ export const importExcelRouter = router({
             price: mappedData.price,
             category: mappedData.category,
             isActive: mappedData.isActive,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
 
           result.success++;
@@ -254,7 +257,7 @@ export const importExcelRouter = router({
   previewImport: importProcedure
     .input(
       z.object({
-        data: z.array(z.record(z.any())),
+        data: z.array(z.record(z.string(), z.any())),
         type: z.enum(["clients", "employees", "services"]),
       })
     )

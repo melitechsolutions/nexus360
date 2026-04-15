@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { trpc } from '../utils/trpc';
-import { Download } from 'lucide-react';
-import DashboardLayout from "@/components/DashboardLayout";
+import { Download, Settings } from 'lucide-react';
+import { toast } from 'sonner';
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const FinanceSettingsPage: React.FC = () => {
   const [vendorId, setVendorId] = useState('');
@@ -17,7 +19,7 @@ export const FinanceSettingsPage: React.FC = () => {
 
   const save = async () => {
     await setAccounts.mutateAsync({ vendorId, expenseAccountId: expenseAccount, payableAccountId: payableAccount });
-    alert('Saved');
+    toast.success('Vendor accounts saved');
   };
 
   const [journalId, setJournalId] = useState('');
@@ -33,7 +35,7 @@ export const FinanceSettingsPage: React.FC = () => {
     if (!journalId) return;
     await reconcile.mutateAsync({ journalEntryId: journalId });
     await refetchRecs();
-    alert('Reconciled');
+    toast.success('Entry reconciled successfully');
   };
 
   const doEdit = async (id: string) => {
@@ -58,9 +60,16 @@ export const FinanceSettingsPage: React.FC = () => {
   }, [vendorQuery.data]);
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Finance Settings"
+      icon={<Settings className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Finance", href: "/accounting" },
+        { label: "Settings" },
+      ]}
+    >
       <div>
-      <h1>Finance Settings</h1>
       {defaults && (
         <div>
           <h3>Default Accounts</h3>
@@ -85,8 +94,10 @@ export const FinanceSettingsPage: React.FC = () => {
         <button onClick={() => listVendors.refetch()}>Refresh Vendor List</button>
         <button onClick={async () => {
           const exp = await trpc.finance.exportVendorAccounts.query();
-          console.log('export data', exp);
-          alert('Check console for export');
+          const csv = ['VendorId,ExpenseAccount,PayableAccount', ...(Array.isArray(exp) ? exp : []).map((v: any) => `${v.vendorId},${v.expense || ''},${v.payable || ''}`)].join('\n');
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'vendor-accounts.csv'; a.click(); URL.revokeObjectURL(a.href);
+          toast.success('Vendor accounts exported');
         }}>Export Settings</button>
         <div>
           <label>Search vendors:</label>
@@ -97,18 +108,18 @@ export const FinanceSettingsPage: React.FC = () => {
           const paged = filtered.slice(vendorPage * pageSize, vendorPage * pageSize + pageSize);
           return (
             <>
-              <table>
-                <thead><tr><th>Vendor</th><th>Expense</th><th>Payable</th></tr></thead>
-                <tbody>
+              <Table>
+                <TableHeader><TableRow><TableHead>Vendor</TableHead><TableHead>Expense</TableHead><TableHead>Payable</TableHead></TableRow></TableHeader>
+                <TableBody>
                   {paged.map(v => (
-                    <tr key={v.vendorId}>
-                      <td>{v.vendorId}</td>
-                      <td>{v.expense || '-'}</td>
-                      <td>{v.payable || '-'}</td>
-                    </tr>
+                    <TableRow key={v.vendorId}>
+                      <TableCell>{v.vendorId}</TableCell>
+                      <TableCell>{v.expense || '-'}</TableCell>
+                      <TableCell>{v.payable || '-'}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
               <div>
                 <button disabled={vendorPage === 0} onClick={() => setVendorPage(p => p - 1)}>Prev</button>
                 <button disabled={(vendorPage + 1) * pageSize >= filtered.length} onClick={() => setVendorPage(p => p + 1)}>Next</button>
@@ -130,29 +141,34 @@ export const FinanceSettingsPage: React.FC = () => {
         <button onClick={() => refetchRecs()}>Filter</button>
         <button onClick={async () => {
           const exp = await trpc.finance.exportReconciliations.query({ journalEntryId: journalId || undefined });
-          console.log('reconciliation export', exp);
-          alert('Check console for reconciliation export');
+          const rows = Array.isArray(exp) ? exp : [];
+          const csv = ['ID,JournalEntryId,ReconciledBy,ReconciledAt,Notes', ...rows.map((r: any) => `${r.id},${r.journalEntryId},${r.reconciledBy},${r.reconciledAt},"${(r.notes || '').replace(/"/g, '""')}"`)].join('\n');
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'reconciliations.csv'; a.click(); URL.revokeObjectURL(a.href);
+          toast.success('Reconciliations exported');
         }}>Export CSV</button>
       </div>
-      <table>
-        <thead><tr><th>ID</th><th>Entry</th><th>By</th><th>When</th><th>Notes</th><th>Actions</th></tr></thead>
-        <tbody>
+      <Table>
+        <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Entry</TableHead><TableHead>By</TableHead><TableHead>When</TableHead><TableHead>Notes</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+        <TableBody>
           {Array.isArray(recs) && recs.map(r => (
-            <tr key={r.id}>
-              <td>{r.id}</td>
-              <td>{r.journalEntryId}</td>
-              <td>{r.reconciledBy}</td>
-              <td>{new Date(r.reconciledAt).toLocaleString()}</td>
-              <td>{r.notes || '-'}</td>
-              <td>
+            <TableRow key={r.id}>
+              <TableCell>{r.id}</TableCell>
+              <TableCell>{r.journalEntryId}</TableCell>
+              <TableCell>{r.reconciledBy}</TableCell>
+              <TableCell>{new Date(r.reconciledAt).toLocaleString()}</TableCell>
+              <TableCell>{r.notes || '-'}</TableCell>
+              <TableCell>
                 <button onClick={() => doEdit(r.id)}>Edit</button>
                 <button onClick={() => doUndo(r.id)}>Undo</button>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
-  </DashboardLayout>
+  </ModuleLayout>
   );
 };
+
+export default FinanceSettingsPage;

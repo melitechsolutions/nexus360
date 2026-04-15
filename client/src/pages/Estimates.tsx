@@ -5,6 +5,8 @@ import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { buildCommunicationComposePath } from "@/lib/communications";
+import { downloadCSV } from "@/lib/export-utils";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +41,16 @@ import {
   Loader2,
   AlertCircle,
   Eye,
+  Copy,
+  Mail,
+  Link,
+  Send,
 } from "lucide-react";
+import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
+import { RowActionsMenu, actionIcons } from "@/components/list-page/RowActionsMenu";
+import { TableColumnSettings, useColumnVisibility, type ColumnConfig } from "@/components/list-page/TableColumnSettings";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction, bulkSendAction, bulkEmailAction } from "@/components/list-page/EnhancedBulkActions";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const iconMap = {
   DollarSign,
@@ -65,13 +76,24 @@ type SortOrder = "asc" | "desc";
 
 export default function Estimates() {
   const { allowed, isLoading } = useRequireFeature("estimates:read");
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortField, setSortField] = useState<SortField>("issueDate");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [isExporting, setIsExporting] = useState(false);
   const [selectedEstimates, setSelectedEstimates] = useState<Set<string>>(new Set());
+
+  const estimateColumns: ColumnConfig[] = [
+    { key: "quoteNumber", label: "Estimate #" },
+    { key: "client", label: "Client" },
+    { key: "amount", label: "Amount" },
+    { key: "issueDate", label: "Date" },
+    { key: "expiryDate", label: "Expiry Date" },
+    { key: "project", label: "Project" },
+    { key: "status", label: "Status" },
+  ];
+  const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(estimateColumns, "estimates");
 
   // Data fetching hooks - enabled flag prevents queries when not allowed
   const { data: estimatesData = [], isLoading: estimatesLoading } = trpc.estimates.list.useQuery(undefined, { enabled: allowed });
@@ -87,6 +109,16 @@ export default function Estimates() {
     },
     onError: (error) => {
       toast.error(error.message || "Failed to delete estimate");
+    },
+  });
+
+  const submitForApprovalMutation = trpc.estimates.submitForApproval.useMutation({
+    onSuccess: () => {
+      toast.success("Estimate submitted for approval");
+      utils.estimates.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to submit estimate");
     },
   });
 
@@ -210,6 +242,22 @@ export default function Estimates() {
     }
   };
 
+  const toggleSelectEstimate = (id: string) => {
+    setSelectedEstimates((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllEstimates = () => {
+    if (selectedEstimates.size === filteredAndSortedEstimates.length) {
+      setSelectedEstimates(new Set());
+    } else {
+      setSelectedEstimates(new Set(filteredAndSortedEstimates.map((e) => e.id)));
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "accepted": return "bg-green-500/10 text-green-500 border-green-500/20";
@@ -226,7 +274,7 @@ export default function Estimates() {
       description="Create and manage estimates"
       icon={<FileText className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Sales", href: "/sales" },
         { label: "Estimates", href: "/estimates" },
       ]}
@@ -257,18 +305,17 @@ export default function Estimates() {
           })}
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex-1 flex gap-2 w-full md:w-auto">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search estimates..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
+        {/* Toolbar */}
+        <ListPageToolbar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search estimates..."
+          onCreateClick={() => navigate("/estimates/create")}
+          createLabel="Create Estimate"
+          onExportClick={() => downloadCSV(estimates, ["id", "quoteNumber", "client", "amount", "status", "issueDate", "expiryDate"], "estimates")}
+          onImportClick={() => toast.info("CSV import is available in Settings > Data Management")}
+          onPrintClick={() => window.print()}
+          filterContent={
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Status" />
@@ -282,28 +329,46 @@ export default function Estimates() {
                 <SelectItem value="expired">Expired</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        </div>
+          }
+        />
+
+        {/* Bulk Actions Bar */}
+        <EnhancedBulkActions
+          selectedCount={selectedEstimates.size}
+          onClear={() => setSelectedEstimates(new Set())}
+          actions={[
+            bulkSendAction(selectedEstimates, (ids) => ids.forEach((id) => submitForApprovalMutation.mutate({ id }))),
+            bulkExportAction(selectedEstimates, estimates, estimateColumns, "estimates"),
+            bulkCopyIdsAction(selectedEstimates),
+            bulkEmailAction(navigate),
+            bulkDeleteAction(selectedEstimates, (ids) => ids.forEach((id) => deleteEstimateMutation.mutate(id))),
+          ]}
+        />
 
         {/* Table */}
         <Card>
           <CardContent className="p-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <span className="text-sm text-muted-foreground">{filteredAndSortedEstimates.length} estimates</span>
+              <TableColumnSettings columns={estimateColumns} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} onReset={reset} pageSize={pageSize} onPageSizeChange={updatePageSize} />
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="cursor-pointer" onClick={() => toggleSort("quoteNumber")}>
+                  <TableHead className="w-10"><Checkbox checked={selectedEstimates.size === filteredAndSortedEstimates.length && filteredAndSortedEstimates.length > 0} onCheckedChange={toggleSelectAllEstimates} /></TableHead>
+                  {isVisible("quoteNumber") && <TableHead className="cursor-pointer" onClick={() => toggleSort("quoteNumber")}>
                     Estimate # {sortField === "quoteNumber" && <ArrowUpDown className="inline h-4 w-4 ml-1" />}
-                  </TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => toggleSort("client")}>
+                  </TableHead>}
+                  {isVisible("client") && <TableHead className="cursor-pointer" onClick={() => toggleSort("client")}>
                     Client {sortField === "client" && <ArrowUpDown className="inline h-4 w-4 ml-1" />}
-                  </TableHead>
-                  <TableHead className="cursor-pointer text-right" onClick={() => toggleSort("amount")}>
+                  </TableHead>}
+                  {isVisible("amount") && <TableHead className="cursor-pointer text-right" onClick={() => toggleSort("amount")}>
                     Amount {sortField === "amount" && <ArrowUpDown className="inline h-4 w-4 ml-1" />}
-                  </TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => toggleSort("issueDate")}>
+                  </TableHead>}
+                  {isVisible("issueDate") && <TableHead className="cursor-pointer" onClick={() => toggleSort("issueDate")}>
                     Date {sortField === "issueDate" && <ArrowUpDown className="inline h-4 w-4 ml-1" />}
-                  </TableHead>
-                  <TableHead>Status</TableHead>
+                  </TableHead>}
+                  {isVisible("status") && <TableHead>Status</TableHead>}
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -323,32 +388,34 @@ export default function Estimates() {
                   </TableRow>
                 ) : (
                   filteredAndSortedEstimates.map((est) => (
-                    <TableRow key={est.id}>
-                      <TableCell className="font-medium">{est.quoteNumber}</TableCell>
-                      <TableCell>{est.client}</TableCell>
-                      <TableCell className="text-right font-semibold">
+                    <TableRow key={est.id} className={selectedEstimates.has(est.id) ? "bg-primary/5" : ""}>
+                      <TableCell><Checkbox checked={selectedEstimates.has(est.id)} onCheckedChange={() => toggleSelectEstimate(est.id)} /></TableCell>
+                      {isVisible("quoteNumber") && <TableCell className="font-medium">{est.quoteNumber}</TableCell>}
+                      {isVisible("client") && <TableCell>{est.client}</TableCell>}
+                      {isVisible("amount") && <TableCell className="text-right font-semibold">
                         Ksh {est.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </TableCell>
-                      <TableCell>{est.issueDate}</TableCell>
-                      <TableCell>
+                      </TableCell>}
+                      {isVisible("issueDate") && <TableCell>{est.issueDate ? new Date(est.issueDate).toLocaleDateString() : "-"}</TableCell>}
+                      {isVisible("status") && <TableCell>
                         <Badge variant="outline" className={getStatusColor(est.status)}>
                           {(est.status || 'draft').toUpperCase()}
                         </Badge>
-                      </TableCell>
+                      </TableCell>}
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => navigate(`/estimates/${est.id}`)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => navigate(`/estimates/${est.id}/edit`)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => {
-                            if(confirm("Delete this estimate?")) deleteEstimateMutation.mutate(est.id);
-                          }}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <RowActionsMenu
+                          primaryActions={[
+                            { label: "View", icon: actionIcons.view, onClick: () => navigate(`/estimates/${est.id}`) },
+                            { label: "Edit", icon: actionIcons.edit, onClick: () => navigate(`/estimates/${est.id}/edit`) },
+                            { label: "Delete", icon: actionIcons.delete, onClick: () => { if(confirm("Delete this estimate?")) deleteEstimateMutation.mutate(est.id); }, variant: "destructive" },
+                          ]}
+                          menuActions={[
+                            { label: "Send to Client", icon: <Send className="h-4 w-4" />, onClick: () => submitForApprovalMutation.mutate({ id: est.id }) },
+                            { label: "Duplicate Estimate", icon: actionIcons.copy, onClick: () => navigate(`/estimates/create?clone=${est.id}`) },
+                            { label: "Email Estimate", icon: actionIcons.email, onClick: () => navigate(buildCommunicationComposePath(location, "", `Estimate ${est.quoteNumber || est.id}`)), separator: true },
+                            { label: "Convert to Invoice", icon: <FileText className="h-4 w-4" />, onClick: () => navigate(`/invoices/create?fromEstimate=${est.id}`) },
+                            { label: "Download PDF", icon: actionIcons.download, onClick: () => { navigate(`/estimates/${est.id}`); setTimeout(() => window.print(), 500); } },
+                          ]}
+                        />
                       </TableCell>
                     </TableRow>
                   ))

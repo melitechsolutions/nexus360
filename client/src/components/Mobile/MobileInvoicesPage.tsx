@@ -264,7 +264,7 @@ export const MobileInvoicesPage: React.FC<MobileInvoicesPageProps> = ({
                       </button>
                     ) : (
                       <button
-                        onClick={() => console.log("Download invoice")}
+                        onClick={() => { handleQuickAction("view", invoice.id); setTimeout(() => window.print(), 300); }}
                         className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors min-h-[40px]"
                       >
                         <Download className="w-4 h-4" />
@@ -386,7 +386,7 @@ export const MobileInvoicesPage: React.FC<MobileInvoicesPageProps> = ({
               <MobileButton
                 variant="secondary"
                 onClick={() => {
-                  console.log("Download invoice");
+                  window.print();
                   setSelectedInvoice(null);
                 }}
                 className="flex items-center justify-center gap-2"

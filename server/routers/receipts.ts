@@ -40,30 +40,50 @@ async function generateNextReceiptNumber(db: any): Promise<string> {
 export const receiptsRouter = router({
   list: viewProcedure
     .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
       
       try {
         const limit = Math.min(input?.limit || 50, 1000); // Cap at 1000
         const offset = input?.offset || 0;
-        const result = await db
-          .select({
-            id: receipts.id,
-            receiptNumber: receipts.receiptNumber,
-            clientId: receipts.clientId,
-            paymentId: receipts.paymentId,
-            amount: receipts.amount,
-            paymentMethod: receipts.paymentMethod,
-            receiptDate: receipts.receiptDate,
-            notes: receipts.notes,
-            createdBy: receipts.createdBy,
-            createdAt: receipts.createdAt,
-          })
-          .from(receipts)
-          .orderBy(desc(receipts.createdAt))
-          .limit(limit)
-          .offset(offset);
+        const orgId = ctx.user.organizationId;
+        const result = orgId
+          ? await db
+              .select({
+                id: receipts.id,
+                receiptNumber: receipts.receiptNumber,
+                clientId: receipts.clientId,
+                paymentId: receipts.paymentId,
+                amount: receipts.amount,
+                paymentMethod: receipts.paymentMethod,
+                receiptDate: receipts.receiptDate,
+                notes: receipts.notes,
+                createdBy: receipts.createdBy,
+                createdAt: receipts.createdAt,
+              })
+              .from(receipts)
+              .where(eq(receipts.organizationId, orgId))
+              .orderBy(desc(receipts.createdAt))
+              .limit(limit)
+              .offset(offset)
+          : await db
+              .select({
+                id: receipts.id,
+                receiptNumber: receipts.receiptNumber,
+                clientId: receipts.clientId,
+                paymentId: receipts.paymentId,
+                amount: receipts.amount,
+                paymentMethod: receipts.paymentMethod,
+                receiptDate: receipts.receiptDate,
+                notes: receipts.notes,
+                createdBy: receipts.createdBy,
+                createdAt: receipts.createdAt,
+              })
+              .from(receipts)
+              .orderBy(desc(receipts.createdAt))
+              .limit(limit)
+              .offset(offset);
         return result || [];
       } catch (error) {
         console.error("Error fetching receipts:", error);
@@ -82,9 +102,11 @@ export const receiptsRouter = router({
 
   getById: viewProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(receipts.id, input), eq(receipts.organizationId, orgId)) : eq(receipts.id, input);
       const result = await db
         .select({
           id: receipts.id,
@@ -99,16 +121,18 @@ export const receiptsRouter = router({
           createdAt: receipts.createdAt,
         })
         .from(receipts)
-        .where(eq(receipts.id, input))
+        .where(where)
         .limit(1);
       return result[0] || null;
     }),
 
   byClient: viewProcedure
     .input(z.object({ clientId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(receipts.clientId, input.clientId), eq(receipts.organizationId, orgId)) : eq(receipts.clientId, input.clientId);
       const result = await db
         .select({
           id: receipts.id,
@@ -123,16 +147,18 @@ export const receiptsRouter = router({
           createdAt: receipts.createdAt,
         })
         .from(receipts)
-        .where(eq(receipts.clientId, input.clientId));
+        .where(where);
       return result;
     }),
 
   getWithItems: viewProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
       
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(receipts.id, input), eq(receipts.organizationId, orgId)) : eq(receipts.id, input);
       const receiptResult = await db
         .select({
           id: receipts.id,
@@ -147,7 +173,7 @@ export const receiptsRouter = router({
           createdAt: receipts.createdAt,
         })
         .from(receipts)
-        .where(eq(receipts.id, input))
+        .where(where)
         .limit(1);
       if (!receiptResult.length) return null;
       
@@ -202,11 +228,16 @@ export const receiptsRouter = router({
         return new Date().toISOString().replace('T', ' ').substring(0, 19);
       };
 
-      const formattedDate = convertToMySQLDateTime(receiptData.receiptDate);
+      const formattedDate = typeof receiptData.receiptDate === 'string'
+        ? new Date(receiptData.receiptDate)
+        : receiptData.receiptDate instanceof Date
+          ? receiptData.receiptDate
+          : new Date();
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
       await db.insert(receipts).values({
         id,
+        organizationId: ctx.user.organizationId ?? null,
         receiptNumber,
         ...receiptData,
         receiptDate: formattedDate,
@@ -259,6 +290,13 @@ export const receiptsRouter = router({
       
       const { id, lineItems: items, ...data } = input;
       
+      // Verify org ownership
+      const orgId = ctx.user.organizationId;
+      if (orgId) {
+        const existing = await db.select({ orgId: receipts.organizationId }).from(receipts).where(eq(receipts.id, id)).limit(1);
+        if (!existing.length || existing[0].orgId !== orgId) throw new Error("Receipt not found");
+      }
+
       // Convert dates to MySQL DATETIME format (YYYY-MM-DD HH:MM:SS)
       const convertToMySQLDateTime = (date?: Date | string | null): string | undefined => {
         if (!date) return undefined;
@@ -269,7 +307,11 @@ export const receiptsRouter = router({
 
       const updateData: any = { ...data };
       if (data.receiptDate) {
-        updateData.receiptDate = convertToMySQLDateTime(data.receiptDate);
+        updateData.receiptDate = typeof data.receiptDate === 'string'
+          ? new Date(data.receiptDate)
+          : data.receiptDate instanceof Date
+            ? data.receiptDate
+            : undefined;
       }
 
       await db.update(receipts).set(updateData).where(eq(receipts.id, id));
@@ -306,10 +348,17 @@ export const receiptsRouter = router({
 
   delete: deleteProcedure
     .input(z.string())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
+      // Verify org ownership
+      const orgId = ctx.user.organizationId;
+      if (orgId) {
+        const existing = await db.select({ orgId: receipts.organizationId }).from(receipts).where(eq(receipts.id, input)).limit(1);
+        if (!existing.length || existing[0].orgId !== orgId) throw new Error("Receipt not found");
+      }
+
       // Delete associated line items first
       await db.delete(lineItems).where(
         and(

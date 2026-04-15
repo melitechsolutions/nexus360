@@ -61,7 +61,9 @@ export const imprestSurrenderRouter = router({
       });
 
       // mark imprest settled
-      await db.update(imprests).set({ status: 'settled', updatedAt: new Date().toISOString().replace('T',' ').substring(0,19) }).where(eq(imprests.id, input.imprestId));
+      await db.update(imprests)
+        .set({ status: 'settled', updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) as any })
+        .where(eq(imprests.id, input.imprestId));
       return { id };
     }),
 });

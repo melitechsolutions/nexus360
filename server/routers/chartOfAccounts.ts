@@ -17,20 +17,24 @@ export const chartOfAccountsRouter = router({
       offset: z.number().optional(),
       type: z.string().optional(),
     }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return [];
+      const orgId = ctx.user.organizationId;
+      const activeFilter = eq(accounts.isActive, 1);
       
-      let query = database.select().from(accounts).where(eq(accounts.isActive, 1));
+      let query = database.select().from(accounts).where(
+        orgId ? and(activeFilter, eq(accounts.organizationId, orgId)) : activeFilter
+      );
       
       if (input?.type && input.type !== 'all') {
+        const typeFilter = eq(accounts.accountType, input.type as any);
         query = database
           .select()
           .from(accounts)
-          .where(and(
-            eq(accounts.accountType, input.type as any),
-            eq(accounts.isActive, 1)
-          )) as any;
+          .where(
+            orgId ? and(typeFilter, activeFilter, eq(accounts.organizationId, orgId)) : and(typeFilter, activeFilter)
+          ) as any;
       }
       
       return await (query as any)
@@ -41,10 +45,12 @@ export const chartOfAccountsRouter = router({
 
   getById: createFeatureRestrictedProcedure("chartOfAccounts:read")
     .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return null;
-      const result = await database.select().from(accounts).where(eq(accounts.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(accounts.id, input.id), eq(accounts.organizationId, orgId)) : eq(accounts.id, input.id);
+      const result = await database.select().from(accounts).where(where).limit(1);
       return result[0] || null;
     }),
 
@@ -73,7 +79,7 @@ export const chartOfAccountsRouter = router({
       }
 
       const id = uuidv4();
-      const now = new Date().toISOString();
+      const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
       
       await database.insert(accounts).values({
         id,
@@ -86,6 +92,7 @@ export const chartOfAccountsRouter = router({
         isActive: 1,
         createdAt: now,
         updatedAt: now,
+        organizationId: ctx.user.organizationId ?? null,
       });
 
       // Log activity
@@ -125,6 +132,12 @@ export const chartOfAccountsRouter = router({
         throw new Error("Account not found");
       }
 
+      // Verify org ownership
+      const orgId = ctx.user.organizationId;
+      if (orgId && existingAccount[0].organizationId !== orgId) {
+        throw new Error("Account not found");
+      }
+
       if (input.accountCode && input.accountCode !== existingAccount[0].accountCode) {
         const duplicate = await database
           .select()
@@ -159,14 +172,16 @@ export const chartOfAccountsRouter = router({
 
   validateCanDelete: createFeatureRestrictedProcedure("chartOfAccounts:read")
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) throw new Error("Database not available");
       
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(accounts.id, input), eq(accounts.organizationId, orgId)) : eq(accounts.id, input);
       const account = await database
         .select()
         .from(accounts)
-        .where(eq(accounts.id, input))
+        .where(where)
         .limit(1);
       
       if (!account.length) {
@@ -214,6 +229,12 @@ export const chartOfAccountsRouter = router({
         .limit(1);
       
       if (!account.length) {
+        throw new Error("Account not found");
+      }
+
+      // Verify org ownership
+      const orgId = ctx.user.organizationId;
+      if (orgId && account[0].organizationId !== orgId) {
         throw new Error("Account not found");
       }
 

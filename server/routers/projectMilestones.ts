@@ -62,6 +62,7 @@ export const projectMilestonesRouter = router({
         }
 
         const id = nanoid();
+        const toMysqlDate = (iso: string) => iso.replace('T', ' ').substring(0, 19);
 
         await db.insert(projectMilestones).values({
           id,
@@ -69,8 +70,8 @@ export const projectMilestonesRouter = router({
           phaseName: input.phaseName,
           description: input.description,
           deliverables: input.deliverables,
-          dueDate: input.dueDate,
-          startDate: input.startDate,
+          dueDate: toMysqlDate(input.dueDate),
+          startDate: input.startDate ? toMysqlDate(input.startDate) : undefined,
           budget: input.budget,
           assignedTo: input.assignedTo,
           notes: input.notes,
@@ -83,9 +84,10 @@ export const projectMilestonesRouter = router({
       } catch (error) {
         console.error("[PROJECT_MILESTONES] Create error:", error);
         if (error instanceof TRPCError) throw error;
+        const msg = error instanceof Error ? error.message : String(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create milestone",
+          message: `Failed to create milestone: ${msg}`,
         });
       }
     }),
@@ -178,7 +180,7 @@ export const projectMilestonesRouter = router({
         }
 
         const updates: any = {
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         };
 
         if (updateData.phaseName !== undefined) {
@@ -272,7 +274,7 @@ export const projectMilestonesRouter = router({
       try {
         const updates: any = {
           completionPercentage: input.completionPercentage,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         };
 
         // Auto-complete if 100%
@@ -315,8 +317,8 @@ export const projectMilestonesRouter = router({
 
         const filters = [
           eq(projectMilestones.status, "planning"),
-          gte(projectMilestones.dueDate, now.toISOString()),
-          lte(projectMilestones.dueDate, futureDate.toISOString()),
+          gte(projectMilestones.dueDate, now.toISOString().replace('T', ' ').substring(0, 19)),
+          lte(projectMilestones.dueDate, futureDate.toISOString().replace('T', ' ').substring(0, 19)),
         ];
 
         if (input.projectId) {
@@ -350,7 +352,7 @@ export const projectMilestonesRouter = router({
 
         const filters = [
           eq(projectMilestones.status, "in_progress"),
-          lte(projectMilestones.dueDate, now.toISOString()),
+          lte(projectMilestones.dueDate, now.toISOString().replace('T', ' ').substring(0, 19)),
         ];
 
         if (input.projectId) {

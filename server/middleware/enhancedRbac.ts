@@ -3,10 +3,14 @@
  * 
  * This module provides factory functions to create TRPC procedures
  * with built-in permission enforcement at the API level.
+ * Supports both hardcoded system roles AND dynamic custom roles.
  */
 
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../_core/trpc";
+import { getDb } from "../db";
+import { customRoles, users } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 export const ROLES = {
   SUPER_ADMIN: "super_admin",
@@ -90,7 +94,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "suppliers:*",
   ],
   ict_manager: [
-    // views only for core data, plus system/technical access
+    // Views for core data - read-only access to overview data
     "accounting:invoices:view",
     "accounting:payments:view",
     "accounting:expenses:view",
@@ -102,10 +106,25 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "procurement:lpo:view",
     "procurement:imprest:view",
     "analytics:view",
-    // technical features
+    // System & Technical Management - full control
     "admin:system",
     "admin:settings",
+    "admin:maintenance",
     "communications:email_queue",
+    "auth:sessions",
+    "auth:manage_sessions",
+    "auth:export_user_data",
+    "system:health",
+    "system:monitoring",
+    "system:logs",
+    "system:backups",
+    "users:view",
+    "users:deactivate",
+    "audit:view",
+    "audit:export",
+    "settings:integrations",
+    "settings:security",
+    "settings:notifications",
   ],
   sales_manager: [
     "sales:*",
@@ -132,37 +151,46 @@ export const FEATURE_ACCESS: Record<string, UserRole[]> = {
   "admin:manage_users": ["super_admin"],
   "admin:manage_roles": ["super_admin"],
   "admin:settings": ["super_admin", "admin", "ict_manager"],
+  "admin:maintenance": ["super_admin", "ict_manager"],
   "admin:system": ["super_admin", "admin", "ict_manager"],
 
+  // Enterprise / Multi-Tenancy (global platform only)
+  "enterprise:view": ["super_admin", "ict_manager"],
+  "enterprise:create": ["super_admin", "ict_manager"],
+  "enterprise:edit": ["super_admin", "ict_manager"],
+  "enterprise:delete": ["super_admin"],
+  "admin:view": ["super_admin", "admin", "ict_manager"],
+  "admin:edit": ["super_admin", "admin"],
+
   // User Management & Permissions
-  "users:edit": ["super_admin", "admin"],
-  "users:view": ["super_admin", "admin"],
-  "users:create": ["super_admin", "admin"],
+  "users:edit": ["super_admin", "admin", "ict_manager"],
+  "users:view": ["super_admin", "admin", "ict_manager"],
+  "users:create": ["super_admin", "admin", "ict_manager"],
   "users:delete": ["super_admin", "admin"],
-  "users:update": ["super_admin", "admin"],
+  "users:update": ["super_admin", "admin", "ict_manager"],
   "users:permissions": ["super_admin"],
-  "users:permissions:edit": ["super_admin"],
-  "users:permissions:view": ["super_admin"],
+  "users:permissions:edit": ["super_admin", "ict_manager"],
+  "users:permissions:view": ["super_admin", "admin", "ict_manager"],
   "users:roles": ["super_admin"],
   "users:roles:edit": ["super_admin"],
-  "users:read": ["super_admin", "admin"],
+  "users:read": ["super_admin", "admin", "ict_manager"],
 
   // Accounting Features
-  "accounting:invoices": ["super_admin", "admin", "accountant", "project_manager", "sales_manager"],
-  "accounting:invoices:view": ["super_admin", "admin", "accountant", "project_manager", "sales_manager"],
-  "accounting:invoices:create": ["super_admin", "admin", "accountant", "sales_manager"],
-  "accounting:invoices:edit": ["super_admin", "admin", "accountant"],
+  "accounting:invoices": ["super_admin", "admin", "accountant", "project_manager", "sales_manager", "ict_manager"],
+  "accounting:invoices:view": ["super_admin", "admin", "accountant", "project_manager", "sales_manager", "ict_manager"],
+  "accounting:invoices:create": ["super_admin", "admin", "accountant", "sales_manager", "ict_manager"],
+  "accounting:invoices:edit": ["super_admin", "admin", "accountant", "ict_manager"],
   "accounting:invoices:delete": ["super_admin", "admin"],
   "accounting:invoices:approve": ["super_admin", "admin", "accountant"],
   
   // Generic accounting permissions (used by bankReconciliation)
-  "accounting:read": ["super_admin", "admin", "accountant", "project_manager"],
+  "accounting:read": ["super_admin", "admin", "accountant", "project_manager", "ict_manager"],
   "accounting:create": ["super_admin", "admin", "accountant"],
   "accounting:edit": ["super_admin", "admin", "accountant"],
   "accounting:delete": ["super_admin", "admin"],
 
-  "accounting:receipts": ["super_admin", "admin", "accountant", "project_manager"],
-  "accounting:receipts:view": ["super_admin", "admin", "accountant", "project_manager"],
+  "accounting:receipts": ["super_admin", "admin", "accountant", "project_manager", "ict_manager"],
+  "accounting:receipts:view": ["super_admin", "admin", "accountant", "project_manager", "ict_manager"],
   "accounting:receipts:create": ["super_admin", "admin", "accountant"],
   "accounting:receipts:edit": ["super_admin", "admin", "accountant"],
   "accounting:receipts:delete": ["super_admin", "admin"],
@@ -195,6 +223,7 @@ export const FEATURE_ACCESS: Record<string, UserRole[]> = {
 
   // HR Features
   "hr:view": ["super_admin", "admin", "hr"],
+  "hr:edit": ["super_admin", "admin", "hr"],
   "hr:employees": ["super_admin", "admin", "hr"],
   "hr:employees:view": ["super_admin", "admin", "hr", "project_manager"],
   "hr:employees:create": ["super_admin", "admin", "hr"],
@@ -203,6 +232,8 @@ export const FEATURE_ACCESS: Record<string, UserRole[]> = {
 
   // Standalone employee read/write features (used by employees router directly)
   "employees:read": ["super_admin", "admin", "hr", "project_manager", "ict_manager"],
+  "employees:view": ["super_admin", "admin", "hr", "project_manager"],
+  "employees:edit": ["super_admin", "admin", "hr"],
   "employees:create": ["super_admin", "admin", "hr"],
   "employees:update": ["super_admin", "admin", "hr"],
   "employees:delete": ["super_admin", "admin"],
@@ -229,6 +260,10 @@ export const FEATURE_ACCESS: Record<string, UserRole[]> = {
   "hr:payroll:view": ["super_admin", "admin", "hr"],
   "hr:payroll:create": ["super_admin", "admin", "hr"],
   "hr:payroll:approve": ["super_admin", "admin", "hr"],
+
+  // Standalone payroll features (used by payslips router)
+  "payroll:view": ["super_admin", "admin", "hr", "accountant"],
+  "payroll:edit": ["super_admin", "admin", "hr"],
 
   "hr:leave": ["super_admin", "admin", "hr"],
   "hr:leave:approve": ["super_admin", "admin", "hr"],
@@ -357,54 +392,54 @@ export const FEATURE_ACCESS: Record<string, UserRole[]> = {
   "reports:departments": ["super_admin", "admin", "hr"],
 
   // AI Features - Chat & Assistance
-  "ai:access": ["super_admin", "admin", "project_manager", "sales_manager", "accountant", "hr", "staff"],
-  "ai:summarize": ["super_admin", "admin", "project_manager", "sales_manager"],
-  "ai:generateEmail": ["super_admin", "admin", "project_manager", "sales_manager"],
-  "ai:chat": ["super_admin", "admin", "project_manager", "sales_manager", "accountant", "hr", "staff"],
-  "ai:financial": ["super_admin", "admin", "project_manager", "sales_manager"],
-  "ai:modal": ["super_admin", "admin", "project_manager", "sales_manager", "accountant", "hr", "staff"],
+  "ai:access": ["super_admin", "admin", "project_manager", "sales_manager", "accountant", "hr", "staff", "ict_manager"],
+  "ai:summarize": ["super_admin", "admin", "project_manager", "sales_manager", "accountant", "hr", "staff", "ict_manager"],
+  "ai:generateEmail": ["super_admin", "admin", "project_manager", "sales_manager", "accountant", "hr", "staff", "ict_manager"],
+  "ai:chat": ["super_admin", "admin", "project_manager", "sales_manager", "accountant", "hr", "staff", "ict_manager"],
+  "ai:financial": ["super_admin", "admin", "project_manager", "sales_manager", "accountant", "hr", "ict_manager"],
+  "ai:modal": ["super_admin", "admin", "project_manager", "sales_manager", "accountant", "hr", "staff", "ict_manager"],
 
   // Chat/IntraChat Features
-  "communications:chat": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager"],
-  "communications:intrachat": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager"],
-  "communications:ai_assistant": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager"],
+  "communications:chat": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager", "ict_manager"],
+  "communications:intrachat": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager", "ict_manager"],
+  "communications:ai_assistant": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager", "ict_manager"],
 
   // Support & Communications
-  "communications:view": ["super_admin", "admin", "staff", "project_manager", "hr"],
-  "communications:manage": ["super_admin", "admin"],
+  "communications:view": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager", "ict_manager"],
+  "communications:manage": ["super_admin", "admin", "ict_manager", "hr", "accountant", "sales_manager", "project_manager"],
 
   // Notifications
-  "notifications:read": ["super_admin", "admin", "staff", "project_manager", "hr"],
-  "notifications:create": ["super_admin", "admin", "staff", "project_manager", "hr"],
-  "communications:email": ["super_admin", "admin"],
-  "communications:notifications": ["super_admin", "admin"],
+  "notifications:read": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager", "ict_manager"],
+  "notifications:create": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager", "ict_manager"],
+  "communications:email": ["super_admin", "admin", "ict_manager", "hr", "accountant", "sales_manager", "project_manager"],
+  "communications:notifications": ["super_admin", "admin", "ict_manager", "hr", "accountant", "sales_manager", "project_manager", "staff"],
   "communications:tickets": ["super_admin", "admin", "staff"],
-  "communications:tickets:create": ["super_admin", "admin", "staff"],
-  "communications:tickets:resolve": ["super_admin", "admin"],
+  "communications:tickets:create": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager", "ict_manager", "procurement_manager", "client"],
+  "communications:tickets:resolve": ["super_admin", "admin", "ict_manager", "project_manager", "hr", "accountant", "sales_manager", "procurement_manager"],
 
   // System Settings
-  "settings:view": ["super_admin", "admin"],
-  "settings:edit": ["super_admin", "admin"],
+  "settings:view": ["super_admin", "admin", "ict_manager"],
+  "settings:edit": ["super_admin", "admin", "ict_manager"],
   "settings:company": ["super_admin", "admin"],
   "settings:billing": ["super_admin", "admin"],
-  "settings:integrations": ["super_admin", "admin"],
-  "settings:security": ["super_admin"],
+  "settings:integrations": ["super_admin", "admin", "ict_manager"],
+  "settings:security": ["super_admin", "ict_manager"],
   "settings:roles": ["super_admin"],
-  "settings:audit": ["super_admin", "admin"],
+  "settings:audit": ["super_admin", "admin", "ict_manager"],
 
   // Tools & Utilities
-  "tools:import_export": ["super_admin", "admin"],
-  "import:create": ["super_admin", "admin"],
-  "import:read": ["super_admin", "admin"],
+  "tools:import_export": ["super_admin", "admin", "accountant", "project_manager", "sales_manager", "procurement_manager", "ict_manager", "hr", "staff", "client"],
+  "import:create": ["super_admin", "admin", "accountant", "project_manager", "sales_manager", "procurement_manager", "ict_manager", "hr", "staff", "client"],
+  "import:read": ["super_admin", "admin", "accountant", "project_manager", "sales_manager", "procurement_manager", "ict_manager", "hr", "staff", "client"],
   "import:restore": ["super_admin", "admin"],
-  "export:create": ["super_admin", "admin"],
-  "data:import": ["super_admin", "admin"],
-  "data:export": ["super_admin", "admin"],
-  "tools:data_backup": ["super_admin", "admin"],
-  "tools:system_health": ["super_admin", "admin"],
-  "tools:api_management": ["super_admin", "admin"],
-  "tools:automation": ["super_admin", "admin"],
-  "tools:workflows": ["super_admin", "admin"],
+  "export:create": ["super_admin", "admin", "accountant", "project_manager", "sales_manager", "procurement_manager", "ict_manager", "hr", "staff", "client"],
+  "data:import": ["super_admin", "admin", "accountant", "project_manager", "sales_manager", "procurement_manager", "ict_manager", "hr", "staff", "client"],
+  "data:export": ["super_admin", "admin", "accountant", "project_manager", "sales_manager", "procurement_manager", "ict_manager", "hr", "staff", "client"],
+  "tools:data_backup": ["super_admin", "admin", "ict_manager"],
+  "tools:system_health": ["super_admin", "admin", "ict_manager"],
+  "tools:api_management": ["super_admin", "admin", "ict_manager"],
+  "tools:automation": ["super_admin", "admin", "ict_manager"],
+  "tools:workflows": ["super_admin", "admin", "ict_manager"],
 
   // Client Portal
   "client_portal:dashboard": ["client"],
@@ -458,18 +493,18 @@ export const FEATURE_ACCESS: Record<string, UserRole[]> = {
   "payments:reconcile": ["super_admin", "admin", "accountant"],
 
   // Client Features (ensure all CRUD operations exist)
-  "clients:read": ["super_admin", "admin", "project_manager", "accountant", "procurement_manager"],
+  "clients:read": ["super_admin", "admin", "project_manager", "accountant", "procurement_manager", "ict_manager", "sales_manager"],
 
   // Communications Features
-  "communications:read": ["super_admin", "admin", "staff", "project_manager", "hr"],
-  "communications:messaging": ["super_admin", "admin", "staff", "project_manager", "hr"],
-  "communications:send": ["super_admin", "admin", "staff", "project_manager", "hr"],
+  "communications:read": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager", "ict_manager", "procurement_manager"],
+  "communications:messaging": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager", "ict_manager", "procurement_manager"],
+  "communications:send": ["super_admin", "admin", "staff", "project_manager", "hr", "accountant", "sales_manager", "ict_manager", "procurement_manager"],
 
   // Filters & Saved Views
-  "filters:create": ["super_admin", "admin", "accountant", "project_manager", "hr", "staff", "ict_manager", "procurement_manager", "sales_manager"],
-  "filters:read": ["super_admin", "admin", "accountant", "project_manager", "hr", "staff", "ict_manager", "procurement_manager", "sales_manager"],
-  "filters:update": ["super_admin", "admin", "accountant", "project_manager", "hr", "staff", "ict_manager", "procurement_manager", "sales_manager"],
-  "filters:delete": ["super_admin", "admin", "accountant", "project_manager", "hr", "staff", "ict_manager", "procurement_manager", "sales_manager"],
+  "filters:create": ["super_admin", "admin", "accountant", "project_manager", "hr", "staff", "ict_manager", "procurement_manager", "sales_manager", "client"],
+  "filters:read": ["super_admin", "admin", "accountant", "project_manager", "hr", "staff", "ict_manager", "procurement_manager", "sales_manager", "client"],
+  "filters:update": ["super_admin", "admin", "accountant", "project_manager", "hr", "staff", "ict_manager", "procurement_manager", "sales_manager", "client"],
+  "filters:delete": ["super_admin", "admin", "accountant", "project_manager", "hr", "staff", "ict_manager", "procurement_manager", "sales_manager", "client"],
 
   // Phase 20 - Business Intelligence & Analytics
   "analytics:reports": ["super_admin", "admin", "accountant", "project_manager", "hr", "sales_manager"],
@@ -544,6 +579,9 @@ export const FEATURE_ACCESS: Record<string, UserRole[]> = {
  * - With ROLE_PERMISSIONS["super_admin"] = ["clients:*"], this returns true
  */
 export function canAccessFeature(userRole: UserRole, feature: string): boolean {
+  // Super admin has unrestricted access to all features
+  if (userRole === ROLES.SUPER_ADMIN) return true;
+
   // First, check if the exact feature is in FEATURE_ACCESS
   const allowedRoles = FEATURE_ACCESS[feature];
   if (allowedRoles && allowedRoles.includes(userRole)) {
@@ -563,6 +601,65 @@ export function canAccessFeature(userRole: UserRole, feature: string): boolean {
 }
 
 /**
+ * Check if a custom role's permissions include a specific feature
+ * Supports wildcards in the custom role's permission list
+ */
+export function customRoleCanAccessFeature(customPermissions: string[], feature: string): boolean {
+  if (!customPermissions || customPermissions.length === 0) return false;
+  
+  // Direct match
+  if (customPermissions.includes(feature)) return true;
+  
+  // Wildcard match (e.g., "clients:*" matches "clients:read")
+  const modulePrefix = feature.split(":")[0];
+  if (customPermissions.includes(`${modulePrefix}:*`)) return true;
+  
+  return false;
+}
+
+/**
+ * Resolve user permissions - checks custom role first, then falls back to system role
+ * This is the primary permission check that should be used in procedures
+ */
+export async function resolveUserPermission(
+  userId: string,
+  userRole: UserRole,
+  customRoleId: string | null | undefined,
+  feature: string
+): Promise<boolean> {
+  // Super admin always has access
+  if (userRole === ROLES.SUPER_ADMIN) return true;
+
+  // If user has a custom role, check custom role permissions
+  if (customRoleId) {
+    try {
+      const db = await getDb();
+      if (db) {
+        const roles = await db.select().from(customRoles)
+          .where(and(eq(customRoles.id, customRoleId), eq(customRoles.isActive, 1)))
+          .limit(1);
+        
+        if (roles.length > 0 && roles[0].permissions) {
+          const perms: string[] = JSON.parse(roles[0].permissions as string);
+          if (customRoleCanAccessFeature(perms, feature)) return true;
+          
+          // If custom role has a baseRole, also check baseRole permissions
+          if (roles[0].baseRole) {
+            return canAccessFeature(roles[0].baseRole as UserRole, feature);
+          }
+          return false;
+        }
+      }
+    } catch (e) {
+      // Fall through to system role check on error
+    }
+  }
+
+  // Fall back to system role
+  return canAccessFeature(userRole, feature);
+}
+
+/**
  * Create a role-restricted procedure
  */
 export function createRoleRestrictedProcedure(allowedRoles: UserRole[]) {
@@ -579,14 +676,27 @@ export function createRoleRestrictedProcedure(allowedRoles: UserRole[]) {
 
 /**
  * Create a feature-restricted procedure
+ * Supports both system roles and custom roles with dynamic permission lookup
  */
 export function createFeatureRestrictedProcedure(feature: string) {
-  return protectedProcedure.use(({ ctx, next }) => {
+  return protectedProcedure.use(async ({ ctx, next }) => {
     const userRole = ctx.user.role as UserRole;
-    if (!canAccessFeature(userRole, feature)) {
+    const customRoleId = (ctx.user as any).customRoleId;
+    
+    // Use dynamic resolver that checks custom roles first
+    const hasAccess = await resolveUserPermission(ctx.user.id, userRole, customRoleId, feature);
+    if (!hasAccess) {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: `Access denied. You don't have permission to access: ${feature}`,
+      });
+    }
+    // Block org-scoped users from global-only features (enterprise, admin:manage_*)
+    const GLOBAL_ONLY_PREFIXES = ["enterprise:", "admin:manage_"];
+    if (ctx.user.organizationId && GLOBAL_ONLY_PREFIXES.some(p => feature.startsWith(p))) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "This resource is only accessible to platform administrators",
       });
     }
     return next({ ctx });
@@ -597,19 +707,28 @@ export function createFeatureRestrictedProcedure(feature: string) {
  * Get all accessible features for a user role
  */
 export function getAccessibleFeatures(userRole: UserRole): string[] {
+  // Super admin has access to all features
+  if (userRole === ROLES.SUPER_ADMIN) {
+    return Object.keys(FEATURE_ACCESS);
+  }
+
   return Object.entries(FEATURE_ACCESS)
     .filter(([_, roles]) => roles.includes(userRole))
     .map(([feature]) => feature);
 }
 
 /**
- * Check if organization scopes match (for multi-org systems)
+ * Check if organization scopes match (for multi-org systems).
+ * 
+ * Only Melitech platform admins (super_admin with NO organizationId) can
+ * access any org.  Org-scoped super_admins (who have an organizationId) are
+ * restricted to their own organization.
  */
 export function checkOrgScopeAccess(ctx: any, targetOrgId: string): boolean {
-  // If user is super admin, they can access any org
-  if (ctx.user.role === "super_admin") return true;
-  
-  // Otherwise, user can only access their own org
+  // Melitech platform admin — has super_admin role but belongs to no org
+  if (ctx.user.role === "super_admin" && !ctx.user.organizationId) return true;
+
+  // Everyone else (including org super_admins) can only access their own org
   return ctx.user.organizationId === targetOrgId;
 }
 

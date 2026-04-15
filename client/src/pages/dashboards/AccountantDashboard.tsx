@@ -20,11 +20,13 @@ import {
   ArrowRight,
   Mail,
   Settings,
+  Calculator,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function AccountantDashboard() {
   const { user, loading, isAuthenticated, logout } = useAuthWithPersistence({
@@ -207,45 +209,34 @@ export default function AccountantDashboard() {
   ];
 
   return (
-    <DashboardLayout title="Accountant Dashboard" user={user} onLogout={logout}>
-      <div className="space-y-8">
-        {/* Accountant Welcome Section */}
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-lg p-8 text-white">
-          <h1 className="text-4xl font-bold mb-2">Accountant Dashboard</h1>
-          <p className="text-lg opacity-90 mb-4">
-            Manage invoices, expenses, financial records, and approve transactions.
-          </p>
-          <div className="flex gap-4">
-            <Button 
-              onClick={() => setLocation("/accounting/management")}
-              className="gap-2 bg-white hover:bg-slate-100 text-emerald-700"
-            >
-              <Settings className="w-4 h-4" />
-              Accounting Management
-            </Button>
-            <Button 
-              className="bg-white text-slate-900 hover:bg-gray-100"
-              onClick={() => setLocation("/crm")}
-            >
-              Go to Main Dashboard
-            </Button>
-          </div>
+    <ModuleLayout
+      title="Accountant Dashboard"
+      description="Manage invoices, expenses, financial records, and approve transactions"
+      icon={<Calculator className="h-5 w-5" />}
+      breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Accounting" }]}
+      actions={
+        <div className="flex gap-2">
+          <Button onClick={() => setLocation("/accounting/management")} variant="secondary" size="sm" className="gap-2">
+            <Settings className="w-4 h-4" />
+            Accounting Management
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setLocation("/crm-home")}>
+            Go to Main Dashboard
+          </Button>
         </div>
+      }
+    >
+      <div className="space-y-8">
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Total Revenue</CardTitle></CardHeader>
-            <CardContent><div className="text-2xl font-bold text-slate-900 dark:text-slate-50">KES {((totalRevenue) || 0).toLocaleString()}</div></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Pending Approvals</CardTitle></CardHeader>
-            <CardContent><div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{(pendingApprovalsPlain?.invoices?.length || 0) + (pendingApprovalsPlain?.expenses?.length || 0)}</div></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Total Expenses</CardTitle></CardHeader>
-            <CardContent><div className="text-2xl font-bold text-slate-900 dark:text-slate-50">KES {((totalExpenses) || 0).toLocaleString()}</div></CardContent>
-          </Card>
+          <StatsCard label="Total Revenue" value={<>KES {((totalRevenue) || 0).toLocaleString()}</>} color="border-l-orange-500" />
+          <StatsCard
+            label="Pending Approvals"
+            value={(pendingApprovalsPlain?.invoices?.length || 0) + (pendingApprovalsPlain?.expenses?.length || 0)}
+            color="border-l-purple-500"
+          />
+          <StatsCard label="Total Expenses" value={<>KES {((totalExpenses) || 0).toLocaleString()}</>} color="border-l-green-500" />
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Net Profit</CardTitle></CardHeader>
             <CardContent><div className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>KES {((netProfit) || 0).toLocaleString()}</div></CardContent>
@@ -306,7 +297,7 @@ export default function AccountantDashboard() {
                 <CardHeader><CardTitle className="text-slate-900 dark:text-slate-50">Quick Actions</CardTitle></CardHeader>
                 <CardContent className="space-y-2">
                   <Button className="w-full justify-start" onClick={() => setLocation("/invoices/create")}>Create Invoice</Button>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => setLocation("/expenses/new")}>Record Expense</Button>
+                  <Button variant="outline" className="w-full justify-start" onClick={() => setLocation("/expenses/create")}>Record Expense</Button>
                   <Button variant="outline" className="w-full justify-start" onClick={() => setLocation("/payments/create")}>Record Payment</Button>
                 </CardContent>
               </Card>
@@ -338,20 +329,14 @@ export default function AccountantDashboard() {
           </TabsContent>
 
           <TabsContent value="reconciliation" className="space-y-4">
-            <Card>
-              <CardHeader><CardTitle className="text-slate-900 dark:text-slate-50">Bank Reconciliation</CardTitle><CardDescription className="text-slate-600 dark:text-slate-300">Data from system records</CardDescription></CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg"><p className="text-sm text-slate-600 dark:text-slate-300">Total Revenue</p><p className="text-2xl font-bold text-blue-600 dark:text-blue-400">KES {(((reconciliationDataPlain?.revenue) || 0)).toLocaleString()}</p></div>
-                  <div className="p-4 bg-red-50 dark:bg-red-950/30 rounded-lg"><p className="text-sm text-slate-600 dark:text-slate-300">Total Expenses</p><p className="text-2xl font-bold text-red-600 dark:text-red-400">KES {(((reconciliationDataPlain?.expenses) || 0)).toLocaleString()}</p></div>
-                  <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg"><p className="text-sm text-slate-600 dark:text-slate-300">Net Balance</p><p className="text-2xl font-bold text-green-600 dark:text-green-400">KES {(((reconciliationDataPlain?.balance) || 0)).toLocaleString()}</p></div>
-                </div>
-                <div className="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-lg"><p className="text-sm text-slate-600 dark:text-slate-300">Status</p><p className="text-sm text-slate-700 dark:text-slate-200 font-medium">{reconciliationDataPlain?.status || "No status"}</p></div>
-              </CardContent>
-            </Card>
+            <StatsCard
+              label="Bank Reconciliation"
+              value={<>KES {(((reconciliationDataPlain?.revenue) || 0)).toLocaleString()}</>}
+              color="border-l-blue-500"
+            />
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

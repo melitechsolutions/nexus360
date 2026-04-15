@@ -1,0 +1,554 @@
+/* 
+ * Print-Optimized Document Templates with Auto-Resizing
+ * Ensures all content scales to fit page perfectly on print/print preview
+ * Supports both screen and print media with dynamic scaling
+ */
+
+:root {
+  /* Light Mode (Default) */
+  --doc-primary-color: #ff9f43;
+  --doc-primary-dark: #2d3436;
+  --doc-secondary-color: #636e72;
+  --doc-border-color: #dfe6e9;
+  --doc-text-color: #2d3436;
+  --doc-light-bg: #f8f9fa;
+  --doc-white: #ffffff;
+  
+  /* Dark Mode */
+  --doc-dark-bg: #0f1419;
+  --doc-dark-surface: #1a1f2e;
+  --doc-dark-card: #242b3d;
+  --doc-dark-border: #3a4557;
+  --doc-dark-text: #e0e0e0;
+  
+  --doc-spacing-unit: 8px;
+  --doc-scale-factor: 1;
+}
+
+/* ============================================
+   PRINT MEDIA - AUTO SCALING & RESIZING
+   ============================================ */
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  html {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: white;
+  }
+
+  .document-wrapper {
+    width: 210mm;
+    height: 297mm;
+    margin: 0 auto;
+    padding: 10mm;
+    box-sizing: border-box;
+    background: white;
+    page-break-after: always;
+  }
+
+  .document-container,
+  .professional-document {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    background: white;
+    color: #2d3436;
+    zoom: 1;
+    transform-origin: top left;
+    
+    /* Auto-scale content to fit page */
+    @supports (display: grid) {
+      transform: scale(1);
+    }
+  }
+
+  /* Auto-scale header section */
+  .document-header {
+    transform: scale(0.95);
+    transform-origin: top center;
+    margin-bottom: calc(var(--doc-spacing-unit) * 2);
+    padding-bottom: calc(var(--doc-spacing-unit) * 2);
+  }
+
+  /* Auto-scale metadata section */
+  .document-meta {
+    transform: scale(0.93);
+    transform-origin: top center;
+    margin-bottom: calc(var(--doc-spacing-unit) * 2);
+  }
+
+  /* Auto-scale line items table */
+  .line-items-section table {
+    width: 100% !important;
+    font-size: 10px !important;
+    line-height: 1.3;
+    transform: scale(0.92);
+    transform-origin: top center;
+  }
+
+  .line-items-section table thead,
+  .line-items-section table tbody {
+    width: 100%;
+  }
+
+  .line-items-section table th,
+  .line-items-section table td {
+    padding: 4px !important;
+    word-break: break-word;
+  }
+
+  /* Auto-scale totals section */
+  .totals-section {
+    transform: scale(0.90);
+    transform-origin: top right;
+    margin-bottom: calc(var(--doc-spacing-unit) * 1);
+  }
+
+  .totals-section table {
+    width: 100% !important;
+    font-size: 11px !important;
+  }
+
+  .totals-section table tr td {
+    padding: 6px !important;
+  }
+
+  /* Auto-scale content sections */
+  .section {
+    transform: scale(0.92);
+    transform-origin: top center;
+    margin-bottom: calc(var(--doc-spacing-unit) * 1);
+    page-break-inside: avoid;
+  }
+
+  .section h2 {
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* Auto-scale footer */
+  .document-footer {
+    transform: scale(0.88);
+    transform-origin: bottom center;
+    margin-top: auto;
+    page-break-inside: avoid;
+  }
+
+  /* Hide non-printable elements */
+  .no-print,
+  .print-area button,
+  .action-buttons {
+    display: none !important;
+  }
+
+  /* Prevent orphaned content */
+  .no-page-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Ensure tables don't break awkwardly */
+  table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  /* Ensure text is visible */
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* Remove shadows and effects */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* ============================================
+   PRINT PREVIEW - SCREEN DISPLAY FOR PREVIEW
+   ============================================ */
+
+@media screen and (min-width: 1024px) {
+  .print-preview-mode {
+    background: #e5e5e5;
+    padding: 20px;
+  }
+
+  .print-preview-mode .document-wrapper {
+    background: white;
+    width: 210mm;
+    height: 297mm;
+    margin: 20px auto;
+    padding: 10mm;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    page-break-after: always;
+    overflow: hidden;
+  }
+
+  .print-preview-mode .document-container {
+    transform: scale(1);
+    width: 100%;
+    height: auto;
+  }
+
+  /* Show scaling indicators in preview */
+  .scale-indicator {
+    display: block;
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+    margin-top: 10px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE SCALING FOR DIFFERENT SCREENS
+   ============================================ */
+
+/* Extra large screens - minimal scaling */
+@media screen and (min-width: 1920px) {
+  .document-container {
+    --doc-scale-factor: 1;
+  }
+}
+
+/* Large screens - slight scaling */
+@media screen and (min-width: 1366px) and (max-width: 1919px) {
+  .document-container {
+    --doc-scale-factor: 0.95;
+  }
+}
+
+/* Medium screens - moderate scaling */
+@media screen and (min-width: 1024px) and (max-width: 1365px) {
+  .document-container {
+    --doc-scale-factor: 0.90;
+    font-size: 13px;
+  }
+}
+
+/* Small screens - significant scaling */
+@media screen and (max-width: 1023px) {
+  .document-container {
+    --doc-scale-factor: 0.85;
+    font-size: 12px;
+  }
+
+  .document-header {
+    margin-bottom: calc(var(--doc-spacing-unit) * 2);
+  }
+
+  .line-items-section table th,
+  .line-items-section table td {
+    padding: 6px 4px !important;
+  }
+
+  .totals-section {
+    width: 80% !important;
+  }
+}
+
+/* ============================================
+   ZOOM & ZOOM CONTROLS (OPTIONAL)
+   ============================================ */
+
+.document-zoom-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.document-zoom-controls button {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.document-zoom-controls button:hover {
+  background: #ff9f43;
+  color: white;
+  border-color: #ff9f43;
+}
+
+.document-zoom-level {
+  min-width: 60px;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+}
+
+/* ============================================
+   TEMPLATE SECTION UNIFICATION
+   ============================================ */
+
+/* Unified Header Section */
+.template-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--doc-border-color);
+}
+
+.template-header-left {
+  flex: 1;
+}
+
+.template-header-logo {
+  max-width: 100px;
+  max-height: 80px;
+  object-fit: contain;
+}
+
+.template-header-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--doc-text-color);
+  margin: 8px 0 4px 0;
+}
+
+.template-header-subtitle {
+  font-size: 13px;
+  color: var(--doc-secondary-color);
+  margin: 0;
+}
+
+/* Unified Metadata Section */
+.template-metadata {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--doc-light-bg);
+  border: 1px solid var(--doc-border-color);
+  border-left: 4px solid var(--doc-primary-color);
+  border-radius: 4px;
+}
+
+.template-metadata-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-metadata-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--doc-secondary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.template-metadata-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--doc-text-color);
+  font-family: 'Courier New', monospace;
+}
+
+/* Unified Line Items Section */
+.template-line-items {
+  margin-bottom: 24px;
+}
+
+.template-line-items-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--doc-text-color);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--doc-primary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.template-line-items table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--doc-border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.template-line-items thead {
+  background: var(--doc-light-bg);
+  border-bottom: 2px solid var(--doc-border-color);
+}
+
+.template-line-items th {
+  padding: 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--doc-secondary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.template-line-items td {
+  padding: 12px;
+  border-bottom: 1px solid var(--doc-border-color);
+  font-size: 13px;
+  color: var(--doc-text-color);
+}
+
+.template-line-items tbody tr:hover {
+  background: rgba(255, 159, 67, 0.05);
+}
+
+.template-line-items tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Right-aligned columns */
+.template-line-items th:nth-child(2),
+.template-line-items th:nth-child(3),
+.template-line-items th:nth-child(4),
+.template-line-items td:nth-child(2),
+.template-line-items td:nth-child(3),
+.template-line-items td:nth-child(4) {
+  text-align: right;
+}
+
+/* Unified Totals Section */
+.template-totals {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.template-totals-box {
+  width: 100%;
+  max-width: 320px;
+  background: var(--doc-light-bg);
+  border: 1px solid var(--doc-border-color);
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.template-totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--doc-border-color);
+  font-size: 13px;
+}
+
+.template-totals-row:last-child {
+  border-bottom: none;
+}
+
+.template-totals-label {
+  color: var(--doc-secondary-color);
+  font-weight: 500;
+}
+
+.template-totals-value {
+  color: var(--doc-text-color);
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.template-totals-row.grand-total {
+  padding: 12px 0;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 2px solid var(--doc-primary-color);
+  font-size: 14px;
+}
+
+.template-totals-row.grand-total .template-totals-label {
+  color: var(--doc-text-color);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.template-totals-row.grand-total .template-totals-value {
+  color: var(--doc-primary-color);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --doc-text-color: #e0e0e0;
+    --doc-light-bg: #1a1f2e;
+    --doc-border-color: #3a4557;
+    --doc-white: #242b3d;
+  }
+
+  .document-container,
+  .professional-document {
+    background: #242b3d;
+    color: var(--doc-text-color);
+  }
+
+  .template-metadata {
+    background: var(--doc-dark-surface);
+    border-color: var(--doc-dark-border);
+  }
+
+  .template-line-items table {
+    border-color: var(--doc-dark-border);
+  }
+
+  .template-line-items thead {
+    background: var(--doc-dark-surface);
+    border-bottom-color: var(--doc-dark-border);
+  }
+
+  .template-totals-box {
+    background: var(--doc-dark-surface);
+    border-color: var(--doc-dark-border);
+  }
+
+  .template-totals-row {
+    border-bottom-color: var(--doc-dark-border);
+  }
+
+  .template-totals-row.grand-total {
+    border-top-color: var(--doc-primary-color);
+  }
+}

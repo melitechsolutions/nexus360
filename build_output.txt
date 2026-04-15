@@ -1,614 +1,525 @@
- Image melitech_crm-app Building 
-#1 [internal] load local bake definitions
-#1 reading from stdin 647B done
-#1 DONE 0.0s
+npm warn Unknown project config "network-timeout". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
 
-#2 [internal] load build definition from Dockerfile
-#2 transferring dockerfile: 4.32kB 0.1s done
-#2 DONE 0.1s
+> melitech_crm@1.0.0 build
+> vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
 
-#3 [internal] load metadata for docker.io/library/node:22-alpine
-#3 DONE 2.1s
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 3575 modules transformed.
+rendering chunks...
+computing gzip size...
+[2m../dist/public/[22m[32mindex.html                                      [39m[1m[2m  3.50 kB[22m[1m[22m[2m Ôöé gzip:   1.55 kB[22m
+[2m../dist/public/[22m[35massets/index-DQGkzazB.css                       [39m[1m[2m332.39 kB[22m[1m[22m[2m Ôöé gzip:  41.91 kB[22m
+[2m../dist/public/[22m[36massets/trpc-Ch7vDx_-.js                         [39m[1m[2m  0.07 kB[22m[1m[22m[2m Ôöé gzip:   0.08 kB[22m
+[2m../dist/public/[22m[36massets/minus-WF_la1GO.js                        [39m[1m[2m  0.11 kB[22m[1m[22m[2m Ôöé gzip:   0.13 kB[22m
+[2m../dist/public/[22m[36massets/chevron-down-CI6vztCt.js                 [39m[1m[2m  0.12 kB[22m[1m[22m[2m Ôöé gzip:   0.14 kB[22m
+[2m../dist/public/[22m[36massets/chevron-up-DgQ3rzxT.js                   [39m[1m[2m  0.12 kB[22m[1m[22m[2m Ôöé gzip:   0.14 kB[22m
+[2m../dist/public/[22m[36massets/chevron-left-B0FnvV6z.js                 [39m[1m[2m  0.13 kB[22m[1m[22m[2m Ôöé gzip:   0.14 kB[22m
+[2m../dist/public/[22m[36massets/circle-Byj0RMKL.js                       [39m[1m[2m  0.13 kB[22m[1m[22m[2m Ôöé gzip:   0.13 kB[22m
+[2m../dist/public/[22m[36massets/play-yNid5N9A.js                         [39m[1m[2m  0.13 kB[22m[1m[22m[2m Ôöé gzip:   0.14 kB[22m
+[2m../dist/public/[22m[36massets/square-BiSuVqF5.js                       [39m[1m[2m  0.14 kB[22m[1m[22m[2m Ôöé gzip:   0.15 kB[22m
+[2m../dist/public/[22m[36massets/plus-DsuUOE7C.js                         [39m[1m[2m  0.15 kB[22m[1m[22m[2m Ôöé gzip:   0.15 kB[22m
+[2m../dist/public/[22m[36massets/filter-1_zd_DS9.js                       [39m[1m[2m  0.16 kB[22m[1m[22m[2m Ôöé gzip:   0.16 kB[22m
+[2m../dist/public/[22m[36massets/arrow-left-KUdG0YsN.js                   [39m[1m[2m  0.16 kB[22m[1m[22m[2m Ôöé gzip:   0.16 kB[22m
+[2m../dist/public/[22m[36massets/arrow-right-CziDdrBp.js                  [39m[1m[2m  0.16 kB[22m[1m[22m[2m Ôöé gzip:   0.16 kB[22m
+[2m../dist/public/[22m[36massets/arrow-up-right-C3aZUBT2.js               [39m[1m[2m  0.16 kB[22m[1m[22m[2m Ôöé gzip:   0.16 kB[22m
+[2m../dist/public/[22m[36massets/search-D_bls5FI.js                       [39m[1m[2m  0.17 kB[22m[1m[22m[2m Ôöé gzip:   0.17 kB[22m
+[2m../dist/public/[22m[36massets/circle-check-CGGz-G-s.js                 [39m[1m[2m  0.17 kB[22m[1m[22m[2m Ôöé gzip:   0.17 kB[22m
+[2m../dist/public/[22m[36massets/message-square-BkxyfnS4.js               [39m[1m[2m  0.18 kB[22m[1m[22m[2m Ôöé gzip:   0.17 kB[22m
+[2m../dist/public/[22m[36massets/clock-DBaRJH7k.js                        [39m[1m[2m  0.18 kB[22m[1m[22m[2m Ôöé gzip:   0.17 kB[22m
+[2m../dist/public/[22m[36massets/chart-line-7bq9DP3E.js                   [39m[1m[2m  0.18 kB[22m[1m[22m[2m Ôöé gzip:   0.17 kB[22m
+[2m../dist/public/[22m[36massets/code-40lIUarp.js                         [39m[1m[2m  0.18 kB[22m[1m[22m[2m Ôöé gzip:   0.16 kB[22m
+[2m../dist/public/[22m[36massets/reply-DdKVHDXS.js                        [39m[1m[2m  0.18 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m
+[2m../dist/public/[22m[36massets/megaphone-BkvXQ_cl.js                    [39m[1m[2m  0.19 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m
+[2m../dist/public/[22m[36massets/circle-check-big-CcYQ90-l.js             [39m[1m[2m  0.19 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m
+[2m../dist/public/[22m[36massets/user-Cd2HCS2A.js                         [39m[1m[2m  0.19 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m
+[2m../dist/public/[22m[36massets/smartphone-C5ErzCwm.js                   [39m[1m[2m  0.19 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m
+[2m../dist/public/[22m[36massets/lock-C_Ht3fdy.js                         [39m[1m[2m  0.20 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/circle-x-CfHLYMHx.js                     [39m[1m[2m  0.20 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m
+[2m../dist/public/[22m[36massets/trending-down-Bdje6u5E.js                [39m[1m[2m  0.20 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m
+[2m../dist/public/[22m[36massets/mail-CTvITMXl.js                         [39m[1m[2m  0.21 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/dollar-sign-BsPeKOUK.js                  [39m[1m[2m  0.22 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/flag-DnOFrQ1A.js                         [39m[1m[2m  0.22 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/paperclip-DPFOHM-N.js                    [39m[1m[2m  0.22 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/target-DnwdRjsZ.js                       [39m[1m[2m  0.22 kB[22m[1m[22m[2m Ôöé gzip:   0.16 kB[22m
+[2m../dist/public/[22m[36massets/ellipsis-BBc0IhE9.js                     [39m[1m[2m  0.22 kB[22m[1m[22m[2m Ôöé gzip:   0.16 kB[22m
+[2m../dist/public/[22m[36massets/panels-top-left-DRT6ut9i.js              [39m[1m[2m  0.22 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/umbrella-DhB1rW4k.js                     [39m[1m[2m  0.23 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m
+[2m../dist/public/[22m[36massets/ellipsis-vertical-CH2InFWV.js            [39m[1m[2m  0.23 kB[22m[1m[22m[2m Ôöé gzip:   0.17 kB[22m
+[2m../dist/public/[22m[36massets/index-Bwr_uYOO.js                        [39m[1m[2m  0.23 kB[22m[1m[22m[2m Ôöé gzip:   0.17 kB[22m
+[2m../dist/public/[22m[36massets/pen-DmoZ6OcO.js                          [39m[1m[2m  0.23 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/copy-CBZI_Q3w.js                         [39m[1m[2m  0.23 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/circle-help-2Bplyg1j.js                  [39m[1m[2m  0.24 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/link-2-CW8qjbif.js                       [39m[1m[2m  0.24 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/globe-SssqWWVG.js                        [39m[1m[2m  0.24 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/percent-CYqGdmTr.js                      [39m[1m[2m  0.24 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/arrow-up-down-Cy0ZQFGa.js                [39m[1m[2m  0.24 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/database-CNd7wV3G.js                     [39m[1m[2m  0.24 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/banknote-D-2Uocms.js                     [39m[1m[2m  0.24 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/heart-7gBwGtZs.js                        [39m[1m[2m  0.24 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/circle-alert-78JCVc4C.js                 [39m[1m[2m  0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/chart-column-DBToRNDa.js                 [39m[1m[2m  0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/external-link-f7KSRGpY.js                [39m[1m[2m  0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/user-check-D_OH1mQE.js                   [39m[1m[2m  0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m
+[2m../dist/public/[22m[36massets/archive-e606R21F.js                      [39m[1m[2m  0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/eye-AxYmM_hN.js                          [39m[1m[2m  0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/link-BGRMY8J9.js                         [39m[1m[2m  0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/calendar-DWbf8eXT.js                     [39m[1m[2m  0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/upload-C6bM0jkz.js                       [39m[1m[2m  0.25 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/map-pin-C-JvYvzM.js                      [39m[1m[2m  0.26 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m
+[2m../dist/public/[22m[36massets/log-in-COfD-viC.js                       [39m[1m[2m  0.26 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m
+[2m../dist/public/[22m[36massets/file-minus-yrv9oDfy.js                   [39m[1m[2m  0.26 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/zap-gZIOYrGL.js                          [39m[1m[2m  0.26 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/file-check-CGRCDdkI.js                   [39m[1m[2m  0.26 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/communications-DPNzK-66.js               [39m[1m[2m  0.27 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/shield-oOWeLehA.js                       [39m[1m[2m  0.27 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m
+[2m../dist/public/[22m[36massets/chart-pie-BN4SggXM.js                    [39m[1m[2m  0.27 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m
+[2m../dist/public/[22m[36massets/award-CpNUK7RG.js                        [39m[1m[2m  0.27 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m
+[2m../dist/public/[22m[36massets/coins-BT3g3z6c.js                        [39m[1m[2m  0.28 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m
+[2m../dist/public/[22m[36massets/house-Dtz0q5aG.js                        [39m[1m[2m  0.29 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m
+[2m../dist/public/[22m[36massets/send-B7Z5FDKV.js                         [39m[1m[2m  0.29 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m
+[2m../dist/public/[22m[36massets/hash-BkiRtRMM.js                         [39m[1m[2m  0.29 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/file-up-DiB7dmYs.js                      [39m[1m[2m  0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/zoom-in-P4Dh9Iep.js                      [39m[1m[2m  0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/list-Bv2T8JuS.js                         [39m[1m[2m  0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.18 kB[22m
+[2m../dist/public/[22m[36massets/file-down-D21l_bUt.js                    [39m[1m[2m  0.30 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/user-plus-BXZSbK16.js                    [39m[1m[2m  0.31 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m
+[2m../dist/public/[22m[36massets/LineChart-CnMdLUAJ.js                    [39m[1m[2m  0.31 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m
+[2m../dist/public/[22m[36massets/AreaChart-Cuk2_cSw.js                    [39m[1m[2m  0.31 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m
+[2m../dist/public/[22m[36massets/square-pen-DLlsGx8N.js                   [39m[1m[2m  0.32 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m
+[2m../dist/public/[22m[36massets/printer-BDsa21gq.js                      [39m[1m[2m  0.32 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m
+[2m../dist/public/[22m[36massets/tag-DHwWZFvo.js                          [39m[1m[2m  0.32 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m
+[2m../dist/public/[22m[36massets/save-B9x07EuG.js                         [39m[1m[2m  0.32 kB[22m[1m[22m[2m Ôöé gzip:   0.22 kB[22m
+[2m../dist/public/[22m[36massets/file-text-CJtXP5fk.js                    [39m[1m[2m  0.33 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/server-BXglMqQT.js                       [39m[1m[2m  0.34 kB[22m[1m[22m[2m Ôöé gzip:   0.21 kB[22m
+[2m../dist/public/[22m[36massets/layout-grid-DyJBPtv5.js                  [39m[1m[2m  0.34 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/folder-kanban-lG0tjHJx.js                [39m[1m[2m  0.35 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m
+[2m../dist/public/[22m[36massets/layout-dashboard-BHvp0Xfy.js             [39m[1m[2m  0.35 kB[22m[1m[22m[2m Ôöé gzip:   0.20 kB[22m
+[2m../dist/public/[22m[36massets/BarChart-0ulEceXj.js                     [39m[1m[2m  0.35 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m
+[2m../dist/public/[22m[36massets/trash-2-CCc2ZaLC.js                      [39m[1m[2m  0.35 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m
+[2m../dist/public/[22m[36massets/crown-CxPmoMUL.js                        [39m[1m[2m  0.36 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m
+[2m../dist/public/[22m[36massets/useUserLookup-GflCNXVs.js                [39m[1m[2m  0.36 kB[22m[1m[22m[2m Ôöé gzip:   0.29 kB[22m
+[2m../dist/public/[22m[36massets/scale-BZG-sQBF.js                        [39m[1m[2m  0.37 kB[22m[1m[22m[2m Ôöé gzip:   0.24 kB[22m
+[2m../dist/public/[22m[36massets/spinner-D9DQYdU4.js                      [39m[1m[2m  0.37 kB[22m[1m[22m[2m Ôöé gzip:   0.28 kB[22m
+[2m../dist/public/[22m[36massets/skeleton-CsZpEFP6.js                     [39m[1m[2m  0.37 kB[22m[1m[22m[2m Ôöé gzip:   0.28 kB[22m
+[2m../dist/public/[22m[36massets/grip-vertical-B_jrBTCI.js                [39m[1m[2m  0.37 kB[22m[1m[22m[2m Ôöé gzip:   0.19 kB[22m
+[2m../dist/public/[22m[36massets/file-spreadsheet-BIbuc7FK.js             [39m[1m[2m  0.37 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m
+[2m../dist/public/[22m[36massets/calendar-clock-D5qQ7ACM.js               [39m[1m[2m  0.38 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m
+[2m../dist/public/[22m[36massets/network-B82R_zkW.js                      [39m[1m[2m  0.38 kB[22m[1m[22m[2m Ôöé gzip:   0.23 kB[22m
+[2m../dist/public/[22m[36massets/hard-drive-DMWJg0VL.js                   [39m[1m[2m  0.39 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m
+[2m../dist/public/[22m[36massets/phone-CUmURfwM.js                        [39m[1m[2m  0.39 kB[22m[1m[22m[2m Ôöé gzip:   0.25 kB[22m
+[2m../dist/public/[22m[36massets/shield-off-CS9mhSjZ.js                   [39m[1m[2m  0.40 kB[22m[1m[22m[2m Ôöé gzip:   0.28 kB[22m
+[2m../dist/public/[22m[36massets/truck-CUBFOuwL.js                        [39m[1m[2m  0.40 kB[22m[1m[22m[2m Ôöé gzip:   0.27 kB[22m
+[2m../dist/public/[22m[36massets/clipboard-list-CJaJax8g.js               [39m[1m[2m  0.41 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m
+[2m../dist/public/[22m[36massets/eye-off-EjR4QlEP.js                      [39m[1m[2m  0.43 kB[22m[1m[22m[2m Ôöé gzip:   0.27 kB[22m
+[2m../dist/public/[22m[36massets/activityLog-BEX8_GA1.js                  [39m[1m[2m  0.43 kB[22m[1m[22m[2m Ôöé gzip:   0.31 kB[22m
+[2m../dist/public/[22m[36massets/exportCsv-CNzVNdz4.js                    [39m[1m[2m  0.44 kB[22m[1m[22m[2m Ôöé gzip:   0.33 kB[22m
+[2m../dist/public/[22m[36massets/ComposedChart-CGVf6pAl.js                [39m[1m[2m  0.45 kB[22m[1m[22m[2m Ôöé gzip:   0.29 kB[22m
+[2m../dist/public/[22m[36massets/index-DOK4-kHq.js                        [39m[1m[2m  0.46 kB[22m[1m[22m[2m Ôöé gzip:   0.34 kB[22m
+[2m../dist/public/[22m[36massets/useCompanyInfo-CNkZyjSm.js               [39m[1m[2m  0.48 kB[22m[1m[22m[2m Ôöé gzip:   0.33 kB[22m
+[2m../dist/public/[22m[36massets/currency-DiTkfvbC.js                     [39m[1m[2m  0.49 kB[22m[1m[22m[2m Ôöé gzip:   0.32 kB[22m
+[2m../dist/public/[22m[36massets/cpu-3nhRL4mp.js                          [39m[1m[2m  0.49 kB[22m[1m[22m[2m Ôöé gzip:   0.26 kB[22m
+[2m../dist/public/[22m[36massets/calculator-MSII_GeA.js                   [39m[1m[2m  0.53 kB[22m[1m[22m[2m Ôöé gzip:   0.28 kB[22m
+[2m../dist/public/[22m[36massets/building-DNpQDpNK.js                     [39m[1m[2m  0.54 kB[22m[1m[22m[2m Ôöé gzip:   0.27 kB[22m
+[2m../dist/public/[22m[36massets/export-utils-C7uzXNTL.js                 [39m[1m[2m  0.57 kB[22m[1m[22m[2m Ôöé gzip:   0.40 kB[22m
+[2m../dist/public/[22m[36massets/useFavorite-dtlhHv9o.js                  [39m[1m[2m  0.59 kB[22m[1m[22m[2m Ôöé gzip:   0.35 kB[22m
+[2m../dist/public/[22m[36massets/palette-B5MCFo6H.js                      [39m[1m[2m  0.61 kB[22m[1m[22m[2m Ôöé gzip:   0.34 kB[22m
+[2m../dist/public/[22m[36massets/textarea-Du_hF9-A.js                     [39m[1m[2m  0.63 kB[22m[1m[22m[2m Ôöé gzip:   0.42 kB[22m
+[2m../dist/public/[22m[36massets/x-Ci3jUASf.js                            [39m[1m[2m  0.64 kB[22m[1m[22m[2m Ôöé gzip:   0.35 kB[22m
+[2m../dist/public/[22m[36massets/input-Dp4vtVPE.js                        [39m[1m[2m  0.72 kB[22m[1m[22m[2m Ôöé gzip:   0.45 kB[22m
+[2m../dist/public/[22m[36massets/users-D95rIt3A.js                        [39m[1m[2m  0.76 kB[22m[1m[22m[2m Ôöé gzip:   0.40 kB[22m
+[2m../dist/public/[22m[36massets/label-BodEyxFW.js                        [39m[1m[2m  0.76 kB[22m[1m[22m[2m Ôöé gzip:   0.50 kB[22m
+[2m../dist/public/[22m[36massets/collapsible-CscjF1-c.js                  [39m[1m[2m  0.88 kB[22m[1m[22m[2m Ôöé gzip:   0.32 kB[22m
+[2m../dist/public/[22m[36massets/separator-qjC4IJaK.js                    [39m[1m[2m  0.88 kB[22m[1m[22m[2m Ôöé gzip:   0.52 kB[22m
+[2m../dist/public/[22m[36massets/healthScore-hLzRzKdj.js                  [39m[1m[2m  0.89 kB[22m[1m[22m[2m Ôöé gzip:   0.52 kB[22m
+[2m../dist/public/[22m[36massets/badge-DWR39Sv3.js                        [39m[1m[2m  0.92 kB[22m[1m[22m[2m Ôöé gzip:   0.50 kB[22m
+[2m../dist/public/[22m[36massets/format-DcMdhruc.js                       [39m[1m[2m  1.05 kB[22m[1m[22m[2m Ôöé gzip:   0.51 kB[22m
+[2m../dist/public/[22m[36massets/index-DsKOWDdC.js                        [39m[1m[2m  1.27 kB[22m[1m[22m[2m Ôöé gzip:   0.64 kB[22m
+[2m../dist/public/[22m[36massets/alert-Bvwm5tOb.js                        [39m[1m[2m  1.56 kB[22m[1m[22m[2m Ôöé gzip:   0.66 kB[22m
+[2m../dist/public/[22m[36massets/user-cog-CSEy09ls.js                     [39m[1m[2m  1.75 kB[22m[1m[22m[2m Ôöé gzip:   0.77 kB[22m
+[2m../dist/public/[22m[36massets/designSystem-BjMWY9N5.js                 [39m[1m[2m  1.76 kB[22m[1m[22m[2m Ôöé gzip:   0.66 kB[22m
+[2m../dist/public/[22m[36massets/useAuthWithPersistence-OFSYGTG1.js       [39m[1m[2m  1.76 kB[22m[1m[22m[2m Ôöé gzip:   0.78 kB[22m
+[2m../dist/public/[22m[36massets/star-Cgb_kpeH.js                         [39m[1m[2m  1.83 kB[22m[1m[22m[2m Ôöé gzip:   0.76 kB[22m
+[2m../dist/public/[22m[36massets/index-Bgcs9UVl.js                        [39m[1m[2m  2.17 kB[22m[1m[22m[2m Ôöé gzip:   0.97 kB[22m
+[2m../dist/public/[22m[36massets/SummaryStatCards-n6KUNj3R.js             [39m[1m[2m  2.29 kB[22m[1m[22m[2m Ôöé gzip:   0.73 kB[22m
+[2m../dist/public/[22m[36massets/ModuleLayout-Hz_XN2OJ.js                 [39m[1m[2m  2.33 kB[22m[1m[22m[2m Ôöé gzip:   0.71 kB[22m
+[2m../dist/public/[22m[36massets/progress-BkZlTIkB.js                     [39m[1m[2m  2.35 kB[22m[1m[22m[2m Ôöé gzip:   1.10 kB[22m
+[2m../dist/public/[22m[36massets/card-CKR3M5Ek.js                         [39m[1m[2m  2.65 kB[22m[1m[22m[2m Ôöé gzip:   0.69 kB[22m
+[2m../dist/public/[22m[36massets/DeleteConfirmationModal-iYprRLlZ.js      [39m[1m[2m  2.87 kB[22m[1m[22m[2m Ôöé gzip:   0.68 kB[22m
+[2m../dist/public/[22m[36massets/RoleBasedDashboard-CGOq12cf.js           [39m[1m[2m  2.89 kB[22m[1m[22m[2m Ôöé gzip:   0.82 kB[22m
+[2m../dist/public/[22m[36massets/switch-jjKH0UY3.js                       [39m[1m[2m  2.91 kB[22m[1m[22m[2m Ôöé gzip:   1.39 kB[22m
+[2m../dist/public/[22m[36massets/actions-B-qgoflA.js                      [39m[1m[2m  3.06 kB[22m[1m[22m[2m Ôöé gzip:   1.31 kB[22m
+[2m../dist/public/[22m[36massets/table-Cymzum3_.js                        [39m[1m[2m  3.22 kB[22m[1m[22m[2m Ôöé gzip:   0.79 kB[22m
+[2m../dist/public/[22m[36massets/stats-card-DmWlryHg.js                   [39m[1m[2m  3.56 kB[22m[1m[22m[2m Ôöé gzip:   0.97 kB[22m
+[2m../dist/public/[22m[36massets/Messages-B4-TkiU9.js                     [39m[1m[2m  3.72 kB[22m[1m[22m[2m Ôöé gzip:   1.31 kB[22m
+[2m../dist/public/[22m[36massets/dialog-ymvW34G-.js                       [39m[1m[2m  4.09 kB[22m[1m[22m[2m Ôöé gzip:   1.08 kB[22m
+[2m../dist/public/[22m[36massets/button-y0PrYEuK.js                       [39m[1m[2m  4.15 kB[22m[1m[22m[2m Ôöé gzip:   1.86 kB[22m
+[2m../dist/public/[22m[36massets/index-inXgRxZV.js                        [39m[1m[2m  4.16 kB[22m[1m[22m[2m Ôöé gzip:   1.31 kB[22m
+[2m../dist/public/[22m[36massets/FormField-USmm7IHw.js                    [39m[1m[2m  4.26 kB[22m[1m[22m[2m Ôöé gzip:   0.85 kB[22m
+[2m../dist/public/[22m[36massets/checkbox-B7etCr9x.js                     [39m[1m[2m  4.61 kB[22m[1m[22m[2m Ôöé gzip:   1.91 kB[22m
+[2m../dist/public/[22m[36massets/OrgBreadcrumb-B8TE45-q.js                [39m[1m[2m  4.70 kB[22m[1m[22m[2m Ôöé gzip:   1.04 kB[22m
+[2m../dist/public/[22m[36massets/CreateReceipt-D4echOod.js                [39m[1m[2m  5.05 kB[22m[1m[22m[2m Ôöé gzip:   1.98 kB[22m
+[2m../dist/public/[22m[36massets/NotFound-DOjqwRS8.js                     [39m[1m[2m  5.08 kB[22m[1m[22m[2m Ôöé gzip:   1.28 kB[22m
+[2m../dist/public/[22m[36massets/index-DTaiGYzJ.js                        [39m[1m[2m  5.13 kB[22m[1m[22m[2m Ôöé gzip:   1.96 kB[22m
+[2m../dist/public/[22m[36massets/SmsQueue-CteDJQ3E.js                     [39m[1m[2m  5.27 kB[22m[1m[22m[2m Ôöé gzip:   1.65 kB[22m
+[2m../dist/public/[22m[36massets/PageHeader-CP6fL-oV.js                   [39m[1m[2m  5.48 kB[22m[1m[22m[2m Ôöé gzip:   1.20 kB[22m
+[2m../dist/public/[22m[36massets/popover-k5nY-J1Y.js                      [39m[1m[2m  5.61 kB[22m[1m[22m[2m Ôöé gzip:   2.03 kB[22m
+[2m../dist/public/[22m[36massets/RowActionsMenu-nSsaxjfD.js               [39m[1m[2m  5.94 kB[22m[1m[22m[2m Ôöé gzip:   1.17 kB[22m
+[2m../dist/public/[22m[36massets/CreateEstimate--kh7Bedn.js               [39m[1m[2m  6.05 kB[22m[1m[22m[2m Ôöé gzip:   2.45 kB[22m
+[2m../dist/public/[22m[36massets/accordion-Jsp1aScq.js                    [39m[1m[2m  6.06 kB[22m[1m[22m[2m Ôöé gzip:   2.11 kB[22m
+[2m../dist/public/[22m[36massets/index-C7yKKq-w.js                        [39m[1m[2m  6.19 kB[22m[1m[22m[2m Ôöé gzip:   2.10 kB[22m
+[2m../dist/public/[22m[36massets/data-table-controls-Ci9bfAzC.js          [39m[1m[2m  6.25 kB[22m[1m[22m[2m Ôöé gzip:   1.39 kB[22m
+[2m../dist/public/[22m[36massets/CreateImprest-Dt5wU9Pl.js                [39m[1m[2m  6.39 kB[22m[1m[22m[2m Ôöé gzip:   1.79 kB[22m
+[2m../dist/public/[22m[36massets/OrgModulePage-NyRahuzi.js                [39m[1m[2m  6.40 kB[22m[1m[22m[2m Ôöé gzip:   2.01 kB[22m
+[2m../dist/public/[22m[36massets/alert-dialog-BsawQRaa.js                 [39m[1m[2m  6.59 kB[22m[1m[22m[2m Ôöé gzip:   1.95 kB[22m
+[2m../dist/public/[22m[36massets/BiTools-D3ft0M9I.js                      [39m[1m[2m  6.65 kB[22m[1m[22m[2m Ôöé gzip:   1.95 kB[22m
+[2m../dist/public/[22m[36massets/tabs-DqVIl6p1.js                         [39m[1m[2m  7.27 kB[22m[1m[22m[2m Ôöé gzip:   2.86 kB[22m
+[2m../dist/public/[22m[36massets/EnhancedBulkActions-D_EED-ef.js          [39m[1m[2m  7.32 kB[22m[1m[22m[2m Ôöé gzip:   1.62 kB[22m
+[2m../dist/public/[22m[36massets/CustomFields-D30glZ0u.js                 [39m[1m[2m  8.05 kB[22m[1m[22m[2m Ôöé gzip:   1.78 kB[22m
+[2m../dist/public/[22m[36massets/Search-DSo4ZQ1-.js                       [39m[1m[2m  8.31 kB[22m[1m[22m[2m Ôöé gzip:   2.33 kB[22m
+[2m../dist/public/[22m[36massets/EditReceipt-LQzNlsd3.js                  [39m[1m[2m  8.31 kB[22m[1m[22m[2m Ôöé gzip:   2.49 kB[22m
+[2m../dist/public/[22m[36massets/Sales-CnXSHogi.js                        [39m[1m[2m  8.32 kB[22m[1m[22m[2m Ôöé gzip:   2.17 kB[22m
+[2m../dist/public/[22m[36massets/EditEstimate-Qe5qCa4N.js                 [39m[1m[2m  8.48 kB[22m[1m[22m[2m Ôöé gzip:   2.53 kB[22m
+[2m../dist/public/[22m[36massets/CreateBudget-B0o0_fsb.js                 [39m[1m[2m  8.75 kB[22m[1m[22m[2m Ôöé gzip:   2.23 kB[22m
+[2m../dist/public/[22m[36massets/EditInvoice-CTyus9pT.js                  [39m[1m[2m  8.91 kB[22m[1m[22m[2m Ôöé gzip:   2.61 kB[22m
+[2m../dist/public/[22m[36massets/LocationSelects-BBFs0UDh.js              [39m[1m[2m  9.12 kB[22m[1m[22m[2m Ôöé gzip:   2.70 kB[22m
+[2m../dist/public/[22m[36massets/Home-DZNwFkGy.js                         [39m[1m[2m  9.30 kB[22m[1m[22m[2m Ôöé gzip:   2.46 kB[22m
+[2m../dist/public/[22m[36massets/DashboardBuilderPro-DxOIXPcf.js          [39m[1m[2m  9.70 kB[22m[1m[22m[2m Ôöé gzip:   2.10 kB[22m
+[2m../dist/public/[22m[36massets/EditDepartment-DsWkex35.js               [39m[1m[2m  9.82 kB[22m[1m[22m[2m Ôöé gzip:   2.29 kB[22m
+[2m../dist/public/[22m[36massets/EditBudget-Bleq3wWN.js                   [39m[1m[2m  9.95 kB[22m[1m[22m[2m Ôöé gzip:   2.47 kB[22m
+[2m../dist/public/[22m[36massets/CreditNotes-BNI7Tyzk.js                  [39m[1m[2m  9.99 kB[22m[1m[22m[2m Ôöé gzip:   2.25 kB[22m
+[2m../dist/public/[22m[36massets/CreateDepartment-BOJX2zlm.js             [39m[1m[2m 10.06 kB[22m[1m[22m[2m Ôöé gzip:   2.33 kB[22m
+[2m../dist/public/[22m[36massets/ReportsDetails-CBv64ULq.js               [39m[1m[2m 10.72 kB[22m[1m[22m[2m Ôöé gzip:   2.16 kB[22m
+[2m../dist/public/[22m[36massets/Area-ztxifWwa.js                         [39m[1m[2m 10.79 kB[22m[1m[22m[2m Ôöé gzip:   3.97 kB[22m
+[2m../dist/public/[22m[36massets/Line-S_3BERAG.js                         [39m[1m[2m 10.94 kB[22m[1m[22m[2m Ôöé gzip:   4.20 kB[22m
+[2m../dist/public/[22m[36massets/FinancialReports-CZBx-P2r.js             [39m[1m[2m 11.01 kB[22m[1m[22m[2m Ôöé gzip:   2.21 kB[22m
+[2m../dist/public/[22m[36massets/CreatePurchaseOrder-MGs_Au2c.js          [39m[1m[2m 11.02 kB[22m[1m[22m[2m Ôöé gzip:   2.19 kB[22m
+[2m../dist/public/[22m[36massets/CreateLPO-CoG7j0ba.js                    [39m[1m[2m 11.04 kB[22m[1m[22m[2m Ôöé gzip:   2.58 kB[22m
+[2m../dist/public/[22m[36massets/EmailQueue-BtZIxcAf.js                   [39m[1m[2m 11.11 kB[22m[1m[22m[2m Ôöé gzip:   2.58 kB[22m
+[2m../dist/public/[22m[36massets/ProjectAnalytics-CZiXa2A1.js             [39m[1m[2m 11.22 kB[22m[1m[22m[2m Ôöé gzip:   2.43 kB[22m
+[2m../dist/public/[22m[36massets/DebitNotes-C5PvQXrw.js                   [39m[1m[2m 11.22 kB[22m[1m[22m[2m Ôöé gzip:   2.44 kB[22m
+[2m../dist/public/[22m[36massets/DepartmentDetails-C80Ps1Yo.js            [39m[1m[2m 11.25 kB[22m[1m[22m[2m Ôöé gzip:   2.33 kB[22m
+[2m../dist/public/[22m[36massets/Login-BAO5nIbb.js                        [39m[1m[2m 11.32 kB[22m[1m[22m[2m Ôöé gzip:   2.43 kB[22m
+[2m../dist/public/[22m[36massets/ChartOfAccountsDetails-BOi11Oa1.js       [39m[1m[2m 11.51 kB[22m[1m[22m[2m Ôöé gzip:   2.22 kB[22m
+[2m../dist/public/[22m[36massets/FunnelAnalysis-BfdjymeM.js               [39m[1m[2m 11.55 kB[22m[1m[22m[2m Ôöé gzip:   2.28 kB[22m
+[2m../dist/public/[22m[36massets/AuditLogs-BxZuCQCa.js                    [39m[1m[2m 11.68 kB[22m[1m[22m[2m Ôöé gzip:   2.47 kB[22m
+[2m../dist/public/[22m[36massets/ProductDetails-BmDSWfvO.js               [39m[1m[2m 11.74 kB[22m[1m[22m[2m Ôöé gzip:   2.47 kB[22m
+[2m../dist/public/[22m[36massets/ChangePassword-boiCWaxa.js               [39m[1m[2m 11.77 kB[22m[1m[22m[2m Ôöé gzip:   2.32 kB[22m
+[2m../dist/public/[22m[36massets/Scatter-BPt2WMcx.js                      [39m[1m[2m 11.79 kB[22m[1m[22m[2m Ôöé gzip:   3.77 kB[22m
+[2m../dist/public/[22m[36massets/HRDetails-DvOI2xN_.js                    [39m[1m[2m 11.80 kB[22m[1m[22m[2m Ôöé gzip:   2.45 kB[22m
+[2m../dist/public/[22m[36massets/format-ZixNOm7y.js                       [39m[1m[2m 11.96 kB[22m[1m[22m[2m Ôöé gzip:   3.22 kB[22m
+[2m../dist/public/[22m[36massets/Activity-JrFRi1IU.js                     [39m[1m[2m 12.05 kB[22m[1m[22m[2m Ôöé gzip:   3.15 kB[22m
+[2m../dist/public/[22m[36massets/ServiceInvoices-DyJYyxpC.js              [39m[1m[2m 12.19 kB[22m[1m[22m[2m Ôöé gzip:   2.48 kB[22m
+[2m../dist/public/[22m[36massets/EditSalaryStructure-XNtqOt7j.js          [39m[1m[2m 12.32 kB[22m[1m[22m[2m Ôöé gzip:   2.67 kB[22m
+[2m../dist/public/[22m[36massets/WorkOrders-DQ-aNvaE.js                   [39m[1m[2m 12.43 kB[22m[1m[22m[2m Ôöé gzip:   2.57 kB[22m
+[2m../dist/public/[22m[36massets/ServiceDetails-BcDev6xB.js               [39m[1m[2m 12.44 kB[22m[1m[22m[2m Ôöé gzip:   2.49 kB[22m
+[2m../dist/public/[22m[36massets/Blog-DjOsEwBM.js                         [39m[1m[2m 12.45 kB[22m[1m[22m[2m Ôöé gzip:   2.39 kB[22m
+[2m../dist/public/[22m[36massets/OrgAI-CFMALEYV.js                        [39m[1m[2m 12.48 kB[22m[1m[22m[2m Ôöé gzip:   3.42 kB[22m
+[2m../dist/public/[22m[36massets/CreateWarranty-BiUgy-f7.js               [39m[1m[2m 12.58 kB[22m[1m[22m[2m Ôöé gzip:   2.52 kB[22m
+[2m../dist/public/[22m[36massets/QuotationDetails-BHUekF4v.js             [39m[1m[2m 12.70 kB[22m[1m[22m[2m Ôöé gzip:   2.39 kB[22m
+[2m../dist/public/[22m[36massets/WarrantyDetails-BbsLRvfM.js              [39m[1m[2m 12.75 kB[22m[1m[22m[2m Ôöé gzip:   2.26 kB[22m
+[2m../dist/public/[22m[36massets/CreateTicket-CPJ6b0qW.js                 [39m[1m[2m 12.77 kB[22m[1m[22m[2m Ôöé gzip:   2.73 kB[22m
+[2m../dist/public/[22m[36massets/CreateAttendance-GS0GsWcT.js             [39m[1m[2m 12.91 kB[22m[1m[22m[2m Ôöé gzip:   2.54 kB[22m
+[2m../dist/public/[22m[36massets/ServiceTemplates-BqVwsowD.js             [39m[1m[2m 12.94 kB[22m[1m[22m[2m Ôöé gzip:   3.23 kB[22m
+[2m../dist/public/[22m[36massets/CohortAnalysis-z6hXbQws.js               [39m[1m[2m 12.95 kB[22m[1m[22m[2m Ôöé gzip:   2.30 kB[22m
+[2m../dist/public/[22m[36massets/CreateLeaveRequest-CSqOXZVi.js           [39m[1m[2m 13.00 kB[22m[1m[22m[2m Ôöé gzip:   2.53 kB[22m
+[2m../dist/public/[22m[36massets/SalesManagerDashboard-BK7mNF_E.js        [39m[1m[2m 13.04 kB[22m[1m[22m[2m Ôöé gzip:   2.04 kB[22m
+[2m../dist/public/[22m[36massets/GRNDetails-G5GFAciP.js                   [39m[1m[2m 13.16 kB[22m[1m[22m[2m Ôöé gzip:   2.41 kB[22m
+[2m../dist/public/[22m[36massets/EditAllowance-DkD1mBKk.js                [39m[1m[2m 13.26 kB[22m[1m[22m[2m Ôöé gzip:   2.87 kB[22m
+[2m../dist/public/[22m[36massets/EditBenefit-DoySAM8P.js                  [39m[1m[2m 13.33 kB[22m[1m[22m[2m Ôöé gzip:   2.96 kB[22m
+[2m../dist/public/[22m[36massets/WarrantyManagement-DTEW-36Q.js           [39m[1m[2m 13.40 kB[22m[1m[22m[2m Ôöé gzip:   2.49 kB[22m
+[2m../dist/public/[22m[36massets/CreateInvoice-BXEhPJtd.js                [39m[1m[2m 13.43 kB[22m[1m[22m[2m Ôöé gzip:   3.55 kB[22m
+[2m../dist/public/[22m[36massets/ProposalDetails-ClAJoLEX.js              [39m[1m[2m 13.63 kB[22m[1m[22m[2m Ôöé gzip:   2.48 kB[22m
+[2m../dist/public/[22m[36massets/CreateAllowance-DfWrZepu.js              [39m[1m[2m 13.76 kB[22m[1m[22m[2m Ôöé gzip:   2.79 kB[22m
+[2m../dist/public/[22m[36massets/BudgetDetails-C7hwvott.js                [39m[1m[2m 13.77 kB[22m[1m[22m[2m Ôöé gzip:   2.50 kB[22m
+[2m../dist/public/[22m[36massets/ProcurementManagerDashboard-Briz93fi.js  [39m[1m[2m 13.80 kB[22m[1m[22m[2m Ôöé gzip:   2.03 kB[22m
+[2m../dist/public/[22m[36massets/OrgActivity-B1oyR4dx.js                  [39m[1m[2m 13.87 kB[22m[1m[22m[2m Ôöé gzip:   3.47 kB[22m
+[2m../dist/public/[22m[36massets/EditDeduction-VfOgSZhw.js                [39m[1m[2m 14.07 kB[22m[1m[22m[2m Ôöé gzip:   3.03 kB[22m
+[2m../dist/public/[22m[36massets/ConversionAnalytics-n_hjL3kj.js          [39m[1m[2m 14.09 kB[22m[1m[22m[2m Ôöé gzip:   2.74 kB[22m
+[2m../dist/public/[22m[36massets/DeliveryNoteDetails-BS30bwFM.js          [39m[1m[2m 14.15 kB[22m[1m[22m[2m Ôöé gzip:   2.38 kB[22m
+[2m../dist/public/[22m[36massets/Documentation-DcP0RFNg.js                [39m[1m[2m 14.23 kB[22m[1m[22m[2m Ôöé gzip:   3.20 kB[22m
+[2m../dist/public/[22m[36massets/EditProduct-B0qeOgzZ.js                  [39m[1m[2m 14.31 kB[22m[1m[22m[2m Ôöé gzip:   2.91 kB[22m
+[2m../dist/public/[22m[36massets/EditAttendance-Bmo-IAk9.js               [39m[1m[2m 14.34 kB[22m[1m[22m[2m Ôöé gzip:   2.78 kB[22m
+[2m../dist/public/[22m[36massets/Accounting-C20Dzds1.js                   [39m[1m[2m 14.39 kB[22m[1m[22m[2m Ôöé gzip:   3.10 kB[22m
+[2m../dist/public/[22m[36massets/documentTemplate-D0NRZM6m.js             [39m[1m[2m 14.51 kB[22m[1m[22m[2m Ôöé gzip:   3.33 kB[22m
+[2m../dist/public/[22m[36massets/RevenueForecasting-CWxETPRx.js           [39m[1m[2m 14.51 kB[22m[1m[22m[2m Ôöé gzip:   2.86 kB[22m
+[2m../dist/public/[22m[36massets/TableColumnSettings-DAoIISd0.js          [39m[1m[2m 14.56 kB[22m[1m[22m[2m Ôöé gzip:   2.71 kB[22m
+[2m../dist/public/[22m[36massets/PaymentDetails-CP-lq4WH.js               [39m[1m[2m 14.76 kB[22m[1m[22m[2m Ôöé gzip:   2.98 kB[22m
+[2m../dist/public/[22m[36massets/EditTicket-sPARx-9e.js                   [39m[1m[2m 14.83 kB[22m[1m[22m[2m Ôöé gzip:   2.98 kB[22m
+[2m../dist/public/[22m[36massets/SalesReports-DAsYezkK.js                 [39m[1m[2m 15.01 kB[22m[1m[22m[2m Ôöé gzip:   2.63 kB[22m
+[2m../dist/public/[22m[36massets/OrgBudgets-DNDyZLq8.js                   [39m[1m[2m 15.26 kB[22m[1m[22m[2m Ôöé gzip:   3.18 kB[22m
+[2m../dist/public/[22m[36massets/CreateUser-C1Hx3g0p.js                   [39m[1m[2m 15.27 kB[22m[1m[22m[2m Ôöé gzip:   3.26 kB[22m
+[2m../dist/public/[22m[36massets/OrgPayments-CdF4U43e.js                  [39m[1m[2m 15.35 kB[22m[1m[22m[2m Ôöé gzip:   3.16 kB[22m
+[2m../dist/public/[22m[36massets/EditWarranty-BhbD0902.js                 [39m[1m[2m 15.38 kB[22m[1m[22m[2m Ôöé gzip:   3.11 kB[22m
+[2m../dist/public/[22m[36massets/AssetDetails-D3quPuW_.js                 [39m[1m[2m 15.41 kB[22m[1m[22m[2m Ôöé gzip:   2.50 kB[22m
+[2m../dist/public/[22m[36massets/Signup-TqgEaAsm.js                       [39m[1m[2m 15.65 kB[22m[1m[22m[2m Ôöé gzip:   2.73 kB[22m
+[2m../dist/public/[22m[36massets/OrgAttendance-BIFMISYG.js                [39m[1m[2m 15.75 kB[22m[1m[22m[2m Ôöé gzip:   3.15 kB[22m
+[2m../dist/public/[22m[36massets/TestPDFGeneration-CZkpEVz2.js            [39m[1m[2m 15.79 kB[22m[1m[22m[2m Ôöé gzip:   2.95 kB[22m
+[2m../dist/public/[22m[36massets/ContractDetails-Da5kGxhp.js              [39m[1m[2m 15.83 kB[22m[1m[22m[2m Ôöé gzip:   2.54 kB[22m
+[2m../dist/public/[22m[36massets/DebitNoteDetails-0TlpixDG.js             [39m[1m[2m 15.83 kB[22m[1m[22m[2m Ôöé gzip:   2.65 kB[22m
+[2m../dist/public/[22m[36massets/ForgotPassword-COnE-RzA.js               [39m[1m[2m 15.90 kB[22m[1m[22m[2m Ôöé gzip:   2.47 kB[22m
+[2m../dist/public/[22m[36massets/EditLPO-C6VDAH5e.js                      [39m[1m[2m 16.47 kB[22m[1m[22m[2m Ôöé gzip:   3.30 kB[22m
+[2m../dist/public/[22m[36massets/ProcurementMaster-Df6IBPVG.js            [39m[1m[2m 16.48 kB[22m[1m[22m[2m Ôöé gzip:   2.93 kB[22m
+[2m../dist/public/[22m[36massets/MFA-Dx1lEm_s.js                          [39m[1m[2m 16.49 kB[22m[1m[22m[2m Ôöé gzip:   2.99 kB[22m
+[2m../dist/public/[22m[36massets/Combination-CTW3MkT3.js                  [39m[1m[2m 16.55 kB[22m[1m[22m[2m Ôöé gzip:   6.26 kB[22m
+[2m../dist/public/[22m[36massets/EditUser-C1LnALwm.js                     [39m[1m[2m 16.56 kB[22m[1m[22m[2m Ôöé gzip:   3.29 kB[22m
+[2m../dist/public/[22m[36massets/HR-Bgnw6sj7.js                           [39m[1m[2m 16.57 kB[22m[1m[22m[2m Ôöé gzip:   3.58 kB[22m
+[2m../dist/public/[22m[36massets/BankReconciliation-DTQNHtDZ.js           [39m[1m[2m 16.58 kB[22m[1m[22m[2m Ôöé gzip:   3.15 kB[22m
+[2m../dist/public/[22m[36massets/ProjectsManagement-KYXk7Phg.js           [39m[1m[2m 16.75 kB[22m[1m[22m[2m Ôöé gzip:   3.29 kB[22m
+[2m../dist/public/[22m[36massets/EditBankReconciliation-C3cQoche.js       [39m[1m[2m 16.76 kB[22m[1m[22m[2m Ôöé gzip:   2.91 kB[22m
+[2m../dist/public/[22m[36massets/ImprestDetails-8v6yWsGM.js               [39m[1m[2m 16.87 kB[22m[1m[22m[2m Ôöé gzip:   2.83 kB[22m
+[2m../dist/public/[22m[36massets/CreateWorkOrder-BJeVXcY6.js              [39m[1m[2m 17.10 kB[22m[1m[22m[2m Ôöé gzip:   3.02 kB[22m
+[2m../dist/public/[22m[36massets/CreateService-Do-6PI_i.js                [39m[1m[2m 17.12 kB[22m[1m[22m[2m Ôöé gzip:   3.12 kB[22m
+[2m../dist/public/[22m[36massets/UserGuide-CZKXs9lC.js                    [39m[1m[2m 17.32 kB[22m[1m[22m[2m Ôöé gzip:   3.85 kB[22m
+[2m../dist/public/[22m[36massets/CreateSalaryStructure-oN6n42Ad.js        [39m[1m[2m 17.34 kB[22m[1m[22m[2m Ôöé gzip:   3.08 kB[22m
+[2m../dist/public/[22m[36massets/Calendar-aYyByqSQ.js                     [39m[1m[2m 17.35 kB[22m[1m[22m[2m Ôöé gzip:   3.65 kB[22m
+[2m../dist/public/[22m[36massets/Products-BdUF_Fh6.js                     [39m[1m[2m 17.36 kB[22m[1m[22m[2m Ôöé gzip:   3.76 kB[22m
+[2m../dist/public/[22m[36massets/OrgLeave-CqQg-ZzV.js                     [39m[1m[2m 17.40 kB[22m[1m[22m[2m Ôöé gzip:   3.60 kB[22m
+[2m../dist/public/[22m[36massets/EditWorkOrder-hV4wHet_.js                [39m[1m[2m 17.44 kB[22m[1m[22m[2m Ôöé gzip:   3.12 kB[22m
+[2m../dist/public/[22m[36massets/Profile-2KY_SZ0R.js                      [39m[1m[2m 17.44 kB[22m[1m[22m[2m Ôöé gzip:   3.53 kB[22m
+[2m../dist/public/[22m[36massets/EditLeave-Clvf-gYT.js                    [39m[1m[2m 17.46 kB[22m[1m[22m[2m Ôöé gzip:   3.19 kB[22m
+[2m../dist/public/[22m[36massets/LPODetails-BnbE2kPN.js                   [39m[1m[2m 17.47 kB[22m[1m[22m[2m Ôöé gzip:   2.92 kB[22m
+[2m../dist/public/[22m[36massets/EditService-MiitAQsF.js                  [39m[1m[2m 17.47 kB[22m[1m[22m[2m Ôöé gzip:   3.47 kB[22m
+[2m../dist/public/[22m[36massets/CreditNoteDetails-D21OKOSq.js            [39m[1m[2m 17.54 kB[22m[1m[22m[2m Ôöé gzip:   2.77 kB[22m
+[2m../dist/public/[22m[36massets/ChurnPrediction-DjDrDFtm.js              [39m[1m[2m 17.56 kB[22m[1m[22m[2m Ôöé gzip:   2.87 kB[22m
+[2m../dist/public/[22m[36massets/AdvancedAnalytics-2ixPEQc9.js            [39m[1m[2m 17.58 kB[22m[1m[22m[2m Ôöé gzip:   2.66 kB[22m
+[2m../dist/public/[22m[36massets/EditChartOfAccounts-DhoKX7dC.js          [39m[1m[2m 17.63 kB[22m[1m[22m[2m Ôöé gzip:   3.32 kB[22m
+[2m../dist/public/[22m[36massets/CreateDebitNote-BBEwIUkS.js              [39m[1m[2m 17.75 kB[22m[1m[22m[2m Ôöé gzip:   3.31 kB[22m
+[2m../dist/public/[22m[36massets/ServiceTemplateDetails-Bh6FwZ2_.js       [39m[1m[2m 17.85 kB[22m[1m[22m[2m Ôöé gzip:   3.07 kB[22m
+[2m../dist/public/[22m[36massets/CreateDeduction-Ccp2z8_Z.js              [39m[1m[2m 17.87 kB[22m[1m[22m[2m Ôöé gzip:   3.32 kB[22m
+[2m../dist/public/[22m[36massets/FinanceSettings-BvpeH67Q.js              [39m[1m[2m 17.91 kB[22m[1m[22m[2m Ôöé gzip:   3.01 kB[22m
+[2m../dist/public/[22m[36massets/OrgTickets-2Vstcszj.js                   [39m[1m[2m 17.97 kB[22m[1m[22m[2m Ôöé gzip:   3.59 kB[22m
+[2m../dist/public/[22m[36massets/BankReconciliationDetails-CsyWvmws.js    [39m[1m[2m 18.00 kB[22m[1m[22m[2m Ôöé gzip:   2.73 kB[22m
+[2m../dist/public/[22m[36massets/Projects-CFTS5iTR.js                     [39m[1m[2m 18.02 kB[22m[1m[22m[2m Ôöé gzip:   3.82 kB[22m
+[2m../dist/public/[22m[36massets/OpportunityDetails-CUJOyqrx.js           [39m[1m[2m 18.17 kB[22m[1m[22m[2m Ôöé gzip:   3.20 kB[22m
+[2m../dist/public/[22m[36massets/SystemLogsViewer-DwTxAZFA.js             [39m[1m[2m 18.25 kB[22m[1m[22m[2m Ôöé gzip:   3.46 kB[22m
+[2m../dist/public/[22m[36massets/OrderDetails-d39qPjX3.js                 [39m[1m[2m 18.37 kB[22m[1m[22m[2m Ôöé gzip:   2.99 kB[22m
+[2m../dist/public/[22m[36massets/OrgContracts-2j5M1IcJ.js                 [39m[1m[2m 18.44 kB[22m[1m[22m[2m Ôöé gzip:   3.77 kB[22m
+[2m../dist/public/[22m[36massets/LeaveManagementDetails-B-8rOdlB.js       [39m[1m[2m 18.46 kB[22m[1m[22m[2m Ôöé gzip:   3.02 kB[22m
+[2m../dist/public/[22m[36massets/AttendanceDetails-DcUhL4DC.js            [39m[1m[2m 18.59 kB[22m[1m[22m[2m Ôöé gzip:   3.22 kB[22m
+[2m../dist/public/[22m[36massets/Features-BdELbjRv.js                     [39m[1m[2m 18.60 kB[22m[1m[22m[2m Ôöé gzip:   4.60 kB[22m
+[2m../dist/public/[22m[36massets/OrgProcurement-BQGnVwlc.js               [39m[1m[2m 18.62 kB[22m[1m[22m[2m Ôöé gzip:   3.66 kB[22m
+[2m../dist/public/[22m[36massets/OrgWorkOrders-Ijwyeobe.js                [39m[1m[2m 18.76 kB[22m[1m[22m[2m Ôöé gzip:   3.64 kB[22m
+[2m../dist/public/[22m[36massets/Holidays-CUACURVa.js                     [39m[1m[2m 18.78 kB[22m[1m[22m[2m Ôöé gzip:   3.54 kB[22m
+[2m../dist/public/[22m[36massets/Attendance-Cmc9U1D3.js                   [39m[1m[2m 18.97 kB[22m[1m[22m[2m Ôöé gzip:   3.38 kB[22m
+[2m../dist/public/[22m[36massets/SystemHealthDashboard-D_P2w8MQ.js        [39m[1m[2m 18.98 kB[22m[1m[22m[2m Ôöé gzip:   3.10 kB[22m
+[2m../dist/public/[22m[36massets/EnterpriseSettings-CKHw22ua.js           [39m[1m[2m 19.01 kB[22m[1m[22m[2m Ôöé gzip:   3.40 kB[22m
+[2m../dist/public/[22m[36massets/ContactDetails-_T_RPcOL.js               [39m[1m[2m 19.02 kB[22m[1m[22m[2m Ôöé gzip:   2.76 kB[22m
+[2m../dist/public/[22m[36massets/CreateServiceInvoice-DU6E_eDr.js         [39m[1m[2m 19.20 kB[22m[1m[22m[2m Ôöé gzip:   3.41 kB[22m
+[2m../dist/public/[22m[36massets/OrgProjects-ZvSKIFZu.js                  [39m[1m[2m 19.30 kB[22m[1m[22m[2m Ôöé gzip:   3.79 kB[22m
+[2m../dist/public/[22m[36massets/Budgets-CA6lA43P.js                      [39m[1m[2m 19.31 kB[22m[1m[22m[2m Ôöé gzip:   3.69 kB[22m
+[2m../dist/public/[22m[36massets/OrgCalendar-Bwp49JKo.js                  [39m[1m[2m 19.32 kB[22m[1m[22m[2m Ôöé gzip:   3.87 kB[22m
+[2m../dist/public/[22m[36massets/OrgAccounting-BvZxAfjW.js                [39m[1m[2m 19.39 kB[22m[1m[22m[2m Ôöé gzip:   3.98 kB[22m
+[2m../dist/public/[22m[36massets/OrgHR-BjW5JbdV.js                        [39m[1m[2m 19.40 kB[22m[1m[22m[2m Ôöé gzip:   3.94 kB[22m
+[2m../dist/public/[22m[36massets/EditOpportunity-B22l7qod.js              [39m[1m[2m 19.44 kB[22m[1m[22m[2m Ôöé gzip:   3.50 kB[22m
+[2m../dist/public/[22m[36massets/EditServiceInvoice-z9d0jCoe.js           [39m[1m[2m 19.48 kB[22m[1m[22m[2m Ôöé gzip:   3.51 kB[22m
+[2m../dist/public/[22m[36massets/OrgCommunications-hAnFZBuO.js            [39m[1m[2m 19.49 kB[22m[1m[22m[2m Ôöé gzip:   3.56 kB[22m
+[2m../dist/public/[22m[36massets/OrgInvoices-Ctwc2sJ2.js                  [39m[1m[2m 19.49 kB[22m[1m[22m[2m Ôöé gzip:   3.79 kB[22m
+[2m../dist/public/[22m[36massets/Services-DjqMqQ6D.js                     [39m[1m[2m 19.54 kB[22m[1m[22m[2m Ôöé gzip:   3.63 kB[22m
+[2m../dist/public/[22m[36massets/Contact-9SMuRDrV.js                      [39m[1m[2m 19.65 kB[22m[1m[22m[2m Ôöé gzip:   3.56 kB[22m
+[2m../dist/public/[22m[36massets/ProposalTemplates-DOB5pqvG.js            [39m[1m[2m 19.83 kB[22m[1m[22m[2m Ôöé gzip:   3.61 kB[22m
+[2m../dist/public/[22m[36massets/EditOrder-B28_pwVb.js                    [39m[1m[2m 19.90 kB[22m[1m[22m[2m Ôöé gzip:   3.73 kB[22m
+[2m../dist/public/[22m[36massets/ContractTemplates-BFHjTvhA.js            [39m[1m[2m 20.14 kB[22m[1m[22m[2m Ôöé gzip:   3.70 kB[22m
+[2m../dist/public/[22m[36massets/CreateContact-DXh6SkNp.js                [39m[1m[2m 20.17 kB[22m[1m[22m[2m Ôöé gzip:   3.30 kB[22m
+[2m../dist/public/[22m[36massets/ResetPassword-COcQJyLS.js                [39m[1m[2m 20.19 kB[22m[1m[22m[2m Ôöé gzip:   3.01 kB[22m
+[2m../dist/public/[22m[36massets/EditDebitNote-Bp37PTnw.js                [39m[1m[2m 20.21 kB[22m[1m[22m[2m Ôöé gzip:   3.68 kB[22m
+[2m../dist/public/[22m[36massets/OrgExpenses-ChWtJRGm.js                  [39m[1m[2m 20.30 kB[22m[1m[22m[2m Ôöé gzip:   4.02 kB[22m
+[2m../dist/public/[22m[36massets/TaxComplianceReports-CgPfqwrq.js         [39m[1m[2m 20.33 kB[22m[1m[22m[2m Ôöé gzip:   2.91 kB[22m
+[2m../dist/public/[22m[36massets/ClientPerformance-CSalAOEo.js            [39m[1m[2m 20.48 kB[22m[1m[22m[2m Ôöé gzip:   3.64 kB[22m
+[2m../dist/public/[22m[36massets/CreateServiceTemplate-NsR0pYt1.js        [39m[1m[2m 20.56 kB[22m[1m[22m[2m Ôöé gzip:   3.68 kB[22m
+[2m../dist/public/[22m[36massets/CreateBenefit-DBJAIzop.js                [39m[1m[2m 20.83 kB[22m[1m[22m[2m Ôöé gzip:   3.77 kB[22m
+[2m../dist/public/[22m[36massets/TermsAndConditions-DVVn5BVA.js           [39m[1m[2m 20.93 kB[22m[1m[22m[2m Ôöé gzip:   3.60 kB[22m
+[2m../dist/public/[22m[36massets/IntegrationGuides-Df6JURZq.js            [39m[1m[2m 20.97 kB[22m[1m[22m[2m Ôöé gzip:   4.50 kB[22m
+[2m../dist/public/[22m[36massets/ProjectManagerDashboard-BeNFr1FB.js      [39m[1m[2m 20.99 kB[22m[1m[22m[2m Ôöé gzip:   3.39 kB[22m
+[2m../dist/public/[22m[36massets/Security-C5h1zxUf.js                     [39m[1m[2m 21.00 kB[22m[1m[22m[2m Ôöé gzip:   3.18 kB[22m
+[2m../dist/public/[22m[36massets/CreateOrder-D3QK__eF.js                  [39m[1m[2m 21.16 kB[22m[1m[22m[2m Ôöé gzip:   3.74 kB[22m
+[2m../dist/public/[22m[36massets/LeaveBalances-knIRxMNt.js                [39m[1m[2m 21.19 kB[22m[1m[22m[2m Ôöé gzip:   3.99 kB[22m
+[2m../dist/public/[22m[36massets/EditContact-BqFgALma.js                  [39m[1m[2m 21.37 kB[22m[1m[22m[2m Ôöé gzip:   3.58 kB[22m
+[2m../dist/public/[22m[36massets/OrgCRM-B8Il5JmH.js                       [39m[1m[2m 21.38 kB[22m[1m[22m[2m Ôöé gzip:   3.87 kB[22m
+[2m../dist/public/[22m[36massets/OrgStaff-BYcyfML2.js                     [39m[1m[2m 21.48 kB[22m[1m[22m[2m Ôöé gzip:   3.99 kB[22m
+[2m../dist/public/[22m[36massets/Dashboard-DoL8ReNf.js                    [39m[1m[2m 21.63 kB[22m[1m[22m[2m Ôöé gzip:   2.96 kB[22m
+[2m../dist/public/[22m[36massets/AccountingManagement-QKO02h-8.js         [39m[1m[2m 21.65 kB[22m[1m[22m[2m Ôöé gzip:   3.55 kB[22m
+[2m../dist/public/[22m[36massets/About-CPNrN4j2.js                        [39m[1m[2m 21.84 kB[22m[1m[22m[2m Ôöé gzip:   4.66 kB[22m
+[2m../dist/public/[22m[36massets/EditPayroll-B_x1pyF-.js                  [39m[1m[2m 21.92 kB[22m[1m[22m[2m Ôöé gzip:   4.45 kB[22m
+[2m../dist/public/[22m[36massets/Estimates-CSLQqs5G.js                    [39m[1m[2m 21.94 kB[22m[1m[22m[2m Ôöé gzip:   4.96 kB[22m
+[2m../dist/public/[22m[36massets/EditProposal-BmnQW422.js                 [39m[1m[2m 22.03 kB[22m[1m[22m[2m Ôöé gzip:   3.71 kB[22m
+[2m../dist/public/[22m[36massets/Notifications-DxlEApuK.js                [39m[1m[2m 22.06 kB[22m[1m[22m[2m Ôöé gzip:   3.45 kB[22m
+[2m../dist/public/[22m[36massets/Payments-CLrZxMmV.js                     [39m[1m[2m 22.20 kB[22m[1m[22m[2m Ôöé gzip:   4.78 kB[22m
+[2m../dist/public/[22m[36massets/EditProject-ymXuAPWK.js                  [39m[1m[2m 22.22 kB[22m[1m[22m[2m Ôöé gzip:   3.85 kB[22m
+[2m../dist/public/[22m[36massets/purify-CovBOfck.js                       [39m[1m[2m 22.58 kB[22m[1m[22m[2m Ôöé gzip:   8.67 kB[22m
+[2m../dist/public/[22m[36massets/EditPayment-D-Bq9l4L.js                  [39m[1m[2m 22.62 kB[22m[1m[22m[2m Ôöé gzip:   4.46 kB[22m
+[2m../dist/public/[22m[36massets/Notes-BGQk7ST_.js                        [39m[1m[2m 22.64 kB[22m[1m[22m[2m Ôöé gzip:   4.38 kB[22m
+[2m../dist/public/[22m[36massets/SessionManager-DWsKmY6x.js               [39m[1m[2m 22.81 kB[22m[1m[22m[2m Ôöé gzip:   3.81 kB[22m
+[2m../dist/public/[22m[36massets/SystemHealth-CEW8djI3.js                 [39m[1m[2m 22.96 kB[22m[1m[22m[2m Ôöé gzip:   3.25 kB[22m
+[2m../dist/public/[22m[36massets/Quotes-BN0S9HnL.js                       [39m[1m[2m 23.19 kB[22m[1m[22m[2m Ôöé gzip:   4.89 kB[22m
+[2m../dist/public/[22m[36massets/ActivityTrail-m0LfqcYL.js                [39m[1m[2m 23.61 kB[22m[1m[22m[2m Ôöé gzip:   4.07 kB[22m
+[2m../dist/public/[22m[36massets/Opportunities-B1LtTgb8.js                [39m[1m[2m 23.67 kB[22m[1m[22m[2m Ôöé gzip:   4.76 kB[22m
+[2m../dist/public/[22m[36massets/Quotations-BuUu8Mtf.js                   [39m[1m[2m 23.73 kB[22m[1m[22m[2m Ôöé gzip:   3.89 kB[22m
+[2m../dist/public/[22m[36massets/CreatePayment-DLOUvnrW.js                [39m[1m[2m 24.01 kB[22m[1m[22m[2m Ôöé gzip:   4.54 kB[22m
+[2m../dist/public/[22m[36massets/EditCreditNote-DAqjhY3X.js               [39m[1m[2m 24.20 kB[22m[1m[22m[2m Ôöé gzip:   4.19 kB[22m
+[2m../dist/public/[22m[36massets/select-CjsBmURy.js                       [39m[1m[2m 24.26 kB[22m[1m[22m[2m Ôöé gzip:   7.66 kB[22m
+[2m../dist/public/[22m[36massets/PayrollDetails-CEENKR2q.js               [39m[1m[2m 24.28 kB[22m[1m[22m[2m Ôöé gzip:   3.56 kB[22m
+[2m../dist/public/[22m[36massets/YAxis-zULw6gs9.js                        [39m[1m[2m 24.41 kB[22m[1m[22m[2m Ôöé gzip:   6.25 kB[22m
+[2m../dist/public/[22m[36massets/GRN-CKwvFz2q.js                          [39m[1m[2m 24.57 kB[22m[1m[22m[2m Ôöé gzip:   4.26 kB[22m
+[2m../dist/public/[22m[36massets/DeliveryNotes-DNOH5T-_.js                [39m[1m[2m 25.03 kB[22m[1m[22m[2m Ôöé gzip:   3.90 kB[22m
+[2m../dist/public/[22m[36massets/Warehouses-C4Np6fkt.js                   [39m[1m[2m 25.09 kB[22m[1m[22m[2m Ôöé gzip:   4.04 kB[22m
+[2m../dist/public/[22m[36massets/PrivacyPolicy-CUjLB8vJ.js                [39m[1m[2m 25.30 kB[22m[1m[22m[2m Ôöé gzip:   3.98 kB[22m
+[2m../dist/public/[22m[36massets/FinancialDashboard-DebwGI-X.js           [39m[1m[2m 25.45 kB[22m[1m[22m[2m Ôöé gzip:   4.10 kB[22m
+[2m../dist/public/[22m[36massets/CreateProduct-CKMnGT6s.js                [39m[1m[2m 25.50 kB[22m[1m[22m[2m Ôöé gzip:   3.65 kB[22m
+[2m../dist/public/[22m[36massets/ExpenseBudgetReport-DKLankO1.js          [39m[1m[2m 25.70 kB[22m[1m[22m[2m Ôöé gzip:   4.32 kB[22m
+[2m../dist/public/[22m[36massets/PieChart-CHXfUC5k.js                     [39m[1m[2m 26.03 kB[22m[1m[22m[2m Ôöé gzip:   7.07 kB[22m
+[2m../dist/public/[22m[36massets/OrgApprovals-By9X1sGY.js                 [39m[1m[2m 26.06 kB[22m[1m[22m[2m Ôöé gzip:   4.73 kB[22m
+[2m../dist/public/[22m[36massets/EstimateDetails-ppp6LGVU.js              [39m[1m[2m 26.20 kB[22m[1m[22m[2m Ôöé gzip:   4.36 kB[22m
+[2m../dist/public/[22m[36massets/JobGroups-CEXm5imA.js                    [39m[1m[2m 26.27 kB[22m[1m[22m[2m Ôöé gzip:   4.12 kB[22m
+[2m../dist/public/[22m[36massets/Pricing-BOELByYB.js                      [39m[1m[2m 26.48 kB[22m[1m[22m[2m Ôöé gzip:   4.77 kB[22m
+[2m../dist/public/[22m[36massets/Departments-Dh47UjZc.js                  [39m[1m[2m 26.52 kB[22m[1m[22m[2m Ôöé gzip:   4.52 kB[22m
+[2m../dist/public/[22m[36massets/AccountantDashboard-YPknWPhY.js          [39m[1m[2m 26.66 kB[22m[1m[22m[2m Ôöé gzip:   4.41 kB[22m
+[2m../dist/public/[22m[36massets/EditSupplier-B-IrrKBA.js                 [39m[1m[2m 26.68 kB[22m[1m[22m[2m Ôöé gzip:   4.46 kB[22m
+[2m../dist/public/[22m[36massets/BillingDashboard-DzE1300v.js             [39m[1m[2m 26.74 kB[22m[1m[22m[2m Ôöé gzip:   4.96 kB[22m
+[2m../dist/public/[22m[36massets/Leads-nWSq1aH0.js                        [39m[1m[2m 26.81 kB[22m[1m[22m[2m Ôöé gzip:   4.91 kB[22m
+[2m../dist/public/[22m[36massets/DocumentTemplates-B8pay_Ca.js            [39m[1m[2m 27.00 kB[22m[1m[22m[2m Ôöé gzip:   4.49 kB[22m
+[2m../dist/public/[22m[36massets/LeaveManagement-Cvi1Gxvh.js              [39m[1m[2m 27.00 kB[22m[1m[22m[2m Ôöé gzip:   4.29 kB[22m
+[2m../dist/public/[22m[36massets/GlobalSettings-CmMOwQSe.js               [39m[1m[2m 27.04 kB[22m[1m[22m[2m Ôöé gzip:   4.11 kB[22m
+[2m../dist/public/[22m[36massets/DisciplinaryRecords-DfmF52y6.js          [39m[1m[2m 27.04 kB[22m[1m[22m[2m Ôöé gzip:   4.15 kB[22m
+[2m../dist/public/[22m[36massets/TroubleshootingGuide-C1KIWxTq.js         [39m[1m[2m 27.05 kB[22m[1m[22m[2m Ôöé gzip:   5.87 kB[22m
+[2m../dist/public/[22m[36massets/AssetManagement-Cz2nXPwL.js              [39m[1m[2m 27.23 kB[22m[1m[22m[2m Ôöé gzip:   4.05 kB[22m
+[2m../dist/public/[22m[36massets/CreateCreditNote-DZxhGJWm.js             [39m[1m[2m 27.45 kB[22m[1m[22m[2m Ôöé gzip:   4.58 kB[22m
+[2m../dist/public/[22m[36massets/LPOs-LncDTsQQ.js                         [39m[1m[2m 27.73 kB[22m[1m[22m[2m Ôöé gzip:   5.98 kB[22m
+[2m../dist/public/[22m[36massets/ProjectMilestones-DtspNUF3.js            [39m[1m[2m 27.92 kB[22m[1m[22m[2m Ôöé gzip:   4.62 kB[22m
+[2m../dist/public/[22m[36massets/RecurringInvoices-cFgLeBGs.js            [39m[1m[2m 27.93 kB[22m[1m[22m[2m Ôöé gzip:   4.44 kB[22m
+[2m../dist/public/[22m[36massets/Receipts-CC87CnXP.js                     [39m[1m[2m 28.01 kB[22m[1m[22m[2m Ôöé gzip:   5.36 kB[22m
+[2m../dist/public/[22m[36massets/OverduePayments-DwdDhH7q.js              [39m[1m[2m 28.20 kB[22m[1m[22m[2m Ôöé gzip:   4.29 kB[22m
+[2m../dist/public/[22m[36massets/ReportBuilder-BWy236VA.js                [39m[1m[2m 28.25 kB[22m[1m[22m[2m Ôöé gzip:   4.63 kB[22m
+[2m../dist/public/[22m[36massets/OrgReports-D2bSwSsc.js                   [39m[1m[2m 28.30 kB[22m[1m[22m[2m Ôöé gzip:   4.68 kB[22m
+[2m../dist/public/[22m[36massets/CreateSupplier-D2TZxlxF.js               [39m[1m[2m 28.54 kB[22m[1m[22m[2m Ôöé gzip:   4.51 kB[22m
+[2m../dist/public/[22m[36massets/UnifiedLanding-DSYxOFEc.js               [39m[1m[2m 28.60 kB[22m[1m[22m[2m Ôöé gzip:   4.71 kB[22m
+[2m../dist/public/[22m[36massets/PerformanceReviews-ChuqBJoc.js           [39m[1m[2m 28.89 kB[22m[1m[22m[2m Ôöé gzip:   4.54 kB[22m
+[2m../dist/public/[22m[36massets/CreateProject-h_l5mDSl.js                [39m[1m[2m 29.12 kB[22m[1m[22m[2m Ôöé gzip:   4.38 kB[22m
+[2m../dist/public/[22m[36massets/OrgSalesPipeline-Bzeb2cbJ.js             [39m[1m[2m 29.18 kB[22m[1m[22m[2m Ôöé gzip:   5.25 kB[22m
+[2m../dist/public/[22m[36massets/MaintenanceAdmin-BPORMU2Z.js             [39m[1m[2m 29.40 kB[22m[1m[22m[2m Ôöé gzip:   5.02 kB[22m
+[2m../dist/public/[22m[36massets/Suppliers-CmKRWpDC.js                    [39m[1m[2m 29.96 kB[22m[1m[22m[2m Ôöé gzip:   5.84 kB[22m
+[2m../dist/public/[22m[36massets/Payroll-DKs2wSuo.js                      [39m[1m[2m 30.00 kB[22m[1m[22m[2m Ôöé gzip:   5.09 kB[22m
+[2m../dist/public/[22m[36massets/HRAnalyticsPage-Bsk3SlbD.js              [39m[1m[2m 30.02 kB[22m[1m[22m[2m Ôöé gzip:   3.97 kB[22m
+[2m../dist/public/[22m[36massets/Inventory-CZmTgAfz.js                    [39m[1m[2m 30.02 kB[22m[1m[22m[2m Ôöé gzip:   4.93 kB[22m
+[2m../dist/public/[22m[36massets/EnhancedReceiptManagement-BgYRF9X2.js    [39m[1m[2m 30.29 kB[22m[1m[22m[2m Ôöé gzip:   5.03 kB[22m
+[2m../dist/public/[22m[36massets/UnifiedModuleLayout-D6FO7ijy.js          [39m[1m[2m 30.45 kB[22m[1m[22m[2m Ôöé gzip:   4.62 kB[22m
+[2m../dist/public/[22m[36massets/Invoices-CirrIdqS.js                     [39m[1m[2m 31.10 kB[22m[1m[22m[2m Ôöé gzip:   6.37 kB[22m
+[2m../dist/public/[22m[36massets/OrgProjectDetail-D2s5mYSp.js             [39m[1m[2m 31.22 kB[22m[1m[22m[2m Ôöé gzip:   5.47 kB[22m
+[2m../dist/public/[22m[36massets/QuoteDetails-nT271MKJ.js                 [39m[1m[2m 31.38 kB[22m[1m[22m[2m Ôöé gzip:   4.52 kB[22m
+[2m../dist/public/[22m[36massets/Contacts-DuZfIq0D.js                     [39m[1m[2m 31.47 kB[22m[1m[22m[2m Ôöé gzip:   5.54 kB[22m
+[2m../dist/public/[22m[36massets/Payslips-C4Nhxr_C.js                     [39m[1m[2m 31.63 kB[22m[1m[22m[2m Ôöé gzip:   4.83 kB[22m
+[2m../dist/public/[22m[36massets/HRAnalytics-D9Th_pcK.js                  [39m[1m[2m 31.67 kB[22m[1m[22m[2m Ôöé gzip:   4.78 kB[22m
+[2m../dist/public/[22m[36massets/AdminCronJobs-Becqnk2d.js                [39m[1m[2m 31.81 kB[22m[1m[22m[2m Ôöé gzip:   4.94 kB[22m
+[2m../dist/public/[22m[36massets/CreatePayroll-GALHbi89.js                [39m[1m[2m 31.95 kB[22m[1m[22m[2m Ôöé gzip:   4.44 kB[22m
+[2m../dist/public/[22m[36massets/KPITracking-CFDv2h6o.js                  [39m[1m[2m 32.10 kB[22m[1m[22m[2m Ôöé gzip:   4.98 kB[22m
+[2m../dist/public/[22m[36massets/CannedResponses-B1Wxvn1l.js              [39m[1m[2m 32.17 kB[22m[1m[22m[2m Ôöé gzip:   5.10 kB[22m
+[2m../dist/public/[22m[36massets/Integrations-oTvYxgrA.js                 [39m[1m[2m 32.52 kB[22m[1m[22m[2m Ôöé gzip:   5.49 kB[22m
+[2m../dist/public/[22m[36massets/TimeTracking-DJSyDHvH.js                 [39m[1m[2m 32.54 kB[22m[1m[22m[2m Ôöé gzip:   5.30 kB[22m
+[2m../dist/public/[22m[36massets/PaymentReconciliation-CFyAP-ap.js        [39m[1m[2m 32.61 kB[22m[1m[22m[2m Ôöé gzip:   4.87 kB[22m
+[2m../dist/public/[22m[36massets/SystemSettings-DJkjv4Kt.js               [39m[1m[2m 32.91 kB[22m[1m[22m[2m Ôöé gzip:   5.00 kB[22m
+[2m../dist/public/[22m[36massets/Onboarding-CcsssA3L.js                   [39m[1m[2m 33.09 kB[22m[1m[22m[2m Ôöé gzip:   4.80 kB[22m
+[2m../dist/public/[22m[36massets/PaymentPlans-7TfFaJsd.js                 [39m[1m[2m 33.92 kB[22m[1m[22m[2m Ôöé gzip:   5.16 kB[22m
+[2m../dist/public/[22m[36massets/DepartmentPayrollReports-CqOlMMql.js     [39m[1m[2m 34.03 kB[22m[1m[22m[2m Ôöé gzip:   4.86 kB[22m
+[2m../dist/public/[22m[36massets/StaffDashboard-CyrU2u1b.js               [39m[1m[2m 34.50 kB[22m[1m[22m[2m Ôöé gzip:   4.64 kB[22m
+[2m../dist/public/[22m[36massets/SalesPipeline-BLqnDvo3.js                [39m[1m[2m 34.92 kB[22m[1m[22m[2m Ôöé gzip:   5.68 kB[22m
+[2m../dist/public/[22m[36massets/EnhancedChangePassword-IXVFu0-9.js       [39m[1m[2m 34.97 kB[22m[1m[22m[2m Ôöé gzip:   4.88 kB[22m
+[2m../dist/public/[22m[36massets/Timesheets-oJQeY0ZY.js                   [39m[1m[2m 35.01 kB[22m[1m[22m[2m Ôöé gzip:   6.12 kB[22m
+[2m../dist/public/[22m[36massets/DashboardHome-BpheuOzc.js                [39m[1m[2m 35.05 kB[22m[1m[22m[2m Ôöé gzip:   6.24 kB[22m
+[2m../dist/public/[22m[36massets/EmployeeDetails-JjRb2tLw.js              [39m[1m[2m 35.24 kB[22m[1m[22m[2m Ôöé gzip:   4.58 kB[22m
+[2m../dist/public/[22m[36massets/ExecutiveDashboard-Dh-rX5h6.js           [39m[1m[2m 35.39 kB[22m[1m[22m[2m Ôöé gzip:   5.25 kB[22m
+[2m../dist/public/[22m[36massets/NotificationCenter-YQ31C8gD.js           [39m[1m[2m 35.47 kB[22m[1m[22m[2m Ôöé gzip:   5.20 kB[22m
+[2m../dist/public/[22m[36massets/Proposals-By0FHym1.js                    [39m[1m[2m 35.52 kB[22m[1m[22m[2m Ôöé gzip:   6.14 kB[22m
+[2m../dist/public/[22m[36massets/ContractManagement-CScD6FAk.js           [39m[1m[2m 35.89 kB[22m[1m[22m[2m Ôöé gzip:   5.20 kB[22m
+[2m../dist/public/[22m[36massets/Imprests-YDeIWiaG.js                     [39m[1m[2m 36.03 kB[22m[1m[22m[2m Ôöé gzip:   6.14 kB[22m
+[2m../dist/public/[22m[36massets/Dashboard-Dzh2HiSb.js                    [39m[1m[2m 36.11 kB[22m[1m[22m[2m Ôöé gzip:   5.77 kB[22m
+[2m../dist/public/[22m[36massets/ExpensesDetails-CdrLD5ix.js              [39m[1m[2m 36.20 kB[22m[1m[22m[2m Ôöé gzip:   5.62 kB[22m
+[2m../dist/public/[22m[36massets/Demo-DtIkx24c.js                         [39m[1m[2m 36.28 kB[22m[1m[22m[2m Ôöé gzip:   5.72 kB[22m
+[2m../dist/public/[22m[36massets/RecurringExpenses-CkuQtCr3.js            [39m[1m[2m 36.65 kB[22m[1m[22m[2m Ôöé gzip:   5.82 kB[22m
+[2m../dist/public/[22m[36massets/EmployeeContracts-CScjK5uu.js            [39m[1m[2m 36.84 kB[22m[1m[22m[2m Ôöé gzip:   4.80 kB[22m
+[2m../dist/public/[22m[36massets/Training-DQiAypTZ.js                     [39m[1m[2m 36.86 kB[22m[1m[22m[2m Ôöé gzip:   5.54 kB[22m
+[2m../dist/public/[22m[36massets/CreateOpportunity-D23sJ4DB.js            [39m[1m[2m 36.86 kB[22m[1m[22m[2m Ôöé gzip:   5.50 kB[22m
+[2m../dist/public/[22m[36massets/ICTDashboard-GS7Xh6ij.js                 [39m[1m[2m 36.98 kB[22m[1m[22m[2m Ôöé gzip:   5.51 kB[22m
+[2m../dist/public/[22m[36massets/PaymentReports-BND_6rrL.js               [39m[1m[2m 37.03 kB[22m[1m[22m[2m Ôöé gzip:   5.25 kB[22m
+[2m../dist/public/[22m[36massets/Tasks-CXlhieWa.js                        [39m[1m[2m 37.46 kB[22m[1m[22m[2m Ôöé gzip:   5.99 kB[22m
+[2m../dist/public/[22m[36massets/ReceiptDetails-Dypz7-jq.js               [39m[1m[2m 37.70 kB[22m[1m[22m[2m Ôöé gzip:   5.33 kB[22m
+[2m../dist/public/[22m[36massets/WorkflowAutomation-CJYMYkqm.js           [39m[1m[2m 38.43 kB[22m[1m[22m[2m Ôöé gzip:   5.53 kB[22m
+[2m../dist/public/[22m[36massets/CustomReportBuilder-CuhIPd0Q.js          [39m[1m[2m 38.49 kB[22m[1m[22m[2m Ôöé gzip:   5.72 kB[22m
+[2m../dist/public/[22m[36massets/Tickets-CZf_uHch.js                      [39m[1m[2m 38.59 kB[22m[1m[22m[2m Ôöé gzip:   6.48 kB[22m
+[2m../dist/public/[22m[36massets/ProcurementLPOs-_-0Kdxb-.js              [39m[1m[2m 38.77 kB[22m[1m[22m[2m Ôöé gzip:   4.79 kB[22m
+[2m../dist/public/[22m[36massets/Account-D-bv1wbz.js                      [39m[1m[2m 38.84 kB[22m[1m[22m[2m Ôöé gzip:   5.69 kB[22m
+[2m../dist/public/[22m[36massets/WebsiteFooter-FGDAXrLP.js                [39m[1m[2m 39.16 kB[22m[1m[22m[2m Ôöé gzip:   6.47 kB[22m
+[2m../dist/public/[22m[36massets/ClientPortal-BO0d06_j.js                 [39m[1m[2m 39.57 kB[22m[1m[22m[2m Ôöé gzip:   5.41 kB[22m
+[2m../dist/public/[22m[36massets/TenantCommunications-DN9UTMzq.js         [39m[1m[2m 39.93 kB[22m[1m[22m[2m Ôöé gzip:   5.31 kB[22m
+[2m../dist/public/[22m[36massets/HRAutomation-Dp7CjmYI.js                 [39m[1m[2m 39.94 kB[22m[1m[22m[2m Ôöé gzip:   5.23 kB[22m
+[2m../dist/public/[22m[36massets/EditClient-Dt6494iv.js                   [39m[1m[2m 41.08 kB[22m[1m[22m[2m Ôöé gzip:   5.61 kB[22m
+[2m../dist/public/[22m[36massets/OrgBilling-CTqxyqQF.js                   [39m[1m[2m 41.12 kB[22m[1m[22m[2m Ôöé gzip:   6.36 kB[22m
+[2m../dist/public/[22m[36massets/ProcurementImprests-QPyJh6vJ.js          [39m[1m[2m 42.06 kB[22m[1m[22m[2m Ôöé gzip:   4.68 kB[22m
+[2m../dist/public/[22m[36massets/OrganizationUsersManagement-8QN24AkO.js  [39m[1m[2m 42.21 kB[22m[1m[22m[2m Ôöé gzip:   5.56 kB[22m
+[2m../dist/public/[22m[36massets/ThemeCustomization-E02QRIo1.js           [39m[1m[2m 42.78 kB[22m[1m[22m[2m Ôöé gzip:   6.10 kB[22m
+[2m../dist/public/[22m[36massets/Forecasting-CrRu7Ig9.js                  [39m[1m[2m 43.21 kB[22m[1m[22m[2m Ôöé gzip:   5.88 kB[22m
+[2m../dist/public/[22m[36massets/EditExpense-BC9u1GwN.js                  [39m[1m[2m 43.57 kB[22m[1m[22m[2m Ôöé gzip:   7.12 kB[22m
+[2m../dist/public/[22m[36massets/Clients-nr0aXWc0.js                      [39m[1m[2m 43.89 kB[22m[1m[22m[2m Ôöé gzip:   7.37 kB[22m
+[2m../dist/public/[22m[36massets/Roles-CBwCJRYb.js                        [39m[1m[2m 43.89 kB[22m[1m[22m[2m Ôöé gzip:   6.34 kB[22m
+[2m../dist/public/[22m[36massets/Recruitment-CR48PCMl.js                  [39m[1m[2m 43.91 kB[22m[1m[22m[2m Ôöé gzip:   5.61 kB[22m
+[2m../dist/public/[22m[36massets/HRAnalyticsDashboard-C65nDkva.js         [39m[1m[2m 44.15 kB[22m[1m[22m[2m Ôöé gzip:   5.31 kB[22m
+[2m../dist/public/[22m[36massets/SuperAdminDashboard-D1-jkMGp.js          [39m[1m[2m 44.18 kB[22m[1m[22m[2m Ôöé gzip:   6.60 kB[22m
+[2m../dist/public/[22m[36massets/ProfessionalBudgeting-snu06YzH.js        [39m[1m[2m 44.21 kB[22m[1m[22m[2m Ôöé gzip:   6.03 kB[22m
+[2m../dist/public/[22m[36massets/EnterpriseTenantsManagement-CnakjXgS.js  [39m[1m[2m 44.39 kB[22m[1m[22m[2m Ôöé gzip:   5.36 kB[22m
+[2m../dist/public/[22m[36massets/Orders-tXIc8Yxm.js                       [39m[1m[2m 44.82 kB[22m[1m[22m[2m Ôöé gzip:   7.68 kB[22m
+[2m../dist/public/[22m[36massets/ProcurementOrders-DxIZ-YLI.js            [39m[1m[2m 46.57 kB[22m[1m[22m[2m Ôöé gzip:   5.33 kB[22m
+[2m../dist/public/[22m[36massets/CreateCommunication-8Pr78UE6.js          [39m[1m[2m 46.94 kB[22m[1m[22m[2m Ôöé gzip:  11.47 kB[22m
+[2m../dist/public/[22m[36massets/Communications-CG0YqTqK.js               [39m[1m[2m 47.20 kB[22m[1m[22m[2m Ôöé gzip:   6.16 kB[22m
+[2m../dist/public/[22m[36massets/KenyanPayrollCalculator-tnPIPaF7.js      [39m[1m[2m 47.62 kB[22m[1m[22m[2m Ôöé gzip:   6.27 kB[22m
+[2m../dist/public/[22m[36massets/Expenses-DBR-F0xB.js                     [39m[1m[2m 47.72 kB[22m[1m[22m[2m Ôöé gzip:   7.44 kB[22m
+[2m../dist/public/[22m[36massets/CustomHomepageBuilder-VVN06nbl.js        [39m[1m[2m 47.91 kB[22m[1m[22m[2m Ôöé gzip:   7.50 kB[22m
+[2m../dist/public/[22m[36massets/StaffChat-DqhoPVyW.js                    [39m[1m[2m 48.12 kB[22m[1m[22m[2m Ôöé gzip:   8.48 kB[22m
+[2m../dist/public/[22m[36massets/Approvals-Srbg_FBE.js                    [39m[1m[2m 48.44 kB[22m[1m[22m[2m Ôöé gzip:   7.02 kB[22m
+[2m../dist/public/[22m[36massets/AdminEmailTemplates-8k-rnuF0.js          [39m[1m[2m 48.53 kB[22m[1m[22m[2m Ôöé gzip:   7.23 kB[22m
+[2m../dist/public/[22m[36massets/OrgDashboard-DuhQ1SgO.js                 [39m[1m[2m 48.92 kB[22m[1m[22m[2m Ôöé gzip:   7.51 kB[22m
+[2m../dist/public/[22m[36massets/KnowledgeBase-2bMbB9if.js                [39m[1m[2m 49.11 kB[22m[1m[22m[2m Ôöé gzip:   7.10 kB[22m
+[2m../dist/public/[22m[36massets/OrgClientDetail-CW42HmrA.js              [39m[1m[2m 49.41 kB[22m[1m[22m[2m Ôöé gzip:   6.91 kB[22m
+[2m../dist/public/[22m[36massets/ImportExcel-0Nj8cFlY.js                  [39m[1m[2m 49.41 kB[22m[1m[22m[2m Ôöé gzip:   9.00 kB[22m
+[2m../dist/public/[22m[36massets/Reports-B43bg-HO.js                      [39m[1m[2m 50.05 kB[22m[1m[22m[2m Ôöé gzip:   7.81 kB[22m
+[2m../dist/public/[22m[36massets/AdminDashboard-Cgh7_fxG.js               [39m[1m[2m 50.20 kB[22m[1m[22m[2m Ôöé gzip:   6.46 kB[22m
+[2m../dist/public/[22m[36massets/SupplierDetails-C-NFjKc5.js              [39m[1m[2m 50.75 kB[22m[1m[22m[2m Ôöé gzip:   5.87 kB[22m
+[2m../dist/public/[22m[36massets/CreateClient-DP_nX_cP.js                 [39m[1m[2m 50.86 kB[22m[1m[22m[2m Ôöé gzip:   6.71 kB[22m
+[2m../dist/public/[22m[36massets/Subscriptions-D6qiJfW0.js                [39m[1m[2m 50.98 kB[22m[1m[22m[2m Ôöé gzip:   6.77 kB[22m
+[2m../dist/public/[22m[36massets/EditEmployee-CtTGSfpi.js                 [39m[1m[2m 51.31 kB[22m[1m[22m[2m Ôöé gzip:   7.06 kB[22m
+[2m../dist/public/[22m[36massets/Employees-jg8zD2p8.js                    [39m[1m[2m 51.60 kB[22m[1m[22m[2m Ôöé gzip:   8.35 kB[22m
+[2m../dist/public/[22m[36massets/CreateExpense-DIuQzCBT.js                [39m[1m[2m 52.58 kB[22m[1m[22m[2m Ôöé gzip:   8.38 kB[22m
+[2m../dist/public/[22m[36massets/DocumentForm-CBLqa-hA.js                 [39m[1m[2m 54.85 kB[22m[1m[22m[2m Ôöé gzip:   8.03 kB[22m
+[2m../dist/public/[22m[36massets/BrandCustomization-DRu183xD.js           [39m[1m[2m 55.40 kB[22m[1m[22m[2m Ôöé gzip:   7.08 kB[22m
+[2m../dist/public/[22m[36massets/DocumentManagement-Cbcdhd17.js           [39m[1m[2m 55.51 kB[22m[1m[22m[2m Ôöé gzip:   7.96 kB[22m
+[2m../dist/public/[22m[36massets/ChartOfAccounts-0b3z98Wk.js              [39m[1m[2m 56.06 kB[22m[1m[22m[2m Ôöé gzip:   7.31 kB[22m
+[2m../dist/public/[22m[36massets/BackupManagement-FPoJcpKe.js             [39m[1m[2m 59.67 kB[22m[1m[22m[2m Ôöé gzip:   8.20 kB[22m
+[2m../dist/public/[22m[36massets/AccountSettings-RTLSzBrh.js              [39m[1m[2m 60.46 kB[22m[1m[22m[2m Ôöé gzip:   7.53 kB[22m
+[2m../dist/public/[22m[36massets/AIHub-DWEIzTkD.js                        [39m[1m[2m 61.19 kB[22m[1m[22m[2m Ôöé gzip:   7.93 kB[22m
+[2m../dist/public/[22m[36massets/CreateEmployee-DPUykA4N.js               [39m[1m[2m 62.77 kB[22m[1m[22m[2m Ôöé gzip:   7.94 kB[22m
+[2m../dist/public/[22m[36massets/OrgSettings-C3IovL75.js                  [39m[1m[2m 64.34 kB[22m[1m[22m[2m Ôöé gzip:   9.00 kB[22m
+[2m../dist/public/[22m[36massets/SuperAdminPricingTiers-CeJIJ5TH.js       [39m[1m[2m 68.57 kB[22m[1m[22m[2m Ôöé gzip:   8.56 kB[22m
+[2m../dist/public/[22m[36massets/HRPayrollManagement-Cw6noLTJ.js          [39m[1m[2m 69.13 kB[22m[1m[22m[2m Ôöé gzip:   8.37 kB[22m
+[2m../dist/public/[22m[36massets/InvoiceDetails-BYOLH_pI.js               [39m[1m[2m 70.68 kB[22m[1m[22m[2m Ôöé gzip:   9.86 kB[22m
+[2m../dist/public/[22m[36massets/CreateQuote-DEyxZRYx.js                  [39m[1m[2m 86.48 kB[22m[1m[22m[2m Ôöé gzip:  20.73 kB[22m
+[2m../dist/public/[22m[36massets/LandingPage-DwGH1Ubc.js                  [39m[1m[2m 92.74 kB[22m[1m[22m[2m Ôöé gzip:  13.78 kB[22m
+[2m../dist/public/[22m[36massets/AdminManagement-tzdHo8IF.js              [39m[1m[2m 95.39 kB[22m[1m[22m[2m Ôöé gzip:  13.04 kB[22m
+[2m../dist/public/[22m[36massets/HRDashboard-CLCRETrZ.js                  [39m[1m[2m 96.22 kB[22m[1m[22m[2m Ôöé gzip:  11.18 kB[22m
+[2m../dist/public/[22m[36massets/OrgLayout-CrY5Go28.js                    [39m[1m[2m 99.04 kB[22m[1m[22m[2m Ôöé gzip:  14.32 kB[22m
+[2m../dist/public/[22m[36massets/ClientDetails-B9V0dhe-.js                [39m[1m[2m106.93 kB[22m[1m[22m[2m Ôöé gzip:  11.67 kB[22m
+[2m../dist/public/[22m[36massets/DashboardLayout-D422GOHl.js              [39m[1m[2m113.54 kB[22m[1m[22m[2m Ôöé gzip:  14.37 kB[22m
+[2m../dist/public/[22m[36massets/AccessibilityWidget-CfRwdSVi.js          [39m[1m[2m123.30 kB[22m[1m[22m[2m Ôöé gzip:  28.47 kB[22m
+[2m../dist/public/[22m[36massets/ProjectDetails-BAmG3F6R.js               [39m[1m[2m150.99 kB[22m[1m[22m[2m Ôöé gzip:  16.92 kB[22m
+[2m../dist/public/[22m[36massets/index.es-B2-B0jZF.js                     [39m[1m[2m158.62 kB[22m[1m[22m[2m Ôöé gzip:  52.95 kB[22m
+[2m../dist/public/[22m[36massets/html2canvas-DXEQVQnt.js                  [39m[1m[2m201.04 kB[22m[1m[22m[2m Ôöé gzip:  47.43 kB[22m
+[2m../dist/public/[22m[36massets/MultiTenancy-Bpn0pOpd.js                 [39m[1m[2m201.80 kB[22m[1m[22m[2m Ôöé gzip:  24.71 kB[22m
+[2m../dist/public/[22m[36massets/WebsiteAdmin-moaOusPc.js                 [39m[1m[2m221.73 kB[22m[1m[22m[2m Ôöé gzip:  23.02 kB[22m
+[2m../dist/public/[22m[36massets/generateCategoricalChart-DZ-eqoKu.js     [39m[1m[2m368.07 kB[22m[1m[22m[2m Ôöé gzip: 103.95 kB[22m
+[2m../dist/public/[22m[36massets/pdfGenerator-B4UW6SIz.js                 [39m[1m[2m422.36 kB[22m[1m[22m[2m Ôöé gzip: 136.36 kB[22m
+[2m../dist/public/[22m[36massets/xlsx-BojT3SgY.js                         [39m[1m[2m424.38 kB[22m[1m[22m[2m Ôöé gzip: 141.60 kB[22m
+[2m../dist/public/[22m[36massets/RichTextEditor-Dpv4kfqP.js               [39m[1m[2m507.58 kB[22m[1m[22m[2m Ôöé gzip: 146.88 kB[22m
+[2m../dist/public/[22m[36massets/Settings-CMFl1KP0.js                     [39m[1m[2m713.97 kB[22m[1m[22m[2m Ôöé gzip:  88.86 kB[22m
+[2m../dist/public/[22m[36massets/index-CGtpgM4v.js                        [39m[1m[2m755.47 kB[22m[1m[22m[2m Ôöé gzip: 201.54 kB[22m
+[32mÔ£ô built in 1m 4s[39m
 
-#4 [internal] load .dockerignore
-#4 transferring context: 402B 0.0s done
-#4 DONE 0.0s
+  dist\index.js  2.3mb
 
-#5 [internal] load build context
-#5 DONE 0.0s
-
-#6 [builder 1/7] FROM docker.io/library/node:22-alpine@sha256:8094c002d08262dba12645a3b4a15cd6cd627d30bc782f53229a2ec13ee22a00
-#6 resolve docker.io/library/node:22-alpine@sha256:8094c002d08262dba12645a3b4a15cd6cd627d30bc782f53229a2ec13ee22a00 0.0s done
-#6 DONE 0.1s
-
-#7 [builder 2/7] WORKDIR /app
-#7 CACHED
-
-#5 [internal] load build context
-#5 transferring context: 79.18kB 0.2s done
-#5 DONE 0.2s
-
-#8 [builder 3/7] COPY patches ./patches
-#8 DONE 0.1s
-
-#9 [builder 4/7] COPY package.json pnpm-lock.yaml ./
-#9 DONE 0.2s
-
-#10 [stage-1  3/18] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/
-#10 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 ...
-
-#10 [stage-1  3/18] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/
-#10 22.40 
-#10 22.40 added 1 package in 21s
-#10 22.40 
-#10 22.40 1 package is looking for funding
-#10 22.40   run `npm fund` for details
-#10 22.41 npm notice
-#10 22.41 npm notice New major version of npm available! 10.9.4 -> 11.11.0
-#10 22.41 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.11.0
-#10 22.41 npm notice To update run: npm install -g npm@11.11.0
-#10 22.41 npm notice
-#10 DONE 25.2s
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 22.38 
-#11 22.38 added 1 package in 21s
-#11 22.38 
-#11 22.38 1 package is looking for funding
-#11 22.38   run `npm fund` for details
-#11 22.39 npm notice
-#11 22.39 npm notice New major version of npm available! 10.9.4 -> 11.11.0
-#11 22.39 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.11.0
-#11 22.39 npm notice To update run: npm install -g npm@11.11.0
-#11 22.39 npm notice
-#11 ...
-
-#12 [stage-1  4/18] RUN apk add --no-cache netcat-openbsd
-#12 5.080 (1/3) Installing libmd (1.1.0-r0)
-#12 5.269 (2/3) Installing libbsd (0.12.2-r0)
-#12 5.411 (3/3) Installing netcat-openbsd (1.234.1-r0)
-#12 5.501 Executing busybox-1.37.0-r30.trigger
-#12 5.543 OK: 11.0 MiB in 21 packages
-#12 DONE 5.7s
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 ...
-
-#13 [stage-1  5/18] COPY patches ./patches
-#13 DONE 0.1s
-
-#14 [stage-1  6/18] COPY package.json pnpm-lock.yaml ./
-#14 DONE 0.2s
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 48.03 Lockfile is up to date, resolution step is skipped
-#11 48.25 Progress: resolved 1, reused 0, downloaded 0, added 0
-#11 48.84 Packages: +648
-#11 48.84 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#11 49.26 Progress: resolved 648, reused 0, downloaded 0, added 0
-#11 50.26 Progress: resolved 648, reused 0, downloaded 1, added 0
-#11 51.26 Progress: resolved 648, reused 0, downloaded 16, added 15
-#11 52.27 Progress: resolved 648, reused 0, downloaded 32, added 31
-#11 53.27 Progress: resolved 648, reused 0, downloaded 51, added 50
-#11 54.28 Progress: resolved 648, reused 0, downloaded 66, added 66
-#11 55.28 Progress: resolved 648, reused 0, downloaded 81, added 80
-#11 56.28 Progress: resolved 648, reused 0, downloaded 100, added 100
-#11 57.32 Progress: resolved 648, reused 0, downloaded 118, added 115
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 22.30 Lockfile is up to date, resolution step is skipped
-#15 22.58 Progress: resolved 1, reused 0, downloaded 0, added 0
-#15 23.41 Packages: +648
-#15 23.41 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#15 23.75 Progress: resolved 648, reused 0, downloaded 0, added 0
-#15 25.31 Progress: resolved 648, reused 0, downloaded 1, added 0
-#15 26.31 Progress: resolved 648, reused 0, downloaded 7, added 0
-#15 27.34 Progress: resolved 648, reused 0, downloaded 21, added 8
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 58.35 Progress: resolved 648, reused 0, downloaded 135, added 134
-#11 59.43 Progress: resolved 648, reused 0, downloaded 146, added 144
-#11 60.47 Progress: resolved 648, reused 0, downloaded 157, added 157
-#11 61.64 Progress: resolved 648, reused 0, downloaded 162, added 158
-#11 62.65 Progress: resolved 648, reused 0, downloaded 176, added 162
-#11 63.66 Progress: resolved 648, reused 0, downloaded 203, added 197
-#11 64.76 Progress: resolved 648, reused 0, downloaded 218, added 218
-#11 65.80 Progress: resolved 648, reused 0, downloaded 233, added 228
-#11 66.80 Progress: resolved 648, reused 0, downloaded 244, added 244
-#11 67.82 Progress: resolved 648, reused 0, downloaded 262, added 258
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 28.49 Progress: resolved 648, reused 0, downloaded 33, added 20
-#15 29.49 Progress: resolved 648, reused 0, downloaded 36, added 21
-#15 30.56 Progress: resolved 648, reused 0, downloaded 48, added 35
-#15 31.56 Progress: resolved 648, reused 0, downloaded 57, added 48
-#15 32.57 Progress: resolved 648, reused 0, downloaded 69, added 61
-#15 33.57 Progress: resolved 648, reused 0, downloaded 84, added 72
-#15 34.58 Progress: resolved 648, reused 0, downloaded 101, added 93
-#15 35.59 Progress: resolved 648, reused 0, downloaded 122, added 121
-#15 36.60 Progress: resolved 648, reused 0, downloaded 136, added 136
-#15 37.63 Progress: resolved 648, reused 0, downloaded 147, added 146
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 68.82 Progress: resolved 648, reused 0, downloaded 272, added 272
-#11 69.83 Progress: resolved 648, reused 0, downloaded 284, added 282
-#11 70.84 Progress: resolved 648, reused 0, downloaded 292, added 287
-#11 71.84 Progress: resolved 648, reused 0, downloaded 300, added 292
-#11 72.85 Progress: resolved 648, reused 0, downloaded 308, added 299
-#11 74.03 Progress: resolved 648, reused 0, downloaded 316, added 306
-#11 75.34 Progress: resolved 648, reused 0, downloaded 316, added 307
-#11 76.37 Progress: resolved 648, reused 0, downloaded 323, added 316
-#11 77.43 Progress: resolved 648, reused 0, downloaded 336, added 326
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 38.63 Progress: resolved 648, reused 0, downloaded 160, added 159
-#15 39.70 Progress: resolved 648, reused 0, downloaded 170, added 163
-#15 40.73 Progress: resolved 648, reused 0, downloaded 181, added 170
-#15 41.74 Progress: resolved 648, reused 0, downloaded 201, added 198
-#15 42.79 Progress: resolved 648, reused 0, downloaded 225, added 223
-#15 43.78 Progress: resolved 648, reused 0, downloaded 239, added 239
-#15 44.78 Progress: resolved 648, reused 0, downloaded 256, added 254
-#15 45.78 Progress: resolved 648, reused 0, downloaded 275, added 271
-#15 46.79 Progress: resolved 648, reused 0, downloaded 284, added 277
-#15 47.81 Progress: resolved 648, reused 0, downloaded 294, added 284
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 78.50 Progress: resolved 648, reused 0, downloaded 358, added 357
-#11 79.50 Progress: resolved 648, reused 0, downloaded 362, added 360
-#11 80.55 Progress: resolved 648, reused 0, downloaded 371, added 362
-#11 81.64 Progress: resolved 648, reused 0, downloaded 375, added 371
-#11 82.59 Progress: resolved 648, reused 0, downloaded 380, added 374
-#11 83.64 Progress: resolved 648, reused 0, downloaded 386, added 380
-#11 84.64 Progress: resolved 648, reused 0, downloaded 389, added 380
-#11 85.74 Progress: resolved 648, reused 0, downloaded 390, added 380
-#11 86.69 Progress: resolved 648, reused 0, downloaded 391, added 381
-#11 87.69 Progress: resolved 648, reused 0, downloaded 393, added 384
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 48.81 Progress: resolved 648, reused 0, downloaded 300, added 289
-#15 49.88 Progress: resolved 648, reused 0, downloaded 306, added 296
-#15 50.96 Progress: resolved 648, reused 0, downloaded 315, added 306
-#15 51.96 Progress: resolved 648, reused 0, downloaded 324, added 317
-#15 52.98 Progress: resolved 648, reused 0, downloaded 333, added 322
-#15 54.03 Progress: resolved 648, reused 0, downloaded 352, added 346
-#15 55.14 Progress: resolved 648, reused 0, downloaded 360, added 355
-#15 56.19 Progress: resolved 648, reused 0, downloaded 363, added 358
-#15 57.22 Progress: resolved 648, reused 0, downloaded 368, added 362
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 88.74 Progress: resolved 648, reused 0, downloaded 395, added 387
-#11 90.66 Progress: resolved 648, reused 0, downloaded 396, added 387
-#11 91.66 Progress: resolved 648, reused 0, downloaded 404, added 391
-#11 92.66 Progress: resolved 648, reused 0, downloaded 405, added 391
-#11 94.36 Progress: resolved 648, reused 0, downloaded 405, added 392
-#11 95.36 Progress: resolved 648, reused 0, downloaded 408, added 395
-#11 96.37 Progress: resolved 648, reused 0, downloaded 415, added 403
-#11 97.39 Progress: resolved 648, reused 0, downloaded 431, added 424
-#11 98.39 Progress: resolved 648, reused 0, downloaded 441, added 432
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 58.24 Progress: resolved 648, reused 0, downloaded 369, added 362
-#15 61.25 Progress: resolved 648, reused 0, downloaded 370, added 362
-#15 62.26 Progress: resolved 648, reused 0, downloaded 378, added 368
-#15 63.26 Progress: resolved 648, reused 0, downloaded 379, added 368
-#15 64.27 Progress: resolved 648, reused 0, downloaded 380, added 368
-#15 65.26 Progress: resolved 648, reused 0, downloaded 383, added 369
-#15 66.26 Progress: resolved 648, reused 0, downloaded 384, added 373
-#15 67.27 Progress: resolved 648, reused 0, downloaded 392, added 379
-#15 68.48 Progress: resolved 648, reused 0, downloaded 392, added 380
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 99.39 Progress: resolved 648, reused 0, downloaded 449, added 440
-#11 100.4 Progress: resolved 648, reused 0, downloaded 454, added 453
-#11 101.4 Progress: resolved 648, reused 0, downloaded 455, added 453
-#11 102.4 Progress: resolved 648, reused 0, downloaded 455, added 455
-#11 103.1 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-7.27.1.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#11 103.1 ÔÇëWARNÔÇë GET https://registry.npmjs.org/estree-walker/-/estree-walker-2.0.2.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#11 103.9 ÔÇëWARNÔÇë GET https://registry.npmjs.org/magic-string/-/magic-string-0.30.19.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 69.49 Progress: resolved 648, reused 0, downloaded 393, added 380
-#15 70.51 Progress: resolved 648, reused 0, downloaded 394, added 380
-#15 71.48 Progress: resolved 648, reused 0, downloaded 405, added 391
-#15 72.48 Progress: resolved 648, reused 0, downloaded 406, added 401
-#15 73.49 Progress: resolved 648, reused 0, downloaded 407, added 405
-#15 74.04 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@types/d3-interpolate/-/d3-interpolate-3.0.4.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 74.08 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@types/d3-scale/-/d3-scale-4.0.9.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 74.15 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@types/d3-shape/-/d3-shape-3.1.7.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 74.26 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@types/d3-time/-/d3-time-3.0.4.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 74.31 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@types/d3-path/-/d3-path-3.1.1.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 74.35 ÔÇëWARNÔÇë GET https://registry.npmjs.org/d3-array/-/d3-array-3.2.4.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 74.36 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@types/d3-timer/-/d3-timer-3.0.2.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 74.39 ÔÇëWARNÔÇë GET https://registry.npmjs.org/internmap/-/internmap-2.0.3.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 74.49 Progress: resolved 648, reused 0, downloaded 407, added 407
-#15 74.50 ÔÇëWARNÔÇë GET https://registry.npmjs.org/d3-ease/-/d3-ease-3.0.1.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 74.78 ÔÇëWARNÔÇë GET https://registry.npmjs.org/d3-scale/-/d3-scale-4.0.2.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 76.95 Progress: resolved 648, reused 0, downloaded 408, added 407
-#15 77.94 Progress: resolved 648, reused 0, downloaded 410, added 410
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 108.8 Progress: resolved 648, reused 0, downloaded 456, added 455
-#11 109.8 Progress: resolved 648, reused 0, downloaded 456, added 456
-#11 110.8 Progress: resolved 648, reused 0, downloaded 457, added 457
-#11 111.9 Progress: resolved 648, reused 0, downloaded 458, added 457
-#11 112.9 Progress: resolved 648, reused 0, downloaded 462, added 461
-#11 114.5 Progress: resolved 648, reused 0, downloaded 466, added 465
-#11 116.1 Progress: resolved 648, reused 0, downloaded 467, added 466
-#11 117.1 Progress: resolved 648, reused 0, downloaded 475, added 475
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 78.95 Progress: resolved 648, reused 0, downloaded 412, added 412
-#15 79.95 Progress: resolved 648, reused 0, downloaded 416, added 416
-#15 80.95 Progress: resolved 648, reused 0, downloaded 418, added 418
-#15 81.96 Progress: resolved 648, reused 0, downloaded 426, added 425
-#15 82.96 Progress: resolved 648, reused 0, downloaded 438, added 438
-#15 83.99 Progress: resolved 648, reused 0, downloaded 444, added 443
-#15 85.49 Progress: resolved 648, reused 0, downloaded 447, added 444
-#15 86.48 Progress: resolved 648, reused 0, downloaded 450, added 450
-#15 87.53 Progress: resolved 648, reused 0, downloaded 457, added 456
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 118.2 Progress: resolved 648, reused 0, downloaded 482, added 482
-#11 119.2 Progress: resolved 648, reused 0, downloaded 484, added 484
-#11 120.2 Progress: resolved 648, reused 0, downloaded 492, added 487
-#11 121.3 Progress: resolved 648, reused 0, downloaded 497, added 495
-#11 122.3 Progress: resolved 648, reused 0, downloaded 502, added 499
-#11 123.4 Progress: resolved 648, reused 0, downloaded 502, added 501
-#11 124.4 Progress: resolved 648, reused 0, downloaded 505, added 501
-#11 125.8 Progress: resolved 648, reused 0, downloaded 506, added 501
-#11 127.5 Progress: resolved 648, reused 0, downloaded 513, added 506
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 88.59 Progress: resolved 648, reused 0, downloaded 464, added 464
-#15 89.59 Progress: resolved 648, reused 0, downloaded 468, added 468
-#15 90.60 Progress: resolved 648, reused 0, downloaded 471, added 468
-#15 91.64 Progress: resolved 648, reused 0, downloaded 477, added 471
-#15 92.68 Progress: resolved 648, reused 0, downloaded 479, added 477
-#15 93.72 Progress: resolved 648, reused 0, downloaded 480, added 478
-#15 95.51 Progress: resolved 648, reused 0, downloaded 481, added 478
-#15 96.76 Progress: resolved 648, reused 0, downloaded 483, added 480
-#15 97.82 Progress: resolved 648, reused 0, downloaded 486, added 480
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 128.6 Progress: resolved 648, reused 0, downloaded 514, added 514
-#11 129.6 Progress: resolved 648, reused 0, downloaded 515, added 515
-#11 130.8 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@babel/helper-compilation-targets/-/helper-compilation-targets-7.27.2.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#11 130.8 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@babel/compat-data/-/compat-data-7.28.4.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#11 130.8 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@babel/helper-validator-option/-/helper-validator-option-7.27.1.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#11 130.8 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@types/serve-static/-/serve-static-1.15.9.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#11 130.9 ÔÇëWARNÔÇë GET https://registry.npmjs.org/@types/send/-/send-0.17.5.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#11 131.1 ÔÇëWARNÔÇë GET https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.8.12.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#11 131.8 Progress: resolved 648, reused 0, downloaded 516, added 515
-#11 132.8 Progress: resolved 648, reused 0, downloaded 520, added 519
-#11 133.8 Progress: resolved 648, reused 0, downloaded 525, added 525
-#11 134.8 Progress: resolved 648, reused 0, downloaded 532, added 531
-#11 136.1 Progress: resolved 648, reused 0, downloaded 539, added 537
-#11 137.0 Progress: resolved 648, reused 0, downloaded 541, added 539
-#11 137.9 Progress: resolved 648, reused 0, downloaded 545, added 545
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 98.84 Progress: resolved 648, reused 0, downloaded 490, added 486
-#15 99.84 Progress: resolved 648, reused 0, downloaded 492, added 492
-#15 101.1 Progress: resolved 648, reused 0, downloaded 493, added 492
-#15 102.1 Progress: resolved 648, reused 0, downloaded 503, added 502
-#15 103.1 Progress: resolved 648, reused 0, downloaded 515, added 515
-#15 104.1 Progress: resolved 648, reused 0, downloaded 525, added 521
-#15 105.4 Progress: resolved 648, reused 0, downloaded 533, added 528
-#15 106.3 Progress: resolved 648, reused 0, downloaded 535, added 528
-#15 107.2 Progress: resolved 648, reused 0, downloaded 541, added 535
-#15 108.3 Progress: resolved 648, reused 0, downloaded 543, added 543
-#15 109.7 Progress: resolved 648, reused 0, downloaded 544, added 543
-#15 110.7 Progress: resolved 648, reused 0, downloaded 544, added 544
-#15 111.5 ÔÇëWARNÔÇë GET https://registry.npmjs.org/cross-env/-/cross-env-10.1.0.tgz error (ETIMEDOUT). Will retry in 10 seconds. 5 retries left.
-#15 111.7 Progress: resolved 648, reused 0, downloaded 546, added 546
-#15 113.4 Progress: resolved 648, reused 0, downloaded 547, added 546
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 144.2 Progress: resolved 648, reused 0, downloaded 546, added 545
-#11 145.2 Progress: resolved 648, reused 0, downloaded 560, added 560
-#11 146.2 Progress: resolved 648, reused 0, downloaded 565, added 565
-#11 147.3 Progress: resolved 648, reused 0, downloaded 568, added 568
-#11 148.5 Progress: resolved 648, reused 0, downloaded 579, added 576
-#11 149.5 Progress: resolved 648, reused 0, downloaded 582, added 581
-#11 150.5 Progress: resolved 648, reused 0, downloaded 585, added 583
-#11 151.8 Progress: resolved 648, reused 0, downloaded 591, added 590
-#11 152.8 Progress: resolved 648, reused 0, downloaded 597, added 596
-#11 154.0 Progress: resolved 648, reused 0, downloaded 600, added 600
-#11 155.1 Progress: resolved 648, reused 0, downloaded 608, added 602
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 114.4 Progress: resolved 648, reused 0, downloaded 560, added 560
-#15 115.4 Progress: resolved 648, reused 0, downloaded 567, added 567
-#15 116.4 Progress: resolved 648, reused 0, downloaded 571, added 571
-#15 117.4 Progress: resolved 648, reused 0, downloaded 580, added 580
-#15 118.7 Progress: resolved 648, reused 0, downloaded 585, added 584
-#15 119.7 Progress: resolved 648, reused 0, downloaded 588, added 586
-#15 120.8 Progress: resolved 648, reused 0, downloaded 593, added 593
-#15 122.4 Progress: resolved 648, reused 0, downloaded 602, added 602
-#15 123.4 Progress: resolved 648, reused 0, downloaded 609, added 605
-#15 124.6 Progress: resolved 648, reused 0, downloaded 615, added 609
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 156.2 Progress: resolved 648, reused 0, downloaded 619, added 618
-#11 157.5 Progress: resolved 648, reused 0, downloaded 626, added 623
-#11 158.6 Progress: resolved 648, reused 0, downloaded 630, added 626
-#11 159.6 Progress: resolved 648, reused 0, downloaded 637, added 630
-#11 160.6 Progress: resolved 648, reused 0, downloaded 642, added 641
-#11 161.6 Progress: resolved 648, reused 0, downloaded 644, added 643
-#11 162.6 Progress: resolved 648, reused 0, downloaded 646, added 646
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 125.6 Progress: resolved 648, reused 0, downloaded 623, added 623
-#15 126.7 Progress: resolved 648, reused 0, downloaded 626, added 623
-#15 127.8 Progress: resolved 648, reused 0, downloaded 631, added 626
-#15 128.9 Progress: resolved 648, reused 0, downloaded 633, added 627
-#15 129.9 Progress: resolved 648, reused 0, downloaded 638, added 631
-#15 130.9 Progress: resolved 648, reused 0, downloaded 642, added 633
-#15 131.9 Progress: resolved 648, reused 0, downloaded 643, added 634
-#15 133.0 Progress: resolved 648, reused 0, downloaded 644, added 643
-#15 134.6 Progress: resolved 648, reused 0, downloaded 645, added 643
-#15 135.6 Progress: resolved 648, reused 0, downloaded 646, added 646
-#15 ...
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 166.5 Progress: resolved 648, reused 0, downloaded 647, added 646
-#11 167.5 Progress: resolved 648, reused 0, downloaded 647, added 647
-#11 168.5 Progress: resolved 648, reused 0, downloaded 648, added 647
-#11 168.9 Progress: resolved 648, reused 0, downloaded 648, added 648, done
-#11 171.3 
-#11 171.3 dependencies:
-#11 171.3 + @aws-sdk/client-s3 3.907.0
-#11 171.3 + @aws-sdk/s3-request-presigner 3.907.0
-#11 171.3 + @radix-ui/react-accordion 1.2.12
-#11 171.3 + @radix-ui/react-alert-dialog 1.1.15
-#11 171.3 + @radix-ui/react-aspect-ratio 1.1.7
-#11 171.3 + @radix-ui/react-avatar 1.1.10
-#11 171.3 + @radix-ui/react-checkbox 1.3.3
-#11 171.3 + @radix-ui/react-collapsible 1.1.12
-#11 171.3 + @radix-ui/react-context-menu 2.2.16
-#11 171.3 + @radix-ui/react-dialog 1.1.15
-#11 171.3 + @radix-ui/react-dropdown-menu 2.1.16
-#11 171.3 + @radix-ui/react-hover-card 1.1.15
-#11 171.3 + @radix-ui/react-icons 1.3.2
-#11 171.3 + @radix-ui/react-label 2.1.7
-#11 171.3 + @radix-ui/react-menubar 1.1.16
-#11 171.3 + @radix-ui/react-navigation-menu 1.2.14
-#11 171.3 + @radix-ui/react-popover 1.1.15
-#11 171.3 + @radix-ui/react-progress 1.1.7
-#11 171.3 + @radix-ui/react-radio-group 1.3.8
-#11 171.3 + @radix-ui/react-scroll-area 1.2.10
-#11 171.3 + @radix-ui/react-select 2.2.6
-#11 171.3 + @radix-ui/react-separator 1.1.7
-#11 171.3 + @radix-ui/react-slider 1.3.6
-#11 171.3 + @radix-ui/react-slot 1.2.3
-#11 171.3 + @radix-ui/react-switch 1.2.6
-#11 171.3 + @radix-ui/react-tabs 1.1.13
-#11 171.3 + @radix-ui/react-toggle 1.1.10
-#11 171.3 + @radix-ui/react-toggle-group 1.1.11
-#11 171.3 + @radix-ui/react-tooltip 1.2.8
-#11 171.3 + @tanstack/react-query 5.90.2
-#11 171.3 + @trpc/client 11.6.0
-#11 171.3 + @trpc/react-query 11.6.0
-#11 171.3 + @trpc/server 11.6.0
-#11 171.3 + axios 1.12.2
-#11 171.3 + bcryptjs 3.0.3
-#11 171.3 + class-variance-authority 0.7.1
-#11 171.3 + clsx 2.1.1
-#11 171.3 + cmdk 1.1.1
-#11 171.3 + cookie 1.0.2
-#11 171.3 + cookie-parser 1.4.7
-#11 171.3 + cron 3.5.0
-#11 171.3 + csurf 1.11.0
-#11 171.3 + date-fns 4.1.0
-#11 171.3 + dotenv 17.2.3
-#11 171.3 + drizzle-orm 0.44.6
-#11 171.3 + embla-carousel-react 8.6.0
-#11 171.3 + exceljs 4.4.0
-#11 171.3 + express 4.21.2
-#11 171.3 + express-rate-limit 7.5.1
-#11 171.3 + framer-motion 12.23.22
-#11 171.3 + input-otp 1.4.2
-#11 171.3 + jose 6.1.0
-#11 171.3 + jspdf 3.0.3
-#11 171.3 + jspdf-autotable 5.0.2
-#11 171.3 + lucide-react 0.453.0
-#11 171.3 + mysql2 3.15.1
-#11 171.3 + nanoid 5.1.6
-#11 171.3 + next-themes 0.4.6
-#11 171.3 + nodemailer 6.10.1
-#11 171.3 + react 19.2.0
-#11 171.3 + react-day-picker 9.11.1
-#11 171.3 + react-dom 19.2.0
-#11 171.3 + react-hook-form 7.64.0
-#11 171.3 + react-resizable-panels 3.0.6
-#11 171.3 + recharts 2.15.4
-#11 171.3 + sanitize-html 2.17.1
-#11 171.3 + sonner 2.0.7
-#11 171.3 + superjson 1.13.3
-#11 171.3 + tailwind-merge 3.3.1
-#11 171.3 + tailwindcss-animate 1.0.7
-#11 171.3 + uuid 13.0.0
-#11 171.3 + vaul 1.1.2
-#11 171.3 + wouter 3.7.1
-#11 171.3 + xlsx 0.18.5
-#11 171.3 + zod 4.1.12
-#11 171.3 
-#11 171.3 devDependencies:
-#11 171.3 + @builder.io/vite-plugin-jsx-loc 0.1.1
-#11 171.3 + @tailwindcss/typography 0.5.19
-#11 171.3 + @tailwindcss/vite 4.1.14
-#11 171.3 + @types/express 4.17.21
-#11 171.3 + @types/node 24.7.0
-#11 171.3 + @types/react 19.2.2
-#11 171.3 + @types/react-dom 19.2.1
-#11 171.3 + @vitejs/plugin-react 5.0.4
-#11 171.3 + add 2.0.6
-#11 171.3 + autoprefixer 10.4.21
-#11 171.3 + cross-env 10.1.0
-#11 171.3 + drizzle-kit 0.31.5
-#11 171.3 + esbuild 0.25.10
-#11 171.3 + pnpm 10.18.0
-#11 171.3 + postcss 8.5.6
-#11 171.3 + prettier 3.6.2
-#11 171.3 + tailwindcss 4.1.14
-#11 171.3 + tsx 4.20.6
-#11 171.3 + tw-animate-css 1.4.0
-#11 171.3 + typescript 5.9.3
-#11 171.3 + vite 7.1.9
-#11 171.3 + vitest 2.1.9
-#11 171.3 
-#11 171.3 Done in 2m 4.7s using pnpm v10.4.1
-#11 ...
-
-#15 [stage-1  7/18] RUN pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#15 136.6 Progress: resolved 648, reused 0, downloaded 647, added 647
-#15 137.3 Progress: resolved 648, reused 0, downloaded 648, added 648, done
-#15 139.6 
-#15 139.6 dependencies:
-#15 139.6 + @aws-sdk/client-s3 3.907.0
-#15 139.6 + @aws-sdk/s3-request-presigner 3.907.0
-#15 139.6 + @radix-ui/react-accordion 1.2.12
-#15 139.6 + @radix-ui/react-alert-dialog 1.1.15
-#15 139.6 + @radix-ui/react-aspect-ratio 1.1.7
-#15 139.6 + @radix-ui/react-avatar 1.1.10
-#15 139.6 + @radix-ui/react-checkbox 1.3.3
-#15 139.6 + @radix-ui/react-collapsible 1.1.12
-#15 139.6 + @radix-ui/react-context-menu 2.2.16
-#15 139.6 + @radix-ui/react-dialog 1.1.15
-#15 139.6 + @radix-ui/react-dropdown-menu 2.1.16
-#15 139.6 + @radix-ui/react-hover-card 1.1.15
-#15 139.6 + @radix-ui/react-icons 1.3.2
-#15 139.6 + @radix-ui/react-label 2.1.7
-#15 139.6 + @radix-ui/react-menubar 1.1.16
-#15 139.6 + @radix-ui/react-navigation-menu 1.2.14
-#15 139.6 + @radix-ui/react-popover 1.1.15
-#15 139.6 + @radix-ui/react-progress 1.1.7
-#15 139.6 + @radix-ui/react-radio-group 1.3.8
-#15 139.6 + @radix-ui/react-scroll-area 1.2.10
-#15 139.6 + @radix-ui/react-select 2.2.6
-#15 139.6 + @radix-ui/react-separator 1.1.7
-#15 139.6 + @radix-ui/react-slider 1.3.6
-#15 139.6 + @radix-ui/react-slot 1.2.3
-#15 139.6 + @radix-ui/react-switch 1.2.6
-#15 139.6 + @radix-ui/react-tabs 1.1.13
-#15 139.6 + @radix-ui/react-toggle 1.1.10
-#15 139.6 + @radix-ui/react-toggle-group 1.1.11
-#15 139.6 + @radix-ui/react-tooltip 1.2.8
-#15 139.6 + @tanstack/react-query 5.90.2
-#15 139.6 + @trpc/client 11.6.0
-#15 139.6 + @trpc/react-query 11.6.0
-#15 139.6 + @trpc/server 11.6.0
-#15 139.6 + axios 1.12.2
-#15 139.6 + bcryptjs 3.0.3
-#15 139.6 + class-variance-authority 0.7.1
-#15 139.6 + clsx 2.1.1
-#15 139.6 + cmdk 1.1.1
-#15 139.6 + cookie 1.0.2
-#15 139.6 + cookie-parser 1.4.7
-#15 139.6 + cron 3.5.0
-#15 139.6 + csurf 1.11.0
-#15 139.6 + date-fns 4.1.0
-#15 139.6 + dotenv 17.2.3
-#15 139.6 + drizzle-orm 0.44.6
-#15 139.6 + embla-carousel-react 8.6.0
-#15 139.6 + exceljs 4.4.0
-#15 139.6 + express 4.21.2
-#15 139.6 + express-rate-limit 7.5.1
-#15 139.6 + framer-motion 12.23.22
-#15 139.6 + input-otp 1.4.2
-#15 139.6 + jose 6.1.0
-#15 139.6 + jspdf 3.0.3
-#15 139.6 + jspdf-autotable 5.0.2
-#15 139.6 + lucide-react 0.453.0
-#15 139.6 + mysql2 3.15.1
-#15 139.6 + nanoid 5.1.6
-#15 139.6 + next-themes 0.4.6
-#15 139.6 + nodemailer 6.10.1
-#15 139.6 + react 19.2.0
-#15 139.6 + react-day-picker 9.11.1
-#15 139.6 + react-dom 19.2.0
-#15 139.6 + react-hook-form 7.64.0
-#15 139.6 + react-resizable-panels 3.0.6
-#15 139.6 + recharts 2.15.4
-#15 139.6 + sanitize-html 2.17.1
-#15 139.6 + sonner 2.0.7
-#15 139.6 + superjson 1.13.3
-#15 139.6 + tailwind-merge 3.3.1
-#15 139.6 + tailwindcss-animate 1.0.7
-#15 139.6 + uuid 13.0.0
-#15 139.6 + vaul 1.1.2
-#15 139.6 + wouter 3.7.1
-#15 139.6 + xlsx 0.18.5
-#15 139.6 + zod 4.1.12
-#15 139.6 
-#15 139.6 devDependencies:
-#15 139.6 + @builder.io/vite-plugin-jsx-loc 0.1.1
-#15 139.6 + @tailwindcss/typography 0.5.19
-#15 139.6 + @tailwindcss/vite 4.1.14
-#15 139.6 + @types/express 4.17.21
-#15 139.6 + @types/node 24.7.0
-#15 139.6 + @types/react 19.2.2
-#15 139.6 + @types/react-dom 19.2.1
-#15 139.6 + @vitejs/plugin-react 5.0.4
-#15 139.6 + add 2.0.6
-#15 139.6 + autoprefixer 10.4.21
-#15 139.6 + cross-env 10.1.0
-#15 139.6 + drizzle-kit 0.31.5
-#15 139.6 + esbuild 0.25.10
-#15 139.6 + pnpm 10.18.0
-#15 139.6 + postcss 8.5.6
-#15 139.6 + prettier 3.6.2
-#15 139.6 + tailwindcss 4.1.14
-#15 139.6 + tsx 4.20.6
-#15 139.6 + tw-animate-css 1.4.0
-#15 139.6 + typescript 5.9.3
-#15 139.6 + vite 7.1.9
-#15 139.6 + vitest 2.1.9
-#15 139.6 
-#15 139.6 Done in 1m 59.5s using pnpm v10.4.1
-#15 DONE 141.1s
-
-#11 [builder 5/7] RUN npm install -g pnpm --no-save &&     npm config set registry https://registry.npmjs.org/ &&     pnpm config set registry https://registry.npmjs.org/ &&     pnpm config set fetch-timeout 120000 &&     pnpm config set fetch-retries 5 &&     pnpm config set auto-install-peers true &&     pnpm install --frozen-lockfile --ignore-scripts
-#11 DONE 172.3s
-
-#16 [builder 6/7] COPY . .
-#16 DONE 5.1s
-
-#17 [builder 7/7] RUN pnpm build
-#17 3.880 
-#17 3.880 > melitech_crm@1.0.0 build /app
-#17 3.880 > vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
-#17 3.880 
-#17 5.564 vite v7.1.9 building for production...
-#17 6.095 transforming...
-
+Done in 313ms

@@ -24,24 +24,27 @@ const procurementRequestSchema = z.object({
 export const procurementRouter = router({
   list: readProcedure
     .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
 
+      const orgId = ctx.user?.organizationId;
+      if (!orgId) return [];
+
       try {
-        // Query from a procurement_requests table if it exists
         const rows = await db.raw(`
           SELECT 
             id, name, description, category, quantity, price, 
             status, requiredDate, notes, createdAt, updatedAt, createdBy
           FROM procurement_requests
+          WHERE organizationId = ?
           ORDER BY createdAt DESC
           LIMIT ? OFFSET ?
-        `, [input?.limit || 50, input?.offset || 0]);
+        `, [orgId, input?.limit || 50, input?.offset || 0]);
         
         return (rows || []).map((r: any) => ({
           ...r,
-          createdAt: r.createdAt || new Date().toISOString(),
+          createdAt: r.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
         }));
       } catch (err) {
         console.warn("Procurement query failed, returning empty", err);
@@ -51,14 +54,17 @@ export const procurementRouter = router({
 
   getById: readProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
 
+      const orgId = ctx.user?.organizationId;
+      if (!orgId) return null;
+
       try {
         const rows = await db.raw(
-          `SELECT * FROM procurement_requests WHERE id = ? LIMIT 1`,
-          [input]
+          `SELECT * FROM procurement_requests WHERE id = ? AND organizationId = ? LIMIT 1`,
+          [input, orgId]
         );
         return (rows || [])[0] || null;
       } catch (err) {
@@ -77,10 +83,13 @@ export const procurementRouter = router({
         const id = uuidv4();
         const now = new Date().toISOString().replace("T", " ").substring(0, 19);
 
+        const orgId = ctx.user?.organizationId;
+        if (!orgId) throw new Error("Organization not found");
+
         await db.raw(
           `INSERT INTO procurement_requests 
-          (id, name, description, category, quantity, price, status, requiredDate, notes, createdBy, createdAt, updatedAt)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (id, name, description, category, quantity, price, status, requiredDate, notes, createdBy, organizationId, createdAt, updatedAt)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             id,
             input.name,
@@ -92,6 +101,7 @@ export const procurementRouter = router({
             input.requiredDate ? input.requiredDate.toISOString().split("T")[0] : null,
             input.notes || null,
             ctx.user?.id || "system",
+            orgId,
             now,
             now,
           ]
@@ -165,10 +175,11 @@ export const procurementRouter = router({
         updateFields.push("updatedAt = ?");
         values.push(now);
         values.push(id);
+        values.push(ctx.user?.organizationId);
 
         if (updateFields.length > 1) {
           await db.raw(
-            `UPDATE procurement_requests SET ${updateFields.join(", ")} WHERE id = ?`,
+            `UPDATE procurement_requests SET ${updateFields.join(", ")} WHERE id = ? AND organizationId = ?`,
             values
           );
 
@@ -204,7 +215,10 @@ export const procurementRouter = router({
       try {
         const now = new Date().toISOString().replace("T", " ").substring(0, 19);
 
-        await db.raw(`DELETE FROM procurement_requests WHERE id = ?`, [input]);
+        const orgId = ctx.user?.organizationId;
+        if (!orgId) throw new Error("Organization not found");
+
+        await db.raw(`DELETE FROM procurement_requests WHERE id = ? AND organizationId = ?`, [input, orgId]);
 
         // Log activity
         await db.raw(
@@ -229,9 +243,12 @@ export const procurementRouter = router({
     }),
 
   getStats: readProcedure
-    .query(async () => {
+    .query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return { totalRequests: 0, pendingCount: 0, totalSpend: 0, approvedCount: 0 };
+
+      const orgId = ctx.user?.organizationId;
+      if (!orgId) return { totalRequests: 0, pendingCount: 0, totalSpend: 0, approvedCount: 0 };
 
       try {
         const result = await db.raw(`
@@ -241,7 +258,8 @@ export const procurementRouter = router({
             SUM(CASE WHEN status = 'approved' THEN price * quantity ELSE 0 END) as totalSpend,
             SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approvedCount
           FROM procurement_requests
-        `);
+          WHERE organizationId = ?
+        `, [orgId]);
 
         const row = (result || [])[0] || {};
         return {

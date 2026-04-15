@@ -104,8 +104,8 @@ class NotificationService {
         provider: emailProvider,
         apiKey: process.env.NOTIFICATION_EMAIL_API_KEY,
         domain: process.env.NOTIFICATION_EMAIL_DOMAIN,
-        fromEmail: process.env.NOTIFICATION_EMAIL_FROM || "noreply@melitech.app",
-        fromName: process.env.NOTIFICATION_EMAIL_FROM_NAME || "Melitech CRM",
+        fromEmail: process.env.NOTIFICATION_EMAIL_FROM || process.env.SMTP_FROM_EMAIL || "noreply@crm.app",
+        fromName: process.env.NOTIFICATION_EMAIL_FROM_NAME || process.env.COMPANY_NAME || "CRM Platform",
       };
     }
 
@@ -125,7 +125,7 @@ class NotificationService {
     if (process.env.NOTIFICATION_SLACK_WEBHOOK) {
       this.slackConfig = {
         webhookUrl: process.env.NOTIFICATION_SLACK_WEBHOOK,
-        botName: process.env.NOTIFICATION_SLACK_BOT_NAME || "Melitech Bot",
+        botName: process.env.NOTIFICATION_SLACK_BOT_NAME || process.env.COMPANY_NAME || "CRM Bot",
         channel: process.env.NOTIFICATION_SLACK_CHANNEL,
       };
     }
@@ -150,9 +150,9 @@ class NotificationService {
       entityId: payload.entityId,
       actionUrl: payload.actionUrl,
       priority: payload.priority,
-      expiresAt: payload.expiresAt?.toISOString(),
+      expiresAt: payload.expiresAt?.toISOString().replace('T', ' ').substring(0, 19),
       isRead: 0,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       readAt: null,
     };
 
@@ -211,7 +211,7 @@ class NotificationService {
 
       const msg = {
         to: recipientEmail,
-        from: this.emailConfig.fromEmail || "noreply@melitech.app",
+        from: this.emailConfig.fromEmail || "noreply@crm.local",
         subject,
         html: htmlContent,
       };
@@ -260,8 +260,8 @@ class NotificationService {
             messageId,
             provider: this.emailConfig.provider,
             status: "sent",
-            sentAt: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
+            sentAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
         }
       }
@@ -376,7 +376,7 @@ class NotificationService {
       const payload = {
         text: message,
         channel: channel || this.slackConfig.channel,
-        username: this.slackConfig.botName || "Melitech Bot",
+        username: this.slackConfig.botName || "CRM Bot",
         attachments: additionalFields
           ? [
               {
@@ -489,7 +489,7 @@ class NotificationService {
       .update(notificationPreferences)
       .set({
         ...preferences,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       })
       .where(eq(notificationPreferences.userId, userId));
   }

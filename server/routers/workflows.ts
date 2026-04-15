@@ -35,7 +35,7 @@ const createWorkflowSchema = z.object({
     "project_milestone_reached",
     "reminder_time",
   ]),
-  triggerCondition: z.record(z.any()).optional(),
+  triggerCondition: z.record(z.string(), z.any()).optional(),
   actions: z.array(
     z.object({
       actionType: z.enum([
@@ -50,7 +50,7 @@ const createWorkflowSchema = z.object({
       ]),
       actionName: z.string(),
       actionTarget: z.string().optional(),
-      actionData: z.record(z.any()),
+      actionData: z.record(z.string(), z.any()),
       delayMinutes: z.number().default(0),
       sequence: z.number().default(1),
     })
@@ -78,7 +78,7 @@ const updateWorkflowSchema = z.object({
         ]),
         actionName: z.string(),
         actionTarget: z.string().optional(),
-        actionData: z.record(z.any()),
+        actionData: z.record(z.string(), z.any()),
         delayMinutes: z.number().default(0),
         sequence: z.number().default(1),
       })
@@ -149,7 +149,7 @@ export const workflowsRouter = router({
         status: z.enum(["active", "inactive", "draft"]).optional(),
         limit: z.number().default(50),
         offset: z.number().default(0),
-      })
+      }).optional()
     )
     .query(async () => {
       try {
@@ -228,7 +228,7 @@ export const workflowsRouter = router({
           .update(workflows)
           .set({
             ...updateData,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(workflows.id, id));
 
@@ -341,7 +341,7 @@ export const workflowsRouter = router({
         workflowId: z.string(),
         entityType: z.string(),
         entityId: z.string(),
-        triggerData: z.record(z.any()).optional(),
+        triggerData: z.record(z.string(), z.any()).optional(),
       })
     )
     .mutation(async ({ input }: { input: any }) => {
@@ -401,8 +401,8 @@ export const workflowsRouter = router({
             .update(workflowExecutions)
             .set({
               status: "completed",
-              executedAt: new Date().toISOString(),
-              completedAt: new Date().toISOString(),
+              executedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+              completedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
               executionLog: JSON.stringify(executionLog),
             })
             .where(eq(workflowExecutions.id, executionId));

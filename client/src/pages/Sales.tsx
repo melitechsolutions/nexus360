@@ -1,8 +1,8 @@
 import { ModuleLayout } from "@/components/ModuleLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, FileText, Briefcase, Receipt, Plus } from "lucide-react";
+import { TrendingUp, FileText, Briefcase, Receipt, Plus, ArrowRight } from "lucide-react";
 import { useLocation } from "wouter";
+import { cn } from "@/lib/utils";
 
 export default function Sales() {
   const [, navigate] = useLocation();
@@ -14,6 +14,9 @@ export default function Sales() {
       icon: FileText,
       href: "/estimates",
       stats: { label: "Total Estimates", value: "0" },
+      borderColor: "border-l-blue-500",
+      iconBg: "bg-blue-50 dark:bg-blue-950",
+      iconColor: "text-blue-500",
     },
     {
       title: "Opportunities",
@@ -21,6 +24,9 @@ export default function Sales() {
       icon: Briefcase,
       href: "/opportunities",
       stats: { label: "Active Opportunities", value: "0" },
+      borderColor: "border-l-purple-500",
+      iconBg: "bg-purple-50 dark:bg-purple-950",
+      iconColor: "text-purple-500",
     },
     {
       title: "Receipts",
@@ -28,13 +34,16 @@ export default function Sales() {
       icon: Receipt,
       href: "/receipts",
       stats: { label: "Total Receipts", value: "0" },
+      borderColor: "border-l-green-500",
+      iconBg: "bg-green-50 dark:bg-green-950",
+      iconColor: "text-green-500",
     },
   ];
 
   return (
     <ModuleLayout
       breadcrumbs={[
-        { label: "Dashboard", href: "/dashboard" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Sales", href: "/sales" },
       ]}
       title="Sales"
@@ -58,58 +67,41 @@ export default function Sales() {
           </Button>
         </div>
 
-        {/* Sales Modules Grid */}
-        <div className="grid gap-6 md:grid-cols-3">
+        {/* Sales Modules Grid - Unified Card Style */}
+        <div className="grid gap-4 md:grid-cols-3">
           {salesModules.map((module) => {
             const Icon = module.icon;
             return (
-              <Card
+              <button
                 key={module.title}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => navigate(module.href)}
+                className={cn(
+                  "group relative overflow-hidden rounded-xl border-l-4 p-4 sm:p-5 text-left transition-all duration-300",
+                  "bg-white dark:bg-slate-800/60 border-t border-r border-b border-slate-200 dark:border-slate-700",
+                  "hover:shadow-xl hover:-translate-y-1 cursor-pointer",
+                  module.borderColor
+                )}
               >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{module.title}</CardTitle>
-                      <CardDescription className="mt-1">{module.description}</CardDescription>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-[0.07] transition-opacity duration-300 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 pointer-events-none" />
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`p-2.5 rounded-lg ${module.iconBg}`}>
+                      <Icon className={`h-5 w-5 ${module.iconColor}`} />
                     </div>
-                    <Icon className="h-8 w-8 text-muted-foreground" />
+                    <ArrowRight className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 group-hover:translate-x-1 transition-all" />
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold">{module.stats.value}</span>
-                    <span className="text-sm text-muted-foreground">{module.stats.label}</span>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-slate-50">{module.title}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{module.description}</p>
+                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{module.stats.label}</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-slate-50 mt-0.5">{module.stats.value}</p>
                   </div>
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(module.href);
-                    }}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    View {module.title}
-                  </Button>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full transition-all duration-500 bg-gradient-to-r from-transparent via-current to-transparent"></div>
+              </button>
             );
           })}
         </div>
-
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Sales Activity</CardTitle>
-            <CardDescription>Latest estimates, opportunities, and receipts</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No recent activity yet. Start by creating an estimate or opportunity.</p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </ModuleLayout>
   );

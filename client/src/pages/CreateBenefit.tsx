@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -97,7 +98,7 @@ export default function CreateBenefit() {
       description="Add a new benefit for an employee"
       icon={<Heart className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Payroll", href: "/payroll" },
         { label: "Create Benefit" },
       ]}
@@ -162,12 +163,11 @@ export default function CreateBenefit() {
 
               <div className="space-y-2">
                 <Label htmlFor="coverage">Coverage Details</Label>
-                <Textarea
-                  id="coverage"
+                <RichTextEditor
                   value={formData.coverage}
-                  onChange={(e) => setFormData({ ...formData, coverage: e.target.value })}
+                  onChange={(html) => setFormData({ ...formData, coverage: html })}
                   placeholder="e.g., Full coverage for individual and family, includes outpatient and inpatient..."
-                  rows={3}
+                  minHeight="100px"
                 />
               </div>
 
@@ -219,12 +219,11 @@ export default function CreateBenefit() {
 
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
+                <RichTextEditor
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(html) => setFormData({ ...formData, notes: html })}
                   placeholder="Any additional notes about this benefit (e.g., policy number, enroll date, etc.)"
-                  rows={3}
+                  minHeight="100px"
                 />
               </div>
 

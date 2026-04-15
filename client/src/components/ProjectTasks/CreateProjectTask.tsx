@@ -63,7 +63,7 @@ export function CreateProjectTask({
         description: formData.description || undefined,
         priority: formData.priority as any,
         status: formData.status as any,
-        assignedTo: formData.assignedTo || undefined,
+        assignedTo: formData.assignedTo && formData.assignedTo !== "__unassigned__" ? formData.assignedTo : undefined,
         dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
         estimatedHours: formData.estimatedHours ? Number(formData.estimatedHours) : undefined,
       };
@@ -193,7 +193,7 @@ export function CreateProjectTask({
                 <SelectValue placeholder="Select team member" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value="__unassigned__">Unassigned</SelectItem>
                 {teamMembers.map((member) => (
                   <SelectItem key={member.id} value={member.id}>
                     {member.name}

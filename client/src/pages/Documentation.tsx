@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { ModuleLayout } from "@/components/ModuleLayout";
+import { toast } from "sonner";
+import { WebsiteNav } from "@/pages/website/WebsiteNav";
+import { WebsiteFooter } from "@/pages/website/WebsiteFooter";
 import { BookOpen, ArrowRight, Download, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,22 +104,31 @@ export default function Documentation() {
   const current = documentation.find((doc) => doc.id === selectedSection);
 
   return (
-    <ModuleLayout
-      title="Documentation"
-      description="Comprehensive guides for using Melitech CRM to its full potential"
-      icon={<BookOpen className="h-5 w-5" />}
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Help & Resources", href: "#" },
-        { label: "Documentation" },
-      ]}
-      actions={
-        <Button variant="outline" size="sm">
-          <Download className="mr-2 h-4 w-4" />
-          Download PDF
-        </Button>
-      }
-    >
+    <div className="min-h-screen bg-white text-gray-900">
+      <WebsiteNav />
+
+      {/* Hero */}
+      <section className="relative pt-32 pb-16 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/80 via-white to-white" />
+        <div className="absolute top-20 left-1/4 w-96 h-96 rounded-full bg-indigo-100/60 blur-3xl" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 text-sm font-medium text-indigo-600 mb-6">
+            <BookOpen className="w-3.5 h-3.5" />
+            Knowledge Base
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
+            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+              Documentation
+            </span>
+          </h1>
+          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            Comprehensive guides for using Nexus360 to its full potential
+          </p>
+        </div>
+      </section>
+
+      {/* Content */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar Navigation */}
         <div className="lg:col-span-1">
@@ -175,7 +186,11 @@ export default function Documentation() {
                         User Guide
                       </a>
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open("https://www.youtube.com/results?search_query=crm+training+tutorials", "_blank")}
+                    >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Video Tutorials
                     </Button>
@@ -186,6 +201,9 @@ export default function Documentation() {
           )}
         </div>
       </div>
-    </ModuleLayout>
+      </section>
+
+      <WebsiteFooter />
+    </div>
   );
 }

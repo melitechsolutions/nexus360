@@ -2,11 +2,11 @@ import { useState, useMemo } from "react";
 import { useRequireFeature } from "@/hooks/useRequireFeature";
 import { Spinner } from "@/components/ui/spinner";
 import { trpc } from "@/lib/trpc";
+import { buildCommunicationComposePath } from "@/lib/communications";
 import { useLocation } from "wouter";
 import { ModuleLayout } from "@/components/ModuleLayout";
-import ActionButtons from "@/components/ActionButtons";
 import { Button } from "@/components/ui/button";
-import { Download, DollarSign } from "lucide-react";
+import { Download, DollarSign, Copy, Mail, Phone } from "lucide-react";
 import { BulkExportManager } from "@/components/DataExport";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,23 +44,37 @@ import {
   UserCheck,
   UserX,
   Briefcase,
-  Mail,
-  Phone,
   Loader2,
   Trash2,
   Settings,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
+import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
+import { RowActionsMenu, actionIcons } from "@/components/list-page/RowActionsMenu";
+import { TableColumnSettings, useColumnVisibility, type ColumnConfig } from "@/components/list-page/TableColumnSettings";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction, bulkEmailAction } from "@/components/list-page/EnhancedBulkActions";
 
 export default function Employees() {
   // CALL ALL HOOKS UNCONDITIONALLY AT TOP LEVEL
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { allowed, isLoading } = useRequireFeature("hr:employees:view");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
+
+  const empColumns: ColumnConfig[] = [
+    { key: "photo", label: "Photo" },
+    { key: "employeeId", label: "Employee ID" },
+    { key: "name", label: "Name" },
+    { key: "email", label: "Email" },
+    { key: "department", label: "Department" },
+    { key: "status", label: "Status" },
+    { key: "salary", label: "Salary" },
+  ];
+  const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(empColumns, "employees");
   const [bulkStatusChangeOpen, setBulkStatusChangeOpen] = useState(false);
   const [bulkDepartmentChangeOpen, setBulkDepartmentChangeOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState("active");
@@ -298,9 +312,10 @@ export default function Employees() {
     }
   };
 
-  const activeEmployees = employees.filter((e: any) => e.status === "active").length;
-  const onLeaveEmployees = employees.filter((e: any) => e.status === "on-leave").length;
-  const totalSalary = employees.reduce((sum: number, e: any) => sum + (e.salary || 0), 0);
+  const safeEmployees = Array.isArray(employees) ? employees : [];
+  const activeEmployees = safeEmployees.filter((e: any) => e.status === "active").length;
+  const onLeaveEmployees = safeEmployees.filter((e: any) => e.status === "on-leave").length;
+  const totalSalary = safeEmployees.reduce((sum: number, e: any) => sum + (e.salary || 0), 0);
 
   const exportFiltered = () => {
     const ids = filteredEmployees.map((e: any) => e.id);
@@ -332,23 +347,38 @@ export default function Employees() {
       description="Manage your workforce and employee information"
       icon={<Users className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Employees" },
       ]}
-      actions={
-        <>
-          <Button variant="outline" onClick={exportFiltered}>
-            <Download className="mr-2 h-4 w-4" />
-            Export Filtered
-          </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Employee
-              </Button>
-            </DialogTrigger>
+      actions={<></>}
+    >
+      {/* Toolbar */}
+      <ListPageToolbar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search by name, email, ID..."
+        onCreateClick={() => setIsAddDialogOpen(true)}
+        createLabel="Add Employee"
+        onExportClick={exportFiltered}
+        onPrintClick={() => window.print()}
+        filterContent={
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="on-leave">On Leave</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+      />
+
+      {/* Add Employee Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Add New Employee</DialogTitle>
@@ -621,187 +651,85 @@ export default function Employees() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </>
-      }
-    >
+
       {/* Bulk Actions Bar */}
-      {selectedEmployees.size > 0 && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-blue-900">
-              {selectedEmployees.size} employee{selectedEmployees.size !== 1 ? "s" : ""} selected
-            </div>
-            <div className="flex gap-2">
-              <BulkExportManager
-                documentType="employee"
-                selectedIds={Array.from(selectedEmployees)}
-              />
-              <Dialog open={bulkStatusChangeOpen} onOpenChange={setBulkStatusChangeOpen}>
-                <Button variant="outline" size="sm">
-                  <Settings className="mr-1 h-4 w-4" />
-                  Change Status
-                </Button>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Change Status</DialogTitle>
-                  </DialogHeader>
-                  <Select value={bulkStatus} onValueChange={setBulkStatus}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="on-leave">On Leave</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setBulkStatusChangeOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleBulkStatusChange}>
-                      Update
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+      <EnhancedBulkActions
+        selectedCount={selectedEmployees.size}
+        onClear={() => setSelectedEmployees(new Set())}
+        actions={[
+          { id: "changeStatus", label: "Change Status", icon: <Settings className="h-3.5 w-3.5" />, onClick: () => setBulkStatusChangeOpen(true) },
+          { id: "changeDept", label: "Change Dept", icon: <Briefcase className="h-3.5 w-3.5" />, onClick: () => setBulkDepartmentChangeOpen(true) },
+          bulkExportAction(selectedEmployees, employees, empColumns, "employees"),
+          bulkCopyIdsAction(selectedEmployees),
+          bulkEmailAction(navigate),
+          bulkDeleteAction(selectedEmployees, () => handleBulkDelete()),
+        ]}
+      />
 
-              <Dialog open={bulkDepartmentChangeOpen} onOpenChange={setBulkDepartmentChangeOpen}>
-                <Button variant="outline" size="sm">
-                  <Briefcase className="mr-1 h-4 w-4" />
-                  Change Department
-                </Button>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Change Department</DialogTitle>
-                  </DialogHeader>
-                  <Select value={bulkDepartment} onValueChange={setBulkDepartment}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Engineering">Engineering</SelectItem>
-                      <SelectItem value="Sales">Sales</SelectItem>
-                      <SelectItem value="Finance">Finance</SelectItem>
-                      <SelectItem value="HR">HR</SelectItem>
-                      <SelectItem value="Design">Design</SelectItem>
-                      <SelectItem value="Operations">Operations</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setBulkDepartmentChangeOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleBulkDepartmentChange}>
-                      Update
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+      {/* Bulk Status Change Dialog */}
+      <Dialog open={bulkStatusChangeOpen} onOpenChange={setBulkStatusChangeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Status</DialogTitle>
+          </DialogHeader>
+          <Select value={bulkStatus} onValueChange={setBulkStatus}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="on-leave">On Leave</SelectItem>
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkStatusChangeOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleBulkStatusChange}>
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-              >
-                <Trash2 className="mr-1 h-4 w-4" />
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-4 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{employees.length}</div>
-            <p className="text-xs text-muted-foreground">{activeEmployees} active</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">On Leave</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{onLeaveEmployees}</div>
-            <p className="text-xs text-muted-foreground">Current</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Departments</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {new Set(employees.map((e: any) => e.department)).size}
-            </div>
-            <p className="text-xs text-muted-foreground">Unique</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Payroll</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              Ksh {(totalSalary / 1000).toFixed(0)}k
-            </div>
-            <p className="text-xs text-muted-foreground">Total salary</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name, email, ID..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="on-leave">On Leave</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Bulk Department Change Dialog */}
+      <Dialog open={bulkDepartmentChangeOpen} onOpenChange={setBulkDepartmentChangeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Department</DialogTitle>
+          </DialogHeader>
+          <Select value={bulkDepartment} onValueChange={setBulkDepartment}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Engineering">Engineering</SelectItem>
+              <SelectItem value="Sales">Sales</SelectItem>
+              <SelectItem value="Finance">Finance</SelectItem>
+              <SelectItem value="HR">HR</SelectItem>
+              <SelectItem value="Design">Design</SelectItem>
+              <SelectItem value="Operations">Operations</SelectItem>
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDepartmentChangeOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleBulkDepartmentChange}>
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Employees Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>All Employees</CardTitle>
-          <CardDescription>
-            {filteredEmployees.length} of {employees.length} employees
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
+          <div className="flex items-center justify-between px-4 py-3 border-b">
+            <span className="text-sm text-muted-foreground">{filteredEmployees.length} of {employees.length} employees</span>
+            <TableColumnSettings columns={empColumns} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} onReset={reset} pageSize={pageSize} onPageSizeChange={updatePageSize} />
+          </div>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -824,13 +752,13 @@ export default function Employees() {
                       }}
                     />
                   </TableHead>
-                  <TableHead className="w-12">Photo</TableHead>
-                  <TableHead>Employee ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Salary</TableHead>
+                  {isVisible("photo") && <TableHead className="w-12">Photo</TableHead>}
+                  {isVisible("employeeId") && <TableHead>Employee ID</TableHead>}
+                  {isVisible("name") && <TableHead>Name</TableHead>}
+                  {isVisible("email") && <TableHead className="hidden lg:table-cell">Email</TableHead>}
+                  {isVisible("department") && <TableHead className="hidden md:table-cell">Department</TableHead>}
+                  {isVisible("status") && <TableHead>Status</TableHead>}
+                  {isVisible("salary") && <TableHead className="hidden md:table-cell">Salary</TableHead>}
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -851,39 +779,43 @@ export default function Employees() {
                         }}
                       />
                     </TableCell>
-                    <TableCell>
+                    {isVisible("photo") && <TableCell>
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={employee.photoUrl || undefined} alt={`${employee.firstName} ${employee.lastName}`} />
                         <AvatarFallback className="text-xs">
                           {employee.firstName?.charAt(0)}{employee.lastName?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
+                    </TableCell>}
+                    {isVisible("employeeId") && <TableCell className="font-mono text-sm">
                       {employee.employeeNumber}
-                    </TableCell>
-                    <TableCell>
+                    </TableCell>}
+                    {isVisible("name") && <TableCell>
                       {(employee.firstName || "")} {(employee.lastName || "")}
-                    </TableCell>
-                    <TableCell className="text-sm">{employee.email}</TableCell>
-                    <TableCell>{employee.department}</TableCell>
-                    <TableCell>
+                    </TableCell>}
+                    {isVisible("email") && <TableCell className="hidden lg:table-cell text-sm truncate max-w-[180px]">{employee.email}</TableCell>}
+                    {isVisible("department") && <TableCell className="hidden md:table-cell">{employee.department}</TableCell>}
+                    {isVisible("status") && <TableCell>
                       <Badge variant={getStatusVariant(employee.status)}>
                         <span className="flex items-center gap-1">
                           {getStatusIcon(employee.status)}
                           {employee.status}
                         </span>
                       </Badge>
-                    </TableCell>
-                    <TableCell>Ksh {(employee.salary || 0).toLocaleString()}</TableCell>
+                    </TableCell>}
+                    {isVisible("salary") && <TableCell className="hidden md:table-cell">Ksh {(employee.salary || 0).toLocaleString()}</TableCell>}
                     <TableCell className="text-right">
-                      <ActionButtons
-                        id={employee.id}
-                        handlers={{
-                          onView: () => navigate(`/employees/${employee.id}`),
-                          onEdit: () => navigate(`/employees/${employee.id}/edit`),
-                          onDelete: () => handleDeleteEmployee(employee.id),
-                        }}
+                      <RowActionsMenu
+                        primaryActions={[
+                          { label: "View", icon: actionIcons.view, onClick: () => navigate(`/employees/${employee.id}`) },
+                          { label: "Edit", icon: actionIcons.edit, onClick: () => navigate(`/employees/${employee.id}/edit`) },
+                          { label: "Delete", icon: actionIcons.delete, onClick: () => handleDeleteEmployee(employee.id), variant: "destructive" },
+                        ]}
+                        menuActions={[
+                          { label: "Send Email", icon: <Mail className="h-4 w-4" />, onClick: () => navigate(buildCommunicationComposePath(location, employee.email, `Message for ${employee.firstName || "Employee"}`)) },
+                          { label: "Call", icon: <Phone className="h-4 w-4" />, onClick: () => { if (employee.phone) window.open(`tel:${employee.phone}`); else toast.info("No phone number available"); }, separator: true },
+                          { label: "Duplicate", icon: actionIcons.copy, onClick: () => navigate(`/employees/create?clone=${employee.id}`) },
+                        ]}
                       />
                     </TableCell>
                   </TableRow>

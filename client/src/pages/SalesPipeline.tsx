@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -43,6 +44,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
 
 type Opportunity = {
   id: string;
@@ -269,11 +271,18 @@ export default function SalesPipeline() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 p-6">
+    <ModuleLayout
+      title="Sales Pipeline"
+      icon={<TrendingUp className="h-6 w-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Sales", href: "/sales" },
+        { label: "Pipeline" },
+      ]}
+    >
+      <div className="space-y-6">
       <Tabs defaultValue="kanban" className="w-full">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Sales Pipeline</h1>
           <div className="flex gap-2">
             <TabsList>
               <TabsTrigger value="kanban">Kanban</TabsTrigger>
@@ -468,58 +477,26 @@ export default function SalesPipeline() {
             <div className="space-y-6">
               {/* Forecast Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Pipeline
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">
-                      KES {(forecast.totalPipeline || 0).toLocaleString()}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {forecast.opportunities.length} opportunities
-                    </p>
-                  </CardContent>
-                </Card>
+                <StatsCard
+                  label="Total Pipeline"
+                  value={<>KES {(forecast.totalPipeline || 0).toLocaleString()}</>}
+                  description={<>{forecast.opportunities.length} opportunities</>}
+                  color="border-l-cyan-500"
+                />
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Weighted Forecast
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">
-                      KES {(forecast.weightedForecast || 0).toLocaleString()}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Probability-weighted revenue
-                    </p>
-                  </CardContent>
-                </Card>
+                <StatsCard
+                  label="Weighted Forecast"
+                  value={<>KES {(forecast.weightedForecast || 0).toLocaleString()}</>}
+                  description="Probability-weighted revenue"
+                  color="border-l-pink-500"
+                />
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Confidence
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">
-                      {forecast.totalPipeline > 0
-                        ? Math.round(
-                            (forecast.weightedForecast / forecast.totalPipeline) * 100
-                          )
-                        : 0}
-                      %
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Average deal confidence
-                    </p>
-                  </CardContent>
-                </Card>
+                <StatsCard
+                  label="Confidence"
+                  value={<>{forecast.totalPipeline > 0 ? Math.round( (forecast.weightedForecast / forecast.totalPipeline) * 100 ) : 0} %</>}
+                  description="Average deal confidence"
+                  color="border-l-emerald-500"
+                />
               </div>
 
               {/* By Stage */}
@@ -562,65 +539,33 @@ export default function SalesPipeline() {
             <div className="space-y-6">
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Win Rate (3mo)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">{stats.winRate}%</div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {stats.won}/{stats.total} deals
-                    </p>
-                  </CardContent>
-                </Card>
+                <StatsCard
+                  label="Win Rate (3mo)"
+                  value={<>{stats.winRate}%</>}
+                  description={<>{stats.won}/{stats.total} deals</>}
+                  color="border-l-orange-500"
+                />
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Won
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-green-600">
-                      KES {(stats.totalWon || 0).toLocaleString()}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Avg: KES {(stats.avgWonDealSize || 0).toLocaleString()}
-                    </p>
-                  </CardContent>
-                </Card>
+                <StatsCard
+                  label="Total Won"
+                  value={<>KES {(stats.totalWon || 0).toLocaleString()}</>}
+                  description={<>Avg: KES {(stats.avgWonDealSize || 0).toLocaleString()}</>}
+                  color="border-l-purple-500"
+                />
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Total Lost
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-red-600">
-                      KES {(stats.totalLost || 0).toLocaleString()}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {stats.lost} deals
-                    </p>
-                  </CardContent>
-                </Card>
+                <StatsCard
+                  label="Total Lost"
+                  value={<>KES {(stats.totalLost || 0).toLocaleString()}</>}
+                  description={<>{stats.lost} deals</>}
+                  color="border-l-green-500"
+                />
 
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      Avg Closure Time
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">{stats.closureTimeAsAvg} days</div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Avg deal lifecycle
-                    </p>
-                  </CardContent>
-                </Card>
+                <StatsCard
+                  label="Avg Closure Time"
+                  value={<>{stats.closureTimeAsAvg} days</>}
+                  description="Avg deal lifecycle"
+                  color="border-l-blue-500"
+                />
               </div>
 
               {/* Win Reasons */}
@@ -705,6 +650,6 @@ export default function SalesPipeline() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

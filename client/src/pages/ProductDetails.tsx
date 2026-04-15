@@ -2,9 +2,10 @@ import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ArrowLeft, Edit, Trash2, Package } from "lucide-react";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
+import { RichTextDisplay } from "@/components/RichTextEditor";
 import { useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -61,38 +62,28 @@ export default function ProductDetails() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Product Details" icon={<Package className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Products", href: "/products"}, {label: "Details"}]} backLink={{label: "Products", href: "/products"}}>
         <div className="flex items-center justify-center h-64">
           <p>Loading product...</p>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!product) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Product Details" icon={<Package className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Products", href: "/products"}, {label: "Details"}]} backLink={{label: "Products", href: "/products"}}>
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Product not found</p>
           <Button onClick={() => navigate("/products")}>Back to Products</Button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout title="Product Details" description={product.sku} icon={<Package className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Products", href: "/products"}, {label: "Details"}]} backLink={{label: "Products", href: "/products"}}>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/products")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{product.name}</h1>
-            <p className="text-muted-foreground">{product.sku}</p>
-          </div>
-        </div>
-
         <div className="flex gap-2">
           <Button onClick={handleEdit}>
             <Edit className="mr-2 h-4 w-4" />
@@ -127,6 +118,16 @@ export default function ProductDetails() {
                 <p className="text-muted-foreground">{product.stock} units</p>
               </div>
             </div>
+
+            {/* Description */}
+            {product.description && (
+              <div className="mt-4 pt-4 border-t">
+                <label className="text-sm font-medium">Description</label>
+                <div className="mt-1">
+                  <RichTextDisplay html={product.description} />
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -139,6 +140,6 @@ export default function ProductDetails() {
         title="Delete Product"
         description="Are you sure you want to delete this product? This action cannot be undone."
       />
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

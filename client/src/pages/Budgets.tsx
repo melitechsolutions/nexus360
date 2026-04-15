@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit2, Trash2, ChevronRight, TrendingUp, Calendar, PiggyBank } from "lucide-react";
+import { Plus, Edit2, Eye, Trash2, ChevronRight, TrendingUp, Calendar, PiggyBank } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function BudgetsPage() {
   const [, navigate] = useLocation();
@@ -95,8 +96,8 @@ export default function BudgetsPage() {
       description="Track and manage department budgets, monitor spending, and analyze budget utilization"
       icon={<PiggyBank className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Accounting", href: "/Accounting" },
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Accounting", href: "/accounting" },
         { label: "Budgets" },
       ]}
       actions={
@@ -123,53 +124,26 @@ export default function BudgetsPage() {
 
       {/* YTD Metrics Summary */}
       <div className="grid grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Budget</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-                maximumFractionDigits: 0,
-              }).format(ytdMetrics.totalBudget)}
-            </div>
-            <p className="text-xs text-gray-500 mt-2">{ytdMetrics.count} budgets</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Total Budget"
+          value={new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0, }).format(ytdMetrics.totalBudget)}
+          description={<>{ytdMetrics.count} budgets</>}
+          color="border-l-purple-500"
+        />
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">YTD Spent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-                maximumFractionDigits: 0,
-              }).format(ytdMetrics.totalSpent)}
-            </div>
-            <p className="text-xs text-gray-500 mt-2">{ytdMetrics.ytdPercentage}% of budget</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="YTD Spent"
+          value={new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0, }).format(ytdMetrics.totalSpent)}
+          description={<>{ytdMetrics.ytdPercentage}% of budget</>}
+          color="border-l-green-500"
+        />
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">Remaining</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-                maximumFractionDigits: 0,
-              }).format(ytdMetrics.totalRemaining)}
-            </div>
-            <p className="text-xs text-gray-500 mt-2">{100 - ytdMetrics.ytdPercentage}% available</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Remaining"
+          value={new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0, }).format(ytdMetrics.totalRemaining)}
+          description={<>{100 - ytdMetrics.ytdPercentage}% available</>}
+          color="border-l-blue-500"
+        />
 
         <Card>
           <CardHeader className="pb-3">
@@ -262,9 +236,9 @@ export default function BudgetsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Department</TableHead>
-                    <TableHead>Fiscal Year</TableHead>
+                    <TableHead className="hidden md:table-cell">Fiscal Year</TableHead>
                     <TableHead className="text-right">Total Budget</TableHead>
-                    <TableHead className="text-right">Remaining</TableHead>
+                    <TableHead className="hidden lg:table-cell text-right">Remaining</TableHead>
                     <TableHead>Usage</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -278,14 +252,14 @@ export default function BudgetsPage() {
                         <TableCell className="font-medium">
                           {budget.departmentName || "N/A"}
                         </TableCell>
-                        <TableCell>{budget.fiscalYear || "N/A"}</TableCell>
+                        <TableCell className="hidden md:table-cell">{budget.fiscalYear || "N/A"}</TableCell>
                         <TableCell className="text-right">
                           {new Intl.NumberFormat("en-US", {
                             style: "currency",
                             currency: "USD",
                           }).format(budget.amount || 0)}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="hidden lg:table-cell text-right">
                           <span className={percentage > 75 ? "text-red-600 font-semibold" : ""}>
                             {new Intl.NumberFormat("en-US", {
                               style: "currency",
@@ -307,6 +281,13 @@ export default function BudgetsPage() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate(`/budgets/${budget.id}`)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
                               variant="outline"
                               size="sm"
                               onClick={() => navigate(`/budgets/${budget.id}/edit`)}
@@ -322,7 +303,7 @@ export default function BudgetsPage() {
                                     "Are you sure you want to delete this budget? This action cannot be undone."
                                   )
                                 ) {
-                                  deleteBudgetMutation.mutate({ id: budget.id });
+                                  deleteBudgetMutation.mutate(budget.id);
                                 }
                               }}
                               disabled={deleteBudgetMutation.isPending}

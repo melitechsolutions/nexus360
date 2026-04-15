@@ -34,7 +34,7 @@ export const savedFiltersRouter = router({
       if (!db) throw new Error("Database not available");
 
       const id = crypto.randomUUID();
-      const now = new Date().toISOString();
+      const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
       try {
         await db.insert(savedFilters).values({
@@ -135,7 +135,7 @@ export const savedFiltersRouter = router({
 
       try {
         const updateData: any = {
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         };
 
         if (input.filterName) updateData.filterName = input.filterName;

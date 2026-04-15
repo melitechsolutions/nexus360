@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import DashboardLayout from "@/components/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
-import { ArrowLeft, Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, Calendar, CalendarDays } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import mutateAsync from '@/lib/mutationHelpers';
@@ -67,104 +69,153 @@ export default function LeaveManagementDetails() {
     }
   };
 
+  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case "approved": return "default";
+      case "rejected": return "destructive";
+      case "pending": return "secondary";
+      default: return "outline";
+    }
+  };
+
+  const getLeaveTypeBadge = (type: string) => {
+    return <Badge variant="outline">{type}</Badge>;
+  };
+
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Leave Request Details"
+        icon={<Calendar className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "HR", href: "/hr" },
+          { label: "Leave Management", href: "/leave-management" },
+          { label: "Details" },
+        ]}
+        backLink={{ label: "Leave Management", href: "/leave-management" }}
+      >
         <div className="flex items-center justify-center h-64">
           <p>Loading leave request...</p>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!leaveRecord) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Leave Request Details"
+        icon={<Calendar className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "HR", href: "/hr" },
+          { label: "Leave Management", href: "/leave-management" },
+          { label: "Details" },
+        ]}
+        backLink={{ label: "Leave Management", href: "/leave-management" }}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Leave request not found</p>
           <Button onClick={() => setLocation("/leave-management")}>Back to Leave Management</Button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "text-green-600";
-      case "rejected":
-        return "text-red-600";
-      case "pending":
-        return "text-yellow-600";
-      default:
-        return "text-slate-600";
-    }
-  };
-
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Leave Request Details"
+      icon={<Calendar className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "HR", href: "/hr" },
+        { label: "Leave Management", href: "/leave-management" },
+        { label: "Details" },
+      ]}
+      backLink={{ label: "Leave Management", href: "/leave-management" }}
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => setLocation("/leave-management")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold">Leave Request Details</h1>
-        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{leaveRecord.employeeName}</CardTitle>
-            <CardDescription>{leaveRecord.leaveType}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-slate-600">Employee ID</p>
-                <p className="font-semibold">{leaveRecord?.employeeId || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Status</p>
-                <p className={`font-semibold ${getStatusColor(leaveRecord?.status || "pending")}`}>
-                  {((leaveRecord?.status || "pending") as string).charAt(0).toUpperCase() + ((leaveRecord?.status || "pending") as string).slice(1)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Start Date</p>
-                <p className="font-semibold">{leaveRecord?.startDate || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">End Date</p>
-                <p className="font-semibold">{leaveRecord.endDate}</p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-sm text-slate-600">Days Requested</p>
-                <p className="font-semibold">{leaveRecord.daysRequested} days</p>
-              </div>
-              {leaveRecord.reason && (
-                <div className="col-span-2">
-                  <p className="text-sm text-slate-600">Reason</p>
-                  <p className="font-semibold">{leaveRecord.reason}</p>
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* LEFT SIDEBAR */}
+          <div className="lg:w-1/3 space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">{leaveRecord.employeeName}</CardTitle>
+                  <Badge variant={getStatusVariant(leaveRecord.status)}>
+                    {leaveRecord.status.charAt(0).toUpperCase() + leaveRecord.status.slice(1)}
+                  </Badge>
                 </div>
-              )}
-            </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Leave Type</p>
+                  <div className="mt-1">{getLeaveTypeBadge(leaveRecord.leaveType)}</div>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm text-muted-foreground">Employee ID</p>
+                  <p className="font-semibold">{leaveRecord.employeeId}</p>
+                </div>
+                <Separator />
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">From - To</p>
+                    <p className="font-semibold">{leaveRecord.startDate} → {leaveRecord.endDate}</p>
+                  </div>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm text-muted-foreground">Days Requested</p>
+                  <p className="text-2xl font-bold">{leaveRecord.daysRequested} <span className="text-sm font-normal text-muted-foreground">days</span></p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-            <div className="flex gap-2 pt-4">
-              <Button variant="outline" className="gap-2" onClick={() => setLocation(`/leave-management/${id}/edit`)}>
-                <Edit2 className="w-4 h-4" />
-                Edit
-              </Button>
-              <Button
-                variant="destructive"
-                className="gap-2"
-                onClick={() => setShowDeleteModal(true)}
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          {/* RIGHT CONTENT */}
+          <div className="lg:w-2/3 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Reason / Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {leaveRecord.reason ? (
+                  <p className="text-sm leading-relaxed">{leaveRecord.reason}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No reason provided.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Approval Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">Current Status</p>
+                  <Badge variant={getStatusVariant(leaveRecord.status)}>
+                    {leaveRecord.status.charAt(0).toUpperCase() + leaveRecord.status.slice(1)}
+                  </Badge>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">Request Duration</p>
+                  <p className="text-sm font-medium">{leaveRecord.daysRequested} day(s)</p>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">Period</p>
+                  <p className="text-sm font-medium">{leaveRecord.startDate} — {leaveRecord.endDate}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         <DeleteConfirmationModal
           isOpen={showDeleteModal}
@@ -175,6 +226,6 @@ export default function LeaveManagementDetails() {
           isLoading={isDeleting}
         />
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

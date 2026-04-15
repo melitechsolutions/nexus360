@@ -55,7 +55,7 @@ export default function ProfessionalBudgeting() {
   const [activeTab, setActiveTab] = useState('budgets');
   const [isCreating, setIsCreating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState('__all__');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
@@ -77,16 +77,16 @@ export default function ProfessionalBudgeting() {
 
   // Fetch budgets
   const { data: budgets, isLoading: budgetsLoading, refetch: refetchBudgets } = trpc.professionalBudgeting.listBudgets.useQuery({
-    departmentId: selectedDepartment || undefined,
+    departmentId: selectedDepartment && selectedDepartment !== '__all__' ? selectedDepartment : undefined,
     fiscalYear: selectedYear,
   });
 
   // Fetch budget template
   const { data: template } = trpc.professionalBudgeting.generateBudgetTemplate.useQuery({
     fiscalYear: selectedYear,
-    departmentId: selectedDepartment || departments?.[0]?.id || '',
+    departmentId: (selectedDepartment && selectedDepartment !== '__all__') ? selectedDepartment : (departments?.[0]?.id || ''),
   }, {
-    enabled: (selectedDepartment || departments?.length === 1) && !!departments?.length,
+    enabled: ((selectedDepartment && selectedDepartment !== '__all__') || departments?.length === 1) && !!departments?.length,
   });
 
   // Mutations
@@ -241,7 +241,7 @@ export default function ProfessionalBudgeting() {
       icon={<TrendingUp className="w-6 h-6" />}
       breadcrumbs={[
         { label: "Home", href: "/" },
-        { label: "Dashboard", href: "/crm" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Procurement", href: "/procurement" },
         { label: "Budgets", href: "/budgets" },
         { label: "Professional Budgeting" },
@@ -264,10 +264,10 @@ export default function ProfessionalBudgeting() {
               <SelectValue placeholder="All departments" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All departments</SelectItem>
+              <SelectItem value="__all__">All departments</SelectItem>
               {departments?.map(dept => (
                 <SelectItem key={dept.id} value={dept.id}>
-                  {dept.departmentName}
+                  {dept.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -329,15 +329,15 @@ export default function ProfessionalBudgeting() {
                     <div className="grid grid-cols-4 gap-4">
                       <div>
                         <p className="text-xs text-gray-500">Total Budget</p>
-                        <p className="font-semibold">KES {(budget.totalBudgeted / 100).toLocaleString()}</p>
+                        <p className="font-semibold">KES {(budget.totalBudgeted || 0).toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Actual Spend</p>
-                        <p className="font-semibold">KES {((budget.totalActual || 0) / 100).toLocaleString()}</p>
+                        <p className="font-semibold">KES {(budget.totalActual || 0).toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Remaining</p>
-                        <p className="font-semibold">KES {((budget.remaining || 0) / 100).toLocaleString()}</p>
+                        <p className="font-semibold">KES {(budget.remaining || 0).toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Utilization</p>
@@ -428,7 +428,7 @@ export default function ProfessionalBudgeting() {
                     <SelectContent>
                       {departments?.map(dept => (
                         <SelectItem key={dept.id} value={dept.id}>
-                          {dept.departmentName}
+                          {dept.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -158,7 +158,7 @@ export default function EditService() {
         description="Loading service details..."
         icon={<Briefcase className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "Products & Services", href: "/services" },
           { label: "Edit Service" },
         ]}
@@ -176,7 +176,7 @@ export default function EditService() {
       description="Update service details"
       icon={<Briefcase className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Products & Services", href: "/services" },
         { label: "Edit Service" },
       ]}

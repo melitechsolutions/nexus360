@@ -1,5 +1,6 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DocumentForm from "@/components/forms/DocumentForm";
+import { Edit } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -152,32 +153,60 @@ export default function EditEstimate() {
 
   if (!estimateId) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Edit Estimate"
+        icon={<Edit className="w-5 h-5" />}
+        backLink={{ label: "Estimates", href: "/estimates" }}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Estimates", href: "/estimates" },
+          { label: "Edit" },
+        ]}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Invalid estimate ID</p>
           <button onClick={() => setLocation("/estimates")} className="text-blue-500 hover:underline">
             Back to Estimates
           </button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!isLoading && !formData) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Edit Estimate"
+        icon={<Edit className="w-5 h-5" />}
+        backLink={{ label: "Estimates", href: "/estimates" }}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Estimates", href: "/estimates" },
+          { label: "Edit" },
+        ]}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Estimate not found</p>
           <button onClick={() => setLocation("/estimates")} className="text-blue-500 hover:underline">
             Back to Estimates
           </button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Edit Estimate"
+      description="Modify estimate details"
+      icon={<Edit className="w-5 h-5" />}
+      backLink={{ label: "Estimates", href: "/estimates" }}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Estimates", href: "/estimates" },
+        { label: "Edit" },
+      ]}
+    >
       <DocumentForm 
         type="estimate"
         mode="edit"
@@ -188,6 +217,6 @@ export default function EditEstimate() {
         isLoading={isLoading}
         isSaving={updateEstimateMutation.isPending || deleteEstimateMutation.isPending}
       />
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

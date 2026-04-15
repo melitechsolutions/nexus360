@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import DashboardLayout from "@/components/DashboardLayout";
-import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { ArrowLeft, Loader2, Trash2, Edit } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import mutateAsync from "@/lib/mutationHelpers";
 import { toast } from "sonner";
@@ -142,44 +142,64 @@ export default function EditUser() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Edit User"
+        icon={<Edit className="w-5 h-5" />}
+        backLink={{ label: "Users", href: "/admin/management" }}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Admin", href: "/admin" },
+          { label: "Users", href: "/admin/management" },
+          { label: "Edit" },
+        ]}
+      >
         <div className="flex items-center justify-center h-64">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
             <p className="text-gray-600">Loading user...</p>
           </div>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!userData) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Edit User"
+        icon={<Edit className="w-5 h-5" />}
+        backLink={{ label: "Users", href: "/admin/management" }}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Admin", href: "/admin" },
+          { label: "Users", href: "/admin/management" },
+          { label: "Edit" },
+        ]}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>User not found</p>
           <Button onClick={() => setLocation("/crm/super-admin")}>
             Back to Dashboard
           </Button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Edit User"
+      description="Update user details"
+      icon={<Edit className="w-5 h-5" />}
+      backLink={{ label: "Users", href: "/admin/management" }}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Admin", href: "/admin" },
+        { label: "Users", href: "/admin/management" },
+        { label: "Edit" },
+      ]}
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => setLocation("/crm/super-admin")}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold">Edit User</h1>
-        </div>
-
         <Card className="max-w-2xl">
           <CardHeader>
             <CardTitle>User Information</CardTitle>
@@ -322,6 +342,6 @@ export default function EditUser() {
           isLoading={isDeleting}
         />
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

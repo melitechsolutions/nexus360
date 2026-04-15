@@ -6,6 +6,8 @@ import { journalEntries, journalEntryLines } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { createFeatureRestrictedProcedure, createRoleRestrictedProcedure } from "../middleware/enhancedRbac";
+import { settings } from "../../drizzle/schema";
+import { and } from "drizzle-orm";
 
 // Permission-restricted procedure instances
 const viewProcedure = createFeatureRestrictedProcedure("procurement:lpo:view");
@@ -13,9 +15,16 @@ const createProcedure = createFeatureRestrictedProcedure("procurement:lpo:create
 const approveProcedure = createFeatureRestrictedProcedure("procurement:lpo:approve");
 const deleteProcedure = createRoleRestrictedProcedure(["super_admin", "admin"]);
 
-// simple lpo number generator
+// Settings-aware LPO number generator
 async function generateNextLPONumber(db: any): Promise<string> {
   try {
+    let prefix = "LPO";
+    try {
+      const rows = await db.select().from(settings)
+        .where(and(eq(settings.category, "numbering"), eq(settings.key, "lpoPrefix")))
+        .limit(1);
+      if (rows.length > 0 && rows[0].value) prefix = rows[0].value;
+    } catch { /* use default */ }
     const result = await db.select({ num: lpos.lpoNumber })
       .from(lpos)
       .orderBy(desc(lpos.createdAt))
@@ -26,7 +35,7 @@ async function generateNextLPONumber(db: any): Promise<string> {
       if (match) seq = parseInt(match[1]);
     }
     seq++;
-    return `LPO-${String(seq).padStart(6,'0')}`;
+    return `${prefix}-${String(seq).padStart(6,'0')}`;
   } catch (err) {
     console.warn("lpogenerator error", err);
     return `LPO-000001`;
@@ -35,7 +44,7 @@ async function generateNextLPONumber(db: any): Promise<string> {
 
 export const lpoRouter = router({
   list: viewProcedure
-    .query(async () => {
+    .query(async ({ ctx }) => {
       try {
         const db = await dbHelpers.getDb();
         if (!db) {
@@ -43,7 +52,9 @@ export const lpoRouter = router({
           return [];
         }
         console.log("[LPO] Attempting to fetch LPOs");
-        const result = await db.select().from(lpos).orderBy(desc(lpos.createdAt));
+        const orgId = ctx.user.organizationId;
+        const where = orgId ? eq(lpos.organizationId, orgId) : undefined;
+        const result = await db.select().from(lpos).where(where).orderBy(desc(lpos.createdAt));
         console.log("[LPO] Successfully fetched", result?.length || 0, "LPOs");
         return result;
       } catch (error) {
@@ -56,11 +67,14 @@ export const lpoRouter = router({
 
   getById: viewProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await dbHelpers.getDb();
       if (!db) return null;
-
-      const rows = await db.select().from(lpos).where(eq(lpos.id, input)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const conditions = orgId
+        ? and(eq(lpos.id, input), eq(lpos.organizationId, orgId))
+        : eq(lpos.id, input);
+      const rows = await db.select().from(lpos).where(conditions).limit(1);
       return rows[0] || null;
     }),
 
@@ -75,8 +89,10 @@ export const lpoRouter = router({
       if (!db) throw new Error("DB not available");
       const id = uuidv4();
       const lpoNumber = await generateNextLPONumber(db);
+      const normalizedOrgId = (ctx.user.organizationId || "").trim() || null;
       await db.insert(lpos).values({
         id,
+        organizationId: normalizedOrgId,
         lpoNumber,
         vendorId: input.vendorId,
         description: input.description || null,
@@ -97,8 +113,12 @@ export const lpoRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await dbHelpers.getDb();
       if (!db) throw new Error("DB not available");
+      const orgId = ctx.user.organizationId;
+      const idCondition = orgId
+        ? and(eq(lpos.id, input.id), eq(lpos.organizationId, orgId))
+        : eq(lpos.id, input.id);
       // fetch existing row to check current status
-      const existing = await db.select().from(lpos).where(eq(lpos.id, input.id)).limit(1);
+      const existing = await db.select().from(lpos).where(idCondition).limit(1);
       if (input.status) {
         // only allow approving a submitted LPO
         if (input.status === 'approved' && existing.length && existing[0].status !== 'submitted') {
@@ -158,7 +178,7 @@ export const lpoRouter = router({
               referenceType: 'lpo',
               referenceId: input.id,
               createdBy: ctx.user.id,
-              createdAt: new Date().toISOString(),
+              createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             } as any);
 
             // create two balancing lines: debit expense, credit accounts_payable
@@ -169,7 +189,7 @@ export const lpoRouter = router({
               debit: existing[0]?.amount || 0,
               credit: 0,
               description: `Expense for LPO ${input.id}`,
-              createdAt: new Date().toISOString(),
+              createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             } as any);
 
             await db.insert(journalEntryLines).values({
@@ -179,7 +199,7 @@ export const lpoRouter = router({
               debit: 0,
               credit: existing[0]?.amount || 0,
               description: `Accounts payable for LPO ${input.id}`,
-              createdAt: new Date().toISOString(),
+              createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             } as any);
 
             // trigger auto-post in finance module for downstream processes
@@ -196,16 +216,20 @@ export const lpoRouter = router({
       }
       if (input.description !== undefined) upd.description = input.description;
       if (input.amount !== undefined) upd.amount = input.amount;
-      await db.update(lpos).set(upd).where(eq(lpos.id, input.id));
+      await db.update(lpos).set(upd).where(idCondition);
       return { success: true };
     }),
 
   delete: deleteProcedure
     .input(z.string())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await dbHelpers.getDb();
       if (!db) throw new Error("DB not available");
-      await db.delete(lpos).where(eq(lpos.id, input));
+      const orgId = (ctx as any).user?.organizationId;
+      const idCondition = orgId
+        ? and(eq(lpos.id, input), eq(lpos.organizationId, orgId))
+        : eq(lpos.id, input);
+      await db.delete(lpos).where(idCondition);
       return { success: true };
     }),
 });

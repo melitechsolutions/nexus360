@@ -31,8 +31,8 @@ export async function createLocalUser(data: {
       passwordHash,
       loginMethod: "local",
       role: data.role || "user",
-      createdAt: new Date().toISOString(),
-      lastSignedIn: new Date().toISOString(),
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      lastSignedIn: new Date().toISOString().replace('T', ' ').substring(0, 19),
       isActive: 1,
     } as any);
 
@@ -84,7 +84,7 @@ export async function authenticateLocalUser(username: string, password: string) 
     // Update last signed in
     await db
       .update(users)
-      .set({ lastSignedIn: new Date().toISOString() })
+      .set({ lastSignedIn: new Date().toISOString().replace('T', ' ').substring(0, 19) })
       .where(eq(users.id, user.id));
 
     return {
@@ -180,7 +180,7 @@ export async function requestPasswordReset(email: string) {
       .update(users)
       .set({
         passwordResetToken: hashedToken,
-        passwordResetExpiresAt: expiresAt.toISOString(),
+        passwordResetExpiresAt: expiresAt.toISOString().replace('T', ' ').substring(0, 19),
       })
       .where(eq(users.id, user.id));
 

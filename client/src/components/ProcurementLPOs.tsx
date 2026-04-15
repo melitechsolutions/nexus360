@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRouter } from 'wouter';
+import { useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import {
@@ -52,9 +52,9 @@ import {
 } from 'lucide-react';
 
 export default function LocalPurchaseOrdersPage() {
-  const [, navigate] = useRouter();
+  const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('__all__');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedLPO, setSelectedLPO] = useState<any>(null);
@@ -74,7 +74,7 @@ export default function LocalPurchaseOrdersPage() {
   // Fetch LPOs
   const { data: lpos = [], isLoading, refetch } = trpc.procurementMgmt.lpoList.useQuery({
     search: searchTerm,
-    status: statusFilter,
+    status: statusFilter === '__all__' ? undefined : statusFilter || undefined,
     limit: 100,
   });
 
@@ -240,7 +240,7 @@ export default function LocalPurchaseOrdersPage() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="__all__">All statuses</SelectItem>
                   <SelectItem value="draft">Draft</SelectItem>
                   <SelectItem value="submitted">Submitted</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>

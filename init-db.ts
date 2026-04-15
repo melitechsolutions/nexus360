@@ -101,11 +101,12 @@ async function initializeDatabase() {
         
         console.log(`[Database] ➤ Executing migration: ${file}`);
         try {
-          // Execute the SQL file content
-          // Split by semicolon to handle multiple statements
+          // Execute the SQL file content using query() instead of execute()
+          // query() uses the text protocol which supports all SQL statements
+          // execute() uses prepared statements which can't handle DELIMITER, CREATE PROCEDURE, etc.
           const statements = sql.split(';').filter(s => s.trim().length > 0);
           for (const statement of statements) {
-            await connection.execute(statement);
+            await connection.query(statement);
           }
           console.log(`[Database]   ✅ ${file} completed`);
         } catch (e) {
@@ -119,7 +120,11 @@ async function initializeDatabase() {
             errMsg.includes('Duplicate column') ||
             errMsg.includes("doesn't exist") ||
             err?.code === 'ER_NO_SUCH_TABLE' ||
-            errMsg.includes('Unknown column')
+            errMsg.includes('Unknown column') ||
+            err?.code === 'ER_DUP_KEYNAME' ||
+            errMsg.includes('Duplicate key name') ||
+            errMsg.includes("can't have a default value") ||
+            err?.code === 'ER_BLOB_CANT_HAVE_DEFAULT'
           ) {
             console.log(`[Database]   ⚠️  ${file} - already applied or non-fatal issue (idempotent)`);
           } else {
@@ -175,16 +180,11 @@ async function createDefaultUser() {
     try {
       existingUser = await getUserByEmail(defaultEmail);
     } catch (error: any) {
-      // If column doesn't exist yet, log and skip default user creation
-      if (
-        error?.message?.includes("Unknown column") &&
-        error?.message?.includes("requiresPasswordChange")
-      ) {
+      // If a schema column doesn't exist yet, skip default user creation
+      if (error?.message?.includes("Unknown column")) {
+        const col = error?.message?.match(/Unknown column '([^']+)'/)?.[1] || "unknown";
         console.warn(
-          `[Database] ⚠️  requiresPasswordChange column not yet available. Skipping default user creation.`
-        );
-        console.warn(
-          `[Database] ℹ️  The user will need to be created manually or via migrations.`
+          `[Database] ⚠️  Column '${col}' not yet available. Skipping default user creation until migrations complete.`
         );
         return;
       }

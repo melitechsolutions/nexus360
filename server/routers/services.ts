@@ -2,7 +2,7 @@ import { router, protectedProcedure, createFeatureRestrictedProcedure } from "..
 import { z } from "zod";
 import { getDb } from "../db";
 import { services } from "../../drizzle/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import * as db from "../db";
 
@@ -13,14 +13,21 @@ export const servicesRouter = router({
       offset: z.number().optional(),
       category: z.string().optional(),
     }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return [];
 
-      let query: any = database.select().from(services);
+      const orgId = ctx.user.organizationId;
+      let query: any;
 
-      if (input?.category) {
-        query = query.where(eq(services.category, input.category));
+      if (orgId && input?.category) {
+        query = database.select().from(services).where(and(eq(services.organizationId, orgId), eq(services.category, input.category)));
+      } else if (orgId) {
+        query = database.select().from(services).where(eq(services.organizationId, orgId));
+      } else if (input?.category) {
+        query = database.select().from(services).where(eq(services.category, input.category));
+      } else {
+        query = database.select().from(services);
       }
 
       return await query.limit(input?.limit || 100).offset(input?.offset || 0);
@@ -28,10 +35,12 @@ export const servicesRouter = router({
 
   getById: protectedProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return null;
-      const result = await database.select().from(services).where(eq(services.id, input)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(services.id, input), eq(services.organizationId, orgId)) : eq(services.id, input);
+      const result = await database.select().from(services).where(where).limit(1);
       return result[0] || null;
     }),
 
@@ -72,6 +81,7 @@ export const servicesRouter = router({
       
       await database.insert(services).values({
         id,
+        organizationId: ctx.user.organizationId ?? null,
         name: svcName,
         description: input.description || '',
         category: svcType,
@@ -125,6 +135,10 @@ export const servicesRouter = router({
       const service = await database.select().from(services).where(eq(services.id, input.id)).limit(1);
       if (!service.length) throw new Error("Service not found");
 
+      // Verify org ownership
+      const orgId = ctx.user.organizationId;
+      if (orgId && service[0].organizationId !== orgId) throw new Error("Service not found");
+
       const newName = input.serviceName || input.name;
       // Check for duplicate service name if changing it
       if (newName && newName !== service[0].name) {
@@ -168,6 +182,10 @@ export const servicesRouter = router({
       const service = await database.select().from(services).where(eq(services.id, input)).limit(1);
       if (!service.length) throw new Error("Service not found");
 
+      // Verify org ownership
+      const orgId = ctx.user.organizationId;
+      if (orgId && service[0].organizationId !== orgId) throw new Error("Service not found");
+
       await database.delete(services).where(eq(services.id, input));
 
       // Log activity
@@ -184,23 +202,27 @@ export const servicesRouter = router({
 
   getByType: protectedProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return [];
 
-      return await database.select().from(services).where(eq(services.category, input));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(services.category, input), eq(services.organizationId, orgId)) : eq(services.category, input);
+      return await database.select().from(services).where(where);
     }),
 
   getActive: protectedProcedure
-    .query(async () => {
+    .query(async ({ ctx }) => {
       const database = await getDb();
       if (!database) return [];
 
-      return await database.select().from(services).where(eq(services.isActive, 1));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(services.isActive, 1), eq(services.organizationId, orgId)) : eq(services.isActive, 1);
+      return await database.select().from(services).where(where);
     }),
 
   getSummary: protectedProcedure
-    .query(async () => {
+    .query(async ({ ctx }) => {
       const database = await getDb();
       if (!database) return {
         totalServices: 0,
@@ -208,7 +230,10 @@ export const servicesRouter = router({
         avgRate: 0,
       };
 
-      const allServices = await database.select().from(services);
+      const orgId = ctx.user.organizationId;
+      const allServices = orgId
+        ? await database.select().from(services).where(eq(services.organizationId, orgId))
+        : await database.select().from(services);
 
       const activeServices = allServices.filter(s => s.isActive === 1).length;
       const avgRate = allServices.length > 0 

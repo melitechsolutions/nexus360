@@ -196,7 +196,7 @@ export const enhancedPermissionsRouter = router({
         id: uuid(),
         roleId: input.roleId,
         permissionId: input.permissionId,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       });
 
       // Log audit
@@ -209,7 +209,7 @@ export const enhancedPermissionsRouter = router({
         action: "assign",
         changedBy: ctx.user.id,
         newValue: "assigned",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       });
 
       return { success: true, message: "Permission assigned successfully" };
@@ -255,7 +255,7 @@ export const enhancedPermissionsRouter = router({
         action: "remove",
         changedBy: ctx.user.id,
         oldValue: "assigned",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       });
 
       return { success: true, message: "Permission removed successfully" };

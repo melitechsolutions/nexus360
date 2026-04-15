@@ -126,7 +126,7 @@ export const notificationsRouter = router({
         .update(notifications)
         .set({
           isRead: 1,
-          readAt: new Date().toISOString(),
+          readAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         })
         .where(
           and(eq(notifications.id, input.id), eq(notifications.userId, ctx.user.id)),
@@ -147,7 +147,7 @@ export const notificationsRouter = router({
       .update(notifications)
       .set({
         isRead: 1,
-        readAt: new Date().toISOString(),
+        readAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       })
       .where(
         and(eq(notifications.userId, ctx.user.id), eq(notifications.isRead, 0)),
@@ -258,7 +258,7 @@ export const notificationsRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    const now = new Date().toISOString();
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const result = await db
       .delete(notifications)
       .where(

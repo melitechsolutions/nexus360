@@ -106,3 +106,5 @@ export function RoleBasedDashboard() {
     </div>
   );
 }
+
+export default RoleBasedDashboard;

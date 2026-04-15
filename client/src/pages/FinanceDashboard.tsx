@@ -14,7 +14,8 @@ import {
   ArrowRight,
   AlertCircle,
 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function FinanceDashboard() {
   const [, navigate] = useLocation();
@@ -76,63 +77,50 @@ export default function FinanceDashboard() {
   ];
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Finance Dashboard"
+      description={`Welcome, ${user?.name}. Monitor your financial performance.`}
+      icon={<DollarSign className="h-6 w-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Finance" },
+      ]}
+    >
       <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="text-center space-y-4 py-4">
-        <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Finance Dashboard
-        </h2>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Welcome, {user?.name}. Monitor your financial performance.
-        </p>
-      </div>
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">KES {(metrics.totalRevenue / 1000).toFixed(1)}K</div>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Total Revenue"
+          value={<>KES {(metrics.totalRevenue / 1000).toFixed(1)}K</>}
+          description="This month"
+          icon={<TrendingUp className="h-5 w-5" />}
+          color="border-l-green-500"
+        />
 
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
-            <FileText className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.pendingInvoices}</div>
-            <p className="text-xs text-muted-foreground">Awaiting payment</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Pending Invoices"
+          value={metrics.pendingInvoices}
+          description="Awaiting payment"
+          icon={<FileText className="h-5 w-5" />}
+          color="border-l-blue-500"
+        />
 
-        <Card className="border-l-4 border-l-orange-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-            <TrendingDown className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">KES 0</div>
-            <p className="text-xs text-muted-foreground">This month</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Total Expenses"
+          value="KES 0"
+          description="This month"
+          icon={<TrendingDown className="h-5 w-5" />}
+          color="border-l-orange-500"
+        />
 
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Account Balance</CardTitle>
-            <DollarSign className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">KES {(metrics.accountBalance / 1000).toFixed(1)}K</div>
-            <p className="text-xs text-muted-foreground">Available balance</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Account Balance"
+          value={<>KES {(metrics.accountBalance / 1000).toFixed(1)}K</>}
+          description="Available balance"
+          icon={<DollarSign className="h-5 w-5" />}
+          color="border-l-purple-500"
+        />
       </div>
 
       {/* Finance Features Grid */}
@@ -183,6 +171,6 @@ export default function FinanceDashboard() {
         </Card>
       </div>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

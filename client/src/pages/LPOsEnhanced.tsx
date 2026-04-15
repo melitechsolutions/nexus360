@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -30,10 +32,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Download, Upload, Edit2, Trash2, Loader2, ShoppingCart, Search } from "lucide-react";
+import { Plus, Download, Upload, Edit2, Eye, Trash2, Loader2, ShoppingCart, Search, Building2, Coins, Truck, MapPin, StickyNote } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { useCurrencySettings } from "@/lib/currency";
 
 export default function LPOsPage() {
+  const [, setLocation] = useLocation();
   const { user } = useAuth();
+  const { code: currencyCode } = useCurrencySettings();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -238,7 +244,7 @@ export default function LPOsPage() {
       description="Create and manage local purchase orders for vendor procurement"
       icon={<ShoppingCart className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Procurement", href: "#" },
         { label: "LPOs" },
       ]}
@@ -340,7 +346,7 @@ export default function LPOsPage() {
                         <TableCell className="text-right">
                           {new Intl.NumberFormat("en-US", {
                             style: "currency",
-                            currency: "KES",
+                            currency: currencyCode,
                           }).format((lpo.amount || 0) / 100)}
                         </TableCell>
                         <TableCell>{lpo.deliveryDate || "N/A"}</TableCell>
@@ -352,6 +358,20 @@ export default function LPOsPage() {
                         <TableCell>{lpo.requestedBy || "N/A"}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setLocation(`/lpos/${lpo.id}`)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setLocation(`/lpos/${lpo.id}/edit`)}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -371,9 +391,9 @@ export default function LPOsPage() {
           </CardContent>
         </Card>
 
-        {/* Create/Edit LPO Dialog */}
+        {/* Create LPO Dialog */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New LPO</DialogTitle>
               <DialogDescription>
@@ -381,107 +401,133 @@ export default function LPOsPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-              {/* LPO Number */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="lpoNumber">LPO Number *</Label>
-                  <Input
-                    id="lpoNumber"
-                    name="lpoNumber"
-                    value={formData.lpoNumber}
-                    onChange={handleInputChange}
-                    placeholder="e.g., LPO-2026-001"
-                  />
-                </div>
+            <div className="space-y-6">
+              {/* Order Identification */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-blue-600" />
+                    Order Identification
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="lpoNumber">LPO Number *</Label>
+                      <Input
+                        id="lpoNumber"
+                        name="lpoNumber"
+                        value={formData.lpoNumber}
+                        onChange={handleInputChange}
+                        placeholder="e.g., LPO-2026-001"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="vendorId">Select Vendor *</Label>
+                      <Select value={formData.vendorId} onValueChange={handleVendorSelect}>
+                        <SelectTrigger id="vendorId">
+                          <SelectValue placeholder="Select a vendor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {suppliers.map((supplier: any) => (
+                            <SelectItem key={supplier.id} value={supplier.id}>
+                              {supplier.companyName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                {/* Vendor Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="vendorId">Select Vendor *</Label>
-                  <Select value={formData.vendorId} onValueChange={handleVendorSelect}>
-                    <SelectTrigger id="vendorId">
-                      <SelectValue placeholder="Select a vendor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {suppliers.map((supplier: any) => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.companyName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              {/* Financial & Delivery */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-green-600" />
+                    Financial & Delivery
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="amount">Amount (KES) *</Label>
+                      <div className="relative">
+                        <Coins className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="amount"
+                          name="amount"
+                          type="number"
+                          value={formData.amount || ""}
+                          onChange={handleInputChange}
+                          placeholder="0.00"
+                          step="0.01"
+                          className="pl-8"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="deliveryDate">Delivery Date</Label>
+                      <Input
+                        id="deliveryDate"
+                        name="deliveryDate"
+                        type="date"
+                        value={formData.deliveryDate}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="deliveryLocation">Delivery Location</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="deliveryLocation"
+                        name="deliveryLocation"
+                        value={formData.deliveryLocation}
+                        onChange={handleInputChange}
+                        placeholder="e.g., Warehouse A, Building 1"
+                        className="pl-8"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* Amount and Delivery Date */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount (KES) *</Label>
-                  <Input
-                    id="amount"
-                    name="amount"
-                    type="number"
-                    value={formData.amount}
-                    onChange={handleInputChange}
-                    placeholder="0.00"
-                    step="0.01"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="deliveryDate">Delivery Date</Label>
-                  <Input
-                    id="deliveryDate"
-                    name="deliveryDate"
-                    type="date"
-                    value={formData.deliveryDate}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              {/* Delivery Location */}
-              <div className="space-y-2">
-                <Label htmlFor="deliveryLocation">Delivery Location</Label>
-                <Input
-                  id="deliveryLocation"
-                  name="deliveryLocation"
-                  value={formData.deliveryLocation}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Warehouse A, Building 1"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description">Description / Items</Label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="List items or services to be procured"
-                  className="w-full p-2 border rounded text-sm"
-                  rows={3}
-                />
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  placeholder="Additional notes or special instructions"
-                  className="w-full p-2 border rounded text-sm"
-                  rows={2}
-                />
-              </div>
+              {/* Description & Notes */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <StickyNote className="w-4 h-4 text-purple-600" />
+                    Description & Notes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description / Items</Label>
+                    <RichTextEditor
+                      value={formData.description}
+                      onChange={(html) => setFormData(prev => ({ ...prev, description: html }))}
+                      placeholder="List items or services to be procured"
+                      minHeight="100px"
+                    />
+                  </div>
+                  <Separator />
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <RichTextEditor
+                      value={formData.notes}
+                      onChange={(html) => setFormData(prev => ({ ...prev, notes: html }))}
+                      placeholder="Additional notes or special instructions"
+                      minHeight="80px"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
                 Cancel
               </Button>

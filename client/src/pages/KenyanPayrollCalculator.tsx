@@ -169,7 +169,7 @@ export default function KenyanPayrollCalculator() {
       description="Calculate payroll with PAYE, NSSF, SHIF, and Housing Levy deductions"
       icon={<Calculator className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Payroll", href: "/payroll" },
         { label: "Kenyan Calculator", href: "#" },
       ]}
@@ -308,7 +308,7 @@ export default function KenyanPayrollCalculator() {
               })}
               taxNumber={selectedEmployee?.taxNumber || "N/A"}
               payroll={calculation}
-              onDownload={() => toast.info("PDF download will be implemented")}
+              onDownload={() => window.print()}
             />
 
             <div className="flex gap-4">

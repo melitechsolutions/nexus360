@@ -51,15 +51,29 @@ const createOpportunitySchema = z.object({
 export const salesPipelineRouter = router({
   // Get opportunities grouped by stage (for Kanban)
   getPipelineBoard: readProcedure
-    .query(async () => {
+    .query(async ({ ctx }) => {
       try {
         const db = await getDb();
         if (!db) return { stages: [] };
 
-        const allOpportunities = await db
-          .select()
-          .from(opportunities)
-          .orderBy(desc(opportunities.createdAt));
+        // Filter to org's opportunities via client join if org user
+        const orgId = ctx.user?.organizationId;
+        let allOpportunities: any[];
+
+        if (orgId) {
+          allOpportunities = await db
+            .select({ opp: opportunities })
+            .from(opportunities)
+            .innerJoin(clients, eq(opportunities.clientId, clients.id))
+            .where(eq(clients.organizationId, orgId))
+            .orderBy(desc(opportunities.createdAt))
+            .then((rows: any[]) => rows.map((r: any) => r.opp));
+        } else {
+          allOpportunities = await db
+            .select()
+            .from(opportunities)
+            .orderBy(desc(opportunities.createdAt));
+        }
 
         // Group by stage
         const board: Record<string, any[]> = {};
@@ -251,7 +265,7 @@ export const salesPipelineRouter = router({
           .from(opportunities)
           .where(
             and(
-              gte(opportunities.actualCloseDate, monthsAgo.toISOString()),
+              gte(opportunities.actualCloseDate, monthsAgo.toISOString().replace('T', ' ').substring(0, 19)),
               (eq(opportunities.stage, "closed_won") ||
                 eq(opportunities.stage, "closed_lost"))
             ) as any
@@ -409,7 +423,7 @@ export const salesPipelineRouter = router({
           .update(opportunities)
           .set({
             probability: input.probability,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(opportunities.id, input.id));
 

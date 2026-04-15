@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Document Template</title>
+    <link rel="stylesheet" href="../styles/document-professional-template.css">
+</head>
+<body>
+    <div class="document-container" data-document-type="purchase-order">
+        
+        <!-- HEADER WITH BRANDING (ISO COMPLIANT) -->
+        <div class="document-header">
+            <div class="company-info">
+                <div class="company-logo" data-field="companyLogo">
+                    <img src="[COMPANY_LOGO]" alt="Company Logo" style="max-height: 60px;">
+                </div>
+                <div>
+                    <div class="company-name" data-field="companyName">[COMPANY_NAME]</div>
+                    <div class="company-tax-id" data-field="companyPin">Tax ID: [COMPANY_PIN]</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCUMENT TITLE AND METADATA (ISO COMPLIANT) -->
+        <div class="document-header-section">
+            <h1 class="document-title">PURCHASE ORDER</h1>
+            <div class="document-meta">
+                <div class="meta-item">
+                    <span class="meta-label">PO #:</span>
+                    <span class="meta-value" data-field="poNumber">[PO-00001]</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Date:</span>
+                    <span class="meta-value" data-field="issueDate">[DD/MM/YYYY]</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Expected Delivery:</span>
+                    <span class="meta-value" data-field="deliveryDate">[DD/MM/YYYY]</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VENDOR / SUPPLIER DETAILS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Vendor / Supplier</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Vendor Name:</strong> [Vendor Company Name]</div>
+                <div><strong>Contact Person:</strong> [Contact Name]</div>
+                <div><strong>Email:</strong> [vendor@email.com]</div>
+                <div><strong>Phone:</strong> [Vendor Phone]</div>
+                <div><strong>Address:</strong> [Vendor Address]</div>
+                <div><strong>Tax ID:</strong> [Tax Number]</div>
+            </div>
+        </div>
+        
+        <!-- DELIVERY ADDRESS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Deliver To</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Department:</strong> [Department Name]</div>
+                <div><strong>Location:</strong> [Delivery Location]</div>
+                <div><strong>Receiving Contact:</strong> [Contact Name]</div>
+                <div><strong>Address:</strong> [Full Delivery Address]</div>
+            </div>
+        </div>
+
+        <!-- CONTENT SECTIONS -->
+        <div class="section">
+            <h2 class="section-title">Description</h2>
+            <div class="section-content">
+                <p>Document content goes here. This template provides a professional, print-persistent format for all app documentation and reports.</p>
+            </div>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="section">
+            <h2 class="section-title">Items List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong>Website Development</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #636e72;">Web02 - Development Package</p>
+                        </td>
+                        <td>1</td>
+                        <td>KES 7,000.00</td>
+                        <td>KES 7,000.00</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Social Media Management</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #636e72;">SMM(Custom) - 22 posts on Facebook, Instagram, X and LinkedIn</p>
+                        </td>
+                        <td>1</td>
+                        <td>KES 4,000.00</td>
+                        <td>KES 4,000.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- HIGHLIGHT BOX -->
+        <div class="section">
+            <div class="highlight-box">
+                <div class="highlight-label">Total Amount Due</div>
+                <div class="highlight-value">KES 14,250.00</div>
+            </div>
+        </div>
+
+        <!-- PURCHASE ORDER TERMS & CONDITIONS SECTION -->
+        <div class="section">
+            <h2 class="section-title">Purchase Order Terms & Conditions</h2>
+            <div class="section-content" style="font-size: 13px; line-height: 1.6; color: var(--secondary-color);">
+                <ol style="margin-left: 20px;">
+                    <li><strong>Order Acceptance:</strong> Vendor acceptance indicated by acknowledgment or commencement of work.</li>
+                    <li><strong>Scope of Work:</strong> Vendor to supply items/services exactly as specified. No substitutions without written approval.</li>
+                    <li><strong>Delivery:</strong> Delivery by specified date to designated location. Delays may result in cancellation or penalty charges.</li>
+                    <li><strong>Pricing & Payment:</strong> Pricing fixed including all costs. Payment 30 days from delivery upon receipt and approval.</li>
+                    <li><strong>Quality Standards:</strong> All items must meet specified quality standards and applicable industry norms.</li>
+                    <li><strong>Warranty:</strong> Vendor warrants items fit for purpose and free from defects for 90 days from delivery.</li>
+                    <li><strong>Legal Compliance:</strong> Vendor certifies compliance with all applicable laws including tax and safety standards.</li>
+                    <li><strong>Insurance & Liability:</strong> Vendor responsible for goods insurance during transit. Payment withheld for non-compliant deliveries.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- FOOTER (ISO COMPLIANT - MINIMAL) -->
+        <div class="document-footer">
+            <div class="footer-info">
+                <span class="document-id" data-field="poNumber">PO: [PO-00001]</span>
+                <span class="document-date" data-field="issueDate">Issued: [DD/MM/YYYY]</span>
+                <span class="page-number">Page <span class="current-page">1</span> of <span class="total-pages">1</span></span>
+            </div>
+            <div class="footer-company" data-field="companyName">[COMPANY_NAME]</div>
+        </div>
+
+    </div>
+
+</body>
+</html>

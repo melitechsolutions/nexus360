@@ -1,8 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
-import DashboardLayout from "@/components/DashboardLayout";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,8 +26,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ClientSearchFilter, type ClientFilters } from "@/components/SearchAndFilter";
+import { type ClientFilters } from "@/components/SearchAndFilter";
 import { trpc } from "@/lib/trpc";
+import { exportToCsv } from "@/utils/exportCsv";
+import { buildCommunicationComposePath } from "@/lib/communications";
 import {
   Users,
   Plus,
@@ -42,7 +43,40 @@ import {
   Search,
   Loader2,
   DollarSign,
+  CheckSquare,
+  ArrowUpDown,
+  Copy,
+  Pencil,
+  Activity,
+  FileText,
+  FolderOpen,
 } from "lucide-react";
+import { computeHealthScoreForClient } from "@/lib/healthScore";
+import { PaginationControls, BulkActionsBar, usePagination, useTableSelection } from "@/components/ui/data-table-controls";
+import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
+import { SummaryStatCards, type SummaryCard } from "@/components/list-page/SummaryStatCards";
+import { TableColumnSettings, useColumnVisibility, type ColumnConfig } from "@/components/list-page/TableColumnSettings";
+import { RowActionsMenu, actionIcons } from "@/components/list-page/RowActionsMenu";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction, bulkEmailAction } from "@/components/list-page/EnhancedBulkActions";
+
+const COLUMNS: ColumnConfig[] = [
+  { key: "client", label: "Client", defaultVisible: true },
+  { key: "contact", label: "Contact", defaultVisible: true },
+  { key: "company", label: "Company", defaultVisible: true },
+  { key: "phone", label: "Phone", defaultVisible: false },
+  { key: "address", label: "Address", defaultVisible: false },
+  { key: "tags", label: "Tags", defaultVisible: true },
+  { key: "category", label: "Category", defaultVisible: true },
+  { key: "projects", label: "Projects", defaultVisible: true },
+  { key: "revenue", label: "Revenue", defaultVisible: true },
+  { key: "health", label: "Health", defaultVisible: true },
+  { key: "status", label: "Status", defaultVisible: true },
+  { key: "accountOwner", label: "Account Owner", defaultVisible: false },
+];
+
+function computeClientHealth(clientId: string, invoices: any[], projects: any[]) {
+  return computeHealthScoreForClient(clientId, invoices, projects);
+}
 
 interface ClientDisplay {
   id: string;
@@ -60,7 +94,7 @@ export default function Clients() {
   // CALL ALL HOOKS UNCONDITIONALLY AT TOP LEVEL
   const { allowed, isLoading } = useRequireFeature("clients:view");
   
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<ClientFilters>({
     status: "all",
@@ -68,6 +102,10 @@ export default function Clients() {
     sortBy: "name",
     sortOrder: "asc",
   });
+
+  // Pagination & selection (all hooks must be unconditional)
+  const { page, pageSize, setPage, setPageSize, paginate, resetPage } = usePagination(25);
+  const { visibleColumns, toggleColumn, isVisible } = useColumnVisibility(COLUMNS, "clients");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newClient, setNewClient] = useState({
     companyName: "",
@@ -101,6 +139,22 @@ export default function Clients() {
     },
     onError: (error) => {
       toast.error(error.message || "Failed to delete client");
+    },
+  });
+
+  const bulkDeleteMutation = trpc.clients.bulkDelete.useMutation({
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete clients");
+    },
+  });
+
+  const updateClientMutation = trpc.clients.update.useMutation({
+    onSuccess: () => {
+      toast.success("Client updated");
+      utils.clients.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update client");
     },
   });
   
@@ -183,6 +237,13 @@ export default function Clients() {
       return filters.sortOrder === "desc" ? -comparison : comparison;
     });
 
+  const pagedClients = paginate(filteredClients);
+  const selection = useTableSelection(pagedClients.map((c) => c.id));
+
+  // Reset page when search or filters change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { resetPage(); }, [searchQuery, filters.sortBy, filters.sortOrder, filters.status]);
+
   const handleAddClient = () => {
     if (!newClient.companyName || !newClient.contactPerson) {
       toast.error("Please fill in required fields (Company Name and Contact Person)");
@@ -238,21 +299,36 @@ export default function Clients() {
   return (
     <ModuleLayout
       title="Clients"
-      description="Manage your client relationships and contacts"
       icon={<Users className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "CRM", href: "/" },
-        { label: "Clients", href: "/clients" },
+        { label: "App", href: "/crm-home" },
+        { label: "Clients" },
       ]}
       actions={
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Client
-            </Button>
-          </DialogTrigger>
+        <ListPageToolbar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search clients..."
+          onCreateClick={() => setIsDialogOpen(true)}
+          createLabel="New Client"
+          onExportClick={() => {
+            if (!clients.length) { toast.warning("No clients to export"); return; }
+            exportToCsv("clients", clients.map((c: any) => ({
+              Name: `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim(),
+              Company: c.company ?? "",
+              Email: c.email ?? "",
+              Phone: c.phone ?? "",
+              Category: c.category ?? "",
+              Status: c.status ?? "",
+            })));
+            toast.success("Clients exported");
+          }}
+          onImportClick={() => toast.info("CSV import is available in Settings > Data Management")}
+          onPrintClick={() => window.print()}
+        />
+      }
+    >
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Client</DialogTitle>
@@ -447,138 +523,268 @@ export default function Clients() {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
-      }
-    >
-      <div className="space-y-6">
-        <ClientSearchFilter
-          onSearch={setSearchQuery}
-          onFilter={setFilters}
-        />
+      </Dialog>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{clients.length}</div>
-              <p className="text-xs text-muted-foreground">Active clients</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalProjects}</div>
-              <p className="text-xs text-muted-foreground">Across all clients</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                Ksh {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </div>
-              <p className="text-xs text-muted-foreground">All time</p>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="space-y-6">
+        {/* Summary Stat Cards */}
+        <SummaryStatCards
+          cards={[
+            { label: "Clients", value: clients.length, color: "blue" },
+            { label: "Projects", value: totalProjects, color: "green" },
+            { label: "Invoices", value: `Ksh ${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, color: "orange" },
+            { label: "Payments", value: `Ksh ${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, color: "purple" },
+          ]}
+        />
 
         {/* Clients Table */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>All Clients</CardTitle>
-                <CardDescription>View and manage your client database</CardDescription>
-              </div>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search clients..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3 pt-4">
+            {/* Bulk actions bar */}
+            {selection.selectedIds.length > 0 && (
+              <EnhancedBulkActions
+                selectedCount={selection.selectedIds.length}
+                onClear={selection.clear}
+                actions={[
+                  bulkExportAction(selection.selectedSet, pagedClients, [
+                    { key: "name", label: "Client" },
+                    { key: "email", label: "Email" },
+                    { key: "company", label: "Company" },
+                    { key: "phone", label: "Phone" },
+                    { key: "status", label: "Status" },
+                  ], "clients"),
+                  bulkCopyIdsAction(selection.selectedSet),
+                  bulkEmailAction(navigate, location),
+                  bulkDeleteAction(selection.selectedSet, (ids) => {
+                    bulkDeleteMutation.mutate(ids, {
+                      onSuccess: (data) => {
+                        toast.success(`${data.count} client(s) deleted`);
+                        utils.clients.list.invalidate();
+                        selection.clear();
+                      },
+                    });
+                  }),
+                ]}
+              />
+            )}
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Projects</TableHead>
-                  <TableHead>Revenue</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-10"></TableHead>
+                  {isVisible("client") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Client <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("contact") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Contact <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("company") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Company <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("phone") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Phone <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("address") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Address <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("tags") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Tags <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("category") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Category <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("projects") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Projects <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("revenue") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Revenue <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("health") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Health <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("status") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Status <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  {isVisible("accountOwner") && (
+                    <TableHead>
+                      <span className="text-primary flex items-center gap-1 cursor-pointer">Account Owner <ArrowUpDown className="h-3 w-3" /></span>
+                    </TableHead>
+                  )}
+                  <TableHead className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      Actions
+                      <TableColumnSettings
+                        columns={COLUMNS}
+                        visibleColumns={visibleColumns}
+                        onToggleColumn={toggleColumn}
+                      />
+                    </div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {clientsLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={COLUMNS.filter(c => isVisible(c.key)).length + 2} className="text-center py-8">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
                     </TableCell>
                   </TableRow>
-                ) : filteredClients.length === 0 ? (
+                ) : pagedClients.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={COLUMNS.filter(c => isVisible(c.key)).length + 2} className="text-center py-8 text-muted-foreground">
                       No clients found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredClients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell className="font-medium">{client.name}</TableCell>
+                  pagedClients.map((client) => (
+                    <TableRow key={client.id} data-selected={selection.selectedSet.has(client.id)} className="data-[selected=true]:bg-primary/5">
                       <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Mail className="h-3 w-3 text-muted-foreground" />
-                            {client.email || "N/A"}
+                        <input
+                          type="checkbox"
+                          checked={selection.selectedSet.has(client.id)}
+                          onChange={() => selection.toggle(client.id)}
+                          className="h-4 w-4 rounded border-gray-300 cursor-pointer"
+                          aria-label={`Select ${client.name}`}
+                        />
+                      </TableCell>
+                      {isVisible("client") && (
+                        <TableCell>
+                          <button
+                            className="font-medium text-primary hover:underline cursor-pointer"
+                            onClick={() => handleViewClient(client.id)}
+                          >
+                            {client.name}
+                          </button>
+                        </TableCell>
+                      )}
+                      {isVisible("contact") && (
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 text-sm">
+                              <Mail className="h-3 w-3 text-muted-foreground" />
+                              {client.email || "N/A"}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Phone className="h-3 w-3" />
+                        </TableCell>
+                      )}
+                      {isVisible("company") && (
+                        <TableCell className="truncate">{client.company}</TableCell>
+                      )}
+                      {isVisible("phone") && (
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
                             {client.phone || "N/A"}
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{client.company}</TableCell>
-                      <TableCell>{client.projects}</TableCell>
-                      <TableCell>Ksh {client.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
-                      <TableCell>
-                        <Badge variant={client.status === "active" ? "default" : "secondary"}>
-                          {client.status}
-                        </Badge>
-                      </TableCell>
+                        </TableCell>
+                      )}
+                      {isVisible("address") && (
+                        <TableCell className="truncate max-w-[200px]">{client.address || "N/A"}</TableCell>
+                      )}
+                      {isVisible("tags") && (
+                        <TableCell>
+                          <span className="text-xs text-muted-foreground">—</span>
+                        </TableCell>
+                      )}
+                      {isVisible("category") && (
+                        <TableCell>
+                          <span className="text-xs text-muted-foreground">—</span>
+                        </TableCell>
+                      )}
+                      {isVisible("projects") && (
+                        <TableCell>{client.projects}</TableCell>
+                      )}
+                      {isVisible("revenue") && (
+                        <TableCell>Ksh {client.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
+                      )}
+                      {isVisible("health") && (
+                        <TableCell>
+                          {(() => {
+                            const { score, label, color } = computeClientHealth(
+                              client.id,
+                              plainInvoicesData,
+                              plainProjectsData
+                            );
+                            return (
+                              <div className="flex items-center gap-2 min-w-[100px]">
+                                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all"
+                                    style={{ width: `${score}%`, background: color }}
+                                  />
+                                </div>
+                                <span className="text-xs font-medium whitespace-nowrap" style={{ color }}>
+                                  {label}
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </TableCell>
+                      )}
+                      {isVisible("status") && (
+                        <TableCell>
+                          <Badge variant={client.status === "active" ? "default" : "secondary"}>
+                            {client.status}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {isVisible("accountOwner") && (
+                        <TableCell>
+                          <span className="text-xs text-muted-foreground">—</span>
+                        </TableCell>
+                      )}
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleViewClient(client.id)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => navigate(`/clients/${client.id}/edit`)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteClient(client.id, client.name)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <RowActionsMenu
+                          primaryActions={[
+                            { label: "Delete", icon: actionIcons.delete, onClick: () => handleDeleteClient(client.id, client.name), variant: "destructive" },
+                            { label: "Edit", icon: actionIcons.edit, onClick: () => navigate(`/clients/${client.id}/edit`) },
+                            { label: "Email", icon: actionIcons.email, onClick: () => navigate(buildCommunicationComposePath(location, client.email, `Message for ${client.name}`)) },
+                            { label: "View", icon: actionIcons.view, onClick: () => handleViewClient(client.id) },
+                          ]}
+                          menuActions={[
+                            { label: "Client URL", icon: actionIcons.copy, onClick: () => { navigator.clipboard.writeText(`${window.location.origin}/clients/${client.id}`); toast.success("URL copied"); } },
+                            { label: "Quick Edit", icon: actionIcons.edit, onClick: () => navigate(`/clients/${client.id}/edit`) },
+                            { label: "Change Status", icon: <Activity className="h-4 w-4" />, onClick: () => { const newStatus = client.status === "active" ? "inactive" : "active"; updateClientMutation.mutate({ id: client.id, status: newStatus }); }, separator: true },
+                            { label: "Change Category", icon: <FolderOpen className="h-4 w-4" />, onClick: () => navigate(`/clients/${client.id}/edit`) },
+                            { label: "View Projects", icon: <Building2 className="h-4 w-4" />, onClick: () => navigate(`/clients/${client.id}?tab=projects`), separator: true },
+                            { label: "View Invoices", icon: <FileText className="h-4 w-4" />, onClick: () => navigate(`/clients/${client.id}?tab=invoices`) },
+                          ]}
+                          showStar={true}
+                          showDownload={true}
+                        />
                       </TableCell>
                     </TableRow>
                   ))
                 )}
               </TableBody>
             </Table>
+            <PaginationControls
+              total={filteredClients.length}
+              page={page}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
           </CardContent>
         </Card>
       </div>

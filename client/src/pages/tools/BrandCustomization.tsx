@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { ModuleLayout } from "@/components/ModuleLayout";
+import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -145,6 +146,7 @@ const formatBrandConfig = (config: BrandConfig): BrandConfig => {
 
 export default function BrandCustomization() {
   const [, navigate] = useLocation();
+  const { updateBrandConfig } = useBrand();
   const [brand, setBrand] = useState<BrandConfig>(DEFAULT_BRAND);
   const [companyGuide, setCompanyGuide] = useState<CompanyBrandGuide>({
     companyName: "",
@@ -206,8 +208,8 @@ export default function BrandCustomization() {
         description="Design and customize your application's visual identity"
         icon={<Palette className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
-          { label: "Tools", href: "/tools" },
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Settings", href: "/settings" },
           { label: "Brand Customization" },
         ]}
       >
@@ -268,6 +270,7 @@ export default function BrandCustomization() {
         return;
       }
 
+      updateBrandConfig(formattedBrand);
       saveMutation.mutate(formattedBrand);
     } catch (err: any) {
       console.error("Save validation error:", err);
@@ -392,8 +395,8 @@ body {
       description="Design and customize your application's visual identity"
       icon={<Palette className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Tools", href: "/tools" },
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Settings", href: "/settings" },
         { label: "Brand Customization" },
       ]}
     >
@@ -704,7 +707,7 @@ body {
                       <div>
                         <Label className="text-sm">Company Name</Label>
                         <Input
-                          placeholder="e.g., Melitech CRM"
+                          placeholder="e.g., Your Company"
                           value={companyGuide.companyName}
                           onChange={(e) =>
                             setCompanyGuide({

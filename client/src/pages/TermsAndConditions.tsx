@@ -1,29 +1,33 @@
 import React from "react";
-import { FileText, ArrowLeft } from "lucide-react";
-import { useLocation } from "wouter";
+import { FileText } from "lucide-react";
+import { WebsiteNav } from "@/pages/website/WebsiteNav";
+import { WebsiteFooter } from "@/pages/website/WebsiteFooter";
 
 export default function TermsAndConditions() {
-  const [, navigate] = useLocation();
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-900 dark:to-blue-950">
-        <div className="max-w-4xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-          <a href="/" className="inline-flex items-center gap-2 text-blue-100 hover:text-white mb-4">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
-          </a>
-          <div className="flex items-center gap-3">
-            <FileText className="h-8 w-8 text-blue-100" />
-            <h1 className="text-3xl font-bold text-white">Terms & Conditions</h1>
+    <div className="min-h-screen bg-white text-gray-900">
+      <WebsiteNav />
+
+      {/* Hero */}
+      <section className="relative pt-32 pb-12 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/80 via-white to-white" />
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 text-sm font-medium text-indigo-600 mb-6">
+            <FileText className="w-3.5 h-3.5" />
+            Legal
           </div>
-          <p className="text-blue-100 mt-2">Last updated: December 2024</p>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
+            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+              Terms & Conditions
+            </span>
+          </h1>
+          <p className="text-sm text-gray-400">Last updated: December 2024</p>
         </div>
-      </header>
+      </section>
 
       {/* Content */}
       <main className="max-w-4xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <div className="prose dark:prose-invert max-w-none space-y-6">
+        <div className="prose max-w-none space-y-6">
             <section>
               <h2 className="text-2xl font-bold mb-3">1. Agreement to Terms</h2>
               <p>
@@ -159,36 +163,7 @@ export default function TermsAndConditions() {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-          <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <p className="text-gray-600 dark:text-gray-400 text-sm">
-                &copy; 2024 Melitech CRM. All rights reserved.
-              </p>
-              <div className="flex items-center gap-6">
-                <a
-                  href="/privacy-policy"
-                  className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm"
-                >
-                  Privacy Policy
-                </a>
-                <a
-                  href="/documentation"
-                  className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm"
-                >
-                  Documentation
-                </a>
-                <a
-                  href="/"
-                  className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm"
-                >
-                  Home
-                </a>
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
-    );
-  }
+      <WebsiteFooter />
+    </div>
+  );
+}

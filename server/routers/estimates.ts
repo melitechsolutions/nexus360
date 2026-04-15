@@ -2,33 +2,13 @@ import { router, protectedProcedure, createFeatureRestrictedProcedure } from "..
 import { z } from "zod";
 import { getDb } from "../db";
 import { estimates, estimateItems, activityLog } from "../../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { generateNextDocumentNumber } from "../utils/document-numbering";
 
-// Helper function to generate next estimate number in format EST-000000
+// Use shared settings-aware document numbering
 async function generateNextEstimateNumber(db: any): Promise<string> {
-  try {
-    const result = await db.select({ estNum: estimates.estimateNumber })
-      .from(estimates)
-      .orderBy(desc(estimates.estimateNumber))
-      .limit(1);
-    
-    let maxSequence = 0;
-    
-    if (result && result.length > 0 && result[0].estNum) {
-      const match = result[0].estNum.match(/(\d+)$/);
-      if (match) {
-        maxSequence = parseInt(match[1]);
-      }
-    }
-
-    const nextSequence = maxSequence + 1;
-    return `EST-${String(nextSequence).padStart(6, '0')}`;
-  } catch (err) {
-    console.warn("Error generating estimate number, using default:", err);
-    return `EST-000001`;
-  }
+  return generateNextDocumentNumber(db, "estimate");
 }
 
 // Validation schema for line items
@@ -47,31 +27,48 @@ const lineItemSchema = z.object({
 export const estimatesRouter = router({
   list: createFeatureRestrictedProcedure("estimates:read")
     .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      return await db
-        .select({
-          id: estimates.id,
-          estimateNumber: estimates.estimateNumber,
-          clientId: estimates.clientId,
-          title: estimates.title,
-          status: estimates.status,
-          issueDate: estimates.issueDate,
-          expiryDate: estimates.expiryDate,
-          subtotal: estimates.subtotal,
-          taxAmount: estimates.taxAmount,
-          discountAmount: estimates.discountAmount,
-          total: estimates.total,
-          notes: estimates.notes,
-          terms: estimates.terms,
-          createdBy: estimates.createdBy,
-          createdAt: estimates.createdAt,
-          updatedAt: estimates.updatedAt,
-        })
-        .from(estimates)
-        .limit(input?.limit || 50)
-        .offset(input?.offset || 0);
+      const orgId = ctx.user.organizationId;
+      const baseQuery = orgId
+        ? db.select({
+            id: estimates.id,
+            estimateNumber: estimates.estimateNumber,
+            clientId: estimates.clientId,
+            title: estimates.title,
+            status: estimates.status,
+            issueDate: estimates.issueDate,
+            expiryDate: estimates.expiryDate,
+            subtotal: estimates.subtotal,
+            taxAmount: estimates.taxAmount,
+            discountAmount: estimates.discountAmount,
+            total: estimates.total,
+            notes: estimates.notes,
+            terms: estimates.terms,
+            createdBy: estimates.createdBy,
+            createdAt: estimates.createdAt,
+            updatedAt: estimates.updatedAt,
+          }).from(estimates).where(eq(estimates.organizationId, orgId))
+        : db.select({
+            id: estimates.id,
+            estimateNumber: estimates.estimateNumber,
+            clientId: estimates.clientId,
+            title: estimates.title,
+            status: estimates.status,
+            issueDate: estimates.issueDate,
+            expiryDate: estimates.expiryDate,
+            subtotal: estimates.subtotal,
+            taxAmount: estimates.taxAmount,
+            discountAmount: estimates.discountAmount,
+            total: estimates.total,
+            notes: estimates.notes,
+            terms: estimates.terms,
+            createdBy: estimates.createdBy,
+            createdAt: estimates.createdAt,
+            updatedAt: estimates.updatedAt,
+          }).from(estimates);
+      return await (baseQuery as any).limit(input?.limit || 50).offset(input?.offset || 0);
     }),
 
   getNextEstimateNumber: createFeatureRestrictedProcedure("estimates:read")
@@ -85,9 +82,11 @@ export const estimatesRouter = router({
 
   getById: createFeatureRestrictedProcedure("estimates:read")
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(estimates.id, input), eq(estimates.organizationId, orgId)) : eq(estimates.id, input);
       const result = await db
         .select({
           id: estimates.id,
@@ -108,7 +107,7 @@ export const estimatesRouter = router({
           updatedAt: estimates.updatedAt,
         })
         .from(estimates)
-        .where(eq(estimates.id, input))
+        .where(where)
         .limit(1);
       return result[0] || null;
     }),
@@ -116,9 +115,11 @@ export const estimatesRouter = router({
   // Get estimate with all line items
   getWithItems: createFeatureRestrictedProcedure("estimates:read")
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(estimates.id, input), eq(estimates.organizationId, orgId)) : eq(estimates.id, input);
       
       const estimate = await db
         .select({
@@ -140,7 +141,7 @@ export const estimatesRouter = router({
           updatedAt: estimates.updatedAt,
         })
         .from(estimates)
-        .where(eq(estimates.id, input))
+        .where(where)
         .limit(1);
       if (!estimate[0]) return null;
 
@@ -154,9 +155,11 @@ export const estimatesRouter = router({
 
   byClient: createFeatureRestrictedProcedure("estimates:read")
     .input(z.object({ clientId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(estimates.clientId, input.clientId), eq(estimates.organizationId, orgId)) : eq(estimates.clientId, input.clientId);
       const result = await db
         .select({
           id: estimates.id,
@@ -177,7 +180,7 @@ export const estimatesRouter = router({
           updatedAt: estimates.updatedAt,
         })
         .from(estimates)
-        .where(eq(estimates.clientId, input.clientId));
+        .where(where);
       return result;
     }),
 
@@ -221,6 +224,7 @@ export const estimatesRouter = router({
       
       await db.insert(estimates).values({
         id,
+        organizationId: ctx.user.organizationId ?? null,
         estimateNumber,
         ...estimateData,
         issueDate,
@@ -299,7 +303,9 @@ export const estimatesRouter = router({
       });
       updateData.updatedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
       
-      await db.update(estimates).set(updateData).where(eq(estimates.id, id));
+      const orgId = ctx.user.organizationId;
+      const updateWhere = orgId ? and(eq(estimates.id, id), eq(estimates.organizationId, orgId)) : eq(estimates.id, id);
+      await db.update(estimates).set(updateData).where(updateWhere);
 
       // Update line items if provided
       if (lineItems !== undefined) {
@@ -350,7 +356,9 @@ export const estimatesRouter = router({
       await db.delete(estimateItems).where(eq(estimateItems.estimateId, input));
       
       // Delete estimate
-      await db.delete(estimates).where(eq(estimates.id, input));
+      const orgId = ctx.user.organizationId;
+      const deleteWhere = orgId ? and(eq(estimates.id, input), eq(estimates.organizationId, orgId)) : eq(estimates.id, input);
+      await db.delete(estimates).where(deleteWhere);
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
       await db.insert(activityLog).values({

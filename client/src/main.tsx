@@ -5,6 +5,7 @@ import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
+import { SystemSettingsProvider } from "./contexts/SystemSettingsContext";
 import { getLoginUrl } from "./const";
 import "./index.css";
 
@@ -78,6 +79,11 @@ const trpcClient = trpc.createClient({
           ...(init?.headers ?? {}),
           'X-CSRF-Token': csrfToken || '',
         } as Record<string,string>;
+        // Send token from localStorage as Authorization header (Docker/HTTP fallback)
+        const localToken = localStorage.getItem("auth-token");
+        if (localToken) {
+          headers['Authorization'] = `Bearer ${localToken}`;
+        }
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
@@ -101,7 +107,9 @@ try {
   createRoot(root).render(
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <SystemSettingsProvider>
+          <App />
+        </SystemSettingsProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );

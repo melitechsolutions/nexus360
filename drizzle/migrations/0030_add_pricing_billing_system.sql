@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `pricingPlans` (
   `maxUsers` INT DEFAULT -1 COMMENT '-1 means unlimited',
   `maxProjects` INT DEFAULT -1,
   `maxStorageGB` INT DEFAULT -1,
-  `features` JSON NOT NULL DEFAULT '{}' COMMENT 'Array of feature flags',
+  `features` JSON COMMENT 'Array of feature flags',
   `supportLevel` ENUM('email', 'priority', '24/7_phone', 'dedicated_manager') DEFAULT 'email',
   `isActive` TINYINT(1) NOT NULL DEFAULT 1,
   `displayOrder` INT DEFAULT 0,

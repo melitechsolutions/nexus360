@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
-import { ArrowLeft, Edit2, Trash2, Loader2, DollarSign } from "lucide-react";
+import { Edit2, Trash2, Loader2, FileText } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -39,40 +39,59 @@ export default function ChartOfAccountsDetails() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Account Details"
+        icon={<FileText className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "Finance", href: "/accounting" },
+          { label: "Chart of Accounts", href: "/chart-of-accounts" },
+          { label: "Details" },
+        ]}
+        backLink={{ label: "Chart of Accounts", href: "/chart-of-accounts" }}
+      >
         <div className="flex items-center justify-center p-12">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!account) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Account Details"
+        icon={<FileText className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "Finance", href: "/accounting" },
+          { label: "Chart of Accounts", href: "/chart-of-accounts" },
+          { label: "Details" },
+        ]}
+        backLink={{ label: "Chart of Accounts", href: "/chart-of-accounts" }}
+      >
         <div className="space-y-6">
-          <Button variant="ghost" onClick={() => setLocation("/chart-of-accounts")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
           <div className="text-center p-12 bg-slate-50 rounded-lg border border-dashed">
             <p className="text-slate-600">Account not found</p>
           </div>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Account Details"
+      icon={<FileText className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Finance", href: "/accounting" },
+        { label: "Chart of Accounts", href: "/chart-of-accounts" },
+        { label: "Details" },
+      ]}
+      backLink={{ label: "Chart of Accounts", href: "/chart-of-accounts" }}
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => setLocation("/chart-of-accounts")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold">Account Details</h1>
-        </div>
 
         <Card>
           <CardHeader>
@@ -127,6 +146,6 @@ export default function ChartOfAccountsDetails() {
           isLoading={isDeleting}
         />
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

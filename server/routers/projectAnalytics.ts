@@ -306,7 +306,7 @@ export const projectAnalyticsRouter = router({
    * Refresh metrics for all projects
    */
   refreshAllMetrics: createFeatureRestrictedProcedure("reporting:view").mutation(async ({ ctx }) => {
-    if (ctx.user?.role !== 'admin') {
+    if (ctx.user?.role !== 'admin' && ctx.user?.role !== 'super_admin') {
       throw new Error('Unauthorized - admin only');
     }
 

@@ -2,7 +2,7 @@ import { router, createFeatureRestrictedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { departments } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import * as db from "../db";
 
@@ -12,11 +12,15 @@ export const departmentsRouter = router({
       limit: z.number().optional(),
       offset: z.number().optional(),
     }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return [];
 
-      const rows = await database.select().from(departments).limit(input?.limit || 100).offset(input?.offset || 0);
+      const orgId = ctx.user.organizationId;
+      const query = orgId
+        ? database.select().from(departments).where(eq(departments.organizationId, orgId))
+        : database.select().from(departments);
+      const rows = await (query as any).limit(input?.limit || 100).offset(input?.offset || 0);
       return rows.map((r: any) => ({
         ...r,
         isActive: (r as any).isActive !== undefined ? (r as any).isActive : ((r as any).status !== 'inactive'),
@@ -25,10 +29,12 @@ export const departmentsRouter = router({
 
   getById: createFeatureRestrictedProcedure("hr:departments:view")
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return null;
-      const result = await database.select().from(departments).where(eq(departments.id, input)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(departments.id, input), eq(departments.organizationId, orgId)) : eq(departments.id, input);
+      const result = await database.select().from(departments).where(where).limit(1);
       const row = result[0] || null;
       if (!row) return null;
       return {
@@ -62,6 +68,7 @@ export const departmentsRouter = router({
       const id = uuidv4();
       await database.insert(departments).values({
         id,
+        organizationId: ctx.user.organizationId ?? null,
         name: deptName,
         description: input.description || '',
         headId: input.headId,
@@ -97,6 +104,10 @@ export const departmentsRouter = router({
 
       const department = await database.select().from(departments).where(eq(departments.id, input.id)).limit(1);
       if (!department.length) throw new Error("Department not found");
+
+      // Verify org ownership
+      const orgId = ctx.user.organizationId;
+      if (orgId && department[0].organizationId !== orgId) throw new Error("Department not found");
 
       // Check for duplicate department name if changing it
       if (input.name && input.name !== department[0].name) {
@@ -136,6 +147,10 @@ export const departmentsRouter = router({
       const department = await database.select().from(departments).where(eq(departments.id, input)).limit(1);
       if (!department.length) throw new Error("Department not found");
 
+      // Verify org ownership
+      const orgId = ctx.user.organizationId;
+      if (orgId && department[0].organizationId !== orgId) throw new Error("Department not found");
+
       await database.delete(departments).where(eq(departments.id, input));
 
       // Log activity
@@ -151,11 +166,13 @@ export const departmentsRouter = router({
     }),
 
   getActive: createFeatureRestrictedProcedure("hr:departments:view")
-    .query(async () => {
+    .query(async ({ ctx }) => {
       const database = await getDb();
       if (!database) return [];
 
-      const rows = await database.select().from(departments).where(eq(departments.status, 'active'));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(departments.status, 'active'), eq(departments.organizationId, orgId)) : eq(departments.status, 'active');
+      const rows = await database.select().from(departments).where(where);
       return rows.map((r: any) => ({
         ...r,
         isActive: true,
@@ -163,7 +180,7 @@ export const departmentsRouter = router({
     }),
 
   getSummary: createFeatureRestrictedProcedure("hr:departments:view")
-    .query(async () => {
+    .query(async ({ ctx }) => {
       const database = await getDb();
       if (!database) return {
         totalDepartments: 0,
@@ -171,7 +188,10 @@ export const departmentsRouter = router({
         totalBudget: 0,
       };
 
-      const allDepartments = await database.select().from(departments);
+      const orgId = ctx.user.organizationId;
+      const allDepartments = orgId
+        ? await database.select().from(departments).where(eq(departments.organizationId, orgId))
+        : await database.select().from(departments);
 
       const activeDepartments = allDepartments.filter(d => d.status === 'active').length;
       const totalBudget = allDepartments.reduce((sum, d) => sum + (d.budget || 0), 0);

@@ -66,7 +66,7 @@ export default function CreateLeaveRequest() {
       description="Submit a leave request"
       icon={<Calendar className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Leave Management", href: "/leave-management" },
         { label: "Request Leave" },

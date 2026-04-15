@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,11 @@ import {
   Loader2,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useCurrencySettings } from "@/lib/currency";
 
 export default function FinancialDashboard() {
+  const { code: currencyCode } = useCurrencySettings();
+
   const [dateRange, setDateRange] = useState("month");
   const [exportFormat, setExportFormat] = useState<"pdf" | "csv" | "txt" | "json">("pdf");
   const [isExporting, setIsExporting] = useState(false);
@@ -35,7 +39,7 @@ export default function FinancialDashboard() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "KES",
+      currency: currencyCode,
     }).format(amount / 100);
   };
 
@@ -121,20 +125,20 @@ export default function FinancialDashboard() {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        alert("Report exported successfully");
+        toast.success("Report exported successfully");
       } else {
-        alert("Failed to export report: " + (result.error || "Unknown error"));
+        toast.error("Failed to export report: " + (result.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Export failed:", error);
-      alert("Export failed: " + (error instanceof Error ? error.message : "Unknown error"));
+      toast.error("Export failed: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsExporting(false);
     }
   };
 
   const breadcrumbs = [
-    { label: "Dashboard", href: "/" },
+    { label: "Dashboard", href: "/crm-home" },
     { label: "Reports", href: "/reports" },
     { label: "Financial Dashboard" },
   ];

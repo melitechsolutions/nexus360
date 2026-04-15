@@ -3,6 +3,7 @@ import autoTable from 'jspdf-autotable';
 import { getDb } from '../db';
 import { estimates, estimateItems, clients } from '../../drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { getCompanyInfo } from './company-info';
 
 /**
  * Generate an estimate PDF buffer
@@ -49,18 +50,20 @@ export async function generateEstimatePDF(estimateId: string): Promise<Buffer> {
   // Set font
   doc.setFont('helvetica');
 
+  const companyInfo = await getCompanyInfo();
+
   // Add company header with logo placeholder and contact details
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(40, 40, 40);
-  doc.text('Melitech Solutions', 20, 20);
+  doc.text(companyInfo.name, 20, 20);
   
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(60, 60, 60);
-  doc.text('Email: info@melitechsolutions.co.ke', 20, 27);
-  doc.text('Phone: +254 123 456 789', 20, 32);
-  doc.text('Address: Nairobi, Kenya', 20, 37);
+  if (companyInfo.email) doc.text(`Email: ${companyInfo.email}`, 20, 27);
+  if (companyInfo.phone) doc.text(`Phone: ${companyInfo.phone}`, 20, 32);
+  if (companyInfo.address) doc.text(`Address: ${companyInfo.address}`, 20, 37);
   
   // Add ESTIMATE title and number on the right
   doc.setFontSize(24);
@@ -200,7 +203,7 @@ export async function generateEstimatePDF(estimateId: string): Promise<Buffer> {
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text('This is a system generated estimate and is digitally signed under Melitech Solutions.', doc.internal.pageSize.width / 2, footerY, { align: 'center' });
+  doc.text(`This is a system generated estimate and is digitally signed under ${companyInfo.name}.`, doc.internal.pageSize.width / 2, footerY, { align: 'center' });
 
   // Convert PDF to buffer
   const pdfOutput = doc.output('arraybuffer');

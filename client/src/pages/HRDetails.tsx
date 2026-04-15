@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
-import { ArrowLeft, Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, Users } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import mutateAsync from '@/lib/mutationHelpers';
@@ -56,35 +56,52 @@ export default function HRDetails() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="HR Details"
+        icon={<Users className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "HR", href: "/hr" },
+          { label: "Details" },
+        ]}
+      >
         <div className="flex items-center justify-center h-64">
           <p>Loading HR record...</p>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!hrRecord) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="HR Details"
+        icon={<Users className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "HR", href: "/hr" },
+          { label: "Details" },
+        ]}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>HR record not found</p>
           <Button onClick={() => setLocation("/hr")}>Back to HR</Button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="HR Details"
+      icon={<Users className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "HR", href: "/hr" },
+        { label: "Details" },
+      ]}
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => setLocation("/hr")}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold">HR Record Details</h1>
-        </div>
 
         <Card>
           <CardHeader>
@@ -147,6 +164,6 @@ export default function HRDetails() {
           isLoading={isDeleting}
         />
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

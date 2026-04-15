@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRouter } from 'wouter';
+import { useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import {
@@ -51,9 +51,9 @@ import {
 } from 'lucide-react';
 
 export default function ProcurementImprestsPage() {
-  const [, navigate] = useRouter();
+  const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('__all__');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedImprest, setSelectedImprest] = useState<any>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -71,7 +71,7 @@ export default function ProcurementImprestsPage() {
   // Fetch imprests
   const { data: imprests = [], isLoading, refetch } = trpc.procurementMgmt.imprestList.useQuery({
     search: searchTerm,
-    status: statusFilter,
+    status: statusFilter === '__all__' ? undefined : statusFilter || undefined,
     limit: 100,
   });
 
@@ -236,7 +236,7 @@ export default function ProcurementImprestsPage() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="__all__">All statuses</SelectItem>
                   <SelectItem value="requested">Requested</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>

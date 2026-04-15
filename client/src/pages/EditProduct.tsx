@@ -32,11 +32,8 @@ export default function EditProduct() {
   const { data: product, isLoading: isLoadingProductData } = trpc.products.getById.useQuery(productId || "", {
     enabled: !!productId,
   });
-  
-  if (isLoading) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
-  if (!allowed) return null;
 
-  // Populate form when product data loads
+  // Populate form when product data loads — MUST be before any conditional returns
   useEffect(() => {
     if (product) {
       setFormData({
@@ -51,6 +48,7 @@ export default function EditProduct() {
     }
   }, [product]);
 
+  // Hooks MUST be called before any conditional returns
   const updateProductMutation = trpc.products.update.useMutation({
     onSuccess: () => {
       toast.success("Product updated successfully!");
@@ -73,6 +71,9 @@ export default function EditProduct() {
       toast.error(`Failed to delete product: ${error.message}`);
     },
   });
+
+  if (isLoading) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
+  if (!allowed) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +113,7 @@ export default function EditProduct() {
         description="Loading product details..."
         icon={<Package className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "Products & Services", href: "/products" },
           { label: "Edit Product" },
         ]}
@@ -130,7 +131,7 @@ export default function EditProduct() {
       description="Update product details"
       icon={<Package className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Products & Services", href: "/products" },
         { label: "Edit Product" },
       ]}

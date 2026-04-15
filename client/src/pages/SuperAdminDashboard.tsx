@@ -19,7 +19,9 @@ import {
   FileText,
   DollarSign,
 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { Shield } from "lucide-react";
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function SuperAdminDashboard() {
   const [, navigate] = useLocation();
@@ -99,17 +101,16 @@ export default function SuperAdminDashboard() {
   ];
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Super Admin"
+      description={`Welcome back, ${user?.name}. Manage your entire system from here.`}
+      icon={<Shield className="h-6 w-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Administration" },
+      ]}
+    >
       <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="text-center space-y-4 py-4">
-        <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Super Admin Dashboard
-        </h2>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Welcome back, {user?.name}. Manage your entire system from here.
-        </p>
-      </div>
 
       {/* Quick Actions */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
@@ -148,60 +149,50 @@ export default function SuperAdminDashboard() {
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-5">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{String(metrics.totalUsers || 0)}</div>
-            <p className="text-xs text-muted-foreground">Registered users</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Total Users"
+          value={String(metrics.totalUsers || 0)}
+          description="Registered users"
+          icon={<Users className="h-5 w-5" />}
+          color="border-l-blue-500"
+          onClick={() => navigate("/admin/management")}
+        />
 
-        <Card className="border-l-4 border-l-cyan-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-            <Briefcase className="h-4 w-4 text-cyan-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{String(metrics.activeProjects || 0)}</div>
-            <p className="text-xs text-muted-foreground">Currently running</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Active Projects"
+          value={String(metrics.activeProjects || 0)}
+          description="Currently running"
+          icon={<Briefcase className="h-5 w-5" />}
+          color="border-l-cyan-500"
+          onClick={() => navigate("/projects")}
+        />
 
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Employees</CardTitle>
-            <Users className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{String(metrics.totalEmployees || 0)}</div>
-            <p className="text-xs text-muted-foreground">Total staff</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Employees"
+          value={String(metrics.totalEmployees || 0)}
+          description="Total staff"
+          icon={<Users className="h-5 w-5" />}
+          color="border-l-green-500"
+          onClick={() => navigate("/employees")}
+        />
 
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Tasks</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{String(metrics.pendingTasks || 0)}</div>
-            <p className="text-xs text-muted-foreground">Awaiting action</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Pending Tasks"
+          value={String(metrics.pendingTasks || 0)}
+          description="Awaiting action"
+          icon={<Clock className="h-5 w-5" />}
+          color="border-l-yellow-500"
+          onClick={() => navigate("/tasks")}
+        />
 
-        <Card className="border-l-4 border-l-green-600">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Status</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{String(metrics.systemHealth || "OK")}</div>
-            <p className="text-xs text-muted-foreground">All operational</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="System Status"
+          value={String(metrics.systemHealth || "OK")}
+          description="All operational"
+          icon={<CheckCircle2 className="h-5 w-5" />}
+          color="border-l-green-600"
+          onClick={() => navigate("/admin/management")}
+        />
       </div>
 
       {/* Admin Features Grid */}
@@ -252,6 +243,6 @@ export default function SuperAdminDashboard() {
         </Card>
       </div>
     </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

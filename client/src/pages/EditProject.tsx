@@ -4,7 +4,7 @@ import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -124,7 +124,7 @@ export default function EditProject() {
         description="Update project information"
         icon={<Briefcase className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "Projects", href: "/projects" },
           { label: "Edit Project" },
         ]}
@@ -143,7 +143,7 @@ export default function EditProject() {
         description="Update project information"
         icon={<Briefcase className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "Projects", href: "/projects" },
           { label: "Edit Project" },
         ]}
@@ -164,7 +164,7 @@ export default function EditProject() {
       description={`Update project: ${project.projectNumber}`}
       icon={<Briefcase className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Projects", href: "/projects" },
         { label: project.name, href: `/projects/${projectId}` },
         { label: "Edit" },
@@ -218,12 +218,11 @@ export default function EditProject() {
 
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(v) => setFormData({ ...formData, description: v })}
                   placeholder="Project description and details"
-                  rows={4}
+                  minHeight="120px"
                 />
               </div>
 

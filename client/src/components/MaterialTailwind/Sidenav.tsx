@@ -193,7 +193,7 @@ export function Sidenav() {
                   sidenavType === "dark" ? "text-white" : "text-slate-900"
                 )}
               >
-                Melitech
+                CRM
               </span>
             </div>
             <button

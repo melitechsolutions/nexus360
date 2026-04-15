@@ -171,7 +171,7 @@ export default function CSVImportExport() {
           });
           break;
         default:
-          toast.error(`Import not yet implemented for ${selectedModule}`);
+          toast.error(`Import is not supported for ${selectedModule}. Supported modules: Clients, Employees, Products, Accounts, Payments.`);
           return;
       }
 
@@ -227,11 +227,14 @@ export default function CSVImportExport() {
                     <SelectValue placeholder="Choose a module" />
                   </SelectTrigger>
                   <SelectContent>
-                    {modules.map(module => (
-                      <SelectItem key={module.id} value={module.id}>
-                        {module.label}
-                      </SelectItem>
-                    ))}
+                    {modules.map(module => {
+                      const importSupported = ['clients', 'employees', 'products', 'accounts', 'payments'].includes(module.id);
+                      return (
+                        <SelectItem key={module.id} value={module.id}>
+                          {module.label}{!importSupported ? ' (export only)' : ''}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 {currentModuleInfo && (

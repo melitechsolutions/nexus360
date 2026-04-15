@@ -30,17 +30,36 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { buildCommunicationComposePath } from "@/lib/communications";
 import { CitySelect } from "@/components/LocationSelects";
-import { Plus, Search, Download, Upload, Edit2, Trash2, Eye, Loader2, Star, Truck } from "lucide-react";
+import { Plus, Search, Download, Upload, Edit2, Trash2, Eye, Loader2, Star, Truck, Copy, Mail } from "lucide-react";
 import { useLocation } from "wouter";
+import { Checkbox } from "@/components/ui/checkbox";
+import { StatsCard } from "@/components/ui/stats-card";
+import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
+import { RowActionsMenu, actionIcons } from "@/components/list-page/RowActionsMenu";
+import { TableColumnSettings, useColumnVisibility, type ColumnConfig } from "@/components/list-page/TableColumnSettings";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction, bulkEmailAction } from "@/components/list-page/EnhancedBulkActions";
 
 export default function SuppliersPage() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [selectedSuppliers, setSelectedSuppliers] = useState<Set<string>>(new Set());
+
+  const supplierColumns: ColumnConfig[] = [
+    { key: "companyName", label: "Company Name" },
+    { key: "contact", label: "Contact" },
+    { key: "phone", label: "Phone" },
+    { key: "email", label: "Email" },
+    { key: "rating", label: "Rating" },
+    { key: "status", label: "Status" },
+    { key: "city", label: "City" },
+  ];
+  const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(supplierColumns, "suppliers");
   const [formData, setFormData] = useState({
     companyName: "",
     contactPerson: "",
@@ -236,28 +255,59 @@ export default function SuppliersPage() {
       description="Manage supplier information, ratings, and audit records"
       icon={<Truck className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/crm" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Procurement", href: "/procurement" },
         { label: "Suppliers" },
       ]}
-      actions={
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setIsImporting(true)} className="gap-2">
-            <Upload className="w-4 h-4" />
-            Import
-          </Button>
-          <Button size="sm" onClick={() => setIsExporting(true)} className="gap-2">
-            <Download className="w-4 h-4" />
-            Export
-          </Button>
-          <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            New Supplier
-          </Button>
-        </div>
-      }
+      actions={<></>}
     >
       <div className="space-y-6">
+        {/* Stat Cards */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <StatsCard label="Total Suppliers" value={suppliers.length} icon={<Truck className="h-5 w-5" />} color="border-l-blue-500" />
+          <StatsCard label="Qualified" value={suppliers.filter((s: any) => s.qualificationStatus === "qualified").length} icon={<Star className="h-5 w-5" />} color="border-l-green-500" />
+          <StatsCard label="Pending" value={suppliers.filter((s: any) => s.qualificationStatus === "pending").length} icon={<Loader2 className="h-5 w-5" />} color="border-l-yellow-500" />
+          <StatsCard label="Rejected" value={suppliers.filter((s: any) => s.qualificationStatus === "rejected").length} icon={<Trash2 className="h-5 w-5" />} color="border-l-red-500" />
+        </div>
+
+        {/* Toolbar */}
+        <ListPageToolbar
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search by company name, email, or phone..."
+          onCreateClick={() => setIsCreateOpen(true)}
+          createLabel="New Supplier"
+          onExportClick={handleExportSuppliers}
+          onImportClick={handleImportSuppliers}
+          onPrintClick={() => window.print()}
+          filterContent={
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="pre_qualified">Pre-qualified</SelectItem>
+                <SelectItem value="qualified">Qualified</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          }
+        />
+
+        {/* Bulk Actions */}
+        <EnhancedBulkActions
+          selectedCount={selectedSuppliers.size}
+          onClear={() => setSelectedSuppliers(new Set())}
+          actions={[
+            bulkExportAction(selectedSuppliers, suppliers, supplierColumns, "suppliers"),
+            bulkCopyIdsAction(selectedSuppliers),
+            bulkEmailAction(navigate),
+            bulkDeleteAction(selectedSuppliers, (ids) => { ids.forEach((id) => deleteMutation.mutate(id)); setSelectedSuppliers(new Set()); }),
+          ]}
+        />
         {/* Create Supplier Dialog */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="max-w-2xl">
@@ -376,109 +426,68 @@ export default function SuppliersPage() {
               </DialogContent>
             </Dialog>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Input
-                  placeholder="Search by company name, email, or phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="pre_qualified">Pre-qualified</SelectItem>
-                  <SelectItem value="qualified">Qualified</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Suppliers List */}
         <Card>
-          <CardHeader>
-            <CardTitle>Suppliers List</CardTitle>
-            <CardDescription>Total: {suppliers.length} suppliers</CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <span className="text-sm text-muted-foreground">{suppliers.length} suppliers</span>
+              <TableColumnSettings columns={supplierColumns} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} onReset={reset} pageSize={pageSize} onPageSizeChange={updatePageSize} />
+            </div>
             {isLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : suppliers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No suppliers found. Click "Add Supplier" to get started.
+                No suppliers found. Click "+" to get started.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Company Name</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Rating</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>City</TableHead>
+                      <TableHead className="w-10"><Checkbox checked={selectedSuppliers.size === suppliers.length && suppliers.length > 0} onCheckedChange={() => { if (selectedSuppliers.size === suppliers.length) setSelectedSuppliers(new Set()); else setSelectedSuppliers(new Set(suppliers.map((s: any) => s.id))); }} /></TableHead>
+                      {isVisible("companyName") && <TableHead>Company Name</TableHead>}
+                      {isVisible("contact") && <TableHead className="hidden md:table-cell">Contact</TableHead>}
+                      {isVisible("phone") && <TableHead>Phone</TableHead>}
+                      {isVisible("email") && <TableHead className="hidden lg:table-cell">Email</TableHead>}
+                      {isVisible("rating") && <TableHead className="hidden lg:table-cell">Rating</TableHead>}
+                      {isVisible("status") && <TableHead>Status</TableHead>}
+                      {isVisible("city") && <TableHead className="hidden md:table-cell">City</TableHead>}
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {suppliers.map((supplier: any) => (
-                      <TableRow key={supplier.id}>
-                        <TableCell className="font-medium">{supplier.companyName}</TableCell>
-                        <TableCell>{supplier.contactPerson || "-"}</TableCell>
-                        <TableCell>{supplier.phone || "-"}</TableCell>
-                        <TableCell className="text-sm">{supplier.email || "-"}</TableCell>
-                        <TableCell>
+                      <TableRow key={supplier.id} className={selectedSuppliers.has(supplier.id) ? "bg-primary/5" : ""}>
+                        <TableCell><Checkbox checked={selectedSuppliers.has(supplier.id)} onCheckedChange={() => { const next = new Set(selectedSuppliers); if (next.has(supplier.id)) next.delete(supplier.id); else next.add(supplier.id); setSelectedSuppliers(next); }} /></TableCell>
+                        {isVisible("companyName") && <TableCell className="font-medium">{supplier.companyName}</TableCell>}
+                        {isVisible("contact") && <TableCell className="hidden md:table-cell">{supplier.contactPerson || "-"}</TableCell>}
+                        {isVisible("phone") && <TableCell>{supplier.phone || "-"}</TableCell>}
+                        {isVisible("email") && <TableCell className="hidden lg:table-cell text-sm truncate max-w-[180px]">{supplier.email || "-"}</TableCell>}
+                        {isVisible("rating") && <TableCell className="hidden lg:table-cell">
                           <div className="flex items-center gap-1">
                             <Star className={`h-4 w-4 ${getRatingColor(supplier.averageRating)}`} />
                             <span className={`font-semibold ${getRatingColor(supplier.averageRating)}`}>
                               {supplier.averageRating || 0}
                             </span>
                           </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(supplier.qualificationStatus)}</TableCell>
-                        <TableCell>{supplier.city || "-"}</TableCell>
+                        </TableCell>}
+                        {isVisible("status") && <TableCell>{getStatusBadge(supplier.qualificationStatus)}</TableCell>}
+                        {isVisible("city") && <TableCell className="hidden md:table-cell">{supplier.city || "-"}</TableCell>}
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/suppliers/${supplier.id}`)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/suppliers/${supplier.id}/edit`)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              if (confirm("Are you sure you want to delete this supplier?")) {
-                                deleteMutation.mutate(supplier.id);
-                              }
-                            }}
-                            disabled={deleteMutation.isPending}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
+                          <RowActionsMenu
+                            primaryActions={[
+                              { label: "View", icon: actionIcons.view, onClick: () => navigate(`/suppliers/${supplier.id}`) },
+                              { label: "Edit", icon: actionIcons.edit, onClick: () => navigate(`/suppliers/${supplier.id}/edit`) },
+                              { label: "Delete", icon: actionIcons.delete, onClick: () => { if (confirm("Delete this supplier?")) deleteMutation.mutate(supplier.id); }, variant: "destructive" },
+                            ]}
+                            menuActions={[
+                              { label: "Send Email", icon: <Mail className="h-4 w-4" />, onClick: () => navigate(buildCommunicationComposePath(location, supplier.email)) },
+                              { label: "Duplicate", icon: <Copy className="h-4 w-4" />, onClick: () => navigate(`/suppliers/create?clone=${supplier.id}`), separator: true },
+                              { label: "Download Profile", icon: actionIcons.download, onClick: () => { navigate(`/suppliers/${supplier.id}`); setTimeout(() => window.print(), 500); } },
+                            ]}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

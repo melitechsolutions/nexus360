@@ -211,7 +211,7 @@ export const financeRouter = router({
           await db.createCommunication({
             id: uuidv4(),
             type: "email",
-            recipientEmail: (invoice as any).clientEmail || "support@melitech.com",
+            recipientEmail: (invoice as any).clientEmail || process.env.COMPANY_EMAIL || "",
             subject: `Receipt #${receiptNumber} - Payment Confirmation`,
             body: `Your payment has been received successfully. Please find attached your receipt #${receiptNumber} for amount ${(invoice as any).totalAmount}`,
             status: "pending",

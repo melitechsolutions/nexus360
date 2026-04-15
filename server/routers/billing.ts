@@ -101,7 +101,7 @@ export const billingRouter = router({
           planId: input.planId,
           status: 'trial',
           billingCycle: input.billingCycle,
-          startDate: now.toISOString(),
+          startDate: now.toISOString().replace('T', ' ').substring(0, 19),
           renewalDate: renewalDate.toISOString(),
           currentPrice: price,
           autoRenew: input.autoRenew ? 1 : 0,
@@ -274,7 +274,7 @@ export const billingRouter = router({
         });
 
         // Update invoice status
-        await db.updateInvoice(input.invoiceId, { status: 'paid', paidAt: new Date().toISOString() });
+        await db.updateInvoice(input.invoiceId, { status: 'paid', paidAt: new Date().toISOString().replace('T', ' ').substring(0, 19) });
 
         // If payment successful, trigger receipt generation
         if (input.amount >= (invoice as any).totalAmount) {

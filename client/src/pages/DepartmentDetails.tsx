@@ -2,8 +2,8 @@ import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { Edit, Trash2, Building2 } from "lucide-react";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -41,7 +41,7 @@ export default function DepartmentDetails() {
     code: (departmentData as any).code || `DEPT-${id?.slice(0, 4)}`,
     manager: (departmentData as any).headId || "Not assigned",
     employeeCount: employeeCount,
-    budget: ((departmentData as any).budget || 0) / 100,
+    budget: (departmentData as any).budget || 0,
     status: (departmentData as any).status || "active",
     description: (departmentData as any).description || "",
   } : null;
@@ -64,37 +64,58 @@ export default function DepartmentDetails() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Department Details"
+        icon={<Building2 className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "HR", href: "/hr" },
+          { label: "Departments", href: "/departments" },
+          { label: "Details" },
+        ]}
+        backLink={{ label: "Departments", href: "/departments" }}
+      >
         <div className="flex items-center justify-center h-64">
           <p>Loading department...</p>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!department) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Department Details"
+        icon={<Building2 className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "HR", href: "/hr" },
+          { label: "Departments", href: "/departments" },
+          { label: "Details" },
+        ]}
+        backLink={{ label: "Departments", href: "/departments" }}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Department not found</p>
           <Button onClick={() => navigate("/departments")}>Back to Departments</Button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Department Details"
+      icon={<Building2 className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "HR", href: "/hr" },
+        { label: "Departments", href: "/departments" },
+        { label: "Details" },
+      ]}
+      backLink={{ label: "Departments", href: "/departments" }}
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/departments")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{department.name}</h1>
-            <p className="text-muted-foreground">{department.code}</p>
-          </div>
-        </div>
 
         <div className="flex gap-2">
           <Button onClick={handleEdit}>
@@ -147,6 +168,6 @@ export default function DepartmentDetails() {
         title="Delete Department"
         description="Are you sure you want to delete this department? This action cannot be undone."
       />
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

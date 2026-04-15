@@ -46,7 +46,7 @@ export const emailRouter = router({
       htmlContent: z.string().optional(),
       plainTextContent: z.string().optional(),
       templateId: z.string().optional(),
-      templateVariables: z.record(z.any()).optional(),
+      templateVariables: z.record(z.string(), z.any()).optional(),
       relatedEntityType: z.enum(['invoice', 'receipt', 'payment', 'quote', 'ticket']).optional(),
       relatedEntityId: z.string().optional(),
       sendImmediately: z.boolean().default(false),
@@ -117,9 +117,7 @@ export const emailRouter = router({
       if (!database) throw new Error('Database unavailable');
 
       const emailQueue = (await import('../../drizzle/schema')).emailQueue;
-      const record = await database.query.emailQueue.findFirst({
-        where: eq(emailQueue.id, input.queueId),
-      });
+      const [record] = await database.select().from(emailQueue).where(eq(emailQueue.id, input.queueId)).limit(1);
 
       if (!record) {
         throw new TRPCError({
@@ -183,7 +181,7 @@ export const emailRouter = router({
     z.object({
       toEmail: z.string().email(),
       templateId: z.string(),
-      templateVariables: z.record(z.any()),
+      templateVariables: z.record(z.string(), z.any()),
       relatedEntityType: z.enum(['invoice', 'receipt', 'payment', 'quote', 'ticket']).optional(),
       relatedEntityId: z.string().optional(),
       sendImmediately: z.boolean().default(true),
@@ -194,9 +192,8 @@ export const emailRouter = router({
       if (!database) throw new Error('Database unavailable');
 
       const emailTemplates = (await import('../../drizzle/schema')).emailTemplates;
-      const template = await database.query.emailTemplates.findFirst({
-        where: eq(emailTemplates.id, input.templateId),
-      });
+      const templateRows = await database.select().from(emailTemplates).where(eq(emailTemplates.id, input.templateId)).limit(1);
+      const template = templateRows[0];
 
       if (!template) {
         throw new TRPCError({
@@ -353,9 +350,7 @@ export const emailRouter = router({
       if (!database) throw new Error('Database unavailable');
 
       const emailQueue = (await import('../../drizzle/schema')).emailQueue;
-      const record = await database.query.emailQueue.findFirst({
-        where: eq(emailQueue.id, input.queueId),
-      });
+      const [record] = await database.select().from(emailQueue).where(eq(emailQueue.id, input.queueId)).limit(1);
 
       if (!record) {
         throw new TRPCError({
@@ -368,7 +363,7 @@ export const emailRouter = router({
       await database.update(emailQueue)
         .set({
           status: 'pending',
-          nextRetryAt: new Date(),
+          nextRetryAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           retryCount: (record.retryCount || 0) + 1,
         })
         .where(eq(emailQueue.id, input.queueId));

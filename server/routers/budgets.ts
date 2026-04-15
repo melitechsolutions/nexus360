@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as db from "../db";
 import { TRPCError } from "@trpc/server";
 import { budgets, departments } from "../../drizzle/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 
 export const budgetsRouter = router({
   list: createFeatureRestrictedProcedure("budgets:view")
@@ -21,9 +21,10 @@ export const budgetsRouter = router({
       try {
         const database = await getDb();
         if (!database) return [];
+        const orgId = ctx.user.organizationId;
 
         // Query budgets with department details
-        const results = await database
+        const q = database
           .select({
             id: budgets.id,
             departmentId: budgets.departmentId,
@@ -34,10 +35,11 @@ export const budgetsRouter = router({
             createdAt: budgets.createdAt,
           })
           .from(budgets)
-          .leftJoin(departments, eq(budgets.departmentId, departments.id))
-          .orderBy(desc(budgets.fiscalYear), desc(budgets.createdAt))
-          .limit(100)
-          .offset(0);
+          .leftJoin(departments, eq(budgets.departmentId, departments.id));
+
+        const results = orgId
+          ? await q.where(eq(budgets.organizationId, orgId)).orderBy(desc(budgets.fiscalYear), desc(budgets.createdAt)).limit(100).offset(0)
+          : await q.orderBy(desc(budgets.fiscalYear), desc(budgets.createdAt)).limit(100).offset(0);
 
         return results || [];
       } catch (error) {
@@ -90,7 +92,7 @@ export const budgetsRouter = router({
         if (!database) throw new Error("Database not available");
 
         const id = uuidv4();
-        const now = new Date();
+        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
         await database.insert(budgets).values({
           id,
@@ -103,8 +105,9 @@ export const budgetsRouter = router({
           totalActual: 0,
           variance: input.amount,
           variancePercent: 0,
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString(),
+          createdAt: now,
+          updatedAt: now,
+          organizationId: ctx.user.organizationId || null,
         });
 
         // Log activity
@@ -113,7 +116,7 @@ export const budgetsRouter = router({
           action: "budget_created",
           entityType: "budget",
           entityId: id,
-          description: `Created budget: Ksh ${input.amount / 100} for FY ${input.fiscalYear}`,
+          description: `Created budget: Ksh ${input.amount.toLocaleString()} for FY ${input.fiscalYear}`,
         });
 
         return { id };
@@ -150,7 +153,7 @@ export const budgetsRouter = router({
           throw new Error("No fields to update");
         }
 
-        updateData.updatedAt = new Date().toISOString();
+        updateData.updatedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
         await database.update(budgets).set(updateData).where(eq(budgets.id, input.id));
 
@@ -241,7 +244,7 @@ export const budgetsRouter = router({
           .update(budgets)
           .set({
             remaining,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(budgets.id, input.budgetId));
 

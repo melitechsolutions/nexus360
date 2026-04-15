@@ -263,6 +263,18 @@ class SDKServer {
    * Does not throw errors - authentication is optional for public procedures
    */
   async authenticateRequest(req: Request): Promise<User | null> {
+    // First try Authorization header (Docker/HTTP localStorage fallback)
+    const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+    if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+      const headerToken = authHeader.slice(7);
+      try {
+        const localUser = await this.verifyLocalJWT(headerToken);
+        if (localUser) return localUser;
+      } catch {
+        // fall through to cookie-based auth
+      }
+    }
+
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
 

@@ -38,16 +38,37 @@ import {
   Eye,
   Loader2,
   MessageCircle,
+  Edit,
+  Trash2,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
+import { useUserLookup } from "@/hooks/useUserLookup";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
+import { RowActionsMenu, actionIcons } from "@/components/list-page/RowActionsMenu";
+import { TableColumnSettings, useColumnVisibility, type ColumnConfig } from "@/components/list-page/TableColumnSettings";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction, bulkEmailAction } from "@/components/list-page/EnhancedBulkActions";
 
 export default function Tickets() {
+  const { getUserName } = useUserLookup();
   const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
+  const [selectedTickets, setSelectedTickets] = useState<Set<string>>(new Set());
+
+  const ticketColumns: ColumnConfig[] = [
+    { key: "title", label: "Title" },
+    { key: "priority", label: "Priority" },
+    { key: "status", label: "Status" },
+    { key: "createdBy", label: "Created By" },
+    { key: "createdDate", label: "Created Date" },
+  ];
+  const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(ticketColumns, "tickets");
 
   // Queries
   const { data: tickets = [], isLoading } = trpc.tickets.list.useQuery({});
@@ -69,6 +90,15 @@ export default function Tickets() {
   const updateTicket = trpc.tickets.update.useMutation({
     onSuccess: () => {
       toast.success("Ticket updated successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const deleteTicket = trpc.tickets.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Ticket deleted successfully");
     },
     onError: (error) => {
       toast.error(error.message);
@@ -148,7 +178,7 @@ export default function Tickets() {
       description="Create and manage support tickets"
       icon={<Ticket className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Support & Ticketing" },
       ]}
       actions={
@@ -161,71 +191,25 @@ export default function Tickets() {
       <div className="space-y-6">
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">New</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.new}</div>
-              <p className="text-xs text-muted-foreground mt-1">Not started</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="New" value={stats.new} description="Not started" color="border-l-orange-500" />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Open</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.open}</div>
-              <p className="text-xs text-muted-foreground mt-1">Awaiting action</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Open" value={stats.open} description="Awaiting action" color="border-l-purple-500" />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{stats.inProgress}</div>
-              <p className="text-xs text-muted-foreground mt-1">Being worked on</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="In Progress" value={stats.inProgress} description="Being worked on" color="border-l-green-500" />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-              <p className="text-xs text-muted-foreground mt-1">Done</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Completed" value={stats.completed} description="Done" color="border-l-blue-500" />
         </div>
 
-        {/* Main Content */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <CardTitle>Tickets</CardTitle>
-                <CardDescription>
-                  {filteredTickets.length} ticket{filteredTickets.length !== 1 ? "s" : ""}
-                </CardDescription>
-              </div>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 flex items-center gap-2 bg-white border rounded-lg px-3">
-                <Search size={16} className="text-muted-foreground" />
-                <Input
-                  placeholder="Search tickets..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="border-0 focus-visible:ring-0 flex-1"
-                />
-              </div>
-
+        {/* Toolbar */}
+        <ListPageToolbar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search tickets..."
+          onCreateClick={() => setShowCreateDialog(true)}
+          createLabel="New Ticket"
+          onPrintClick={() => window.print()}
+          filterContent={
+            <>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Status" />
@@ -251,10 +235,30 @@ export default function Tickets() {
                   <SelectItem value="low">Low</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-          </CardHeader>
+            </>
+          }
+        />
 
-          <CardContent>
+        {/* Bulk Actions */}
+        <EnhancedBulkActions
+          selectedCount={selectedTickets.size}
+          onClear={() => setSelectedTickets(new Set())}
+          actions={[
+            { id: "close", label: "Close Tickets", icon: <CheckCircle2 className="h-3.5 w-3.5" />, confirm: true, confirmMessage: `Close ${selectedTickets.size} selected ticket(s)?`, onClick: () => { selectedTickets.forEach((id) => updateTicket.mutate({ id, status: "closed" })); setSelectedTickets(new Set()); } },
+            bulkExportAction(selectedTickets, tickets, ticketColumns, "tickets"),
+            bulkCopyIdsAction(selectedTickets),
+            bulkEmailAction(navigate),
+            bulkDeleteAction(selectedTickets, (ids) => { ids.forEach((id) => deleteTicket.mutate(id)); setSelectedTickets(new Set()); }),
+          ]}
+        />
+
+        {/* Main Content */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <span className="text-sm text-muted-foreground">{filteredTickets.length} ticket{filteredTickets.length !== 1 ? "s" : ""}</span>
+              <TableColumnSettings columns={ticketColumns} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} onReset={reset} pageSize={pageSize} onPageSizeChange={updatePageSize} />
+            </div>
             {isLoading ? (
               <div className="text-center py-12">
                 <Loader2 className="h-12 w-12 mx-auto text-muted-foreground mb-4 animate-spin" />
@@ -266,41 +270,50 @@ export default function Tickets() {
                 <p className="text-muted-foreground">No tickets found</p>
               </div>
             ) : (
-              <div className="rounded-lg border overflow-hidden">
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created By</TableHead>
-                      <TableHead>Created Date</TableHead>
+                      <TableHead className="w-10"><Checkbox checked={selectedTickets.size === filteredTickets.length && filteredTickets.length > 0} onCheckedChange={() => { if (selectedTickets.size === filteredTickets.length) setSelectedTickets(new Set()); else setSelectedTickets(new Set(filteredTickets.map((t: any) => t.id))); }} /></TableHead>
+                      {isVisible("title") && <TableHead>Title</TableHead>}
+                      {isVisible("priority") && <TableHead>Priority</TableHead>}
+                      {isVisible("status") && <TableHead>Status</TableHead>}
+                      {isVisible("createdBy") && <TableHead className="hidden md:table-cell">Created By</TableHead>}
+                      {isVisible("createdDate") && <TableHead className="hidden md:table-cell">Created Date</TableHead>}
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredTickets.map((ticket) => (
-                      <TableRow key={ticket.id}>
-                        <TableCell className="font-medium">{ticket.title}</TableCell>
-                        <TableCell>
+                      <TableRow key={ticket.id} className={selectedTickets.has(ticket.id) ? "bg-primary/5" : ""}>
+                        <TableCell><Checkbox checked={selectedTickets.has(ticket.id)} onCheckedChange={() => { const next = new Set(selectedTickets); if (next.has(ticket.id)) next.delete(ticket.id); else next.add(ticket.id); setSelectedTickets(next); }} /></TableCell>
+                        {isVisible("title") && <TableCell className="font-medium">{ticket.title}</TableCell>}
+                        {isVisible("priority") && <TableCell>
                           <Badge className={getPriorityColor(ticket.priority)}>
                             {(ticket.priority || "medium").charAt(0).toUpperCase() + (ticket.priority || "medium").slice(1)}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
+                        </TableCell>}
+                        {isVisible("status") && <TableCell>
                           <Badge className={getStatusColor(ticket.status)} variant="outline">
                             <div className="flex items-center gap-2">
                               {getStatusIcon(ticket.status)}
                               {(ticket.status || "new").replace("_", " ").charAt(0).toUpperCase() + (ticket.status || "new").replace("_", " ").slice(1)}
                             </div>
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{ticket.createdBy || "-"}</TableCell>
-                        <TableCell className="text-sm">{new Date(ticket.createdAt || "").toLocaleDateString()}</TableCell>
+                        </TableCell>}
+                        {isVisible("createdBy") && <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{getUserName(ticket.createdBy)}</TableCell>}
+                        {isVisible("createdDate") && <TableCell className="hidden md:table-cell text-sm">{new Date(ticket.createdAt || "").toLocaleDateString()}</TableCell>}
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => setSelectedTicket(ticket.id)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <RowActionsMenu
+                            primaryActions={[
+                              { label: "View", icon: actionIcons.view, onClick: () => setSelectedTicket(ticket.id) },
+                            ]}
+                            menuActions={[
+                              { label: "Edit Ticket", icon: <Edit className="h-4 w-4" />, onClick: () => navigate(`/tickets/${ticket.id}/edit`) },
+                              { label: "Duplicate", icon: <Copy className="h-4 w-4" />, onClick: () => navigate(`/tickets/create?clone=${ticket.id}`), separator: true },
+                              { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: () => { if (confirm("Delete this ticket?")) deleteTicket.mutate(ticket.id); }, variant: "destructive" },
+                            ]}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

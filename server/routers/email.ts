@@ -1,14 +1,80 @@
 import { router, createFeatureRestrictedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { clients, invoices, estimates, payments } from "../../drizzle/schema";
-import { eq, inArray } from "drizzle-orm";
+import { clients, invoices, estimates, payments, settings } from "../../drizzle/schema";
+import { eq, inArray, and } from "drizzle-orm";
 import * as db from "../db";
-import { sendEmail } from "../_core/mail";
+import { sendEmail } from "../_core/mail";import { getCompanyInfo } from "../utils/company-info";
+/**
+ * Resolve an email template by looking up user-customized version from settings.
+ * Falls back to the provided default if no custom template is saved.
+ * Replaces {variable} placeholders with actual values.
+ */
+async function resolveTemplate(
+  templateId: string,
+  variables: Record<string, string>,
+  fallback: { subject: string; html: string; text: string },
+): Promise<{ subject: string; html: string; text: string }> {
+  try {
+    const database = await getDb();
+    if (!database) return fallback;
 
-// Email templates with HTML and text versions
+    const rows = await database.select().from(settings)
+      .where(eq(settings.category, `email_template:${templateId}`));
+
+    if (!rows.length) return fallback;
+
+    const saved: Record<string, string> = {};
+    rows.forEach(r => { if (r.key) saved[r.key] = r.value ?? ""; });
+
+    if (!saved.subject && !saved.body) return fallback;
+
+    let subject = saved.subject || fallback.subject;
+    let html = saved.body || fallback.html;
+
+    // Also load signature & footer from settings
+    const sigRows = await database.select().from(settings)
+      .where(eq(settings.category, "email_template:email-signature-all"));
+    const footerRows = await database.select().from(settings)
+      .where(eq(settings.category, "email_template:email-footer-all"));
+
+    const sigBody = sigRows.find(r => r.key === "body")?.value || "";
+    const footerBody = footerRows.find(r => r.key === "body")?.value || "";
+
+    // Add general variables
+    variables.email_signature = replaceVars(sigBody, variables);
+    variables.email_footer = replaceVars(footerBody, variables);
+    variables.todays_date = variables.todays_date || new Date().toLocaleDateString();
+
+    subject = replaceVars(subject, variables);
+    html = replaceVars(html, variables);
+
+    // Wrap in base email styling
+    const wrappedHtml = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">${html}${variables.email_signature ? `<div>${variables.email_signature}</div>` : ""}${variables.email_footer ? `<hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;"><div>${variables.email_footer}</div>` : ""}</div>`;
+
+    const text = wrappedHtml.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+
+    return { subject, html: wrappedHtml, text };
+  } catch {
+    return fallback;
+  }
+}
+
+function replaceVars(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (match, key) => vars[key] ?? match);
+}
+
+// Read company name from settings, fall back to env var, then default
+async function getCompanyName(): Promise<string> {
+  try {
+    const info = await getCompanyInfo();
+    return info.name;
+  } catch { return process.env.COMPANY_NAME || "Your Company"; }
+}
+
+// Email templates with HTML and text versions (defaults — overridden by settings)
 const emailTemplates = {
-  invoice: (clientName: string, invoiceNumber: string, amount: number, dueDate: string, companyName: string = "Melitech Solutions") => {
+  invoice: (clientName: string, invoiceNumber: string, amount: number, dueDate: string, companyName: string = "Your Company") => {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
         <h2 style="color: #1a5490; margin-bottom: 20px;">Invoice ${invoiceNumber}</h2>
@@ -32,7 +98,7 @@ const emailTemplates = {
       text,
     };
   },
-  estimate: (clientName: string, estimateNumber: string, amount: number, validUntil: string, companyName: string = "Melitech Solutions") => {
+  estimate: (clientName: string, estimateNumber: string, amount: number, validUntil: string, companyName: string = "Your Company") => {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
         <h2 style="color: #1a5490; margin-bottom: 20px;">Estimate ${estimateNumber}</h2>
@@ -56,7 +122,7 @@ const emailTemplates = {
       text,
     };
   },
-  paymentReminder: (clientName: string, invoiceNumber: string, amount: number, daysOverdue: number, dueDate: string, companyName: string = "Melitech Solutions") => {
+  paymentReminder: (clientName: string, invoiceNumber: string, amount: number, daysOverdue: number, dueDate: string, companyName: string = "Your Company") => {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
         <h2 style="color: #d32f2f; margin-bottom: 20px;">Payment Reminder - Invoice Overdue</h2>
@@ -81,7 +147,7 @@ const emailTemplates = {
       text,
     };
   },
-  paymentReceived: (clientName: string, invoiceNumber: string, amount: number, companyName: string = "Melitech Solutions") => {
+  paymentReceived: (clientName: string, invoiceNumber: string, amount: number, companyName: string = "Your Company") => {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
         <h2 style="color: #4CAF50; margin-bottom: 20px;">Payment Received - Thank You!</h2>
@@ -143,13 +209,31 @@ export const emailRouter = router({
       }
 
       const client = clientResult[0];
-      const template = emailTemplates.invoice(
-        client.contactPerson || client.companyName,
+      const companyName = await getCompanyName();
+      const contactName = client.contactPerson || client.companyName;
+      const defaultTemplate = emailTemplates.invoice(
+        contactName,
         invoice.invoiceNumber,
         invoice.total || 0,
         new Date(invoice.dueDate).toLocaleDateString(),
-        process.env.COMPANY_NAME || "Melitech Solutions"
+        companyName
       );
+
+      const template = await resolveTemplate("invoice-new-client", {
+        first_name: contactName.split(" ")[0],
+        last_name: contactName.split(" ").slice(1).join(" "),
+        invoice_id: invoice.invoiceNumber,
+        invoice_amount: `KES ${(invoice.total || 0).toLocaleString()}`,
+        invoice_amount_due: `KES ${(invoice.total || 0).toLocaleString()}`,
+        invoice_date_created: new Date(invoice.createdAt || new Date()).toLocaleDateString(),
+        invoice_date_due: new Date(invoice.dueDate).toLocaleDateString(),
+        client_name: client.companyName,
+        client_id: client.id,
+        invoice_status: invoice.status || "pending",
+        invoice_url: `${process.env.APP_URL || ""}/invoices/${invoice.id}`,
+        our_company_name: companyName,
+        dashboard_url: process.env.APP_URL || "",
+      }, defaultTemplate);
 
       // Send email through SMTP
       const emailResult = await sendEmail({
@@ -214,13 +298,27 @@ export const emailRouter = router({
       }
 
       const client = clientResult[0];
-      const template = emailTemplates.estimate(
-        client.contactPerson || client.companyName,
+      const companyName = await getCompanyName();
+      const contactName = client.contactPerson || client.companyName;
+      const defaultTemplate = emailTemplates.estimate(
+        contactName,
         estimate.estimateNumber,
         estimate.total || 0,
         new Date(estimate.expiryDate || new Date()).toLocaleDateString(),
-        process.env.COMPANY_NAME || "Melitech Solutions"
+        companyName
       );
+
+      const template = await resolveTemplate("estimate-new-client", {
+        first_name: contactName.split(" ")[0],
+        last_name: contactName.split(" ").slice(1).join(" "),
+        estimate_id: estimate.estimateNumber,
+        estimate_amount: `KES ${(estimate.total || 0).toLocaleString()}`,
+        estimate_date: new Date(estimate.createdAt || new Date()).toLocaleDateString(),
+        client_name: client.companyName,
+        client_id: client.id,
+        our_company_name: companyName,
+        dashboard_url: process.env.APP_URL || "",
+      }, defaultTemplate);
 
       // Send email through SMTP
       const emailResult = await sendEmail({
@@ -286,15 +384,30 @@ export const emailRouter = router({
       const daysOverdue = Math.floor(
         (new Date().getTime() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24)
       );
+      const companyName = await getCompanyName();
+      const contactName = client.contactPerson || client.companyName;
 
-      const template = emailTemplates.paymentReminder(
-        client.contactPerson || client.companyName,
+      const defaultTemplate = emailTemplates.paymentReminder(
+        contactName,
         invoice.invoiceNumber,
         invoice.total || 0,
         Math.max(daysOverdue, 0),
         new Date(invoice.dueDate).toLocaleDateString(),
-        process.env.COMPANY_NAME || "Melitech Solutions"
+        companyName
       );
+
+      const template = await resolveTemplate("invoice-reminder-client", {
+        first_name: contactName.split(" ")[0],
+        last_name: contactName.split(" ").slice(1).join(" "),
+        invoice_id: invoice.invoiceNumber,
+        invoice_amount: `KES ${(invoice.total || 0).toLocaleString()}`,
+        invoice_amount_due: `KES ${(invoice.total || 0).toLocaleString()}`,
+        invoice_date_due: new Date(invoice.dueDate).toLocaleDateString(),
+        client_name: client.companyName,
+        invoice_url: `${process.env.APP_URL || ""}/invoices/${invoice.id}`,
+        our_company_name: companyName,
+        dashboard_url: process.env.APP_URL || "",
+      }, defaultTemplate);
 
       // Send email through SMTP
       const emailResult = await sendEmail({
@@ -358,12 +471,24 @@ export const emailRouter = router({
       }
 
       const client = clientResult[0];
-      const template = emailTemplates.paymentReceived(
-        client.contactPerson || client.companyName,
+      const companyName = await getCompanyName();
+      const contactName = client.contactPerson || client.companyName;
+      const defaultTemplate = emailTemplates.paymentReceived(
+        contactName,
         invoice.invoiceNumber,
         input.paymentAmount,
-        process.env.COMPANY_NAME || "Melitech Solutions"
+        companyName
       );
+
+      const template = await resolveTemplate("payment-thankyou-client", {
+        first_name: contactName.split(" ")[0],
+        last_name: contactName.split(" ").slice(1).join(" "),
+        invoice_id: invoice.invoiceNumber,
+        payment_amount: `KES ${input.paymentAmount.toLocaleString()}`,
+        client_name: client.companyName,
+        our_company_name: companyName,
+        dashboard_url: process.env.APP_URL || "",
+      }, defaultTemplate);
 
       // Send email through SMTP
       const emailResult = await sendEmail({
@@ -437,13 +562,31 @@ export const emailRouter = router({
           }
 
           const client = clientResult[0];
-          const template = emailTemplates.invoice(
-            client.contactPerson || client.companyName,
+          const companyName = await getCompanyName();
+          const contactName = client.contactPerson || client.companyName;
+          const defaultTemplate = emailTemplates.invoice(
+            contactName,
             invoice.invoiceNumber,
             invoice.total || 0,
             new Date(invoice.dueDate).toLocaleDateString(),
-            process.env.COMPANY_NAME || "Melitech Solutions"
+            companyName
           );
+
+          const template = await resolveTemplate("invoice-new-client", {
+            first_name: contactName.split(" ")[0],
+            last_name: contactName.split(" ").slice(1).join(" "),
+            invoice_id: invoice.invoiceNumber,
+            invoice_amount: `KES ${(invoice.total || 0).toLocaleString()}`,
+            invoice_amount_due: `KES ${(invoice.total || 0).toLocaleString()}`,
+            invoice_date_created: new Date(invoice.createdAt || new Date()).toLocaleDateString(),
+            invoice_date_due: new Date(invoice.dueDate).toLocaleDateString(),
+            client_name: client.companyName,
+            client_id: client.id,
+            invoice_status: invoice.status || "pending",
+            invoice_url: `${process.env.APP_URL || ""}/invoices/${invoice.id}`,
+            our_company_name: companyName,
+            dashboard_url: process.env.APP_URL || "",
+          }, defaultTemplate);
 
           // Send email through SMTP
           const emailResult = await sendEmail({
@@ -537,14 +680,29 @@ export const emailRouter = router({
           }
 
           const client = clientResult[0];
-          const template = emailTemplates.paymentReminder(
-            client.contactPerson || client.companyName,
+          const companyName = await getCompanyName();
+          const contactName = client.contactPerson || client.companyName;
+          const defaultTemplate = emailTemplates.paymentReminder(
+            contactName,
             invoice.invoiceNumber,
             invoice.total || 0,
             Math.max(daysOverdue, 0),
             new Date(invoice.dueDate).toLocaleDateString(),
-            process.env.COMPANY_NAME || "Melitech Solutions"
+            companyName
           );
+
+          const template = await resolveTemplate("invoice-reminder-client", {
+            first_name: contactName.split(" ")[0],
+            last_name: contactName.split(" ").slice(1).join(" "),
+            invoice_id: invoice.invoiceNumber,
+            invoice_amount: `KES ${(invoice.total || 0).toLocaleString()}`,
+            invoice_amount_due: `KES ${(invoice.total || 0).toLocaleString()}`,
+            invoice_date_due: new Date(invoice.dueDate).toLocaleDateString(),
+            client_name: client.companyName,
+            invoice_url: `${process.env.APP_URL || ""}/invoices/${invoice.id}`,
+            our_company_name: companyName,
+            dashboard_url: process.env.APP_URL || "",
+          }, defaultTemplate);
 
           // Send email through SMTP
           const emailResult = await sendEmail({

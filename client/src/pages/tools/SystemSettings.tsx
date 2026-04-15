@@ -50,7 +50,7 @@ interface SystemSettings {
 }
 
 const DEFAULT_SETTINGS: SystemSettings = {
-  applicationName: "Melitech CRM",
+  applicationName: "CRM Platform",
   applicationDescription: "Enterprise CRM and Business Management System",
   maintenanceMode: false,
   maintenanceMessage: "The system is under maintenance. Please try again later.",
@@ -111,13 +111,22 @@ export default function SystemSettings() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await saveMutation.mutateAsync({
-        key: "app_name",
-        value: settings.applicationName,
-        category: "general",
-        description: "Application name",
-      });
-      // Save other settings...
+      const settingsToSave = [
+        { key: "app_name", value: settings.applicationName, category: "general", description: "Application name" },
+        { key: "app_description", value: settings.applicationDescription, category: "general", description: "Application description" },
+        { key: "maintenance_mode", value: String(settings.maintenanceMode), category: "maintenance", description: "Maintenance mode toggle" },
+        { key: "maintenance_message", value: settings.maintenanceMessage, category: "maintenance", description: "Maintenance message" },
+        { key: "backup_enabled", value: String(settings.autoBackupEnabled), category: "backup", description: "Auto backup enabled" },
+        { key: "backup_frequency", value: settings.backupFrequency, category: "backup", description: "Backup frequency" },
+        { key: "backup_retention_days", value: String(settings.backupRetentionDays), category: "backup", description: "Backup retention days" },
+        { key: "email_notifications", value: String(settings.emailNotificationsEnabled), category: "notifications", description: "Email notifications enabled" },
+        { key: "system_logs", value: String(settings.systemLogsEnabled), category: "general", description: "System logs enabled" },
+        { key: "api_rate_limit", value: String(settings.apiRateLimitPerMinute), category: "security", description: "API rate limit per minute" },
+        { key: "session_timeout", value: String(settings.sessionTimeoutMinutes), category: "security", description: "Session timeout in minutes" },
+        { key: "2fa_required", value: String(settings.twoFactorAuthenticationRequired), category: "security", description: "Two-factor authentication required" },
+        { key: "file_upload_limit_mb", value: String(settings.fileUploadLimitMB), category: "general", description: "File upload limit in MB" },
+      ];
+      await Promise.all(settingsToSave.map((s) => saveMutation.mutateAsync(s)));
       setIsSaving(false);
     } catch (error) {
       toast.error("Failed to save system settings");
@@ -139,8 +148,8 @@ export default function SystemSettings() {
         description="Configure application-wide system settings and preferences"
         icon={<Settings className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
-          { label: "Tools", href: "/tools" },
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Settings", href: "/settings" },
           { label: "System Settings" },
         ]}
       >
@@ -161,8 +170,8 @@ export default function SystemSettings() {
       description="Configure application-wide settings, security, and backup preferences"
       icon={<Settings className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Tools", href: "/tools" },
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Settings", href: "/settings" },
         { label: "System Settings" },
       ]}
     >

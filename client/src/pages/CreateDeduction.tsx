@@ -86,7 +86,7 @@ export default function CreateDeduction() {
       description="Add a new salary deduction for an employee"
       icon={<Minus className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Payroll", href: "/payroll" },
         { label: "Create Deduction" },
       ]}

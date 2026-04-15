@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import DashboardLayout from "@/components/DashboardLayout";
-import { ArrowLeft, Loader2, RefreshCw, Copy, Check } from "lucide-react";
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { UserPlus, Loader2, RefreshCw, Copy, Check } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import mutateAsync from "@/lib/mutationHelpers";
 import { toast } from "sonner";
@@ -141,18 +141,19 @@ export default function CreateUser() {
   };
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Create User"
+      description="Fill in the details below to create a new system user"
+      icon={<UserPlus className="w-6 h-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Admin", href: "/admin/management" },
+        { label: "Users", href: "/admin/management" },
+        { label: "Create" },
+      ]}
+      backLink={{ label: "Users", href: "/admin/management" }}
+    >
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => setLocation("/crm/super-admin")}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold">Create New User</h1>
-        </div>
 
         <Card className="max-w-2xl">
           <CardHeader>
@@ -313,6 +314,6 @@ export default function CreateUser() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

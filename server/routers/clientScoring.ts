@@ -304,7 +304,7 @@ export const clientScoringRouter = router({
    * Recalculate all client scores
    */
   refreshAllScores: readProcedure.mutation(async ({ ctx }) => {
-    if (ctx.user?.role !== 'admin') {
+    if (ctx.user?.role !== 'admin' && ctx.user?.role !== 'super_admin') {
       throw new Error('Unauthorized - admin only');
     }
 

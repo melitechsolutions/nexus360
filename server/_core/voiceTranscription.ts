@@ -274,7 +274,7 @@ function getLanguageName(langCode: string): string {
  *         duration: result.duration,
  *         language: result.language,
  *         audioUrl: input.audioUrl,
- *         createdAt: new Date(),
+ *         createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
  *       });
  *       
  *       return result;

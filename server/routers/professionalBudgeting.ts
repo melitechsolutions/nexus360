@@ -319,8 +319,8 @@ export const professionalBudgetingRouter = router({
       }
 
       try {
-        // Only admins can approve budgets
-        if (ctx.user.role !== 'admin' && ctx.user.role !== 'manager') {
+        // Only admins/super_admins/managers can approve budgets
+        if (!['super_admin', 'admin', 'manager'].includes(ctx.user.role)) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Only admins or managers can approve budgets",
@@ -344,8 +344,8 @@ export const professionalBudgetingRouter = router({
           .set({
             budgetStatus: 'active',
             approvedBy: ctx.user.id,
-            approvedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            approvedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(budgets.id, input.budgetId));
 

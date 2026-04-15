@@ -2,6 +2,7 @@ import { CronJob } from "cron";
 import { sendOverdueReminders } from "../routers/paymentReminders";
 import { processEmailQueue } from "../routers/emailQueue";
 import { billingRouter } from "../routers/billing";
+import { sendUsageReminders } from "../jobs/usageReminders";
 
 /**
  * Scheduler configuration for automated background jobs
@@ -81,17 +82,35 @@ export function initializeSchedulers() {
     }
   });
 
+  // ============================================================================
+  // USAGE REMINDERS - Weekly on Monday at 10:00 AM
+  // Remind users to create clients, invoices, and complete their profile
+  // ============================================================================
+  const usageReminderJob = new CronJob("0 10 * * 1", async () => {
+    try {
+      console.log("[SCHEDULER] Running usage reminder check...");
+      const result = await sendUsageReminders();
+      console.log(
+        `[SCHEDULER] Usage reminders: ${result.sent} sent, ${result.skipped} skipped, ${result.errors} errors`
+      );
+    } catch (error) {
+      console.error("[SCHEDULER] Error in usage reminders:", error);
+    }
+  });
+
   // Start all jobs
   emailQueueJob.start();
   overdueRemindersJob.start();
   billingLockJob.start();
   billingNotificationsJob.start();
+  usageReminderJob.start();
 
   console.log("[SCHEDULER] Background jobs started:");
   console.log("  - Email queue processor: Every 5 minutes");
   console.log("  - Overdue invoice reminders: Daily at 09:00 AM");
   console.log("  - Subscription lockout check: Daily at 00:01 AM");
   console.log("  - Billing notifications: Daily at 08:00 AM");
+  console.log("  - Usage reminders: Weekly on Monday at 10:00 AM");
 
   // Graceful shutdown
   process.on("SIGTERM", () => {
@@ -100,10 +119,11 @@ export function initializeSchedulers() {
     overdueRemindersJob.stop();
     billingLockJob.stop();
     billingNotificationsJob.stop();
+    usageReminderJob.stop();
     process.exit(0);
   });
 
-  return { emailQueueJob, overdueRemindersJob, billingLockJob, billingNotificationsJob };
+  return { emailQueueJob, overdueRemindersJob, billingLockJob, billingNotificationsJob, usageReminderJob };
 }
 
 /**
@@ -116,5 +136,9 @@ export const manualTriggers = {
 
   async sendOverdueReminders() {
     return await sendOverdueReminders();
+  },
+
+  async sendUsageReminders() {
+    return await sendUsageReminders();
   },
 };

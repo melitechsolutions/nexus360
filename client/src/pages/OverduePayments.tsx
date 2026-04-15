@@ -1,6 +1,7 @@
 import React from "react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import OverduePaymentDashboard from "@/components/OverduePaymentDashboard";
+import { AlertCircle } from "lucide-react";
 
 /**
  * OverduePayments Page
@@ -13,19 +14,19 @@ import OverduePaymentDashboard from "@/components/OverduePaymentDashboard";
  */
 export default function OverduePaymentsPage() {
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Overdue Payments Management
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Track and manage overdue invoices. Send reminders to encourage timely payment and improve cash flow.
-          </p>
-        </div>
-
+    <ModuleLayout
+      title="Overdue Payments Management"
+      description="Track and manage overdue invoices. Send reminders to encourage timely payment and improve cash flow."
+      icon={<AlertCircle className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Accounting", href: "/accounting" },
+        { label: "Overdue Payments" },
+      ]}
+    >
+      <div className="space-y-6 p-4 sm:p-6">
         <OverduePaymentDashboard />
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { downloadCSV } from "@/lib/export-utils";
 import { ProductSearchFilter, type ProductFilters } from "@/components/SearchAndFilter";
 import { trpc } from "@/lib/trpc";
 import {
@@ -27,7 +28,15 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
+  Copy,
+  BarChart3,
 } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
+import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
+import { RowActionsMenu, actionIcons } from "@/components/list-page/RowActionsMenu";
+import { TableColumnSettings, useColumnVisibility, type ColumnConfig } from "@/components/list-page/TableColumnSettings";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction, bulkEmailAction } from "@/components/list-page/EnhancedBulkActions";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Products() {
   // CALL ALL HOOKS UNCONDITIONALLY AT TOP LEVEL
@@ -40,6 +49,18 @@ export default function Products() {
     sortBy: "name",
     sortOrder: "asc",
   });
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+
+  const productColumns: ColumnConfig[] = [
+    { key: "sku", label: "SKU" },
+    { key: "name", label: "Name" },
+    { key: "category", label: "Category" },
+    { key: "price", label: "Price" },
+    { key: "stock", label: "Stock" },
+    { key: "unit", label: "Unit" },
+    { key: "status", label: "Status" },
+  ];
+  const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(productColumns, "products");
 
   // Fetch products from backend
   const { data: products = [], isLoading: isLoadingProducts } = trpc.products.list.useQuery();
@@ -54,6 +75,22 @@ export default function Products() {
     onError: (error) => {
       toast.error(error.message || "Failed to delete product");
     },
+  });
+
+  const bulkDeleteProductsMutation = trpc.products.bulkDelete.useMutation({
+    onSuccess: () => {
+      toast.success("Products deleted successfully");
+      utils.products.list.invalidate();
+      setSelectedProducts(new Set());
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete products");
+    },
+  });
+
+  const updateProductMutation = trpc.products.update.useMutation({
+    onSuccess: () => { utils.products.list.invalidate(); },
+    onError: (error) => { toast.error(error.message || "Failed to update product"); },
   });
 
   const filteredProducts = products
@@ -77,13 +114,29 @@ export default function Products() {
     }
   };
 
+  const toggleSelectProduct = (id: string) => {
+    setSelectedProducts((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllProducts = () => {
+    if (selectedProducts.size === filteredProducts.length) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(filteredProducts.map((p: any) => p.id)));
+    }
+  };
+
   return (
     <ModuleLayout
       title="Products"
       description="Manage your inventory and product catalog"
       icon={<Package className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Products & Services", href: "/products" },
         { label: "Products" },
       ]}
@@ -95,69 +148,71 @@ export default function Products() {
       }
     >
       <div className="space-y-6">
-        <ProductSearchFilter
-          onSearch={setSearchQuery}
-          onFilter={setFilters}
+        {/* Toolbar */}
+        <ListPageToolbar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search products..."
+          onCreateClick={() => navigate("/products/create")}
+          createLabel="Add Product"
+          onExportClick={() => downloadCSV(filteredProducts.map((p: any) => ({ SKU: p.sku || "", Name: p.name, Category: p.category || "", Price: p.price, Stock: p.stockQuantity || 0, Status: p.isActive ? "Active" : "Inactive" })), "products")}
+          onImportClick={() => { toast.info("Navigate to import page"); navigate("/products/import"); }}
+          onPrintClick={() => window.print()}
+        />
+
+        {/* Bulk Actions Bar */}
+        <EnhancedBulkActions
+          selectedCount={selectedProducts.size}
+          onClear={() => setSelectedProducts(new Set())}
+          actions={[
+            { id: "activate", label: "Activate", icon: <CheckCircle2 className="h-3.5 w-3.5" />, onClick: async () => { let count = 0; for (const id of selectedProducts) { try { await updateProductMutation.mutateAsync({ id, status: 'active' }); count++; } catch {} } toast.success(`Activated ${count} products`); setSelectedProducts(new Set()); } },
+            { id: "deactivate", label: "Deactivate", icon: <XCircle className="h-3.5 w-3.5" />, onClick: async () => { let count = 0; for (const id of selectedProducts) { try { await updateProductMutation.mutateAsync({ id, status: 'inactive' }); count++; } catch {} } toast.success(`Deactivated ${count} products`); setSelectedProducts(new Set()); } },
+            bulkExportAction(selectedProducts, products, productColumns, "products"),
+            bulkCopyIdsAction(selectedProducts),
+            bulkDeleteAction(selectedProducts, (ids) => bulkDeleteProductsMutation.mutate(ids)),
+          ]}
         />
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{products.length}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {products.filter((p: any) => p.isActive !== 0).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {products.filter((p: any) => (p.stockQuantity || 0) <= (p.minStockLevel || 0)).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-              <XCircle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {products.filter((p: any) => p.isActive === 0).length}
-              </div>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Products" value={products.length} icon={<Package className="h-5 w-5" />} color="border-l-orange-500" />
+          <StatsCard
+            label="Active"
+            value={products.filter((p: any) => p.isActive !== 0).length}
+            icon={<CheckCircle2 className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
+          <StatsCard
+            label="Low Stock"
+            value={products.filter((p: any) => (p.stockQuantity || 0) <= (p.minStockLevel || 0)).length}
+            icon={<AlertTriangle className="h-5 w-5" />}
+            color="border-l-orange-500"
+          />
+          <StatsCard
+            label="Inactive"
+            value={products.filter((p: any) => p.isActive === 0).length}
+            icon={<XCircle className="h-5 w-5" />}
+            color="border-l-red-500"
+          />
         </div>
 
         {/* Products Table */}
         <Card>
           <CardContent className="p-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <span className="text-sm text-muted-foreground">{filteredProducts.length} products</span>
+              <TableColumnSettings columns={productColumns} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} onReset={reset} pageSize={pageSize} onPageSizeChange={updatePageSize} />
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="w-10"><Checkbox checked={selectedProducts.size === filteredProducts.length && filteredProducts.length > 0} onCheckedChange={toggleSelectAllProducts} /></TableHead>
+                  {isVisible("sku") && <TableHead>SKU</TableHead>}
+                  {isVisible("name") && <TableHead>Name</TableHead>}
+                  {isVisible("category") && <TableHead className="hidden md:table-cell">Category</TableHead>}
+                  {isVisible("price") && <TableHead>Price</TableHead>}
+                  {isVisible("stock") && <TableHead>Stock</TableHead>}
+                  {isVisible("status") && <TableHead className="hidden md:table-cell">Status</TableHead>}
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -179,14 +234,14 @@ export default function Products() {
                     <TableRow key={product.id}>
                       <TableCell className="font-medium">{product.sku || "N/A"}</TableCell>
                       <TableCell>{product.name}</TableCell>
-                      <TableCell>{product.category || "Uncategorized"}</TableCell>
+                      <TableCell className="hidden md:table-cell">{product.category || "Uncategorized"}</TableCell>
                       <TableCell>Ksh {(Number(product.unitPrice) / 100).toLocaleString()}</TableCell>
                       <TableCell>
                         <span className={(product.stockQuantity || 0) <= (product.minStockLevel || 0) ? "text-red-600 font-medium" : ""}>
                           {product.stockQuantity} {product.unit || "pcs"}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         {product.isActive !== 0 ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
                         ) : (

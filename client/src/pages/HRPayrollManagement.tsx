@@ -31,8 +31,12 @@ import {
   CheckCircle2,
   Upload,
 } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
+import { useCurrencySettings } from "@/lib/currency";
 
 export default function HRPayrollManagement() {
+  const { code: currencyCode } = useCurrencySettings();
+
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("salaryStructures");
   const utils = trpc.useUtils();
@@ -65,7 +69,7 @@ export default function HRPayrollManagement() {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "KES",
+      currency: currencyCode,
     }).format(value / 100);
   };
 
@@ -88,7 +92,7 @@ export default function HRPayrollManagement() {
       description="Manage employee payroll, benefits, and compensation"
       icon={<DollarSign className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR & Payroll", href: "/payroll" },
       ]}
       actions={
@@ -107,51 +111,37 @@ export default function HRPayrollManagement() {
       <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-              <Users className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{employees.length}</div>
-              <p className="text-xs text-muted-foreground">Active staff</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Employees"
+            value={employees.length}
+            description="Active staff"
+            icon={<Users className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
 
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Payroll</CardTitle>
-              <FileText className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {payrolls.filter((p) => p.status === "draft").length}
-              </div>
-              <p className="text-xs text-muted-foreground">Awaiting processing</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Pending Payroll"
+            value={payrolls.filter((p) => p.status === "draft").length}
+            description="Awaiting processing"
+            icon={<FileText className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
 
-          <Card className="border-l-4 border-l-amber-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Salary Structures</CardTitle>
-              <Percent className="h-4 w-4 text-amber-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{salaryStructures.length}</div>
-              <p className="text-xs text-muted-foreground">Configured</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Salary Structures"
+            value={salaryStructures.length}
+            description="Configured"
+            icon={<Percent className="h-5 w-5" />}
+            color="border-l-amber-500"
+          />
 
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Benefits</CardTitle>
-              <Heart className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{benefits.length}</div>
-              <p className="text-xs text-muted-foreground">Active benefits</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Benefits"
+            value={benefits.length}
+            description="Active benefits"
+            icon={<Heart className="h-5 w-5" />}
+            color="border-l-purple-500"
+          />
         </div>
 
         {/* Main Content Tabs */}
@@ -225,7 +215,7 @@ export default function HRPayrollManagement() {
                             {new Date(structure.effectiveDate).toLocaleDateString()}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => navigate(`/salary-structures/${structure.id}/edit`)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                           </TableCell>
@@ -293,7 +283,29 @@ export default function HRPayrollManagement() {
                         />
                       </div>
                       <div className="flex items-end gap-2">
-                        <Button size="sm" className="bg-blue-600 w-full">Add</Button>
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 w-full"
+                          onClick={() => {
+                            const employeeEl = document.getElementById("allowance-employee") as HTMLSelectElement | null;
+                            const typeEl = document.getElementById("allowance-type") as HTMLInputElement | null;
+                            const amountEl = document.getElementById("allowance-amount") as HTMLInputElement | null;
+                            const employeeId = employeeEl?.value || "";
+                            const allowanceType = (typeEl?.value || "").trim();
+                            const amount = Number(amountEl?.value || 0);
+
+                            if (!employeeId || !allowanceType || amount <= 0) {
+                              toast.error("Select employee, type, and amount before adding");
+                              return;
+                            }
+
+                            toast.success(`Added ${allowanceType} allowance (KES ${amount.toLocaleString()}) to draft`);
+                            if (typeEl) typeEl.value = "";
+                            if (amountEl) amountEl.value = "";
+                          }}
+                        >
+                          Add
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -335,7 +347,7 @@ export default function HRPayrollManagement() {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => navigate(`/allowances/${allowance.id}/edit`)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                           </TableCell>
@@ -402,7 +414,7 @@ export default function HRPayrollManagement() {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => navigate(`/payroll/deductions/${deduction.id}/edit`)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                           </TableCell>
@@ -467,7 +479,7 @@ export default function HRPayrollManagement() {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => navigate(`/payroll/benefits/${benefit.id}/edit`)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                           </TableCell>

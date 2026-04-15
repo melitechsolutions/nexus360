@@ -3,7 +3,7 @@ import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
 import { z } from "zod";
 import { getDb } from "../db";
 import { products } from "../../drizzle/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import * as db from "../db";
 
@@ -20,15 +20,22 @@ export const productsRouter = router({
       offset: z.number().optional(),
       category: z.string().optional(),
     }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const database = await getDb();
         if (!database) return [];
 
-        let query: any = database.select().from(products);
-        
-        if (input?.category) {
+        const orgId = ctx.user.organizationId;
+        let query: any;
+
+        if (orgId && input?.category) {
+          query = database.select().from(products).where(and(eq(products.organizationId, orgId), eq(products.category, input.category)));
+        } else if (orgId) {
+          query = database.select().from(products).where(eq(products.organizationId, orgId));
+        } else if (input?.category) {
           query = database.select().from(products).where(eq(products.category, input.category));
+        } else {
+          query = database.select().from(products);
         }
 
         return await query.limit(input?.limit || 100).offset(input?.offset || 0);
@@ -40,21 +47,35 @@ export const productsRouter = router({
 
   getById: protectedProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return null;
-      const result = await database.select().from(products).where(eq(products.id, input)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const conditions = orgId
+        ? and(eq(products.id, input), eq(products.organizationId, orgId))
+        : eq(products.id, input);
+      const result = await database.select().from(products).where(conditions).limit(1);
       return result[0] || null;
     }),
 
   create: createProcedure
     .input(z.object({
-      productName: z.string().min(1).max(100),
-      description: z.string().max(500).optional(),
-      sku: z.string().max(50).optional(),
-      unitPrice: z.number().positive(),
+      productName: z.string().min(1).max(255),
+      description: z.string().optional(),
+      sku: z.string().max(100).optional(),
+      unitPrice: z.number().nonnegative(),
+      costPrice: z.number().nonnegative().optional(),
       quantity: z.number().nonnegative().optional(),
+      minStockLevel: z.number().nonnegative().optional(),
+      maxStockLevel: z.number().nonnegative().optional(),
+      reorderLevel: z.number().nonnegative().optional(),
+      reorderQuantity: z.number().nonnegative().optional(),
       category: z.string().max(100).optional(),
+      unit: z.string().max(50).optional(),
+      taxRate: z.number().nonnegative().optional(),
+      supplier: z.string().max(255).optional(),
+      location: z.string().max(255).optional(),
+      imageUrl: z.string().url().optional().or(z.literal("")),
       status: z.enum(['active', 'inactive']).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
@@ -70,17 +91,28 @@ export const productsRouter = router({
       }
 
       const id = uuidv4();
-      // Convert price to cents for storage
-      const unitPriceInCents = Math.round(input.unitPrice * 100);
+      const unitPriceInCents = Math.round((input.unitPrice || 0) * 100);
+      const costPriceInCents = input.costPrice ? Math.round(input.costPrice * 100) : null;
       
       await database.insert(products).values({
         id,
+        organizationId: ctx.user.organizationId ?? null,
         name: input.productName,
         description: input.description || '',
         sku: input.sku,
         unitPrice: unitPriceInCents,
+        costPrice: costPriceInCents ?? undefined,
         stockQuantity: input.quantity || 0,
+        minStockLevel: input.minStockLevel || 0,
+        maxStockLevel: input.maxStockLevel || undefined,
+        reorderLevel: input.reorderLevel || undefined,
+        reorderQuantity: input.reorderQuantity || undefined,
         category: input.category,
+        unit: input.unit || 'pcs',
+        taxRate: input.taxRate ? Math.round(input.taxRate * 100) : 0,
+        supplier: input.supplier,
+        location: input.location,
+        imageUrl: input.imageUrl || undefined,
         isActive: input.status === 'inactive' ? 0 : 1,
         createdBy: ctx.user.id,
       } as any);
@@ -112,7 +144,11 @@ export const productsRouter = router({
       const database = await getDb();
       if (!database) throw new Error("Database not available");
 
-      const product = await database.select().from(products).where(eq(products.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const idCondition = orgId
+        ? and(eq(products.id, input.id), eq(products.organizationId, orgId))
+        : eq(products.id, input.id);
+      const product = await database.select().from(products).where(idCondition).limit(1);
       if (!product.length) throw new Error("Product not found");
 
       // Check for duplicate SKU if changing it
@@ -132,7 +168,7 @@ export const productsRouter = router({
       if (input.category) updateData.category = input.category;
       if (input.status) updateData.isActive = input.status === 'inactive' ? 0 : 1;
 
-      await database.update(products).set(updateData).where(eq(products.id, input.id));
+      await database.update(products).set(updateData).where(idCondition);
 
       // Log activity
       await db.logActivity({
@@ -152,10 +188,14 @@ export const productsRouter = router({
       const database = await getDb();
       if (!database) throw new Error("Database not available");
 
-      const product = await database.select().from(products).where(eq(products.id, input)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const idCondition = orgId
+        ? and(eq(products.id, input), eq(products.organizationId, orgId))
+        : eq(products.id, input);
+      const product = await database.select().from(products).where(idCondition).limit(1);
       if (!product.length) throw new Error("Product not found");
 
-      await database.delete(products).where(eq(products.id, input));
+      await database.delete(products).where(idCondition);
 
       // Log activity
       await db.logActivity({
@@ -171,19 +211,25 @@ export const productsRouter = router({
 
   getByCategory: readProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return [];
-
-      return await database.select().from(products).where(eq(products.category, input));
+      const orgId = ctx.user.organizationId;
+      const conditions = orgId
+        ? and(eq(products.category, input), eq(products.organizationId, orgId))
+        : eq(products.category, input);
+      return await database.select().from(products).where(conditions);
     }),
 
   getActive: readProcedure
-    .query(async () => {
+    .query(async ({ ctx }) => {
       const database = await getDb();
       if (!database) return [];
-
-      return await database.select().from(products).where(eq(products.isActive, 1));
+      const orgId = ctx.user.organizationId;
+      const conditions = orgId
+        ? and(eq(products.isActive, 1), eq(products.organizationId, orgId))
+        : eq(products.isActive, 1);
+      return await database.select().from(products).where(conditions);
     }),
 
   getSummary: readProcedure

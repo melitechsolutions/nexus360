@@ -17,11 +17,13 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { DollarSign, ArrowLeft, Loader2, Trash2, Save, Download } from "lucide-react";
 import { APP_TITLE } from "@/const";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 
 export default function EditPayroll() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
+  const companyInfo = useCompanyInfo();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [formData, setFormData] = useState({
     employeeId: "",
@@ -160,9 +162,8 @@ export default function EditPayroll() {
             </div>
             <div class="company-info">
               <strong>${APP_TITLE}</strong><br>
-              P.O. Box 12345-00100<br>
-              Nairobi, Kenya<br>
-              info@melitechsolutions.co.ke
+              ${companyInfo.address ? companyInfo.address + '<br>' : ''}
+              ${companyInfo.email || ''}
             </div>
           </div>
           
@@ -243,7 +244,7 @@ export default function EditPayroll() {
         description="Update payroll record"
         icon={<DollarSign className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "HR", href: "/hr" },
           { label: "Payroll", href: "/payroll" },
           { label: "Edit Payroll" },
@@ -262,7 +263,7 @@ export default function EditPayroll() {
       description="Update payroll record"
       icon={<DollarSign className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Payroll", href: "/payroll" },
         { label: "Edit Payroll" },

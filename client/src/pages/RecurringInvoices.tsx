@@ -40,8 +40,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { Plus, Trash2, Edit2, Play, Clock } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
 
 type RecurringInvoice = {
   id: string;
@@ -215,14 +216,19 @@ export function RecurringInvoices() {
   }, [recurringList]);
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Recurring Invoices"
+      description="Manage automated invoice generation"
+      icon={<Clock className="h-6 w-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Invoices", href: "/invoices" },
+        { label: "Recurring" },
+      ]}
+    >
       <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold">Recurring Invoices</h1>
-          <p className="text-gray-600">Manage automated invoice generation</p>
-        </div>
+      {/* Create/Edit Dialog */}
+      <div className="flex justify-end">
         <Dialog open={isOpen} onOpenChange={(open) => {
           setIsOpen(open);
           if (!open) {
@@ -388,30 +394,9 @@ export function RecurringInvoices() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-500">{stats.inactive}</div>
-          </CardContent>
-        </Card>
+        <StatsCard label="Total" value={stats.total} color="border-l-purple-500" />
+        <StatsCard label="Active" value={stats.active} color="border-l-green-500" />
+        <StatsCard label="Inactive" value={stats.inactive} color="border-l-blue-500" />
       </div>
 
       {/* Table */}
@@ -419,11 +404,11 @@ export function RecurringInvoices() {
         <CardHeader>
           <CardTitle>Recurring Invoice List</CardTitle>
           <CardDescription>
-            {recurringList?.length || 0} recurring invoices configured
+            {Array.isArray(recurringList) ? recurringList.length : 0} recurring invoices configured
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!recurringList || recurringList.length === 0 ? (
+          {!Array.isArray(recurringList) || recurringList.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No recurring invoices yet. Create one to get started.
             </div>
@@ -442,7 +427,7 @@ export function RecurringInvoices() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recurringList.map((recurring: any) => (
+                  {Array.isArray(recurringList) && recurringList.map((recurring: any) => (
                     <TableRow key={recurring.id}>
                       <TableCell className="font-medium">
                         {getClientName(recurring.clientId)}
@@ -544,6 +529,8 @@ export function RecurringInvoices() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }
+
+export default RecurringInvoices;

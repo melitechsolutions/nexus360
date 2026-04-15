@@ -53,6 +53,7 @@ import {
   Filter,
   RefreshCw,
 } from 'lucide-react';
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function InventoryManagement() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -162,7 +163,7 @@ export default function InventoryManagement() {
       description="Manage product inventory, stock levels, and reorder points"
       icon={<Package className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Procurement", href: "/lpos" },
         { label: "Inventory" },
       ]}
@@ -183,40 +184,10 @@ export default function InventoryManagement() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-500">Total Items</p>
-                <p className="text-3xl font-bold mt-2">{stats.totalItems}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-500">Low Stock Items</p>
-                <p className="text-3xl font-bold text-yellow-600 mt-2">{stats.lowStockItems}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-500">Out of Stock</p>
-                <p className="text-3xl font-bold text-red-600 mt-2">{stats.outOfStock}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-500">Total Value</p>
-                <p className="text-3xl font-bold mt-2">
-                  KES {(stats.totalValue / 100).toLocaleString()}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Items" value={stats.totalItems} color="border-l-orange-500" />
+          <StatsCard label="Low Stock Items" value={stats.lowStockItems} color="border-l-purple-500" />
+          <StatsCard label="Out of Stock" value={stats.outOfStock} color="border-l-green-500" />
+          <StatsCard label="Total Value" value={<>KES {(stats.totalValue / 100).toLocaleString()}</>} color="border-l-blue-500" />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -240,10 +211,16 @@ export default function InventoryManagement() {
                       className="pl-10"
                     />
                   </div>
-                  <Button variant="outline">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm("");
+                      toast.success("Filters reset. Use search and tabs to narrow results.");
+                    }}
+                  >
                     <Filter className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => { refetchInventories(); toast.success("Inventory refreshed"); }}>
                     <RefreshCw className="h-4 w-4" />
                   </Button>
                 </div>
@@ -266,10 +243,10 @@ export default function InventoryManagement() {
                         <TableRow>
                           <TableHead>SKU</TableHead>
                           <TableHead>Product</TableHead>
-                          <TableHead>Category</TableHead>
+                          <TableHead className="hidden md:table-cell">Category</TableHead>
                           <TableHead className="text-right">Quantity</TableHead>
-                          <TableHead className="text-right">Reorder Level</TableHead>
-                          <TableHead className="text-right">Unit Cost</TableHead>
+                          <TableHead className="hidden lg:table-cell text-right">Reorder Level</TableHead>
+                          <TableHead className="hidden md:table-cell text-right">Unit Cost</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -286,14 +263,14 @@ export default function InventoryManagement() {
                             <TableRow key={item.id}>
                               <TableCell className="font-mono text-sm">{item.sku}</TableCell>
                               <TableCell className="font-medium">{item.productName}</TableCell>
-                              <TableCell>{item.category}</TableCell>
+                              <TableCell className="hidden md:table-cell">{item.category}</TableCell>
                               <TableCell className="text-right font-semibold">
                                 {item.quantity || 0}
                               </TableCell>
-                              <TableCell className="text-right text-gray-500">
+                              <TableCell className="hidden lg:table-cell text-right text-gray-500">
                                 {item.reorderLevel || 0}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="hidden md:table-cell text-right">
                                 KES {((item.unitCost || 0) / 100).toLocaleString()}
                               </TableCell>
                               <TableCell>

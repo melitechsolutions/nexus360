@@ -130,7 +130,7 @@ export const inventoryRouter = router({
             stockQuantity: input.quantity,
             reorderPoint: input.reorderLevel,
             unitPrice: input.unitCost,
-            updatedAt: new Date().toISOString().split('T')[0],
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19).split('T')[0],
           })
           .where(eq(products.id, input.productId));
 
@@ -208,7 +208,7 @@ export const inventoryRouter = router({
           .update(products)
           .set({
             stockQuantity: newQuantity,
-            updatedAt: new Date().toISOString().split('T')[0],
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19).split('T')[0],
           })
           .where(eq(products.id, input.productId));
 
@@ -371,7 +371,7 @@ export const inventoryRouter = router({
               .update(products)
               .set({
                 stockQuantity: newQuantity,
-                updatedAt: new Date().toISOString().split('T')[0],
+                updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19).split('T')[0],
               })
               .where(eq(products.id, adjustment.productId));
 

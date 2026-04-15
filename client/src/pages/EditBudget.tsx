@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, PiggyBank } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useCurrencySettings } from "@/lib/currency";
 
 export default function EditBudget() {
   const [, navigate] = useLocation();
@@ -24,6 +25,7 @@ export default function EditBudget() {
   });
   
   const { data: departments } = trpc.departments.list.useQuery();
+  const { code: currencyCode } = useCurrencySettings();
   const updateBudgetMutation = trpc.budgets.update.useMutation({
     onSuccess: () => {
       toast.success("Budget updated successfully");
@@ -36,7 +38,7 @@ export default function EditBudget() {
 
   useEffect(() => {
     if (budget) {
-      setAmount((budget.amount / 100).toString());
+      setAmount(budget.amount.toString());
       setFiscalYear(budget.fiscalYear?.toString() || "");
       setDepartmentName(budget.departmentName || "");
     }
@@ -50,11 +52,11 @@ export default function EditBudget() {
       return;
     }
 
-    const amountInCents = Math.round(parseFloat(amount) * 100);
+    const parsedAmount = Math.round(parseFloat(amount));
 
     updateBudgetMutation.mutate({
       id: budgetId,
-      amount: amountInCents,
+      amount: parsedAmount,
       fiscalYear: parseInt(fiscalYear),
     });
   };
@@ -84,7 +86,7 @@ export default function EditBudget() {
       description="Update budget details and allocation"
       icon={<PiggyBank className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Budgets", href: "/budgets" },
         { label: "Edit Budget" },
       ]}
@@ -132,7 +134,7 @@ export default function EditBudget() {
                 step="0.01"
               />
               <p className="text-sm text-gray-500">
-                {amount ? `≈ ${new Intl.NumberFormat("en-US", { style: "currency", currency: "KES" }).format(parseFloat(amount))}` : "Enter an amount"}
+                {amount ? `≈ ${new Intl.NumberFormat("en-US", { style: "currency", currency: currencyCode }).format(parseFloat(amount))}` : "Enter an amount"}
               </p>
             </div>
 

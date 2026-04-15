@@ -23,10 +23,16 @@ import {
   Mail,
   Upload,
   TrendingDown,
+  Shield,
+  Menu,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { trpc } from "@/lib/trpc";
+import { StatsCard } from "@/components/ui/stats-card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 /**
  * AdminDashboard component
@@ -44,6 +50,7 @@ export default function AdminDashboard() {
   });
   const [, setLocation] = useLocation();
   const [staffSearch, setStaffSearch] = useState("");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Fetch dashboard metrics from backend
   const { data: metrics, isLoading: metricsLoading } = trpc.dashboard.metrics.useQuery();
@@ -225,77 +232,133 @@ export default function AdminDashboard() {
     },
   ];
 
+  // Mini sidebar items for responsive design
+  const sidebarItems = [
+    { title: "Projects", icon: FolderKanban, href: "/projects" },
+    { title: "Clients", icon: Users, href: "/clients" },
+    { title: "Invoices", icon: FileText, href: "/invoices" },
+    { title: "Payments", icon: DollarSign, href: "/payments" },
+    { title: "HR", icon: UserCog, href: "/hr" },
+    { title: "Staff Chat", icon: Mail, href: "/staff-chat" },
+    { title: "Reports", icon: BarChart3, href: "/reports" },
+    { title: "Settings", icon: UserCog, href: "/admin/management" },
+  ];
+
   return (
-    <DashboardLayout
-      title="Admin Dashboard"
-      user={user}
-      onLogout={handleLogout}
-    >
-      <div className="space-y-8">
-        {/* Admin Welcome Section */}
-        <div className="bg-gradient-to-r from-slate-700 to-slate-900 rounded-lg p-8 text-white">
-          <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-lg opacity-90 mb-4">
-            Manage organization, departments, staff, and system settings.
-          </p>
-          <div className="flex gap-4">
-            <Button 
-              onClick={() => setLocation("/admin/management")}
-              className="gap-2 bg-white hover:bg-slate-100 text-slate-900"
-            >
-              <UserCog className="w-4 h-4" />
-              Staff Management
-            </Button>
-            <Button 
-              className="bg-white text-slate-900 hover:bg-gray-100"
-              onClick={() => setLocation("/crm")}
-            >
-              Go to Main Dashboard
-            </Button>
+    <div className="flex h-screen bg-background">
+      {/* Desktop Mini Sidebar */}
+      <div className="hidden md:flex md:w-60 md:flex-col md:border-r md:bg-card">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            Admin
+          </h2>
+        </div>
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          {sidebarItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.href}
+                onClick={() => {
+                  setLocation(item.href);
+                  setMobileNavOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition hover:bg-muted"
+              >
+                <Icon className="w-4 h-4" />
+                <span className="truncate">{item.title}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {mobileNavOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setMobileNavOpen(false)}
+        >
+          <div
+            className="fixed left-0 top-0 h-full w-64 bg-card flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                Admin
+              </h2>
+              <button onClick={() => setMobileNavOpen(false)}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.href}
+                    onClick={() => {
+                      setLocation(item.href);
+                      setMobileNavOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition hover:bg-muted"
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="truncate">{item.title}</span>
+                  </button>
+                );
+              })}
+            </nav>
           </div>
         </div>
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between p-4 border-b bg-card">
+          <h1 className="text-lg font-semibold">Admin Dashboard</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-auto">
+          <ModuleLayout
+            title="Admin Dashboard"
+            description="Manage organization, departments, staff, and system settings"
+            icon={<Shield className="h-5 w-5" />}
+            breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Admin" }]}
+            actions={
+              <div className="flex gap-2">
+                <Button onClick={() => setLocation("/admin/management")} variant="secondary" size="sm" className="gap-2">
+                  <UserCog className="w-4 h-4" />
+                  Staff Management
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => setLocation("/crm-home")}>
+                  Go to Main Dashboard
+                </Button>
+              </div>
+            }
+          >
+            <div className="space-y-8">
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Total Staff</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">{totalStaff}</div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{activeStaff} active</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Staff" value={totalStaff} description={<>{activeStaff} active</>} color="border-l-orange-500" />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Departments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">{totalDepartments}</div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{activeDepartments} active</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Departments" value={totalDepartments} description={<>{activeDepartments} active</>} color="border-l-purple-500" />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Pending Approvals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{pendingLeaves}</div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Leave requests</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Pending Approvals" value={pendingLeaves} description="Leave requests" color="border-l-green-500" />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Active Projects</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">{activeProjects}</div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">In progress</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Active Projects" value={activeProjects} description="In progress" color="border-l-blue-500" />
         </div>
 
         {/* Module Features Grid */}
@@ -389,14 +452,14 @@ export default function AdminDashboard() {
                 <CardContent className="space-y-2">
                   <Button 
                     className="w-full justify-start"
-                    onClick={() => setLocation("/employees/new")}
+                    onClick={() => setLocation("/employees/create")}
                   >
                     Add New Staff Member
                   </Button>
                   <Button 
                     variant="outline" 
                     className="w-full justify-start"
-                    onClick={() => setLocation("/departments/new")}
+                    onClick={() => setLocation("/departments/create")}
                   >
                     Create Department
                   </Button>
@@ -428,7 +491,7 @@ export default function AdminDashboard() {
                     <CardTitle className="text-slate-900 dark:text-slate-50">Department Management</CardTitle>
                     <CardDescription className="text-slate-600 dark:text-slate-300">Manage organization departments</CardDescription>
                   </div>
-                  <Button onClick={() => setLocation("/departments/new")}>Add Department</Button>
+                  <Button onClick={() => setLocation("/departments/create")}>Add Department</Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -490,7 +553,7 @@ export default function AdminDashboard() {
                     <CardTitle className="text-slate-900 dark:text-slate-50">Staff Management</CardTitle>
                     <CardDescription className="text-slate-600 dark:text-slate-300">Manage organization staff members</CardDescription>
                   </div>
-                  <Button onClick={() => setLocation("/employees/new")}>Add Staff</Button>
+                  <Button onClick={() => setLocation("/employees/create")}>Add Staff</Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -511,23 +574,23 @@ export default function AdminDashboard() {
                     </div>
                   ) : filteredStaff.length > 0 ? (
                     <div className="border rounded-lg overflow-hidden">
-                      <table className="w-full">
-                        <thead className="bg-slate-50 dark:bg-slate-900/40 border-b">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-200">Name</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-200">Department</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-200">Position</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-200">Status</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-200">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Department</TableHead>
+                            <TableHead>Position</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
                           {filteredStaff.map((employee: any) => (
-                            <tr key={employee.id} className="border-b hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                              <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">{employee.name || "N/A"}</td>
-                              <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">{employee.department || "Unassigned"}</td>
-                              <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">{employee.position || "N/A"}</td>
-                              <td className="px-4 py-3 text-sm">
+                            <TableRow key={employee.id}>
+                              <TableCell>{employee.name || "N/A"}</TableCell>
+                              <TableCell>{employee.department || "Unassigned"}</TableCell>
+                              <TableCell>{employee.position || "N/A"}</TableCell>
+                              <TableCell>
                                 <span className={`px-2 py-1 rounded text-xs ${
                                   employee.status === "active" 
                                     ? "bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-200" 
@@ -535,8 +598,8 @@ export default function AdminDashboard() {
                                 }`}>
                                   {employee.status || "Unknown"}
                                 </span>
-                              </td>
-                              <td className="px-4 py-3 text-sm">
+                              </TableCell>
+                              <TableCell>
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
@@ -544,11 +607,11 @@ export default function AdminDashboard() {
                                 >
                                   Edit
                                 </Button>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     </div>
                   ) : (
                     <div className="text-center py-8 text-slate-500 dark:text-slate-400">
@@ -602,7 +665,10 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+            </div>
+          </ModuleLayout>
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

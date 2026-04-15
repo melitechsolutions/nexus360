@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melitech CRM — Comprehensive Platform Documentation</title>
+<style>
+  @page {
+    size: A4;
+    margin: 22mm 20mm 28mm 20mm;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #1e293b;
+    line-height: 1.6;
+    font-size: 11pt;
+    background: #fff;
+    padding: 32px 40px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1, h2, h3, h4 { color: #0f172a; font-weight: 700; }
+  h1 { font-size: 26pt; margin-bottom: 12px; }
+  h2 { font-size: 18pt; margin: 36px 0 16px 0; border-bottom: 3px solid #2563eb; padding-bottom: 8px; page-break-after: avoid; }
+  h3 { font-size: 14pt; margin: 24px 0 10px 0; color: #1e40af; page-break-after: avoid; }
+  h4 { font-size: 12pt; margin: 18px 0 8px 0; color: #334155; }
+  p { margin-bottom: 12px; line-height: 1.7; }
+  ul, ol { margin: 10px 0 16px 28px; }
+  li { margin-bottom: 6px; line-height: 1.6; }
+  code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-size: 10pt; font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; }
+
+  /* Cover Page */
+  .cover {
+    page-break-after: always;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 90vh; text-align: center;
+    padding: 60px 40px;
+  }
+  .cover .logo-box {
+    width: 120px; height: 120px; background: linear-gradient(135deg, #2563eb, #7c3aed);
+    border-radius: 24px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 28px; box-shadow: 0 8px 30px rgba(37,99,235,0.3);
+  }
+  .cover .logo-box span { color: #fff; font-size: 48pt; font-weight: 800; }
+  .cover h1 { font-size: 38pt; color: #0f172a; margin-bottom: 6px; }
+  .cover .subtitle { font-size: 16pt; color: #475569; margin-bottom: 32px; font-weight: 400; }
+  .cover .meta { font-size: 10pt; color: #94a3b8; margin-top: 40px; line-height: 2; }
+
+  /* TOC */
+  .toc { page-break-after: always; padding: 20px 0; }
+  .toc h2 { border-bottom: 3px solid #2563eb; }
+  .toc ol { counter-reset: toc; list-style: none; margin-left: 0; padding: 8px 0; }
+  .toc > ol > li { counter-increment: toc; margin-bottom: 10px; padding: 4px 0; font-size: 11.5pt; }
+  .toc > ol > li::before { content: counter(toc) ". "; font-weight: 700; color: #2563eb; }
+  .toc > ol > li > ol { margin-top: 6px; margin-left: 28px; }
+  .toc a { color: #1e40af; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* Screenshot */
+  .screenshot {
+    border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;
+    margin: 16px 0 24px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    page-break-inside: avoid;
+  }
+  .screenshot img { width: 100%; display: block; padding: 4px; }
+  .screenshot .caption {
+    background: #f8fafc; padding: 8px 16px; font-size: 9pt; color: #64748b;
+    text-align: center; border-top: 1px solid #e2e8f0;
+  }
+
+  /* Tables */
+  table {
+    width: 100%; border-collapse: collapse; margin: 14px 0 24px 0;
+    font-size: 10pt; page-break-inside: avoid;
+  }
+  thead { background: #1e40af; color: #fff; }
+  th { padding: 10px 14px; text-align: left; font-weight: 600; }
+  td { padding: 9px 14px; border-bottom: 1px solid #e2e8f0; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { background: #eff6ff; }
+
+  /* Feature Grid */
+  .feature-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    margin: 12px 0 18px 0; page-break-inside: avoid;
+  }
+  .feature-card {
+    border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px 20px;
+    background: #f8fafc;
+  }
+  .feature-card h4 { margin: 0 0 8px 0; font-size: 11pt; color: #1e40af; }
+  .feature-card p { margin: 0; font-size: 10pt; color: #475569; line-height: 1.6; }
+
+  /* Badge */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 12px;
+    font-size: 8pt; font-weight: 600; margin-right: 4px;
+  }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-purple { background: #f3e8ff; color: #6b21a8; }
+  .badge-orange { background: #ffedd5; color: #9a3412; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+
+  /* Stats Row */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    margin: 16px 0 20px 0; page-break-inside: avoid;
+  }
+  .stat-box {
+    text-align: center; padding: 20px 14px; border-radius: 10px;
+    border: 1px solid #e2e8f0;
+  }
+  .stat-box .num { font-size: 24pt; font-weight: 800; color: #2563eb; }
+  .stat-box .label { font-size: 9pt; color: #64748b; margin-top: 2px; }
+
+  /* Pricing Table */
+  .pricing-table th { text-align: center; }
+  .pricing-table td { text-align: center; }
+  .pricing-table td:first-child, .pricing-table th:first-child { text-align: left; }
+  .check { color: #16a34a; font-weight: 700; }
+  .cross { color: #dc2626; }
+
+  /* Architecture */
+  .arch-box {
+    background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 24px 28px;
+    font-family: 'Cascadia Code', Consolas, monospace; font-size: 9.5pt;
+    line-height: 1.7; white-space: pre; overflow-x: auto;
+    margin: 16px 0 24px 0; page-break-inside: avoid;
+  }
+
+  /* Section break */
+  .section-break { page-break-before: always; padding-top: 8px; }
+
+  /* Info box */
+  .info-box {
+    background: #eff6ff; border-left: 4px solid #2563eb; padding: 16px 20px;
+    border-radius: 0 6px 6px 0; margin: 16px 0 20px 0; font-size: 10pt;
+    line-height: 1.6;
+  }
+
+  /* Footer */
+  .page-footer {
+    margin-top: 48px; padding: 20px 0 12px 0; border-top: 2px solid #e2e8f0;
+    text-align: center; font-size: 8pt; color: #94a3b8;
+  }
+
+  /* Print-specific overrides */
+  @media print {
+    body { padding: 0; max-width: none; margin: 0; }
+    .section-break { padding-top: 0; }
+    .cover { padding: 80px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ====================== COVER PAGE ====================== -->
+<div class="cover">
+  <div class="logo-box"><span>M</span></div>
+  <h1>Melitech CRM</h1>
+  <div class="subtitle">Comprehensive Platform Documentation</div>
+  <p style="font-size:12pt; color:#64748b; max-width:480px;">
+    Enterprise Customer Relationship Management, Accounting, HR, Procurement, Multi-Tenancy &amp; Business Intelligence Platform
+  </p>
+  <div class="meta">
+    <strong>Version:</strong> 2.0 &nbsp;|&nbsp; <strong>Date:</strong> July 2025<br>
+    <strong>Author:</strong> Melitech Solutions Ltd.<br>
+    <strong>Contact:</strong> info@melitechsolutions.co.ke<br>
+    <strong>Classification:</strong> Confidential
+  </div>
+</div>
+
+<!-- ====================== TABLE OF CONTENTS ====================== -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><a href="#overview">Platform Overview</a></li>
+    <li><a href="#architecture">Technical Architecture</a></li>
+    <li><a href="#dashboard">Dashboard &amp; Navigation</a></li>
+    <li><a href="#crm">CRM — Client Management</a></li>
+    <li><a href="#sales">Sales &amp; Invoicing</a></li>
+    <li><a href="#accounting">Accounting &amp; Finance</a></li>
+    <li><a href="#hr">Human Resources</a></li>
+    <li><a href="#procurement">Procurement &amp; Inventory</a></li>
+    <li><a href="#projects">Project Management</a></li>
+    <li><a href="#products">Products &amp; Services</a></li>
+    <li><a href="#communications">Communications &amp; Messaging</a></li>
+    <li><a href="#reports">Reports &amp; Analytics</a></li>
+    <li><a href="#multitenancy">Enterprise Multi-Tenancy</a></li>
+    <li><a href="#pricing">Pricing Tiers &amp; Feature Access</a></li>
+    <li><a href="#tools">Tools &amp; Administration</a></li>
+    <li><a href="#security">Security &amp; Authentication</a></li>
+    <li><a href="#roles">Roles &amp; Permissions</a></li>
+    <li><a href="#integrations">Integrations &amp; APIs</a></li>
+    <li><a href="#deployment">Deployment &amp; DevOps</a></li>
+    <li><a href="#appendix">Appendix — Module Summary</a></li>
+  </ol>
+</div>
+
+<!-- ====================== 1. PLATFORM OVERVIEW ====================== -->
+<div class="section-break" id="overview">
+  <h2>1. Platform Overview</h2>
+  <p>
+    <strong>Melitech CRM</strong> is an enterprise-grade, multi-tenant Customer Relationship Management platform built for organisations operating across East Africa and beyond.
+    It unifies client management, invoicing, accounting, human resources, procurement, project management, communications, and business intelligence into a single, cohesive web application.
+  </p>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="num">194</div>
+      <div class="label">Frontend Pages</div>
+    </div>
+    <div class="stat-box">
+      <div class="num">108</div>
+      <div class="label">API Routers</div>
+    </div>
+    <div class="stat-box">
+      <div class="num">150+</div>
+      <div class="label">Permissions</div>
+    </div>
+    <div class="stat-box">
+      <div class="num">12</div>
+      <div class="label">Core Modules</div>
+    </div>
+  </div>
+
+  <h3>Key Capabilities</h3>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h4>&#128101; Client &amp; Contact Management</h4>
+      <p>Full lifecycle client records, custom fields, organisation linkages, activity timelines, and bulk operations.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#128176; Sales &amp; Revenue</h4>
+      <p>Invoices, recurring billing, estimates, quotations, sales pipeline, opportunities, credit/debit notes, and receipts.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#128200; Accounting &amp; Finance</h4>
+      <p>Chart of Accounts, payments, expenses, budgets, bank reconciliation, tax compliance, and financial forecasting.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#128188; Human Resources</h4>
+      <p>Employee management, departments, attendance, payroll with Kenyan tax engine, leave management, job groups, performance reviews.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#128722; Procurement</h4>
+      <p>Suppliers, LPOs, purchase orders, GRNs, inventory management, delivery notes, and imprests.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#128736; Project Management</h4>
+      <p>Projects with milestones, work orders, time tracking, service invoices, and project analytics.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#127970; Multi-Tenancy</h4>
+      <p>Enterprise multi-organisation support with tenant isolation, pricing tiers, feature flags, and centralised communications.</p>
+    </div>
+    <div class="feature-card">
+      <h4>&#128202; Business Intelligence</h4>
+      <p>Advanced reports, KPI tracking, report builder, revenue forecasting, conversion analytics, and real-time dashboards.</p>
+    </div>
+  </div>
+
+  <div class="screenshot">
+    <img src="screenshots/29_landing_page.png" alt="Melitech CRM Landing Page">
+    <div class="caption">Figure 1.1 — Melitech CRM Landing Page</div>
+  </div>
+</div>
+
+<!-- ====================== 2. TECHNICAL ARCHITECTURE ====================== -->
+<div class="section-break" id="architecture">
+  <h2>2. Technical Architecture</h2>
+
+  <h3>Technology Stack</h3>
+  <table>
+    <thead><tr><th>Layer</th><th>Technology</th><th>Details</th></tr></thead>
+    <tbody>
+      <tr><td>Frontend</td><td>React 18 + TypeScript</td><td>Single Page Application with Vite build tool</td></tr>
+      <tr><td>UI Framework</td><td>Tailwind CSS + shadcn/ui</td><td>Radix primitives, custom theme engine</td></tr>
+      <tr><td>Charts</td><td>Recharts</td><td>Interactive graphs, dashboards, analytics</td></tr>
+      <tr><td>API Layer</td><td>tRPC v11</td><td>End-to-end type-safe RPC with Zod validation</td></tr>
+      <tr><td>Backend</td><td>Node.js + Express</td><td>REST + tRPC hybrid, JWT authentication</td></tr>
+      <tr><td>ORM</td><td>Drizzle ORM</td><td>Type-safe MySQL queries, migration system</td></tr>
+      <tr><td>Database</td><td>MySQL 8</td><td>utf8mb4 collation, JSON columns, full-text search</td></tr>
+      <tr><td>Payments</td><td>Stripe + M-Pesa</td><td>Card payments, STK push mobile money</td></tr>
+      <tr><td>Icons</td><td>Lucide React</td><td>Consistent icon set across all modules</td></tr>
+      <tr><td>Deployment</td><td>Docker</td><td>Multi-container with docker-compose</td></tr>
+    </tbody>
+  </table>
+
+  <h3>System Architecture</h3>
+  <div class="arch-box">┌──────────────────────────────────────────────────────────────────┐
+│                      CLIENT (Browser)                            │
+│   React 18 + TypeScript + Vite + Tailwind + shadcn/ui            │
+│   ├── wouter (Routing)                                           │
+│   ├── @tanstack/react-query (Data Fetching &amp; Caching)            │
+│   └── tRPC Client (Type-safe API Calls)                          │
+├──────────────────────────────────────────────────────────────────┤
+│                   API LAYER (tRPC v11)                            │
+│   ├── 108 Routers (Sales, HR, Accounting, etc.)                  │
+│   ├── Zod v4 Input/Output Validation                             │
+│   ├── JWT Authentication Middleware                               │
+│   └── Role-based Permission Enforcement                          │
+├──────────────────────────────────────────────────────────────────┤
+│                   BACKEND (Node.js + Express)                     │
+│   ├── Drizzle ORM (Type-safe DB Access)                          │
+│   ├── bcryptjs (Password Hashing, 10 rounds)                     │
+│   ├── Email Service (Template-based, queued)                     │
+│   ├── SMS Service (Africa's Talking integration)                 │
+│   ├── Scheduler (Cron jobs, invoice reminders)                   │
+│   └── File Upload Handler                                        │
+├──────────────────────────────────────────────────────────────────┤
+│                     DATABASE (MySQL 8)                            │
+│   ├── 50+ Tables (organisations, users, invoices, etc.)          │
+│   ├── JSON Columns (settings, metadata, custom fields)           │
+│   ├── Foreign Keys + Cascading Constraints                       │
+│   └── 52 Migrations (Drizzle migration system)                   │
+└──────────────────────────────────────────────────────────────────┘</div>
+
+  <h3>Database Entity Relationship Overview</h3>
+  <table>
+    <thead><tr><th>Entity Group</th><th>Tables</th><th>Key Relationships</th></tr></thead>
+    <tbody>
+      <tr><td>Authentication</td><td>users, sessions, password_resets</td><td>users → organizations</td></tr>
+      <tr><td>CRM</td><td>clients, contacts, activities, custom_fields</td><td>clients → organizations, contacts → clients</td></tr>
+      <tr><td>Sales</td><td>invoices, invoice_items, estimates, opportunities, receipts, credit_notes, debit_notes</td><td>invoices → clients, items → invoices</td></tr>
+      <tr><td>Accounting</td><td>payments, expenses, chart_of_accounts, budgets, bank_reconciliation</td><td>payments → invoices, expenses → categories</td></tr>
+      <tr><td>HR</td><td>employees, departments, attendance, payroll, leave_requests, job_groups</td><td>employees → departments, payroll → employees</td></tr>
+      <tr><td>Procurement</td><td>suppliers, lpos, grn, inventory, delivery_notes</td><td>lpos → suppliers, grn → lpos</td></tr>
+      <tr><td>Projects</td><td>projects, milestones, work_orders, time_tracking</td><td>milestones → projects, work_orders → projects</td></tr>
+      <tr><td>Multi-Tenancy</td><td>organizations, organization_features, pricing_tier_features, tenant_messages</td><td>org_features → organizations, users → organizations</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 3. DASHBOARD ====================== -->
+<div class="section-break" id="dashboard">
+  <h2>3. Dashboard &amp; Navigation</h2>
+  <p>
+    Melitech CRM provides <strong>role-specific dashboards</strong> tailored to each user type. Upon login, users are automatically routed to their personalised dashboard with relevant metrics, quick actions, and module shortcuts.
+  </p>
+
+  <h3>Available Dashboards</h3>
+  <table>
+    <thead><tr><th>Role</th><th>Dashboard Route</th><th>Key Widgets</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-red">Super Admin</span></td><td>/crm/super-admin</td><td>Organisation stats, system health, user metrics, revenue overview, all modules</td></tr>
+      <tr><td><span class="badge badge-purple">Admin</span></td><td>/crm/admin</td><td>User management, approvals, full module access</td></tr>
+      <tr><td><span class="badge badge-blue">HR Manager</span></td><td>/crm/hr</td><td>Employee count, attendance today, leave requests, payroll summary</td></tr>
+      <tr><td><span class="badge badge-green">Accountant</span></td><td>/crm/accountant</td><td>Revenue overview, outstanding invoices, expense tracking, P&amp;L</td></tr>
+      <tr><td><span class="badge badge-orange">Project Manager</span></td><td>/crm/project-manager</td><td>Active projects, milestones, team workload, deadlines</td></tr>
+      <tr><td><span class="badge badge-blue">Procurement</span></td><td>/crm/procurement</td><td>Pending LPOs, inventory alerts, supplier metrics</td></tr>
+      <tr><td><span class="badge badge-green">Sales Manager</span></td><td>/crm/sales</td><td>Pipeline value, conversion rates, top clients, forecasts</td></tr>
+      <tr><td><span class="badge badge-blue">ICT Manager</span></td><td>/crm/ict</td><td>System health, tickets, integrations status</td></tr>
+      <tr><td><span class="badge badge-orange">Staff</span></td><td>/crm/staff</td><td>My tasks, attendance, leave balance, team chat</td></tr>
+    </tbody>
+  </table>
+
+  <div class="screenshot">
+    <img src="screenshots/02_super_admin_dashboard.png" alt="Super Admin Dashboard">
+    <div class="caption">Figure 3.1 — Super Admin Dashboard with system-wide metrics and quick actions</div>
+  </div>
+
+  <div class="screenshot">
+    <img src="screenshots/03_crm_dashboard.png" alt="CRM Dashboard">
+    <div class="caption">Figure 3.2 — Main CRM Dashboard with module shortcuts, KPI widgets, and recent activity feed</div>
+  </div>
+
+  <h3>Sidebar Navigation</h3>
+  <p>
+    The collapsible sidebar adapts to the user's role, showing only modules the user has permission to access. Super admins see the full navigation with 14 top-level sections and 80+ sub-items.
+  </p>
+
+  <h4>Navigation Sections (Super Admin View)</h4>
+  <table>
+    <thead><tr><th>Section</th><th>Sub-Items</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard</td><td>1</td><td>Role-specific home dashboard</td></tr>
+      <tr><td>Admin</td><td>2</td><td>User management, approvals</td></tr>
+      <tr><td>Clients</td><td>1</td><td>Client directory and management</td></tr>
+      <tr><td>Projects</td><td>1</td><td>Project management hub</td></tr>
+      <tr><td>Sales</td><td>11</td><td>Invoices, estimates, quotations, receipts, pipeline, credit/debit notes</td></tr>
+      <tr><td>Accounting</td><td>11</td><td>Payments, expenses, CoA, reconciliation, budgets, tax, billing</td></tr>
+      <tr><td>HR</td><td>7</td><td>Employees, departments, attendance, payroll, leave, reviews</td></tr>
+      <tr><td>Procurement</td><td>7</td><td>Suppliers, LPOs, orders, imprests, inventory, delivery, GRNs</td></tr>
+      <tr><td>Assets &amp; Contracts</td><td>4</td><td>Assets, contracts, warranty, work orders</td></tr>
+      <tr><td>Products &amp; Services</td><td>3</td><td>Products, services, service templates</td></tr>
+      <tr><td>Reports</td><td>9</td><td>Financial, sales, HR, KPI, report builder, activity trail</td></tr>
+      <tr><td>Communications</td><td>5</td><td>Email, tickets, notifications, team chat, AI assistant</td></tr>
+      <tr><td>Enterprise</td><td>5</td><td>Multi-tenancy, tenant admins, pricing, comms, settings</td></tr>
+      <tr><td>Tools</td><td>14</td><td>System settings, backups, themes, custom fields, workflows, integrations</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 4. CRM — CLIENT MANAGEMENT ====================== -->
+<div class="section-break" id="crm">
+  <h2>4. CRM — Client Management</h2>
+  <p>
+    The CRM module is the core of client relationship tracking. It provides a comprehensive client registry with full contact details, activity history, associated invoices, projects, and customisable fields.
+  </p>
+
+  <h3>Features</h3>
+  <ul>
+    <li><strong>Client Directory</strong> — Searchable, paginated list with bulk operations and CSV/PDF export</li>
+    <li><strong>Client Profiles</strong> — Detailed view with tabs for contacts, invoices, projects, payments, activities</li>
+    <li><strong>Custom Fields</strong> — 14+ field types (text, number, date, dropdown, checkbox, etc.) per entity</li>
+    <li><strong>Advanced Filtering</strong> — Dynamic filters with saved filter presets</li>
+    <li><strong>Bulk Operations</strong> — Multi-select with batch status updates, export, and delete</li>
+    <li><strong>Activity Timeline</strong> — Complete audit trail of all client interactions</li>
+    <li><strong>Organisation Linking</strong> — Associate clients with parent companies or groups</li>
+    <li><strong>Data Import</strong> — Excel/CSV bulk import with field mapping</li>
+  </ul>
+
+  <div class="screenshot">
+    <img src="screenshots/04_clients.png" alt="Clients Management">
+    <div class="caption">Figure 4.1 — Clients list with search, filters, pagination, and bulk actions</div>
+  </div>
+
+  <h3>Client Data Model</h3>
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Name</td><td>Text</td><td>Client or company name</td></tr>
+      <tr><td>Email</td><td>Email</td><td>Primary contact email</td></tr>
+      <tr><td>Phone</td><td>Phone</td><td>Contact phone number</td></tr>
+      <tr><td>Company</td><td>Text</td><td>Associated company name</td></tr>
+      <tr><td>Status</td><td>Enum</td><td>Active, Inactive, Lead, Prospect</td></tr>
+      <tr><td>Country / Address</td><td>Text</td><td>Physical location details</td></tr>
+      <tr><td>KRA PIN</td><td>Text</td><td>Tax identification (Kenya)</td></tr>
+      <tr><td>Custom Fields</td><td>Dynamic</td><td>User-defined fields with validation</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 5. SALES & INVOICING ====================== -->
+<div class="section-break" id="sales">
+  <h2>5. Sales &amp; Invoicing</h2>
+  <p>
+    The Sales module covers the complete revenue lifecycle from opportunity identification through quotation, invoicing, payment collection, and receipt generation.
+  </p>
+
+  <h3>5.1 Invoices</h3>
+  <p>Create, send, and track invoices with automatic tax calculation, line item management, payment tracking and overdue alerts.</p>
+  <ul>
+    <li>Professional invoice templates with company branding</li>
+    <li>Automatic invoice numbering with customisable prefixes</li>
+    <li>Multi-currency support</li>
+    <li>Partial payment tracking</li>
+    <li>Overdue invoice alerts and reminders (automated via scheduler)</li>
+    <li>PDF generation and email delivery</li>
+    <li>Recurring invoices with configurable intervals</li>
+  </ul>
+
+  <div class="screenshot">
+    <img src="screenshots/05_invoices.png" alt="Invoices Management">
+    <div class="caption">Figure 5.1 — Invoice management with status tracking, search, and export</div>
+  </div>
+
+  <h3>5.2 Sales Pipeline &amp; Opportunities</h3>
+  <p>Visual Kanban-style pipeline for tracking deals through stages. Each opportunity records value, probability, expected close date, and associated contacts.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/20_sales_pipeline.png" alt="Sales Pipeline">
+    <div class="caption">Figure 5.2 — Sales pipeline with Kanban-style deal management and stage progression</div>
+  </div>
+
+  <h3>5.3 Estimates &amp; Quotations</h3>
+  <p>Generate professional estimates that can be converted to invoices with a single click. Track estimate status (Draft → Sent → Accepted → Converted).</p>
+
+  <div class="screenshot">
+    <img src="screenshots/32_estimates.png" alt="Estimates">
+    <div class="caption">Figure 5.3 — Estimates management with status tracking and one-click invoice conversion</div>
+  </div>
+
+  <h3>5.4 Credit &amp; Debit Notes</h3>
+  <p>Issue credit notes for returns or adjustments, and debit notes for additional charges. Both link back to the original invoice for audit trail.</p>
+
+  <h3>5.5 Receipts</h3>
+  <p>Auto-generated receipts upon payment confirmation. Supports manual receipt creation with configurable templates.</p>
+
+  <h3>Sales Module Summary</h3>
+  <table>
+    <thead><tr><th>Sub-Module</th><th>Route</th><th>Key Actions</th></tr></thead>
+    <tbody>
+      <tr><td>Invoices</td><td>/invoices</td><td>Create, Edit, Send, Track Payments, Export</td></tr>
+      <tr><td>Service Invoices</td><td>/service-invoices</td><td>Service-based billing with templates</td></tr>
+      <tr><td>Recurring Invoices</td><td>/recurring-invoices</td><td>Automated periodic billing</td></tr>
+      <tr><td>Estimates</td><td>/estimates</td><td>Create, Send, Convert to Invoice</td></tr>
+      <tr><td>Quotations</td><td>/quotations</td><td>Formal price quotes for clients</td></tr>
+      <tr><td>Receipts</td><td>/receipts</td><td>Payment confirmation documents</td></tr>
+      <tr><td>Proposals</td><td>/proposals</td><td>Business proposal generation</td></tr>
+      <tr><td>Opportunities</td><td>/opportunities</td><td>Deal tracking with pipeline stages</td></tr>
+      <tr><td>Sales Pipeline</td><td>/sales-pipeline</td><td>Visual Kanban deal management</td></tr>
+      <tr><td>Credit Notes</td><td>/credit-notes</td><td>Client credit adjustments</td></tr>
+      <tr><td>Debit Notes</td><td>/debit-notes</td><td>Additional charge documents</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 6. ACCOUNTING & FINANCE ====================== -->
+<div class="section-break" id="accounting">
+  <h2>6. Accounting &amp; Finance</h2>
+  <p>
+    A full-featured accounting module with double-entry bookkeeping, bank reconciliation, budgeting, and Kenyan tax compliance built in.
+  </p>
+
+  <h3>6.1 Chart of Accounts</h3>
+  <p>Hierarchical account structure supporting Assets, Liabilities, Equity, Revenue, and Expense categories with sub-accounts.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/16_accounting.png" alt="Chart of Accounts">
+    <div class="caption">Figure 6.1 — Chart of Accounts with hierarchical account structure</div>
+  </div>
+
+  <h3>6.2 Payments</h3>
+  <p>Record and track all incoming and outgoing payments with multiple payment method support (Bank Transfer, M-Pesa, Stripe, Cash, Cheque).</p>
+  <ul>
+    <li>Payment recording with invoice linking</li>
+    <li>Partial payment support</li>
+    <li>Overdue payment dashboard</li>
+    <li>Payment reconciliation with bank statements</li>
+    <li>Payment plans for instalment billing</li>
+  </ul>
+
+  <div class="screenshot">
+    <img src="screenshots/11_payments.png" alt="Payments">
+    <div class="caption">Figure 6.2 — Payments management with method tracking and reconciliation status</div>
+  </div>
+
+  <h3>6.3 Expenses</h3>
+  <p>Track business expenses by category, department, and project. Supports receipt uploads, approval workflows, and expense reports.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/12_expenses.png" alt="Expenses">
+    <div class="caption">Figure 6.3 — Expense tracking with category-based organisation</div>
+  </div>
+
+  <h3>6.4 Budgets</h3>
+  <p>Create department and project budgets, track actual spend vs. budget, and receive alerts when thresholds are exceeded.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/17_budgets.png" alt="Budgets">
+    <div class="caption">Figure 6.4 — Budget management with variance tracking and departmental breakdown</div>
+  </div>
+
+  <h3>6.5 Financial Tools</h3>
+  <table>
+    <thead><tr><th>Tool</th><th>Route</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Bank Reconciliation</td><td>/bank-reconciliation</td><td>Match bank transactions with system records</td></tr>
+      <tr><td>Budgets</td><td>/budgets</td><td>Department/project budget creation and tracking</td></tr>
+      <tr><td>Tax Compliance</td><td>/payroll/tax-compliance</td><td>KRA tax reports, P9 forms, PAYE summaries</td></tr>
+      <tr><td>Financial Dashboard</td><td>/financial-dashboard</td><td>Real-time P&amp;L, cash flow, revenue charts</td></tr>
+      <tr><td>Forecasting</td><td>/forecasting</td><td>Revenue and expense projections</td></tr>
+      <tr><td>Billing</td><td>/billing</td><td>Subscription and recurring charge management</td></tr>
+      <tr><td>Overdue Payments</td><td>/payments/overdue</td><td>Aged receivables with follow-up actions</td></tr>
+      <tr><td>Payment Plans</td><td>/payment-plans</td><td>Instalment schedules and tracking</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 7. HUMAN RESOURCES ====================== -->
+<div class="section-break" id="hr">
+  <h2>7. Human Resources</h2>
+  <p>
+    End-to-end HR management from recruitment through payroll processing. Includes Kenyan payroll compliance with PAYE, NHIF, NSSF, and Housing Levy calculations.
+  </p>
+
+  <h3>7.1 Employees</h3>
+  <p>Comprehensive employee records with personal details, employment history, documents, and role assignments.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/07_employees.png" alt="Employees">
+    <div class="caption">Figure 7.1 — Employee directory with department and status filtering</div>
+  </div>
+
+  <h3>7.2 Attendance</h3>
+  <p>Daily attendance tracking with clock-in/clock-out, overtime calculation, and attendance analytics.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/10_attendance.png" alt="Attendance">
+    <div class="caption">Figure 7.2 — Attendance management with daily tracking and bulk operations</div>
+  </div>
+
+  <h3>7.3 Payroll</h3>
+  <p>Full payroll processing with automatic statutory deduction calculations for Kenyan employment law.</p>
+
+  <div class="info-box">
+    <strong>Kenyan Payroll Compliance:</strong> Automatic calculation of PAYE (progressive tax bands), NHIF contributions, NSSF Tier I/II, Housing Levy (1.5%), and employer contributions.
+  </div>
+
+  <div class="screenshot">
+    <img src="screenshots/08_payroll.png" alt="Payroll">
+    <div class="caption">Figure 7.3 — Payroll management with processing and tax compliance</div>
+  </div>
+
+  <h3>7.4 Leave Management</h3>
+  <p>Configure leave types (annual, sick, maternity, paternity, compassionate), track balances, and process approval workflows.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/09_leave_management.png" alt="Leave Management">
+    <div class="caption">Figure 7.4 — Leave management with balance tracking and approval workflows</div>
+  </div>
+
+  <h3>7.5 Departments</h3>
+  <p>Manage organisational departments with head assignments, budget allocations, and employee counts per department.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/33_departments.png" alt="Departments">
+    <div class="caption">Figure 7.5 — Department management with head assignments and headcount tracking</div>
+  </div>
+
+  <h3>HR Module Summary</h3>
+  <table>
+    <thead><tr><th>Sub-Module</th><th>Route</th><th>Key Features</th></tr></thead>
+    <tbody>
+      <tr><td>Employees</td><td>/employees</td><td>CRUD, document uploads, role assignment</td></tr>
+      <tr><td>Departments</td><td>/departments</td><td>Department hierarchy, head assignment</td></tr>
+      <tr><td>Attendance</td><td>/attendance</td><td>Clock in/out, overtime, reports</td></tr>
+      <tr><td>Payroll</td><td>/payroll</td><td>Processing, KE calculator, payslips</td></tr>
+      <tr><td>Leave Management</td><td>/leave-management</td><td>Requests, approvals, balances</td></tr>
+      <tr><td>Job Groups</td><td>/job-groups</td><td>Grades, salary structures, bands</td></tr>
+      <tr><td>Performance Reviews</td><td>/performance-reviews</td><td>Review cycles, goals, ratings</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 8. PROCUREMENT ====================== -->
+<div class="section-break" id="procurement">
+  <h2>8. Procurement &amp; Inventory</h2>
+  <p>
+    Manage the complete procurement lifecycle from supplier management through purchase ordering, goods receipt, and inventory tracking.
+  </p>
+
+  <h3>8.1 Suppliers</h3>
+  <p>Maintain a supplier registry with contact details, payment terms, rating scores, and purchase history.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/14_suppliers.png" alt="Suppliers">
+    <div class="caption">Figure 8.1 — Supplier directory with rating and category management</div>
+  </div>
+
+  <h3>8.2 Procurement Hub</h3>
+  <p>Centralised procurement command centre with overview of pending orders, supplier performance, LPO status, and inventory alerts.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/15_procurement.png" alt="Procurement Hub">
+    <div class="caption">Figure 8.2 — Procurement Hub with unified view of purchasing activities and supplier status</div>
+  </div>
+
+  <h3>Procurement Sub-Modules</h3>
+  <table>
+    <thead><tr><th>Module</th><th>Route</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Suppliers</td><td>/suppliers</td><td>Supplier registry with performance tracking</td></tr>
+      <tr><td>LPOs (Local Purchase Orders)</td><td>/lpos</td><td>Purchase order creation and approval</td></tr>
+      <tr><td>Orders</td><td>/orders</td><td>Order management and tracking</td></tr>
+      <tr><td>GRNs (Goods Received Notes)</td><td>/grn</td><td>Receiving verification against POs</td></tr>
+      <tr><td>Inventory</td><td>/inventory</td><td>Stock levels, reorder alerts, warehouse management</td></tr>
+      <tr><td>Delivery Notes</td><td>/delivery-notes</td><td>Outgoing delivery documentation</td></tr>
+      <tr><td>Imprests</td><td>/imprests</td><td>Petty cash and imprest management</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 9. PROJECTS ====================== -->
+<div class="section-break" id="projects">
+  <h2>9. Project Management</h2>
+  <p>
+    Track projects from inception to completion with milestones, task assignments, time logging, work orders, and project-specific invoicing.
+  </p>
+
+  <div class="screenshot">
+    <img src="screenshots/06_projects.png" alt="Projects">
+    <div class="caption">Figure 9.1 — Project management with status tracking and client association</div>
+  </div>
+
+  <h3>Features</h3>
+  <ul>
+    <li><strong>Project Milestones</strong> — Define key deliverables with due dates and completion tracking</li>
+    <li><strong>Time Tracking</strong> — Log hours per team member per task for billable and non-billable work</li>
+    <li><strong>Work Orders</strong> — Issue and track work orders tied to projects</li>
+    <li><strong>Service Invoices</strong> — Generate invoices directly from project time entries and milestones</li>
+    <li><strong>Service Templates</strong> — Reusable service definitions for recurring project types</li>
+    <li><strong>Project Analytics</strong> — Budget vs. actual, timeline adherence, resource utilisation</li>
+    <li><strong>Workflow Automation</strong> — Automated task assignment and status transitions</li>
+  </ul>
+
+  <table>
+    <thead><tr><th>Feature</th><th>Route</th></tr></thead>
+    <tbody>
+      <tr><td>All Projects</td><td>/projects</td></tr>
+      <tr><td>Project Milestones</td><td>/project-milestones</td></tr>
+      <tr><td>Time Tracking</td><td>/time-tracking</td></tr>
+      <tr><td>Work Orders</td><td>/work-orders</td></tr>
+      <tr><td>Service Invoices</td><td>/service-invoices</td></tr>
+      <tr><td>Service Templates</td><td>/service-templates</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 10. PRODUCTS & SERVICES ====================== -->
+<div class="section-break" id="products">
+  <h2>10. Products &amp; Services</h2>
+  <p>
+    Catalogue your products and services with pricing, categories, stock management, and linkage to invoices and estimates.
+  </p>
+
+  <div class="screenshot">
+    <img src="screenshots/13_products.png" alt="Products">
+    <div class="caption">Figure 10.1 — Product catalogue with pricing and category management</div>
+  </div>
+
+  <h3>Capabilities</h3>
+  <table>
+    <thead><tr><th>Feature</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Product Catalogue</td><td>Searchable inventory of physical and digital products</td></tr>
+      <tr><td>Service Catalogue</td><td>Service offerings with hourly/fixed pricing</td></tr>
+      <tr><td>Service Templates</td><td>Reusable service bundles for quoting and invoicing</td></tr>
+      <tr><td>Category Management</td><td>Hierarchical categorisation with tags</td></tr>
+      <tr><td>Pricing Management</td><td>Cost price, selling price, markup calculation</td></tr>
+      <tr><td>Stock Tracking</td><td>Quantity on hand, reorder levels, stock alerts</td></tr>
+      <tr><td>Invoice Integration</td><td>Select products/services directly when creating invoices</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 11. COMMUNICATIONS ====================== -->
+<div class="section-break" id="communications">
+  <h2>11. Communications &amp; Messaging</h2>
+  <p>
+    Unified communications hub for email, SMS, in-app notifications, support tickets, team chat, and AI-powered assistance.
+  </p>
+
+  <div class="screenshot">
+    <img src="screenshots/28_communications.png" alt="Communications">
+    <div class="caption">Figure 11.1 — Communications centre with email, SMS, and notification management</div>
+  </div>
+
+  <h3>11.1 Support Tickets</h3>
+  <p>Internal and client-facing ticket system with priority levels, assignment, SLA tracking, and resolution workflows.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/23_tickets.png" alt="Support Tickets">
+    <div class="caption">Figure 11.2 — Support ticket management with priority and status tracking</div>
+  </div>
+
+  <h3>11.3 Document Management</h3>
+  <p>Centralised document repository for storing, organising, and sharing files across all modules. Supports version control and access permissions.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/22_documents.png" alt="Document Management">
+    <div class="caption">Figure 11.3 — Document management with folder organisation and access controls</div>
+  </div>
+
+  <h3>Communication Channels</h3>
+  <table>
+    <thead><tr><th>Channel</th><th>Route</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Communications Hub</td><td>/communications</td><td>Unified inbox for email and SMS</td></tr>
+      <tr><td>Support Tickets</td><td>/tickets</td><td>Issue tracking and resolution</td></tr>
+      <tr><td>Notifications</td><td>/notifications</td><td>In-app notification centre</td></tr>
+      <tr><td>Team Chat</td><td>/staff-chat</td><td>Real-time messaging between staff</td></tr>
+      <tr><td>AI Assistant</td><td>/ai-hub</td><td>AI-powered help and automation</td></tr>
+      <tr><td>Email Queue</td><td>/admin/email-queue</td><td>Email delivery queue management</td></tr>
+      <tr><td>SMS Queue</td><td>/admin/sms-queue</td><td>SMS delivery queue management</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 12. REPORTS ====================== -->
+<div class="section-break" id="reports">
+  <h2>12. Reports &amp; Analytics</h2>
+  <p>
+    Comprehensive reporting across all modules with interactive charts, exportable tables, custom report builder, and KPI dashboards.
+  </p>
+
+  <div class="screenshot">
+    <img src="screenshots/18_reports.png" alt="Reports">
+    <div class="caption">Figure 12.1 — Reports hub with category-based report selection</div>
+  </div>
+
+  <h3>Report Categories</h3>
+  <table>
+    <thead><tr><th>Category</th><th>Reports Available</th><th>Route</th></tr></thead>
+    <tbody>
+      <tr><td>Financial Reports</td><td>P&amp;L, Balance Sheet, Cash Flow, Trial Balance, Tax Reports</td><td>/financial-dashboard</td></tr>
+      <tr><td>Sales Reports</td><td>Revenue by period, Client revenue, Pipeline analysis, Conversion rates</td><td>/reports/sales</td></tr>
+      <tr><td>HR Analytics</td><td>Headcount, Attrition, Attendance rates, Payroll costs, Leave utilisation</td><td>/hr-analytics</td></tr>
+      <tr><td>Project Analytics</td><td>Budget variance, Timeline adherence, Resource utilisation, Profitability</td><td>/project-analytics</td></tr>
+      <tr><td>Advanced Analytics</td><td>Custom queries, cross-module data, trend analysis</td><td>/advanced-analytics</td></tr>
+      <tr><td>KPI Tracking</td><td>Configurable KPI dashboards with target tracking</td><td>/kpi-tracking</td></tr>
+      <tr><td>Report Builder</td><td>Drag-and-drop custom report creation</td><td>/report-builder</td></tr>
+      <tr><td>Revenue Forecasting</td><td>AI-assisted revenue predictions</td><td>/reports/revenue</td></tr>
+      <tr><td>Conversion Analytics</td><td>Lead-to-client conversion funnel analysis</td><td>/reports/conversion</td></tr>
+      <tr><td>Activity Trail</td><td>Full audit log of all system actions</td><td>/activity-trail</td></tr>
+    </tbody>
+  </table>
+
+  <h3>12.2 Executive Dashboard</h3>
+  <p>High-level business intelligence dashboard with cross-module KPIs, trend charts, and performance summaries for executive review.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/19_executive_dashboard.png" alt="Executive Dashboard">
+    <div class="caption">Figure 12.2 — Executive Dashboard with aggregate KPIs and business performance metrics</div>
+  </div>
+
+  <h3>12.3 AI Insights</h3>
+  <p>AI-powered analytics providing predictive insights, anomaly detection, revenue forecasting, and intelligent recommendations across all business data.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/23_ai_insights.png" alt="AI Insights">
+    <div class="caption">Figure 12.3 — AI Insights with predictive analytics and business intelligence recommendations</div>
+  </div>
+
+  <h3>Export Capabilities</h3>
+  <ul>
+    <li><strong>CSV Export</strong> — All data tables support one-click CSV download with all columns</li>
+    <li><strong>PDF Export</strong> — Professional PDF reports with branding and charts</li>
+    <li><strong>Print-Ready</strong> — Optimised layouts for direct printing</li>
+    <li><strong>Scheduled Reports</strong> — Configure automatic report generation and email delivery</li>
+  </ul>
+</div>
+
+<!-- ====================== 13. MULTI-TENANCY ====================== -->
+<div class="section-break" id="multitenancy">
+  <h2>13. Enterprise Multi-Tenancy</h2>
+  <p>
+    The Enterprise Multi-Tenancy system enables a single Melitech CRM instance to serve multiple organisations — each with isolated data, configurable module access, dedicated super admin accounts, and tailored pricing tiers.
+  </p>
+
+  <h3>13.1 Organisation Management</h3>
+  <p>Create and manage tenant organisations with dedicated settings, user limits, and module access controls.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/25_multitenancy_orgs.png" alt="Multi-Tenancy">
+    <div class="caption">Figure 13.1 — Organisation listing with plan, status, and user counts</div>
+  </div>
+
+  <h3>13.2 Create Organisation Flow</h3>
+  <p>
+    New organisations are created with a compulsory super admin assignment — either creating a new user or assigning an existing one. This ensures every tenant has an accountable administrator from day one.
+  </p>
+
+  <div class="screenshot">
+    <img src="screenshots/24_create_org.png" alt="Create Organisation">
+    <div class="caption">Figure 13.2 — Create Organisation dialog with super admin setup</div>
+  </div>
+
+  <h3>13.3 Tenant Admin Directory</h3>
+  <p>Centralised view of all tenant administrator accounts with organisation affiliation, contact details, and quick action links.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/27_tenant_admins.png" alt="Tenant Admins">
+    <div class="caption">Figure 13.3 — Tenant administrator directory</div>
+  </div>
+
+  <h3>13.4 Tenant Communications</h3>
+  <p>
+    Broadcast messaging system for platform administrators to communicate with tenant super admins. Supports priority levels (Low, Normal, High, Urgent) and targeting (all admins, specific organisation, or specific user).
+  </p>
+
+  <div class="screenshot">
+    <img src="screenshots/28_communications.png" alt="Tenant Communications">
+    <div class="caption">Figure 13.4 — Tenant communications with priority-based messaging</div>
+  </div>
+
+  <h3>Multi-Tenancy Architecture</h3>
+  <div class="arch-box">
+┌─────────────────────────────────────────────────────────────┐
+│                    Melitech CRM Platform                    │
+│                   (Single App Instance)                     │
+├─────────────────────────────────────────────────────────────┤
+│  Platform Super Admin                                       │
+│  ├── Enterprise → Multi-Tenancy (organisation CRUD)         │
+│  ├── Enterprise → Pricing Tiers (tier feature config)       │
+│  ├── Enterprise → Tenant Admins (admin directory)           │
+│  └── Enterprise → Tenant Comms (broadcast messaging)        │
+├──────────────────────┬──────────────────────────────────────┤
+│  Organisation A      │  Organisation B                      │
+│  ├── Super Admin     │  ├── Super Admin                     │
+│  ├── Modules: Tier   │  ├── Modules: Tier                   │
+│  ├── Users: Scoped   │  ├── Users: Scoped                   │
+│  └── Data: Isolated  │  └── Data: Isolated                  │
+└──────────────────────┴──────────────────────────────────────┘</div>
+
+  <h3>Database Tables</h3>
+  <table>
+    <thead><tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr></thead>
+    <tbody>
+      <tr><td>organizations</td><td>Tenant registry</td><td>id, name, slug, plan, isActive, maxUsers, contactEmail</td></tr>
+      <tr><td>organization_features</td><td>Per-org module toggles</td><td>organizationId, featureKey, isEnabled, config</td></tr>
+      <tr><td>pricing_tier_features</td><td>Tier-level defaults</td><td>tier, featureKey, isEnabled</td></tr>
+      <tr><td>tenant_messages</td><td>Admin communications</td><td>senderId, subject, content, priority, targetType</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 14. PRICING TIERS ====================== -->
+<div class="section-break" id="pricing">
+  <h2>14. Pricing Tiers &amp; Feature Access</h2>
+  <p>
+    Configure which CRM modules are available at each pricing tier. Pricing tiers act as templates — when an organisation is assigned a tier, it inherits the tier's default feature flags.
+  </p>
+
+  <div class="screenshot">
+    <img src="screenshots/26_pricing_tiers.png" alt="Pricing Tiers">
+    <div class="caption">Figure 14.1 — Pricing tier configuration with module toggles</div>
+  </div>
+
+  <h3>Tier Comparison</h3>
+  <table class="pricing-table">
+    <thead>
+      <tr>
+        <th>Module / Feature</th>
+        <th>Trial</th>
+        <th>Starter</th>
+        <th>Professional</th>
+        <th>Enterprise</th>
+        <th>Custom</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>CRM (Clients)</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Invoicing</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Payments</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Expenses</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Chart of Accounts</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>HR Management</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Payroll (KE Compliant)</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Procurement</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Project Management</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Reports &amp; Analytics</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Report Builder</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Multi-Tenancy</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>AI Assistant</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Workflow Automation</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Custom Fields</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Integrations (Stripe/M-Pesa)</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+      <tr><td>Max Users</td><td>5</td><td>15</td><td>50</td><td>Unlimited</td><td>Custom</td></tr>
+    </tbody>
+  </table>
+
+  <div class="screenshot">
+    <img src="screenshots/25_tier_comparison.png" alt="Tier Comparison">
+    <div class="caption">Figure 14.2 — Pricing tier feature comparison in the Enterprise panel</div>
+  </div>
+</div>
+
+<!-- ====================== 15. TOOLS & ADMIN ====================== -->
+<div class="section-break" id="tools">
+  <h2>15. Tools &amp; Administration</h2>
+  <p>
+    System administration tools for platform configuration, customisation, data management, and monitoring.
+  </p>
+
+  <div class="screenshot">
+    <img src="screenshots/24_tools_settings.png" alt="Settings">
+    <div class="caption">Figure 15.1 — System settings and configuration panel</div>
+  </div>
+
+  <h3>15.2 Activity Trail</h3>
+  <p>Complete audit log of all user actions and system events. Track who changed what, when, and from which IP address for compliance and security auditing.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/30_activity_trail.png" alt="Activity Trail">
+    <div class="caption">Figure 15.2 — Activity Trail showing user actions, timestamps, and change details</div>
+  </div>
+
+  <h3>15.3 System Health</h3>
+  <p>Real-time system monitoring dashboard showing server status, database performance, API response times, and resource utilisation.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/34_system_health.png" alt="System Health">
+    <div class="caption">Figure 15.3 — System Health monitor with live performance metrics and service status</div>
+  </div>
+
+  <h3>Administration Tools</h3>
+  <table>
+    <thead><tr><th>Tool</th><th>Route</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>System Settings</td><td>/tools/system-settings</td><td>Global configuration: company info, locale, currency, date format</td></tr>
+      <tr><td>Maintenance Mode</td><td>/tools/system-settings</td><td>Enable/disable maintenance mode with custom messaging</td></tr>
+      <tr><td>Backup &amp; Restore</td><td>/admin/backups</td><td>Database backup, scheduled backups, point-in-time restore</td></tr>
+      <tr><td>Theme Customisation</td><td>/tools/theme-customization</td><td>Colour scheme, fonts, sidebar style, dark mode</td></tr>
+      <tr><td>Brand Customisation</td><td>/tools/brand-customization</td><td>Logo, company name, branding across all pages</td></tr>
+      <tr><td>Custom Fields</td><td>/tools/custom-fields</td><td>14+ field types, entity-specific, validation rules</td></tr>
+      <tr><td>Homepage Builder</td><td>/tools/homepage-builder</td><td>Drag-and-drop landing page configuration</td></tr>
+      <tr><td>Import Data</td><td>/import-excel</td><td>Excel/CSV import with column mapping</td></tr>
+      <tr><td>Workflow Automation</td><td>/automation</td><td>Trigger-based automated actions and notifications</td></tr>
+      <tr><td>System Health</td><td>/system-health</td><td>Server status, database health, API response times</td></tr>
+      <tr><td>Integrations</td><td>/integrations</td><td>Third-party service connections (Stripe, M-Pesa, email, SMS)</td></tr>
+      <tr><td>Email Queue</td><td>/admin/email-queue</td><td>Monitor and manage outgoing email delivery</td></tr>
+      <tr><td>SMS Queue</td><td>/admin/sms-queue</td><td>Monitor and manage outgoing SMS delivery</td></tr>
+      <tr><td>Search</td><td>/search</td><td>Global search across all modules</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 16. SECURITY ====================== -->
+<div class="section-break" id="security">
+  <h2>16. Security &amp; Authentication</h2>
+
+  <h3>Authentication Flow</h3>
+  <div class="screenshot">
+    <img src="screenshots/01_login.png" alt="Login">
+    <div class="caption">Figure 16.1 — Secure login page with branding</div>
+  </div>
+
+  <table>
+    <thead><tr><th>Feature</th><th>Implementation</th></tr></thead>
+    <tbody>
+      <tr><td>Password Hashing</td><td>bcryptjs with 10 salt rounds</td></tr>
+      <tr><td>Session Management</td><td>JWT (JSON Web Tokens) with configurable expiry</td></tr>
+      <tr><td>Route Protection</td><td>AuthGate component wrapping all private routes</td></tr>
+      <tr><td>CORS Policy</td><td>Strict origin validation for cross-origin requests</td></tr>
+      <tr><td>Input Validation</td><td>Zod v4 schemas on all API inputs (server-side)</td></tr>
+      <tr><td>SQL Injection Prevention</td><td>Parameterised queries via Drizzle ORM</td></tr>
+      <tr><td>XSS Prevention</td><td>React DOM escaping + Content Security Policy</td></tr>
+      <tr><td>Password Reset</td><td>Token-based reset with email verification</td></tr>
+      <tr><td>Session Timeout</td><td>Automatic logout after inactivity period</td></tr>
+      <tr><td>Audit Logging</td><td>Activity trail for all state-changing operations</td></tr>
+    </tbody>
+  </table>
+
+  <h3>16.2 Security &amp; Compliance Dashboard</h3>
+  <p>Dedicated security management interface for running audits, reviewing access logs, managing encryption settings, and monitoring compliance status.</p>
+
+  <div class="screenshot">
+    <img src="screenshots/31_security_compliance.png" alt="Security Compliance">
+    <div class="caption">Figure 16.2 — Security &amp; Compliance dashboard with audit tools and access management</div>
+  </div>
+
+  <h3>Authentication Pages</h3>
+  <table>
+    <thead><tr><th>Page</th><th>Route</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Login</td><td>/login</td><td>Email + password authentication</td></tr>
+      <tr><td>Sign Up</td><td>/signup</td><td>New user registration</td></tr>
+      <tr><td>Forgot Password</td><td>/forgot-password</td><td>Password reset request</td></tr>
+      <tr><td>Reset Password</td><td>/reset-password</td><td>Token-based password reset</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 17. ROLES & PERMISSIONS ====================== -->
+<div class="section-break" id="roles">
+  <h2>17. Roles &amp; Permissions</h2>
+  <p>
+    Melitech CRM implements granular role-based access control (RBAC) with 150+ frontend permissions and 85+ backend permissions enforced at both the UI and API levels.
+  </p>
+
+  <h3>System Roles</h3>
+  <table>
+    <thead><tr><th>Role</th><th>Access Level</th><th>Typical Users</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-red">super_admin</span></td><td>Full platform access + Enterprise features</td><td>Platform owner, CTO</td></tr>
+      <tr><td><span class="badge badge-purple">admin</span></td><td>Full module access, user management</td><td>Office manager, department heads</td></tr>
+      <tr><td><span class="badge badge-blue">manager</span></td><td>Module-specific management + reports</td><td>Sales manager, HR manager</td></tr>
+      <tr><td><span class="badge badge-green">hr</span></td><td>HR module, employees, payroll, attendance</td><td>HR officers</td></tr>
+      <tr><td><span class="badge badge-green">accountant</span></td><td>Finance, invoicing, payments, expenses</td><td>Finance team</td></tr>
+      <tr><td><span class="badge badge-blue">project_manager</span></td><td>Projects, milestones, work orders, time tracking</td><td>Project leads</td></tr>
+      <tr><td><span class="badge badge-blue">procurement_manager</span></td><td>Procurement, suppliers, LPOs, inventory</td><td>Procurement officers</td></tr>
+      <tr><td><span class="badge badge-blue">sales_manager</span></td><td>Sales, pipeline, clients, invoices</td><td>Sales team leads</td></tr>
+      <tr><td><span class="badge badge-orange">staff</span></td><td>Limited access to assigned modules</td><td>General staff</td></tr>
+      <tr><td><span class="badge badge-orange">client</span></td><td>Client portal: own invoices, projects, tickets</td><td>External clients</td></tr>
+      <tr><td><span class="badge badge-blue">ict_manager</span></td><td>System tools, tickets, integrations</td><td>IT administrators</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Permission Enforcement</h3>
+  <ul>
+    <li><strong>Frontend:</strong> Sidebar items, page access, button visibility all controlled by role</li>
+    <li><strong>Backend:</strong> tRPC middleware checks role array before executing any procedure</li>
+    <li><strong>Feature Flags:</strong> Multi-tenancy feature toggles provide an additional access layer per organisation</li>
+  </ul>
+</div>
+
+<!-- ====================== 18. INTEGRATIONS ====================== -->
+<div class="section-break" id="integrations">
+  <h2>18. Integrations &amp; APIs</h2>
+  <p>
+    Melitech CRM integrates with external services for payments, communications, and data exchange.
+  </p>
+
+  <h3>Payment Integrations</h3>
+  <table>
+    <thead><tr><th>Provider</th><th>Type</th><th>Capabilities</th></tr></thead>
+    <tbody>
+      <tr><td>Stripe</td><td>Card Payments</td><td>One-time charges, recurring billing, webhook notifications, refunds</td></tr>
+      <tr><td>M-Pesa (Safaricom)</td><td>Mobile Money</td><td>STK Push payments, payment confirmations, Kenyan phone validation</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Communication Integrations</h3>
+  <table>
+    <thead><tr><th>Service</th><th>Purpose</th><th>Features</th></tr></thead>
+    <tbody>
+      <tr><td>Email (SMTP / SendGrid)</td><td>Email notifications</td><td>Template-based emails, queue management, delivery tracking</td></tr>
+      <tr><td>Africa's Talking</td><td>SMS notifications</td><td>Bulk SMS, delivery reports, Kenyan phone validation</td></tr>
+    </tbody>
+  </table>
+
+  <h3>API Architecture</h3>
+  <p>All API endpoints use <strong>tRPC v11</strong> with end-to-end TypeScript type safety. The API supports:</p>
+  <ul>
+    <li><strong>108 routers</strong> covering all modules</li>
+    <li><strong>Zod v4</strong> input validation on every procedure</li>
+    <li><strong>JWT Bearer authentication</strong> on all protected endpoints</li>
+    <li><strong>Pagination</strong> with cursor-based and offset-based support</li>
+    <li><strong>Batch requests</strong> via tRPC batching</li>
+  </ul>
+</div>
+
+<!-- ====================== 19. DEPLOYMENT ====================== -->
+<div class="section-break" id="deployment">
+  <h2>19. Deployment &amp; DevOps</h2>
+
+  <h3>Docker Deployment</h3>
+  <p>Melitech CRM ships as a Docker multi-container application with the following services:</p>
+
+  <table>
+    <thead><tr><th>Container</th><th>Image</th><th>Port</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>melitech_crm_app</td><td>Custom (Node.js)</td><td>3000</td><td>Application server (frontend + backend)</td></tr>
+      <tr><td>melitech_crm_db</td><td>MySQL 8.0</td><td>3307</td><td>Database server with persistent volume</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Database Migrations</h3>
+  <p>The platform uses Drizzle ORM's migration system with 52 sequential migrations:</p>
+  <table>
+    <thead><tr><th>Migration Range</th><th>Content</th></tr></thead>
+    <tbody>
+      <tr><td>0000 – 0030</td><td>Core tables (users, clients, invoices, payments, expenses, employees, etc.)</td></tr>
+      <tr><td>0031 – 0040</td><td>Procurement, projects, services, receipts, custom fields</td></tr>
+      <tr><td>0041 – 0048</td><td>Advanced features (approvals, contracts, warranties, attendance)</td></tr>
+      <tr><td>0049 – 0051</td><td>Docker deployment fixes, MySQL syntax corrections, Zod compatibility</td></tr>
+      <tr><td>0052</td><td>Multi-tenancy (tenant_messages, pricing_tier_features)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Environment Configuration</h3>
+  <table>
+    <thead><tr><th>Variable</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>DATABASE_URL</td><td>MySQL connection string</td></tr>
+      <tr><td>JWT_SECRET</td><td>Secret for JWT token signing</td></tr>
+      <tr><td>STRIPE_SECRET_KEY</td><td>Stripe API secret key</td></tr>
+      <tr><td>STRIPE_PUBLISHABLE_KEY</td><td>Stripe publishable key</td></tr>
+      <tr><td>MPESA_CONSUMER_KEY</td><td>M-Pesa API consumer key</td></tr>
+      <tr><td>MPESA_CONSUMER_SECRET</td><td>M-Pesa API consumer secret</td></tr>
+      <tr><td>EMAIL_HOST / EMAIL_PORT</td><td>SMTP server configuration</td></tr>
+      <tr><td>AT_API_KEY / AT_USERNAME</td><td>Africa's Talking SMS credentials</td></tr>
+      <tr><td>NODE_ENV</td><td>production / development</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== 20. APPENDIX ====================== -->
+<div class="section-break" id="appendix">
+  <h2>20. Appendix — Complete Module Summary</h2>
+
+  <h3>A. All Routes &amp; Pages</h3>
+  <table>
+    <thead><tr><th>#</th><th>Module</th><th>Route</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Landing Page</td><td>/</td><td>Public</td></tr>
+      <tr><td>2</td><td>Login</td><td>/login</td><td>Auth</td></tr>
+      <tr><td>3</td><td>Sign Up</td><td>/signup</td><td>Auth</td></tr>
+      <tr><td>4</td><td>Forgot Password</td><td>/forgot-password</td><td>Auth</td></tr>
+      <tr><td>5</td><td>Dashboard Home</td><td>/crm</td><td>Protected</td></tr>
+      <tr><td>6</td><td>Super Admin Dashboard</td><td>/crm/super-admin</td><td>Protected</td></tr>
+      <tr><td>7</td><td>Admin Dashboard</td><td>/crm/admin</td><td>Protected</td></tr>
+      <tr><td>8</td><td>HR Dashboard</td><td>/crm/hr</td><td>Protected</td></tr>
+      <tr><td>9</td><td>Accountant Dashboard</td><td>/crm/accountant</td><td>Protected</td></tr>
+      <tr><td>10</td><td>PM Dashboard</td><td>/crm/project-manager</td><td>Protected</td></tr>
+      <tr><td>11</td><td>Clients</td><td>/clients</td><td>Protected</td></tr>
+      <tr><td>12</td><td>Create Client</td><td>/clients/create</td><td>Protected</td></tr>
+      <tr><td>13</td><td>Projects</td><td>/projects</td><td>Protected</td></tr>
+      <tr><td>14</td><td>Create Project</td><td>/projects/create</td><td>Protected</td></tr>
+      <tr><td>15</td><td>Invoices</td><td>/invoices</td><td>Protected</td></tr>
+      <tr><td>16</td><td>Create Invoice</td><td>/invoices/create</td><td>Protected</td></tr>
+      <tr><td>17</td><td>Estimates</td><td>/estimates</td><td>Protected</td></tr>
+      <tr><td>18</td><td>Quotations</td><td>/quotations</td><td>Protected</td></tr>
+      <tr><td>19</td><td>Receipts</td><td>/receipts</td><td>Protected</td></tr>
+      <tr><td>20</td><td>Opportunities</td><td>/opportunities</td><td>Protected</td></tr>
+      <tr><td>21</td><td>Sales Pipeline</td><td>/sales-pipeline</td><td>Protected</td></tr>
+      <tr><td>22</td><td>Credit Notes</td><td>/credit-notes</td><td>Protected</td></tr>
+      <tr><td>23</td><td>Debit Notes</td><td>/debit-notes</td><td>Protected</td></tr>
+      <tr><td>24</td><td>Payments</td><td>/payments</td><td>Protected</td></tr>
+      <tr><td>25</td><td>Payment Plans</td><td>/payment-plans</td><td>Protected</td></tr>
+      <tr><td>26</td><td>Expenses</td><td>/expenses</td><td>Protected</td></tr>
+      <tr><td>27</td><td>Chart of Accounts</td><td>/chart-of-accounts</td><td>Protected</td></tr>
+      <tr><td>28</td><td>Bank Reconciliation</td><td>/bank-reconciliation</td><td>Protected</td></tr>
+      <tr><td>29</td><td>Budgets</td><td>/budgets</td><td>Protected</td></tr>
+      <tr><td>30</td><td>Financial Dashboard</td><td>/financial-dashboard</td><td>Protected</td></tr>
+      <tr><td>31</td><td>Tax Compliance</td><td>/payroll/tax-compliance</td><td>Protected</td></tr>
+      <tr><td>32</td><td>Forecasting</td><td>/forecasting</td><td>Protected</td></tr>
+      <tr><td>33</td><td>Billing</td><td>/billing</td><td>Protected</td></tr>
+      <tr><td>34</td><td>Employees</td><td>/employees</td><td>Protected</td></tr>
+      <tr><td>35</td><td>Departments</td><td>/departments</td><td>Protected</td></tr>
+      <tr><td>36</td><td>Attendance</td><td>/attendance</td><td>Protected</td></tr>
+      <tr><td>37</td><td>Payroll</td><td>/payroll</td><td>Protected</td></tr>
+      <tr><td>38</td><td>Leave Management</td><td>/leave-management</td><td>Protected</td></tr>
+      <tr><td>39</td><td>Job Groups</td><td>/job-groups</td><td>Protected</td></tr>
+      <tr><td>40</td><td>Performance Reviews</td><td>/performance-reviews</td><td>Protected</td></tr>
+      <tr><td>41</td><td>Suppliers</td><td>/suppliers</td><td>Protected</td></tr>
+      <tr><td>42</td><td>LPOs</td><td>/lpos</td><td>Protected</td></tr>
+      <tr><td>43</td><td>Orders</td><td>/orders</td><td>Protected</td></tr>
+      <tr><td>44</td><td>GRNs</td><td>/grn</td><td>Protected</td></tr>
+      <tr><td>45</td><td>Inventory</td><td>/inventory</td><td>Protected</td></tr>
+      <tr><td>46</td><td>Delivery Notes</td><td>/delivery-notes</td><td>Protected</td></tr>
+      <tr><td>47</td><td>Imprests</td><td>/imprests</td><td>Protected</td></tr>
+      <tr><td>48</td><td>Products</td><td>/products</td><td>Protected</td></tr>
+      <tr><td>49</td><td>Services</td><td>/services</td><td>Protected</td></tr>
+      <tr><td>50</td><td>Service Templates</td><td>/service-templates</td><td>Protected</td></tr>
+      <tr><td>51</td><td>Assets</td><td>/assets</td><td>Protected</td></tr>
+      <tr><td>52</td><td>Contracts</td><td>/contracts</td><td>Protected</td></tr>
+      <tr><td>53</td><td>Warranty</td><td>/warranty</td><td>Protected</td></tr>
+      <tr><td>54</td><td>Work Orders</td><td>/work-orders</td><td>Protected</td></tr>
+      <tr><td>55</td><td>Reports</td><td>/reports</td><td>Protected</td></tr>
+      <tr><td>56</td><td>Report Builder</td><td>/report-builder</td><td>Protected</td></tr>
+      <tr><td>57</td><td>KPI Tracking</td><td>/kpi-tracking</td><td>Protected</td></tr>
+      <tr><td>58</td><td>Activity Trail</td><td>/activity-trail</td><td>Protected</td></tr>
+      <tr><td>59</td><td>Communications</td><td>/communications</td><td>Protected</td></tr>
+      <tr><td>60</td><td>Tickets</td><td>/tickets</td><td>Protected</td></tr>
+      <tr><td>61</td><td>Team Chat</td><td>/staff-chat</td><td>Protected</td></tr>
+      <tr><td>62</td><td>AI Assistant</td><td>/ai-hub</td><td>Protected</td></tr>
+      <tr><td>63</td><td>Multi-Tenancy</td><td>/enterprise/tenants</td><td>Enterprise</td></tr>
+      <tr><td>64</td><td>Tenant Admins</td><td>/enterprise/tenant-admins</td><td>Enterprise</td></tr>
+      <tr><td>65</td><td>Pricing Tiers</td><td>/enterprise/pricing</td><td>Enterprise</td></tr>
+      <tr><td>66</td><td>Tenant Comms</td><td>/enterprise/tenant-comms</td><td>Enterprise</td></tr>
+      <tr><td>67</td><td>Settings</td><td>/settings</td><td>Protected</td></tr>
+      <tr><td>68</td><td>Custom Fields</td><td>/tools/custom-fields</td><td>Protected</td></tr>
+      <tr><td>69</td><td>Theme Customisation</td><td>/tools/theme-customization</td><td>Protected</td></tr>
+      <tr><td>70</td><td>Import Data</td><td>/import-excel</td><td>Protected</td></tr>
+    </tbody>
+  </table>
+
+  <h3>B. API Router List (Key Routers)</h3>
+  <table>
+    <thead><tr><th>Router</th><th>Procedures</th><th>Module</th></tr></thead>
+    <tbody>
+      <tr><td>auth</td><td>login, register, forgotPassword, resetPassword, me</td><td>Authentication</td></tr>
+      <tr><td>clients</td><td>list, get, create, update, delete, bulkDelete, export</td><td>CRM</td></tr>
+      <tr><td>invoices</td><td>list, get, create, update, delete, send, markPaid</td><td>Sales</td></tr>
+      <tr><td>payments</td><td>list, get, create, update, delete, reconcile</td><td>Accounting</td></tr>
+      <tr><td>expenses</td><td>list, get, create, update, delete, approve</td><td>Accounting</td></tr>
+      <tr><td>employees</td><td>list, get, create, update, delete, getByDepartment</td><td>HR</td></tr>
+      <tr><td>payroll</td><td>list, process, getPayslip, kenyanCalculation</td><td>HR</td></tr>
+      <tr><td>attendance</td><td>list, clockIn, clockOut, getByDate, report</td><td>HR</td></tr>
+      <tr><td>leave</td><td>list, request, approve, reject, getBalance</td><td>HR</td></tr>
+      <tr><td>projects</td><td>list, get, create, update, delete, getAnalytics</td><td>Projects</td></tr>
+      <tr><td>suppliers</td><td>list, get, create, update, delete</td><td>Procurement</td></tr>
+      <tr><td>products</td><td>list, get, create, update, delete</td><td>Products</td></tr>
+      <tr><td>multiTenancy</td><td>listOrgs, createOrgWithAdmin, updateOrg, pricingTiers, tenantComms</td><td>Enterprise</td></tr>
+      <tr><td>reports</td><td>financial, sales, hr, project, custom</td><td>Reports</td></tr>
+      <tr><td>stripe</td><td>createPaymentIntent, webhook, getBalance</td><td>Integrations</td></tr>
+      <tr><td>mpesa</td><td>stkPush, callback, getStatus</td><td>Integrations</td></tr>
+    </tbody>
+  </table>
+
+  <h3>C. Screenshot Index</h3>
+  <table>
+    <thead><tr><th>Figure</th><th>File</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1.1</td><td>16_landing.png</td><td>Landing Page</td></tr>
+      <tr><td>3.1</td><td>02_super_admin_dashboard.png</td><td>Super Admin Dashboard</td></tr>
+      <tr><td>4.1</td><td>03_clients.png</td><td>Clients Management</td></tr>
+      <tr><td>5.1</td><td>04_invoices.png</td><td>Invoice Management</td></tr>
+      <tr><td>6.1</td><td>21_accounting.png</td><td>Chart of Accounts</td></tr>
+      <tr><td>6.2</td><td>07_payments.png</td><td>Payments</td></tr>
+      <tr><td>6.3</td><td>14_expenses.png</td><td>Expenses</td></tr>
+      <tr><td>7.1</td><td>06_employees.png</td><td>Employees</td></tr>
+      <tr><td>7.2</td><td>15_attendance.png</td><td>Attendance</td></tr>
+      <tr><td>7.3</td><td>22_payroll.png</td><td>Payroll</td></tr>
+      <tr><td>7.4</td><td>20_leave.png</td><td>Leave Management</td></tr>
+      <tr><td>8.1</td><td>11_suppliers.png</td><td>Suppliers</td></tr>
+      <tr><td>9.1</td><td>05_projects.png</td><td>Projects</td></tr>
+      <tr><td>10.1</td><td>17_products.png</td><td>Products</td></tr>
+      <tr><td>11.1</td><td>10_communications.png</td><td>Communications</td></tr>
+      <tr><td>11.2</td><td>23_tickets.png</td><td>Support Tickets</td></tr>
+      <tr><td>12.1</td><td>12_reports.png</td><td>Reports Hub</td></tr>
+      <tr><td>13.1</td><td>08_multitenancy.png</td><td>Multi-Tenancy</td></tr>
+      <tr><td>13.2</td><td>24_create_org.png</td><td>Create Organisation</td></tr>
+      <tr><td>13.3</td><td>18_tenant_admins.png</td><td>Tenant Admins</td></tr>
+      <tr><td>13.4</td><td>19_tenant_comms.png</td><td>Tenant Communications</td></tr>
+      <tr><td>14.1</td><td>09_pricing_tiers.png</td><td>Pricing Tiers</td></tr>
+      <tr><td>14.2</td><td>25_tier_comparison.png</td><td>Tier Comparison</td></tr>
+      <tr><td>15.1</td><td>13_settings.png</td><td>Settings</td></tr>
+      <tr><td>16.1</td><td>01_login.png</td><td>Login Page</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====================== FOOTER ====================== -->
+<div class="page-footer">
+  <p>
+    &copy; 2026 Melitech Solutions Ltd. All rights reserved.<br>
+    This document is confidential and intended for authorised personnel only.<br>
+    <strong>Melitech CRM v2.0</strong> — Generated March 2026
+  </p>
+</div>
+
+</body>
+</html>

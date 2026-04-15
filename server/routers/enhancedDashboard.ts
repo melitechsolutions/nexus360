@@ -18,7 +18,7 @@ const DashboardWidgetSchema = z.object({
   rowIndex: z.number().default(0),
   colIndex: z.number().default(0),
   refreshInterval: z.number().default(300),
-  config: z.record(z.any()).optional(),
+  config: z.record(z.string(), z.any()).optional(),
 });
 
 const DashboardLayoutSchema = z.object({
@@ -127,8 +127,8 @@ export const enhancedDashboardRouter = router({
         gridColumns: input.gridColumns,
         isDefault: input.isDefault ? 1 : 0,
         layoutData: {},
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       });
 
       // Add widgets if provided
@@ -144,8 +144,8 @@ export const enhancedDashboardRouter = router({
           colIndex: widget.colIndex,
           refreshInterval: widget.refreshInterval,
           config: widget.config || {},
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         });
       }
 
@@ -202,7 +202,7 @@ export const enhancedDashboardRouter = router({
           description: input.description,
           gridColumns: input.gridColumns,
           isDefault: input.isDefault ? 1 : 0,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         })
         .where(eq(dashboardLayouts.id, input.id));
 
@@ -223,8 +223,8 @@ export const enhancedDashboardRouter = router({
           colIndex: widget.colIndex,
           refreshInterval: widget.refreshInterval,
           config: widget.config || {},
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         });
       }
 
@@ -316,8 +316,8 @@ export const enhancedDashboardRouter = router({
         colIndex: input.widget.colIndex,
         refreshInterval: input.widget.refreshInterval,
         config: input.widget.config || {},
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       });
 
       return { id: widgetId, success: true };
@@ -367,7 +367,7 @@ export const enhancedDashboardRouter = router({
         rowIndex: z.number().optional(),
         colIndex: z.number().optional(),
         widgetSize: z.enum(["small", "medium", "large"]).optional(),
-        config: z.record(z.any()).optional(),
+        config: z.record(z.string(), z.any()).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -395,7 +395,7 @@ export const enhancedDashboardRouter = router({
       }
 
       const updateData: any = {
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       };
 
       if (input.rowIndex !== undefined)
@@ -437,8 +437,8 @@ export const enhancedDashboardRouter = router({
         widgetId: input.widgetId,
         dataKey: input.dataKey,
         dataValue: input.dataValue,
-        cachedAt: new Date().toISOString(),
-        expiresAt: expiresAt.toISOString(),
+        cachedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        expiresAt: expiresAt.toISOString().replace('T', ' ').substring(0, 19),
       });
 
       return { success: true };

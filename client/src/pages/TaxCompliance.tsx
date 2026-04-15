@@ -1,12 +1,13 @@
 import { useState } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Download, FileText, PieChart } from "lucide-react";
+import { Download, FileText, PieChart, Calculator } from "lucide-react";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 export default function TaxCompliancePage() {
   const [from, setFrom] = useState<string>(new Date().toISOString().slice(0,10));
@@ -50,25 +51,29 @@ export default function TaxCompliancePage() {
     try {
       const resp = await ytd.refetch();
       toast.success('YTD summary fetched');
-      console.log(resp);
     } catch (err: any) {
       toast.error('Failed to fetch YTD summary');
     }
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Tax Compliance Reports</h1>
-            <p className="text-muted-foreground">Generate PAYE, NSSF, SHIF and KRA reports</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleDownloadKRA}><Download className="mr-2 h-4 w-4"/>Download KRA CSV</Button>
-            <Button onClick={handleYTD}><FileText className="mr-2 h-4 w-4"/>YTD Summary</Button>
-          </div>
+    <ModuleLayout
+      title="Tax Compliance"
+      description="Generate PAYE, NSSF, SHIF and KRA reports"
+      icon={<Calculator className="h-6 w-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Finance", href: "/accounting" },
+        { label: "Tax Compliance" },
+      ]}
+      actions={
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleDownloadKRA}><Download className="mr-2 h-4 w-4"/>Download KRA CSV</Button>
+          <Button onClick={handleYTD}><FileText className="mr-2 h-4 w-4"/>YTD Summary</Button>
         </div>
+      }
+    >
+      <div className="space-y-6">
 
         <Card>
           <CardHeader>
@@ -104,14 +109,14 @@ export default function TaxCompliancePage() {
             </CardHeader>
             <CardContent>
               {paye.isLoading ? <p>Loading...</p> : (
-                <table className="w-full text-sm">
-                  <thead><tr><th>Month</th><th className="text-right">Total PAYE</th></tr></thead>
-                  <tbody>
+                <Table>
+                  <TableHeader><TableRow><TableHead>Month</TableHead><TableHead className="text-right">Total PAYE</TableHead></TableRow></TableHeader>
+                  <TableBody>
                     {Array.isArray(paye.data) && paye.data.map((r: any) => (
-                      <tr key={r.month} className="border-b"><td>{r.month}</td><td className="text-right">Ksh {Math.round(r.totalPayee/100).toLocaleString()}</td></tr>
+                      <TableRow key={r.month}><TableCell>{r.month}</TableCell><TableCell className="text-right">Ksh {Math.round(r.totalPayee/100).toLocaleString()}</TableCell></TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>
@@ -122,14 +127,14 @@ export default function TaxCompliancePage() {
             </CardHeader>
             <CardContent>
               {nssf.isLoading ? <p>Loading...</p> : (
-                <table className="w-full text-sm">
-                  <thead><tr><th>Month</th><th className="text-right">Total NSSF</th></tr></thead>
-                  <tbody>
+                <Table>
+                  <TableHeader><TableRow><TableHead>Month</TableHead><TableHead className="text-right">Total NSSF</TableHead></TableRow></TableHeader>
+                  <TableBody>
                     {Array.isArray(nssf.data) && nssf.data.map((r: any) => (
-                      <tr key={r.month} className="border-b"><td>{r.month}</td><td className="text-right">Ksh {Math.round(r.totalNSSF/100).toLocaleString()}</td></tr>
+                      <TableRow key={r.month}><TableCell>{r.month}</TableCell><TableCell className="text-right">Ksh {Math.round(r.totalNSSF/100).toLocaleString()}</TableCell></TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>
@@ -142,14 +147,14 @@ export default function TaxCompliancePage() {
             </CardHeader>
             <CardContent>
               {shif.isLoading ? <p>Loading...</p> : (
-                <table className="w-full text-sm">
-                  <thead><tr><th>Month</th><th className="text-right">Total SHIF</th></tr></thead>
-                  <tbody>
+                <Table>
+                  <TableHeader><TableRow><TableHead>Month</TableHead><TableHead className="text-right">Total SHIF</TableHead></TableRow></TableHeader>
+                  <TableBody>
                     {Array.isArray(shif.data) && shif.data.map((r: any) => (
-                      <tr key={r.month} className="border-b"><td>{r.month}</td><td className="text-right">Ksh {Math.round(r.totalSHIF/100).toLocaleString()}</td></tr>
+                      <TableRow key={r.month}><TableCell>{r.month}</TableCell><TableCell className="text-right">Ksh {Math.round(r.totalSHIF/100).toLocaleString()}</TableCell></TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>
@@ -160,19 +165,19 @@ export default function TaxCompliancePage() {
             </CardHeader>
             <CardContent>
               {housing.isLoading ? <p>Loading...</p> : (
-                <table className="w-full text-sm">
-                  <thead><tr><th>Month</th><th className="text-right">Total Housing Levy</th></tr></thead>
-                  <tbody>
+                <Table>
+                  <TableHeader><TableRow><TableHead>Month</TableHead><TableHead className="text-right">Total Housing Levy</TableHead></TableRow></TableHeader>
+                  <TableBody>
                     {Array.isArray(housing.data) && housing.data.map((r: any) => (
-                      <tr key={r.month} className="border-b"><td>{r.month}</td><td className="text-right">Ksh {Math.round(r.totalHousing/100).toLocaleString()}</td></tr>
+                      <TableRow key={r.month}><TableCell>{r.month}</TableCell><TableCell className="text-right">Ksh {Math.round(r.totalHousing/100).toLocaleString()}</TableCell></TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

@@ -4,6 +4,7 @@ import { getDb } from '../db';
 import { invoices, expenses } from '../../drizzle/schema';
 import { gte, lte } from 'drizzle-orm';
 import { formatDistanceToNow } from 'date-fns';
+import { getCompanyInfo } from './company-info';
 
 interface ReportConfig {
   title: string;
@@ -70,11 +71,13 @@ export async function generateFinancialReportPDF(config: ReportConfig): Promise<
     // Set font
     doc.setFont('helvetica');
 
+    const companyInfo = await getCompanyInfo();
+
     // Add company header
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(40, 40, 40);
-  doc.text('Melitech Solutions', 20, 20);
+  doc.text(companyInfo.name, 20, 20);
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
@@ -236,11 +239,13 @@ export async function generateExpenseReportPDF(config: ReportConfig): Promise<Bu
   // Set font
   doc.setFont('helvetica');
 
+  const companyInfo = await getCompanyInfo();
+
   // Add company header
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(40, 40, 40);
-  doc.text('Melitech Solutions', 20, 20);
+  doc.text(companyInfo.name, 20, 20);
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { ModuleLayout } from "@/components/ModuleLayout";
+import { useThemeCustomization } from "@/contexts/ThemeCustomizationContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -225,8 +226,11 @@ export default function ThemeCustomization() {
     },
   });
 
+  const { updateThemeConfig } = useThemeCustomization();
+
   const handleSave = () => {
     setIsSaving(true);
+    updateThemeConfig(config);
     saveMutation.mutate(config);
   };
 
@@ -283,8 +287,8 @@ export default function ThemeCustomization() {
       description="Configure light and dark mode themes, card styles, and color schemes"
       icon={<Palette className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Tools", href: "/tools" },
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Settings", href: "/settings" },
         { label: "Theme Customization" },
       ]}
     >

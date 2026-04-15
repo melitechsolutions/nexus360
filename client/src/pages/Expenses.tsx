@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
 import { trpc } from "@/lib/trpc";
+import { buildCommunicationComposePath } from "@/lib/communications";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,9 +22,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DollarSign, Plus, Search, Eye, Edit, Trash2, Receipt, TrendingUp, Loader2, Check, BarChart3 } from "lucide-react";
+import { DollarSign, Plus, Search, Eye, Edit, Trash2, Receipt, TrendingUp, Loader2, Check, BarChart3, Copy, Mail, ArrowUpDown, Link } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { downloadCSV } from "@/lib/export-utils";
+import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
+import { RowActionsMenu, actionIcons, type RowAction } from "@/components/list-page/RowActionsMenu";
+import { TableColumnSettings, useColumnVisibility, type ColumnConfig } from "@/components/list-page/TableColumnSettings";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction, bulkApproveAction, bulkEmailAction } from "@/components/list-page/EnhancedBulkActions";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,18 +40,32 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ExpenseBudgetReport } from "@/components/ExpenseBudgetReport";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function Expenses() {
   // All hooks must be called at the top, before any conditional returns
   const { allowed, isLoading } = useRequireFeature("accounting:expenses:view");
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"list" | "budget">("list");
-  
+  const [selectedExpenses, setSelectedExpenses] = useState<Set<string>>(new Set());
+
+  const expenseColumns: ColumnConfig[] = [
+    { key: "date", label: "Date" },
+    { key: "category", label: "Category" },
+    { key: "vendor", label: "Vendor" },
+    { key: "description", label: "Description" },
+    { key: "amount", label: "Amount" },
+    { key: "paymentMethod", label: "Payment Method" },
+    { key: "status", label: "Status" },
+    { key: "receipt", label: "Receipt" },
+  ];
+  const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(expenseColumns, "expenses");
+
   // Fetch real data from backend
   const { data: expensesData = [], isLoading: isLoadingExpenses } = trpc.expenses.list.useQuery();
   const utils = trpc.useUtils();
@@ -70,6 +91,18 @@ export default function Expenses() {
     },
     onError: (error) => {
       toast.error(error.message || "Failed to approve expense");
+    },
+  });
+
+  // Bulk approve mutation
+  const bulkApproveMutation = trpc.expenses.bulkApprove.useMutation({
+    onSuccess: () => {
+      toast.success("Expenses approved successfully");
+      utils.expenses.list.invalidate();
+      setSelectedExpenses(new Set());
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to bulk approve expenses");
     },
   });
 
@@ -144,14 +177,30 @@ export default function Expenses() {
     setDeleteDialogOpen(true);
   };
 
+  const toggleSelectExpense = (id: string) => {
+    setSelectedExpenses((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedExpenses.size === filteredExpenses.length) {
+      setSelectedExpenses(new Set());
+    } else {
+      setSelectedExpenses(new Set(filteredExpenses.map((e) => e.id)));
+    }
+  };
+
   return (
     <ModuleLayout
       title="Expenses"
       description="Track and manage business expenses"
       icon={<DollarSign className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Finance", href: "/finance" },
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Finance", href: "/accounting" },
         { label: "Expenses" },
       ]}
       actions={
@@ -190,90 +239,95 @@ export default function Expenses() {
           <>
         <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-4">
-          <Card className="border-l-4 border-l-red-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-              <DollarSign className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(summary.total || 0).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">All time</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Expenses"
+            value={<>Ksh {(summary.total || 0).toLocaleString()}</>}
+            description="All time"
+            icon={<DollarSign className="h-5 w-5" />}
+            color="border-l-red-500"
+          />
 
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Approved</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(summary.approved || 0).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">{expenses.filter(e => e.status === "approved").length} expenses</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Approved"
+            value={<>Ksh {(summary.approved || 0).toLocaleString()}</>}
+            description={<>{expenses.filter(e => e.status === "approved").length} expenses</>}
+            icon={<TrendingUp className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
 
-          <Card className="border-l-4 border-l-yellow-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-              <Receipt className="h-4 w-4 text-yellow-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(summary.pending || 0).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">{expenses.filter(e => e.status === "pending").length} expenses</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Pending Approval"
+            value={<>Ksh {(summary.pending || 0).toLocaleString()}</>}
+            description={<>{expenses.filter(e => e.status === "pending").length} expenses</>}
+            icon={<Receipt className="h-5 w-5" />}
+            color="border-l-yellow-500"
+          />
 
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Categories</CardTitle>
-              <Receipt className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.categories}</div>
-              <p className="text-xs text-muted-foreground">Expense categories</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Categories"
+            value={summary.categories}
+            description="Expense categories"
+            icon={<Receipt className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
         </div>
 
+        {/* Toolbar */}
+        <ListPageToolbar
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search expenses..."
+          onCreateClick={() => navigate("/expenses/create")}
+          createLabel="Record Expense"
+          onExportClick={() => downloadCSV(expenses.map(e => ({ Date: e.date, Category: e.category, Vendor: e.vendor, Description: e.description, Amount: e.amount, "Payment Method": e.paymentMethod, Status: e.status })), "expenses")}
+          onImportClick={() => toast.info("CSV import is available in Settings > Data Management")}
+          onPrintClick={() => window.print()}
+          filterContent={
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {Array.from(new Set(expenses.map(e => e.category))).map(cat => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          }
+        />
+
+        {/* Bulk Actions Bar */}
+        <EnhancedBulkActions
+          selectedCount={selectedExpenses.size}
+          onClear={() => setSelectedExpenses(new Set())}
+          actions={[
+            bulkApproveAction(selectedExpenses, (ids) => bulkApproveMutation.mutate({ ids })),
+            bulkExportAction(selectedExpenses, expenses, expenseColumns, "expenses"),
+            bulkCopyIdsAction(selectedExpenses),
+            bulkEmailAction(navigate),
+            bulkDeleteAction(selectedExpenses, (ids) => ids.forEach(id => deleteExpenseMutation.mutate(id))),
+          ]}
+        />
+
         <Card>
-          <CardHeader>
-            <CardTitle>All Expenses</CardTitle>
-            <CardDescription>View and manage expense records</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search expenses..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {Array.from(new Set(expenses.map(e => e.category))).map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <span className="text-sm text-muted-foreground">{filteredExpenses.length} expenses</span>
+              <TableColumnSettings columns={expenseColumns} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} onReset={reset} pageSize={pageSize} onPageSizeChange={updatePageSize} />
             </div>
 
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Vendor</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="w-10"><Checkbox checked={selectedExpenses.size === filteredExpenses.length && filteredExpenses.length > 0} onCheckedChange={toggleSelectAll} /></TableHead>
+                    {isVisible("date") && <TableHead>Date</TableHead>}
+                    {isVisible("category") && <TableHead>Category</TableHead>}
+                    {isVisible("vendor") && <TableHead>Vendor</TableHead>}
+                    {isVisible("description") && <TableHead>Description</TableHead>}
+                    {isVisible("amount") && <TableHead>Amount</TableHead>}
+                    {isVisible("status") && <TableHead>Status</TableHead>}
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -293,40 +347,29 @@ export default function Expenses() {
                     </TableRow>
                   ) : (
                     filteredExpenses.map((expense) => (
-                      <TableRow key={expense.id}>
-                        <TableCell>{expense.date}</TableCell>
-                        <TableCell>{expense.category}</TableCell>
-                        <TableCell>{expense.vendor}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{expense.description}</TableCell>
-                        <TableCell className="font-mono">Ksh {(expense.amount || 0).toLocaleString()}</TableCell>
-                        <TableCell>{getStatusBadge(expense.status)}</TableCell>
+                      <TableRow key={expense.id} className={selectedExpenses.has(expense.id) ? "bg-primary/5" : ""}>
+                        <TableCell><Checkbox checked={selectedExpenses.has(expense.id)} onCheckedChange={() => toggleSelectExpense(expense.id)} /></TableCell>
+                        {isVisible("date") && <TableCell>{expense.date ? new Date(expense.date).toLocaleDateString() : "-"}</TableCell>}
+                        {isVisible("category") && <TableCell>{expense.category}</TableCell>}
+                        {isVisible("vendor") && <TableCell>{expense.vendor}</TableCell>}
+                        {isVisible("description") && <TableCell className="max-w-[200px] truncate">{expense.description}</TableCell>}
+                        {isVisible("amount") && <TableCell className="font-mono">Ksh {(expense.amount || 0).toLocaleString()}</TableCell>}
+                        {isVisible("status") && <TableCell>{getStatusBadge(expense.status)}</TableCell>}
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            {expense.status === "pending" && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => approveExpenseMutation.mutate({ id: expense.id })}
-                                title="Approve Expense"
-                              >
-                                <Check className="h-4 w-4 text-green-500" />
-                              </Button>
-                            )}
-                            <Button variant="ghost" size="icon" onClick={() => navigate(`/expenses/${expense.id}`)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => navigate(`/expenses/${expense.id}/edit`)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => handleDeleteClick(expense.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <RowActionsMenu
+                            primaryActions={[
+                              { label: "View", icon: actionIcons.view, onClick: () => navigate(`/expenses/${expense.id}`) },
+                              { label: "Edit", icon: actionIcons.edit, onClick: () => navigate(`/expenses/${expense.id}/edit`) },
+                              { label: "Delete", icon: actionIcons.delete, onClick: () => handleDeleteClick(expense.id), variant: "destructive" },
+                            ]}
+                            menuActions={[
+                              ...(expense.status === "pending" ? [{ label: "Approve Expense", icon: <Check className="h-4 w-4" />, onClick: () => approveExpenseMutation.mutate({ id: expense.id }) }] : []),
+                              { label: "Duplicate Expense", icon: actionIcons.copy, onClick: () => navigate(`/expenses/create?clone=${expense.id}`) },
+                              { label: "Email Receipt", icon: actionIcons.email, onClick: () => navigate(buildCommunicationComposePath(location, expense.vendorEmail || "", `Expense Receipt ${expense.id}`)) },
+                              { label: "Attach to Project", icon: <Link className="h-4 w-4" />, onClick: () => navigate(`/expenses/${expense.id}/edit`), separator: true },
+                              { label: "Download Receipt", icon: actionIcons.download, onClick: () => { navigate(`/expenses/${expense.id}`); setTimeout(() => window.print(), 500); } },
+                            ]}
+                          />
                         </TableCell>
                       </TableRow>
                     ))

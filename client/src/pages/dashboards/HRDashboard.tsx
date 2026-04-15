@@ -1,6 +1,6 @@
 import { useAuthWithPersistence } from "@/_core/hooks/useAuthWithPersistence";
 import { useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,11 +22,15 @@ import {
   ArrowRight,
   Mail,
   Settings,
+  Menu,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { trpc } from "@/lib/trpc";
 import TeamWorkloadDashboard from "@/components/TeamWorkloadDashboard";
+import { StatsCard } from "@/components/ui/stats-card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 /**
  * HRDashboard component
@@ -44,6 +48,7 @@ export default function HRDashboard() {
     redirectOnUnauthenticated: true,
   });
   const [, setLocation] = useLocation();
+  const [mobileQuickAccessOpen, setMobileQuickAccessOpen] = useState(false);
 
   // Fetch employees data from backend
   const { data: employeesData, isLoading: employeesLoading } = trpc.employees.list.useQuery();
@@ -210,77 +215,94 @@ export default function HRDashboard() {
     },
   ];
 
+  // Quick access items for mobile menu
+  const quickAccessItems = [
+    { title: "Employees", icon: Users, href: "/employees" },
+    { title: "Attendance", icon: Clock, href: "/hr/attendance" },
+    { title: "Leave Requests", icon: Calendar, href: "/hr/leaves" },
+    { title: "Payroll", icon: DollarSign, href: "/payroll" },
+    { title: "HR Management", icon: UserCog, href: "/hr/management" },
+  ];
+
   return (
-    <DashboardLayout
-      title="HR Dashboard"
-      user={user}
-      onLogout={handleLogout}
-    >
-      <div className="space-y-8">
-        {/* HR Welcome Section */}
-        <div className="bg-gradient-to-r from-rose-600 to-pink-700 rounded-lg p-8 text-white">
-          <h1 className="text-4xl font-bold mb-2">Human Resources Dashboard</h1>
-          <p className="text-lg opacity-90 mb-4">
-            Manage employees, attendance, leave requests, and payroll operations.
-          </p>
-          <div className="flex gap-4">
-            <Button 
-              onClick={() => setLocation("/hr/management")}
-              className="gap-2 bg-white hover:bg-slate-100 text-rose-700"
-            >
-              <Settings className="w-4 h-4" />
-              HR Management
-            </Button>
-            <Button 
-              className="bg-white text-slate-900 hover:bg-gray-100"
-              onClick={() => setLocation("/crm")}
-            >
-              Go to Main Dashboard
-            </Button>
-          </div>
+    <div className="flex flex-col h-screen overflow-hidden">
+      {/* Mobile Quick Access Header */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b bg-card">
+        <h1 className="text-lg font-bold flex items-center gap-2">
+          <Users className="h-5 w-5" />
+          HR Dashboard
+        </h1>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setMobileQuickAccessOpen(!mobileQuickAccessOpen)}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Mobile Quick Access Dropdown */}
+      {mobileQuickAccessOpen && (
+        <div className="md:hidden p-3 border-b bg-muted space-y-2">
+          {quickAccessItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.href}
+                onClick={() => {
+                  setLocation(item.href);
+                  setMobileQuickAccessOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <Icon className="w-4 h-4" />
+                <span>{item.title}</span>
+              </button>
+            );
+          })}
         </div>
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <ModuleLayout
+          title="HR Dashboard"
+          description="Manage employees, attendance, leave requests, and payroll operations"
+          icon={<Users className="h-5 w-5" />}
+          breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "HR" }]}
+          actions={
+            <div className="flex gap-2">
+              <Button onClick={() => setLocation("/hr/management")} variant="secondary" size="sm" className="gap-2 hidden sm:flex">
+                <Settings className="w-4 h-4" />
+                HR Management
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setLocation("/crm-home")} className="hidden sm:flex">
+                Go to Main Dashboard
+              </Button>
+            </div>
+          }
+        >
+      <div className="space-y-8">
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Total Employees</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">{totalEmployees}</div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{activeEmployees} active</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Employees" value={totalEmployees} description={<>{activeEmployees} active</>} color="border-l-orange-500" />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Today's Attendance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{presentToday}/<span className="text-sm text-slate-600 dark:text-slate-300">{totalEmployees}</span></div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{attendanceRate}% attendance rate</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Today's Attendance"
+            value={<>{presentToday}/<span className="text-sm text-slate-600 dark:text-slate-300">{totalEmployees}</span></>}
+            description={<>{attendanceRate}% attendance rate</>}
+            color="border-l-purple-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Pending Leave Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{leaveDataPlain?.filter((l: any) => l.status === "pending").length || 0}</div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Awaiting approval</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Pending Leave Requests"
+            value={leaveDataPlain?.filter((l: any) => l.status === "pending").length || 0}
+            description="Awaiting approval"
+            color="border-l-green-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-300">Payroll Cycles</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-slate-50">{payrollDataPlain?.length || 0}</div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Total cycles</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Payroll Cycles" value={payrollDataPlain?.length || 0} description="Total cycles" color="border-l-blue-500" />
         </div>
 
         {/* Module Features Grid */}
@@ -315,26 +337,26 @@ export default function HRDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="employees" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="employees" className="flex items-center gap-2">
+          <TabsList className="overflow-x-auto">
+            <TabsTrigger value="employees" className="flex items-center gap-2 whitespace-nowrap">
               <Users className="w-4 h-4" />
-              Employees
+              <span className="hidden sm:inline">Employees</span>
             </TabsTrigger>
-            <TabsTrigger value="attendance" className="flex items-center gap-2">
+            <TabsTrigger value="attendance" className="flex items-center gap-2 whitespace-nowrap">
               <Clock className="w-4 h-4" />
-              Attendance
+              <span className="hidden sm:inline">Attendance</span>
             </TabsTrigger>
-            <TabsTrigger value="leave" className="flex items-center gap-2">
+            <TabsTrigger value="leave" className="flex items-center gap-2 whitespace-nowrap">
               <Calendar className="w-4 h-4" />
-              Leave Management
+              <span className="hidden sm:inline">Leave</span>
             </TabsTrigger>
-            <TabsTrigger value="payroll" className="flex items-center gap-2">
+            <TabsTrigger value="payroll" className="flex items-center gap-2 whitespace-nowrap">
               <FileText className="w-4 h-4" />
-              Payroll
+              <span className="hidden sm:inline">Payroll</span>
             </TabsTrigger>
-            <TabsTrigger value="workload" className="flex items-center gap-2">
+            <TabsTrigger value="workload" className="flex items-center gap-2 whitespace-nowrap">
               <TrendingUp className="w-4 h-4" />
-              Team Workload
+              <span className="hidden sm:inline">Workload</span>
             </TabsTrigger>
           </TabsList>
 
@@ -347,53 +369,53 @@ export default function HRDashboard() {
                     <CardTitle className="text-slate-900 dark:text-slate-50">Employee Management</CardTitle>
                     <CardDescription className="text-slate-600 dark:text-slate-300">Manage employee information and records</CardDescription>
                   </div>
-                  <Button onClick={() => setLocation("/employees/new")}>Add Employee</Button>
+                  <Button onClick={() => setLocation("/employees/create")}>Add Employee</Button>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <Input placeholder="Search employees..." />
                   <div className="border rounded-lg">
-                    <table className="w-full">
-                      <thead className="bg-slate-50 dark:bg-slate-900/40 border-b">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-200">Name</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-200">Position</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-200">Department</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-200">Status</th>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-slate-700 dark:text-slate-200">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Position</TableHead>
+                          <TableHead>Department</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {Array.isArray(employeesData) && employeesData.length > 0 ? (
                           employeesData.slice(0, 10).map((employee: any) => (
-                            <tr key={employee.id} className="border-b hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                              <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">{employee.name || 'N/A'}</td>
-                              <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">{employee.position || 'N/A'}</td>
-                              <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">{employee.department || 'N/A'}</td>
-                              <td className="px-4 py-3 text-sm">
+                            <TableRow key={employee.id}>
+                              <TableCell>{employee.name || 'N/A'}</TableCell>
+                              <TableCell>{employee.position || 'N/A'}</TableCell>
+                              <TableCell>{employee.department || 'N/A'}</TableCell>
+                              <TableCell>
                                 <span className={`px-2 py-1 rounded text-xs ${
                                   employee.status === 'active' ? 'bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-200' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200'
                                 }`}>
                                   {employee.status || 'Active'}
                                 </span>
-                              </td>
-                              <td className="px-4 py-3 text-sm">
+                              </TableCell>
+                              <TableCell>
                                 <Button variant="ghost" size="sm" onClick={() => setLocation(`/employees/${employee.id}`)}>
                                   View
                                 </Button>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))
                         ) : (
-                          <tr>
-                            <td colSpan={5} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-8 text-slate-500 dark:text-slate-400">
                               No employees found
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         )}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
               </CardContent>
@@ -450,7 +472,7 @@ export default function HRDashboard() {
                     <CardTitle className="text-slate-900 dark:text-slate-50">Leave Management</CardTitle>
                     <CardDescription className="text-slate-600 dark:text-slate-300">Manage employee leave requests</CardDescription>
                   </div>
-                  <Button onClick={() => setLocation("/leave/new")}>New Leave Request</Button>
+                  <Button onClick={() => setLocation("/leave-management/create")}>New Leave Request</Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -492,7 +514,7 @@ export default function HRDashboard() {
                     <CardTitle className="text-slate-900 dark:text-slate-50">Payroll Management</CardTitle>
                     <CardDescription className="text-slate-600 dark:text-slate-300">Manage employee payroll and salaries</CardDescription>
                   </div>
-                  <Button onClick={() => setLocation("/payroll/new")}>Process Payroll</Button>
+                  <Button onClick={() => setLocation("/payroll/create")}>Process Payroll</Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -518,7 +540,7 @@ export default function HRDashboard() {
                   ) : (
                     <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                       <p>No payroll records found</p>
-                      <Button className="mt-4" onClick={() => setLocation("/payroll/new")}>
+                      <Button className="mt-4" onClick={() => setLocation("/payroll/create")}>
                         Process Payroll
                       </Button>
                     </div>
@@ -534,6 +556,8 @@ export default function HRDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
+      </div>
+    </div>
   );
 }

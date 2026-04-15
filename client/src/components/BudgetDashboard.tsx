@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { TrendingUp, AlertTriangle, DollarSign, PieChart, BarChart3, TrendingDown } from "lucide-react";
-import { trpc } from "../_trpc/client";
+import { trpc } from "@/lib/trpc";
 import Button from "./Button";
 import Toast from "./Toast";
+import { useCurrencySettings } from "@/lib/currency";
 
 interface BudgetSummary {
   year: number;
@@ -27,6 +28,7 @@ interface BudgetSummary {
 }
 
 export function BudgetDashboard() {
+  const { code: currencyCode } = useCurrencySettings();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -99,7 +101,7 @@ export function BudgetDashboard() {
                     <span className="font-semibold">
                       {(alert.overage / 100).toLocaleString("en-US", {
                         style: "currency",
-                        currency: "KES",
+                        currency: currencyCode,
                       })}
                       over
                     </span>
@@ -126,7 +128,7 @@ export function BudgetDashboard() {
                 <p className="text-2xl font-bold text-gray-900">
                   {(summary.combined.total / 100).toLocaleString("en-US", {
                     style: "currency",
-                    currency: "KES",
+                    currency: currencyCode,
                   })}
                 </p>
               </div>
@@ -135,7 +137,7 @@ export function BudgetDashboard() {
                 <p className="text-xl font-semibold text-gray-900">
                   {(summary.combined.spent / 100).toLocaleString("en-US", {
                     style: "currency",
-                    currency: "KES",
+                    currency: currencyCode,
                   })}
                 </p>
               </div>
@@ -144,7 +146,7 @@ export function BudgetDashboard() {
                 <p className="text-xl font-semibold text-green-600">
                   {(summary.combined.remaining / 100).toLocaleString("en-US", {
                     style: "currency",
-                    currency: "KES",
+                    currency: currencyCode,
                   })}
                 </p>
               </div>
@@ -241,20 +243,20 @@ export function BudgetDashboard() {
                     <td className="py-3 px-4 text-sm text-right text-gray-900 font-medium">
                       {(dept.budgeted / 100).toLocaleString("en-US", {
                         style: "currency",
-                        currency: "KES",
+                        currency: currencyCode,
                       })}
                     </td>
                     <td className="py-3 px-4 text-sm text-right text-gray-900 font-medium">
                       {(dept.spent / 100).toLocaleString("en-US", {
                         style: "currency",
-                        currency: "KES",
+                        currency: currencyCode,
                       })}
                     </td>
                     <td className="py-3 px-4 text-sm text-right font-medium">
                       <span className={dept.remaining < 0 ? "text-red-600" : "text-green-600"}>
                         {(dept.remaining / 100).toLocaleString("en-US", {
                           style: "currency",
-                          currency: "KES",
+                          currency: currencyCode,
                         })}
                       </span>
                     </td>
@@ -322,7 +324,7 @@ export function BudgetDashboard() {
                       <p className="font-semibold text-gray-900">
                         {(project.budgeted / 100).toLocaleString("en-US", {
                           style: "currency",
-                          currency: "KES",
+                          currency: currencyCode,
                         })}
                       </p>
                     </div>
@@ -331,7 +333,7 @@ export function BudgetDashboard() {
                       <p className="font-semibold text-gray-900">
                         {(project.spent / 100).toLocaleString("en-US", {
                           style: "currency",
-                          currency: "KES",
+                          currency: currencyCode,
                         })}
                       </p>
                     </div>
@@ -356,7 +358,7 @@ export function BudgetDashboard() {
                         Over by{" "}
                         {((Math.abs(project.remaining) / 100).toLocaleString("en-US", {
                           style: "currency",
-                          currency: "KES",
+                          currency: currencyCode,
                         }))}
                       </p>
                     </div>

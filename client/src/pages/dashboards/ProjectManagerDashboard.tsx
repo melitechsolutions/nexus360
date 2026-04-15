@@ -1,4 +1,4 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuthWithPersistence } from "@/_core/hooks/useAuthWithPersistence";
 import { useEffect } from "react";
@@ -21,6 +21,7 @@ import {
   Mail,
   Settings,
 } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function ProjectManagerDashboard() {
   const { user, loading, isAuthenticated, logout } = useAuthWithPersistence({ redirectOnUnauthenticated: true });
@@ -106,62 +107,36 @@ export default function ProjectManagerDashboard() {
   ];
 
   return (
-    <DashboardLayout title="Project Manager" user={user} onLogout={logout}>
-      <div className="space-y-8">
-        {/* Project Manager Welcome Section */}
-        <div className="bg-gradient-to-r from-indigo-600 to-blue-700 rounded-lg p-8 text-white">
-          <h1 className="text-4xl font-bold mb-2">Project Manager Dashboard</h1>
-          <p className="text-lg opacity-90 mb-4">
-            Oversee your projects, team assignments, and project approvals.
-          </p>
-          <div className="flex gap-4">
-            <Button 
-              onClick={() => setLocation("/projects/management")}
-              className="gap-2 bg-white hover:bg-slate-100 text-indigo-700"
-            >
-              <Settings className="w-4 h-4" />
-              Project Management
-            </Button>
-            <Button 
-              className="bg-white text-slate-900 hover:bg-gray-100"
-              onClick={() => setLocation("/crm")}
-            >
-              Go to Main Dashboard
-            </Button>
-          </div>
+    <ModuleLayout
+      title="Project Manager"
+      description="Oversee your projects, team assignments, and project approvals"
+      icon={<FolderKanban className="h-5 w-5" />}
+      breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Project Management" }]}
+      actions={
+        <div className="flex gap-2">
+          <Button onClick={() => setLocation("/projects/management")} variant="secondary" size="sm" className="gap-2">
+            <Settings className="w-4 h-4" />
+            Project Management
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => setLocation("/crm-home")}>
+            Go to Main Dashboard
+          </Button>
         </div>
+      }
+    >
+      <div className="space-y-8">
 
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">My Projects</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{myProjects.length}</div>
-              <div className="mt-3 text-sm text-slate-600">Projects you manage or are assigned to</div>
-            </CardContent>
-          </Card>
+          <StatsCard label="My Projects" value={myProjects.length} color="border-l-purple-500" />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Team Members</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{teamMemberIds.size}</div>
-              <div className="mt-3 text-sm text-slate-600">Unique team member IDs across your projects</div>
-            </CardContent>
-          </Card>
+          <StatsCard label="Team Members" value={teamMemberIds.size} color="border-l-green-500" />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(pendingExpensesPlain?.length || 0) + (pendingEstimates?.length || 0)}</div>
-              <div className="mt-3 text-sm text-slate-600">Expenses and estimates awaiting approval</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Pending Approvals"
+            value={(pendingExpensesPlain?.length || 0) + (pendingEstimates?.length || 0)}
+            color="border-l-blue-500"
+          />
         </div>
 
         {/* Feature Cards */}
@@ -280,6 +255,6 @@ export default function ProjectManagerDashboard() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

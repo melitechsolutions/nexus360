@@ -1,30 +1,20 @@
-import { useState, useEffect } from "react";
-import { Bell, X, AlertCircle, CheckCircle, Info, AlertTriangle, Zap, Trash2, Archive } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Bell, X, AlertCircle, CheckCircle, Info, AlertTriangle, Zap, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import { formatDistanceToNow } from "date-fns";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
-interface NotificationWithCategory extends any {
+interface NotificationWithCategory {
   category?: string;
   priority?: "low" | "normal" | "high";
   type?: "info" | "success" | "warning" | "error" | "reminder";
+  [key: string]: any;
 }
 
 export function NotificationBell() {
@@ -32,6 +22,20 @@ export function NotificationBell() {
   const utils = trpc.useUtils();
   const [activeTab, setActiveTab] = useState("all");
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [isOpen]);
 
   // Fetch unread count
   const { data: unreadCount = 0 } = trpc.notifications.unreadCount.useQuery(undefined, {
@@ -154,41 +158,31 @@ export function NotificationBell() {
       : filteredNotifications.filter((n) => !n.isRead).length;
 
   return (
-    <TooltipProvider>
-      <DropdownMenu>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "relative transition-all duration-300",
-                  isAnimating && "animate-pulse"
-                )}
-              >
-                <Bell className={cn("h-5 w-5 transition-transform", isAnimating && "scale-110")} />
-                {unreadCount > 0 && (
-                  <Badge
-                    className={cn(
-                      "absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold animate-in fade-in zoom-in",
-                      unreadCount > 3 ? "bg-red-500" : "bg-blue-500"
-                    )}
-                  >
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent>
-            {unreadCount > 0
-              ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}`
-              : "No notifications"}
-          </TooltipContent>
-        </Tooltip>
+    <div ref={containerRef} className="relative">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "relative transition-all duration-300",
+          isAnimating && "animate-pulse"
+        )}
+      >
+        <Bell className={cn("h-5 w-5 transition-transform", isAnimating && "scale-110")} />
+        {unreadCount > 0 && (
+          <Badge
+            className={cn(
+              "absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs font-bold animate-in fade-in zoom-in",
+              unreadCount > 3 ? "bg-red-500" : "bg-blue-500"
+            )}
+          >
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </Badge>
+        )}
+      </Button>
 
-        <DropdownMenuContent align="end" className="w-96">
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 w-96 rounded-md border bg-popover text-popover-foreground shadow-lg z-[100] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b">
             <div>
@@ -356,13 +350,13 @@ export function NotificationBell() {
           </Tabs>
 
           {/* Footer */}
-          <DropdownMenuSeparator />
+          <Separator />
           <div className="px-2 py-2 flex gap-2">
             <Button
               variant="outline"
               size="sm"
               className="flex-1 text-xs h-8"
-              onClick={() => navigate("/notifications")}
+              onClick={() => { setIsOpen(false); navigate("/notifications"); }}
             >
               View all
             </Button>
@@ -372,7 +366,6 @@ export function NotificationBell() {
                 size="sm"
                 className="px-2 h-8"
                 onClick={() => {
-                  // Delete all read notifications
                   notifications
                     .filter((n) => n.isRead)
                     .forEach((n) => deleteMutation.mutate(n.id));
@@ -382,9 +375,9 @@ export function NotificationBell() {
               </Button>
             )}
           </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </TooltipProvider>
+        </div>
+      )}
+    </div>
   );
 }
 

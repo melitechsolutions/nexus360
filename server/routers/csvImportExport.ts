@@ -11,6 +11,20 @@ import { v4 as uuidv4 } from "uuid";
 import * as csvGen from "../utils/csvGenerator";
 import * as db from "../db";
 
+const parseOptionalIntString = (value: string): number | undefined => {
+  const trimmed = value.trim();
+  if (trimmed === "") return undefined;
+  const parsed = Number.parseInt(trimmed, 10);
+  return Number.isNaN(parsed) ? undefined : parsed;
+};
+
+const parseRequiredIntString = (value: string): number => {
+  const trimmed = value.trim();
+  if (trimmed === "") return 0;
+  const parsed = Number.parseInt(trimmed, 10);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
 /**
  * CSV Import/Export Router
  * Handles template generation, CSV parsing, and module-specific imports
@@ -63,7 +77,7 @@ export const csvImportExportRouter = router({
         status: z.enum(['active', 'inactive', 'prospect', 'archived']).optional(),
         businessType: z.string().optional(),
         registrationNumber: z.string().optional(),
-        creditLimit: z.number().optional().or(z.string().transform(v => parseInt(v))),
+        creditLimit: z.number().optional().or(z.string().transform(parseOptionalIntString)),
       })),
       skipDuplicates: z.boolean().default(true),
     }))
@@ -122,7 +136,7 @@ export const csvImportExportRouter = router({
             registrationNumber: clientData.registrationNumber || null,
             creditLimit: clientData.creditLimit ? parseInt(clientData.creditLimit.toString()) : null,
             createdBy: ctx.user.id,
-            createdAt: new Date().toISOString(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
 
           results.imported++;
@@ -160,7 +174,7 @@ export const csvImportExportRouter = router({
         department: z.string().optional(),
         position: z.string().optional(),
         jobGroupId: z.string().optional(),
-        salary: z.number().optional().or(z.string().transform(v => parseInt(v))),
+        salary: z.number().optional().or(z.string().transform(parseOptionalIntString)),
         employmentType: z.enum(['full_time', 'part_time', 'contract', 'intern']).optional(),
         status: z.enum(['active', 'on_leave', 'terminated', 'suspended']).optional(),
         address: z.string().optional(),
@@ -242,7 +256,7 @@ export const csvImportExportRouter = router({
             bankAccountNumber: empData.bankAccountNumber || null,
             taxId: empData.taxId || null,
             createdBy: ctx.user.id,
-            createdAt: new Date().toISOString(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
 
           results.imported++;
@@ -273,10 +287,10 @@ export const csvImportExportRouter = router({
         productCode: z.string().optional(),
         description: z.string().optional(),
         category: z.string().optional(),
-        unitPrice: z.number().or(z.string().transform(v => parseInt(v))),
-        taxRate: z.number().optional().or(z.string().transform(v => parseInt(v))),
-        quantity: z.number().optional().or(z.string().transform(v => parseInt(v))),
-        reorderLevel: z.number().optional().or(z.string().transform(v => parseInt(v))),
+        unitPrice: z.number().or(z.string().transform(parseRequiredIntString)),
+        taxRate: z.number().optional().or(z.string().transform(parseOptionalIntString)),
+        quantity: z.number().optional().or(z.string().transform(parseOptionalIntString)),
+        reorderLevel: z.number().optional().or(z.string().transform(parseOptionalIntString)),
         supplier: z.string().optional(),
         status: z.enum(['active', 'inactive', 'discontinued']).optional(),
       })),
@@ -326,7 +340,7 @@ export const csvImportExportRouter = router({
             supplier: prodData.supplier || null,
             status: prodData.status || 'active',
             createdBy: ctx.user.id,
-            createdAt: new Date().toISOString(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
 
           results.imported++;
@@ -435,7 +449,7 @@ export const csvImportExportRouter = router({
             parentAccountId,
             description: accData.description || null,
             isActive: accData.isActive ? 1 : 0,
-            createdAt: new Date().toISOString(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
 
           results.imported++;
@@ -464,7 +478,7 @@ export const csvImportExportRouter = router({
       data: z.array(z.object({
         invoiceNumber: z.string(),
         clientName: z.string().optional(),
-        amount: z.number().or(z.string().transform(v => parseInt(v))),
+        amount: z.number().or(z.string().transform(parseRequiredIntString)),
         paymentDate: z.string(),
         paymentMethod: z.enum(['cash', 'bank_transfer', 'cheque', 'card', 'other']).optional(),
         reference: z.string().optional(),
@@ -506,13 +520,13 @@ export const csvImportExportRouter = router({
             id,
             invoiceNumber: payData.invoiceNumber,
             amount: parseInt(payData.amount.toString()),
-            paymentDate: new Date(payData.paymentDate).toISOString(),
+            paymentDate: new Date(payData.paymentDate).toISOString().replace('T', ' ').substring(0, 19),
             paymentMethod: payData.paymentMethod || 'bank_transfer',
             reference: payData.reference || null,
             description: payData.description || null,
             status: payData.status || 'completed',
             createdBy: ctx.user.id,
-            createdAt: new Date().toISOString(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
 
           results.imported++;

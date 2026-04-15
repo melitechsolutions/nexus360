@@ -1,5 +1,6 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DocumentForm from "@/components/forms/DocumentForm";
+import { Edit } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 import { toast } from "sonner";
 import { useRequireFeature } from "@/lib/permissions";
@@ -167,32 +168,60 @@ export default function EditInvoice() {
 
   if (!invoiceId) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Edit Invoice"
+        icon={<Edit className="w-5 h-5" />}
+        backLink={{ label: "Invoices", href: "/invoices" }}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Invoices", href: "/invoices" },
+          { label: "Edit" },
+        ]}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Invalid invoice ID</p>
           <button onClick={() => setLocation("/invoices")} className="text-blue-500 hover:underline">
             Back to Invoices
           </button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!isLoadingInvoiceData && !formData) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Edit Invoice"
+        icon={<Edit className="w-5 h-5" />}
+        backLink={{ label: "Invoices", href: "/invoices" }}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Invoices", href: "/invoices" },
+          { label: "Edit" },
+        ]}
+      >
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p>Invoice not found</p>
           <button onClick={() => setLocation("/invoices")} className="text-blue-500 hover:underline">
             Back to Invoices
           </button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Edit Invoice"
+      description="Modify invoice details"
+      icon={<Edit className="w-5 h-5" />}
+      backLink={{ label: "Invoices", href: "/invoices" }}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Invoices", href: "/invoices" },
+        { label: "Edit" },
+      ]}
+    >
       <DocumentForm 
         type="invoice"
         mode="edit"
@@ -203,6 +232,6 @@ export default function EditInvoice() {
         isLoading={isLoadingInvoiceData}
         isSaving={updateInvoiceMutation.isPending || deleteInvoiceMutation.isPending}
       />
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

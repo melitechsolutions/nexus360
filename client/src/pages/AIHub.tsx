@@ -21,7 +21,6 @@ export default function AIHub() {
 
   const breadcrumbs = [
     { label: 'Dashboard', href: '/' },
-    { label: 'Tools', href: '/tools' },
     { label: 'AI Hub' },
   ];
 
@@ -39,7 +38,7 @@ export default function AIHub() {
         {!aiStatus?.available && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>AI Features Coming Soon</AlertTitle>
+            <AlertTitle>AI Features Not Configured</AlertTitle>
             <AlertDescription>
               Configure ANTHROPIC_API_KEY environment variable to unlock AI-powered features like document summarization, email generation, and financial analysis. See ENVIRONMENT_SETUP_GUIDE.md for setup details.
             </AlertDescription>

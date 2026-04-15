@@ -17,6 +17,7 @@ import { protectedProcedure, router } from '../_core/trpc';
 import * as smsService from '../services/smsService';
 import * as db from '../db';
 import { and, eq, desc, gte, count } from 'drizzle-orm';
+import { smsQueue, smsCustomerPreferences } from '../../drizzle/schema';
 
 // Feature-restricted procedure for SMS operations
 const smsProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -117,10 +118,8 @@ export const smsRouter = router({
       const database = await db.getDb();
       if (!database) throw new Error('Database unavailable');
 
-      const smsQueue = (await import('../../drizzle/schema')).smsQueue;
-      const record = await database.query.smsQueue.findFirst({
-        where: eq(smsQueue.id, input.queueId),
-      });
+      const records = await database.select().from(smsQueue).where(eq(smsQueue.id, input.queueId)).limit(1);
+      const record = records[0] || null;
 
       if (!record) {
         throw new TRPCError({
@@ -163,8 +162,7 @@ export const smsRouter = router({
       const database = await db.getDb();
       if (!database) throw new Error('Database unavailable');
 
-      const smsQueue = (await import('../../drizzle/schema')).smsQueue;
-      const where = and(
+            const where = and(
         input.status ? eq(smsQueue.status, input.status) : undefined,
         input.relatedEntityId ? eq(smsQueue.relatedEntityId, input.relatedEntityId) : undefined
       );
@@ -209,8 +207,6 @@ export const smsRouter = router({
       const database = await db.getDb();
       if (!database) throw new Error('Database unavailable');
 
-      const preferences = (await import('../../drizzle/schema')).smsCustomerPreferences;
-
       // Normalize phone number
       let normalizedPhone = input.phoneNumber;
       if (normalizedPhone.startsWith('0')) {
@@ -219,9 +215,10 @@ export const smsRouter = router({
         normalizedPhone = '+' + normalizedPhone;
       }
 
-      const record = await database.query.smsCustomerPreferences.findFirst({
-        where: eq(preferences.phoneNumber, normalizedPhone),
-      });
+      const records = await database.select().from(smsCustomerPreferences)
+        .where(eq(smsCustomerPreferences.phoneNumber, normalizedPhone))
+        .limit(1);
+      const record = records[0] || null;
 
       if (!record) {
         // Return default preferences
@@ -235,7 +232,7 @@ export const smsRouter = router({
             payments: true,
             receipts: true,
           },
-          createdAt: new Date(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         };
       }
 
@@ -276,8 +273,6 @@ export const smsRouter = router({
       const database = await db.getDb();
       if (!database) throw new Error('Database unavailable');
 
-      const preferences = (await import('../../drizzle/schema')).smsCustomerPreferences;
-
       // Normalize phone number
       let normalizedPhone = input.phoneNumber;
       if (normalizedPhone.startsWith('0')) {
@@ -287,25 +282,28 @@ export const smsRouter = router({
       }
 
       // Check if record exists
-      const existing = await database.query.smsCustomerPreferences.findFirst({
-        where: eq(preferences.phoneNumber, normalizedPhone),
-      });
+      const existingRecords = await database.select().from(smsCustomerPreferences)
+        .where(eq(smsCustomerPreferences.phoneNumber, normalizedPhone))
+        .limit(1);
+      const existing = existingRecords[0] || null;
 
       if (existing) {
-        await database.update(preferences)
+        await database.update(smsCustomerPreferences)
           .set({
             optedIn: input.optedIn ?? existing.optedIn,
             marketingOptedIn: input.marketingOptedIn ?? existing.marketingOptedIn,
             transactionalOptedIn: input.transactionalOptedIn ?? existing.transactionalOptedIn,
             reminderPreferences: input.reminderPreferences
-              ? { ...existing.reminderPreferences, ...input.reminderPreferences }
+              ? { ...(existing.reminderPreferences as any), ...input.reminderPreferences }
               : existing.reminderPreferences,
-            updatedAt: new Date(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
-          .where(eq(preferences.phoneNumber, normalizedPhone));
+          .where(eq(smsCustomerPreferences.phoneNumber, normalizedPhone));
       } else {
         // Create new preference record
-        await database.insert(preferences).values({
+        const crypto = await import('crypto');
+        await database.insert(smsCustomerPreferences).values({
+          id: crypto.randomUUID(),
           phoneNumber: normalizedPhone,
           optedIn: input.optedIn ?? true,
           marketingOptedIn: input.marketingOptedIn ?? false,
@@ -339,9 +337,7 @@ export const smsRouter = router({
       const database = await db.getDb();
       if (!database) throw new Error('Database unavailable');
 
-      const smsQueue = (await import('../../drizzle/schema')).smsQueue;
-
-      // Get counts by status
+            // Get counts by status
       const stats = await database.select({
         status: smsQueue.status,
         count: count(),
@@ -391,10 +387,8 @@ export const smsRouter = router({
       const database = await db.getDb();
       if (!database) throw new Error('Database unavailable');
 
-      const smsQueue = (await import('../../drizzle/schema')).smsQueue;
-      const record = await database.query.smsQueue.findFirst({
-        where: eq(smsQueue.id, input.queueId),
-      });
+      const records = await database.select().from(smsQueue).where(eq(smsQueue.id, input.queueId)).limit(1);
+      const record = records[0] || null;
 
       if (!record) {
         throw new TRPCError({
@@ -407,7 +401,7 @@ export const smsRouter = router({
       await database.update(smsQueue)
         .set({
           status: 'pending',
-          nextRetryAt: new Date(),
+          nextRetryAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           retryCount: (record.retryCount || 0) + 1,
         })
         .where(eq(smsQueue.id, input.queueId));

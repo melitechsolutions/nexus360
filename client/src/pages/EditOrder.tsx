@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useRouter, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,8 +27,7 @@ interface OrderLineItem {
 }
 
 export default function EditOrder() {
-  const [, navigate] = useRouter();
-  const [, setLocation] = useLocation();
+  const [, navigate] = useLocation();
   const orderId = new URLSearchParams(window.location.search).get("id") || "";
 
   const [orderNumber, setOrderNumber] = useState("");
@@ -39,17 +38,29 @@ export default function EditOrder() {
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<OrderLineItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
 
-  const { data: suppliers = [] } = trpc.suppliers?.list?.useQuery?.() || { data: [] };
+  const { data: rawSuppliers = [] } = trpc.suppliers.list.useQuery();
+  const suppliers = JSON.parse(JSON.stringify(rawSuppliers));
 
-  // TODO: Fetch order details using tRPC
-  // const { data: order } = trpc.orders.getById.useQuery(orderId);
+  const { data: rawOrder, isLoading: isFetching } = trpc.lpo.getById.useQuery(orderId, { enabled: !!orderId });
+  const order = rawOrder ? JSON.parse(JSON.stringify(rawOrder)) : null;
+
+  const updateMutation = trpc.lpo.update.useMutation({
+    onSuccess: () => {
+      toast.success("Purchase order updated successfully");
+      navigate("/procurement");
+    },
+    onError: () => toast.error("Failed to update purchase order"),
+  });
 
   useEffect(() => {
-    // Simulate loading order data
-    setIsFetching(false);
-  }, [orderId]);
+    if (order) {
+      setOrderNumber(order.lpoNumber || "");
+      setVendorId(order.vendorId || "");
+      setStatus(order.status || "draft");
+      setNotes(order.description || "");
+    }
+  }, [order]);
 
   const handleAddLineItem = () => {
     const newItem: OrderLineItem = {
@@ -110,23 +121,14 @@ export default function EditOrder() {
 
     setIsLoading(true);
     try {
-      // TODO: Implement tRPC call to update order
-      // await trpc.orders.update.mutate({
-      //   id: orderId,
-      //   orderNumber,
-      //   vendorId,
-      //   orderDate,
-      //   dueDate,
-      //   status,
-      //   notes,
-      //   lineItems,
-      //   totalAmount: getTotalAmount(),
-      // });
-
-      toast.success("Purchase order updated successfully");
-      navigate("/orders");
+      await updateMutation.mutateAsync({
+        id: orderId,
+        status: status as any,
+        description: notes || undefined,
+        amount: getTotalAmount() > 0 ? getTotalAmount() : undefined,
+      });
     } catch (error) {
-      toast.error("Failed to update purchase order");
+      // error handled by mutation onError
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +140,7 @@ export default function EditOrder() {
         title="Edit Purchase Order"
         description="Modify purchase order details"
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "Procurement", href: "/procurement" },
           { label: "Orders", href: "/orders" },
           { label: "Edit Order" },
@@ -156,7 +158,7 @@ export default function EditOrder() {
       title="Edit Purchase Order"
       description="Modify purchase order details and line items"
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Procurement", href: "/procurement" },
         { label: "Orders", href: "/orders" },
         { label: "Edit Order" },

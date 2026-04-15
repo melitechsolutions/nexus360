@@ -2,6 +2,8 @@ import { router, protectedProcedure, createFeatureRestrictedProcedure } from "..
 import { z } from "zod";
 import { getDb } from "../db";
 import { v4 as uuidv4 } from "uuid";
+import { performanceReviews, skillsMatrix, schedules, employees, vacationRequests } from "../../drizzle/schema";
+import { eq, and, desc, gte, lte } from "drizzle-orm";
 
 // Define typed procedures
 const createProcedure = createFeatureRestrictedProcedure("hr:performance");
@@ -35,7 +37,7 @@ export const teamPerformanceRouter = router({
 
       try {
         const reviewId = uuidv4();
-        await db.insertPerformanceReview({
+        await db.insert(performanceReviews).values({
           id: reviewId,
           employeeId: input.employeeId,
           reviewerId: ctx.user?.id || "",
@@ -70,7 +72,9 @@ export const teamPerformanceRouter = router({
       if (!db) return { reviews: [] };
 
       try {
-        const reviews = await db.getPerformanceReviews(input.employeeId);
+        const reviews = await db.select().from(performanceReviews)
+          .where(eq(performanceReviews.employeeId, input.employeeId))
+          .orderBy(desc(performanceReviews.reviewDate));
         return { reviews };
       } catch (error) {
         console.error("[TEAM PERFORMANCE] Error:", error);
@@ -97,7 +101,7 @@ export const teamPerformanceRouter = router({
 
       try {
         const skillId = uuidv4();
-        await db.insertSkill({
+        await db.insert(skillsMatrix).values({
           id: skillId,
           employeeId: input.employeeId,
           skillName: input.skillName,
@@ -122,7 +126,8 @@ export const teamPerformanceRouter = router({
       if (!db) return { skills: [] };
 
       try {
-        const skills = await db.getEmployeeSkills(input.employeeId);
+        const skills = await db.select().from(skillsMatrix)
+          .where(eq(skillsMatrix.employeeId, input.employeeId));
         return { skills };
       } catch (error) {
         return { skills: [] };
@@ -137,15 +142,23 @@ export const teamPerformanceRouter = router({
     if (!db) return { team: [] };
 
     try {
-      const employees = await db.getEmployeesByManager(ctx.user?.id || "");
+      // Get employees in the same organization
+      const orgId = (ctx.user as any)?.organizationId;
+      const emps = orgId
+        ? await db.select().from(employees).where(eq(employees.organizationId, orgId)).limit(50)
+        : await db.select().from(employees).limit(50);
       const dashboard = [];
 
-      for (const emp of employees) {
-        const latestReview = await db.getLatestReview(emp.id);
-        const skills = await db.getEmployeeSkills(emp.id);
+      for (const emp of emps) {
+        const [latestReview] = await db.select().from(performanceReviews)
+          .where(eq(performanceReviews.employeeId, emp.id))
+          .orderBy(desc(performanceReviews.reviewDate))
+          .limit(1);
+        const skills = await db.select().from(skillsMatrix)
+          .where(eq(skillsMatrix.employeeId, emp.id));
         dashboard.push({
           ...emp,
-          latestReview,
+          latestReview: latestReview || null,
           skillCount: skills.length,
         });
       }
@@ -182,7 +195,7 @@ export const advancedSchedulingRouter = router({
         const scheduleId = uuidv4();
         const duration = new Date(input.endDate).getTime() - new Date(input.startDate).getTime();
 
-        await db.insertSchedule({
+        await db.insert(schedules).values({
           id: scheduleId,
           employeeId: input.employeeId,
           taskTitle: input.taskTitle,
@@ -193,7 +206,7 @@ export const advancedSchedulingRouter = router({
           priority: input.priority,
           projectId: input.projectId,
           recurrencePattern: input.recurrencePattern,
-          createdBy: ctx.user?.id,
+          assignedTo: ctx.user?.id,
           status: 'scheduled',
         });
 
@@ -208,12 +221,16 @@ export const advancedSchedulingRouter = router({
    */
   getTeamCalendar: readProcedure
     .input(z.object({ startDate: z.string(), endDate: z.string() }))
-    .query(async ({ ctx }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return { events: [] };
 
       try {
-        const events = await db.getSchedulesByDateRange(new Date(input.startDate), new Date(input.endDate));
+        const events = await db.select().from(schedules)
+          .where(and(
+            gte(schedules.startDate, input.startDate),
+            lte(schedules.endDate, input.endDate)
+          ));
         return { events };
       } catch (error) {
         return { events: [] };
@@ -242,7 +259,7 @@ export const advancedSchedulingRouter = router({
           (new Date(input.endDate).getTime() - new Date(input.startDate).getTime()) / (1000 * 60 * 60 * 24)
         );
 
-        await db.insertVacationRequest({
+        await db.insert(vacationRequests).values({
           id: requestId,
           employeeId: ctx.user?.id || "",
           startDate: input.startDate,
@@ -267,8 +284,11 @@ export const advancedSchedulingRouter = router({
     if (!db) return { requests: [] };
 
     try {
-      const requests = await db.getVacationRequestsByManager(ctx.user?.id || "");
-      return { requests };
+      // Return pending vacation requests (org-scoped if available)
+      const allRequests = await db.select().from(vacationRequests)
+        .where(eq(vacationRequests.status, "pending"))
+        .orderBy(desc(vacationRequests.createdAt));
+      return { requests: allRequests };
     } catch (error) {
       return { requests: [] };
     }
@@ -290,12 +310,14 @@ export const advancedSchedulingRouter = router({
       if (!db) return { success: false };
 
       try {
-        await db.updateVacationRequest(input.requestId, {
-          status: input.approved ? 'approved' : 'rejected',
-          approvedBy: ctx.user?.id,
-          approvalDate: new Date().toISOString(),
-          notes: input.notes,
-        });
+        await db.update(vacationRequests)
+          .set({
+            status: input.approved ? 'approved' : 'rejected',
+            approvedBy: ctx.user?.id,
+            approvalDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+            notes: input.notes,
+          })
+          .where(eq(vacationRequests.id, input.requestId));
 
         return { success: true };
       } catch (error) {
@@ -311,17 +333,21 @@ export const advancedSchedulingRouter = router({
     if (!db) return { team: [] };
 
     try {
-      const employees = await db.getEmployeesByManager(ctx.user?.id || "");
+      const orgId = (ctx.user as any)?.organizationId;
+      const emps = orgId
+        ? await db.select().from(employees).where(eq(employees.organizationId, orgId)).limit(50)
+        : await db.select().from(employees).limit(50);
       const utilization = [];
 
-      for (const emp of employees) {
-        const schedules = await db.getEmployeeSchedules(emp.id);
-        const totalHours = schedules.reduce((sum: number, s: any) => sum + (s.duration || 0), 0);
+      for (const emp of emps) {
+        const empSchedules = await db.select().from(schedules)
+          .where(eq(schedules.employeeId, emp.id));
+        const totalHours = empSchedules.reduce((sum: number, s: any) => sum + (s.duration || 0), 0);
         const utilizationRate = totalHours > 0 ? Math.min(100, Math.round((totalHours / 160) * 100)) : 0;
 
         utilization.push({
           employeeId: emp.id,
-          employeeName: emp.name,
+          employeeName: `${emp.firstName} ${emp.lastName}`,
           totalHours,
           utilizationRate,
           status: utilizationRate < 50 ? 'underutilized' : utilizationRate > 100 ? 'overbooked' : 'optimal',

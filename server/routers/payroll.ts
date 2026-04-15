@@ -13,6 +13,7 @@ import {
   salaryIncrements,
 } from "../../drizzle/schema-extended";
 import { eq, and, inArray } from "drizzle-orm";
+import { getCompanyInfo } from "../utils/company-info";
 import { v4 as uuidv4 } from "uuid";
 import { generateP9Form, generateP9DataFromPayroll } from "../utils/p9-form-generator";
 
@@ -736,9 +737,9 @@ export const payrollRouter = router({
           id,
           ...input,
           incrementPercent: Math.round(incrementPercent),
-          effectiveDate: new Date().toISOString(),
+          effectiveDate: new Date().toISOString().replace('T', ' ').substring(0, 19),
           createdBy: ctx.user.id,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         } as any);
 
         return { id };
@@ -754,7 +755,7 @@ export const payrollRouter = router({
 
         await db.update(salaryIncrements).set({
           approvedBy: ctx.user.id,
-          approvalDate: new Date().toISOString(),
+          approvalDate: new Date().toISOString().replace('T', ' ').substring(0, 19),
         } as any).where(eq(salaryIncrements.id, input.id));
 
         return { success: true };
@@ -782,7 +783,7 @@ export const payrollRouter = router({
 
         await db.update(salaryIncrements).set({
           ...updateData,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         } as any).where(eq(salaryIncrements.id, id));
 
         return { success: true };
@@ -800,6 +801,37 @@ export const payrollRouter = router({
 
   // ===================== Payroll Approval Workflow =====================
   approvals: router({
+    list: createFeatureRestrictedProcedure("payroll:read")
+      .input(z.object({ status: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return [];
+        const params = input || {};
+        const conditions: any[] = [];
+        if (params.status) conditions.push(eq(payrollApprovals.status, params.status as any));
+        const rows = await db.select().from(payrollApprovals).where(conditions.length ? and(...conditions) : undefined);
+        // Join with payroll + employees for display names & salary info
+        const payrollIds = [...new Set(rows.map(r => (r as any).payrollId))];
+        if (payrollIds.length === 0) return [];
+        const payrollRows = await db.select().from(payroll).where(inArray(payroll.id, payrollIds));
+        const empIds = [...new Set(payrollRows.map(p => p.employeeId))];
+        const empRows = empIds.length ? await db.select().from(employees).where(inArray(employees.id, empIds)) : [];
+        const payrollMap = Object.fromEntries(payrollRows.map(p => [p.id, p]));
+        const empMap = Object.fromEntries(empRows.map(e => [e.id, e]));
+        return rows.map((r: any) => {
+          const pr = payrollMap[r.payrollId];
+          const emp = pr ? empMap[pr.employeeId] : null;
+          return {
+            ...r,
+            employeeName: emp ? `${emp.firstName || ""} ${emp.lastName || ""}`.trim() : "Unknown",
+            basicSalary: pr?.basicSalary || 0,
+            netSalary: pr?.netSalary || 0,
+            payPeriodStart: pr?.payPeriodStart,
+            payPeriodEnd: pr?.payPeriodEnd,
+          };
+        });
+      }),
+
     byPayroll: createFeatureRestrictedProcedure("payroll:read")
       .input(z.object({ payrollId: z.string() }))
       .query(async ({ input }) => {
@@ -823,7 +855,7 @@ export const payrollRouter = router({
           ...input,
           approverId: ctx.user.id,
           status: "pending",
-          createdAt: new Date().toISOString(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         } as any);
 
         return { id };
@@ -839,7 +871,7 @@ export const payrollRouter = router({
 
         await db.update(payrollApprovals).set({
           status: "approved",
-          approvalDate: new Date().toISOString(),
+          approvalDate: new Date().toISOString().replace('T', ' ').substring(0, 19),
         } as any).where(eq(payrollApprovals.id, input.id));
 
         return { success: true };
@@ -857,7 +889,7 @@ export const payrollRouter = router({
         await db.update(payrollApprovals).set({
           status: "rejected",
           rejectionReason: input.reason,
-          approvalDate: new Date().toISOString(),
+          approvalDate: new Date().toISOString().replace('T', ' ').substring(0, 19),
         } as any).where(eq(payrollApprovals.id, input.id));
 
         return { success: true };
@@ -1027,6 +1059,8 @@ export const payrollRouter = router({
           totalNetSalary += record.netSalary || 0;
         }
 
+        const companyInfo = await getCompanyInfo();
+
         // Generate P9 data
         const p9Data = {
           employeeId: emp.employeeNumber || emp.id,
@@ -1043,9 +1077,9 @@ export const payrollRouter = router({
           taxYear,
           monthFrom: 1,
           monthTo: 12,
-          companyName: 'Melitech Solutions',
-          companyKRAPin: 'P000123456A',
-          companyAddress: 'Nairobi, Kenya',
+          companyName: companyInfo.name,
+          companyKRAPin: companyInfo.kraPin || 'N/A',
+          companyAddress: companyInfo.address || 'N/A',
           certificationDate: new Date(),
           certifiedBy: ctx.user.firstName ? `${ctx.user.firstName} ${ctx.user.lastName}` : 'HR Manager',
           certifiedByTitle: 'Human Resources Manager',

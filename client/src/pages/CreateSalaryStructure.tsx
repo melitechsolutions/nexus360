@@ -73,7 +73,7 @@ export default function CreateSalaryStructure() {
       description="Set up salary structure for an employee"
       icon={<DollarSign className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Payroll", href: "/payroll" },
         { label: "Create Salary Structure" },
       ]}

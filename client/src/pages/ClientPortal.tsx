@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DashboardLayout from "@/components/DashboardLayout";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import {
   FileText,
@@ -18,11 +17,14 @@ import {
   Clock,
   Search,
   Loader2,
+  Users,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuthWithPersistence } from "@/_core/hooks/useAuthWithPersistence";
 import { trpc } from "@/lib/trpc";
+import { useUserLookup } from "@/hooks/useUserLookup";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
 
 /**
  * ClientPortal component with backend API integration
@@ -39,6 +41,7 @@ import { toast } from "sonner";
  */
 export default function ClientPortal() {
   const [, setLocation] = useLocation();
+  const { getUserName } = useUserLookup();
   const [searchQuery, setSearchQuery] = useState("");
   const { user, loading: authLoading, isAuthenticated } = useAuthWithPersistence({
     redirectOnUnauthenticated: true,
@@ -92,17 +95,18 @@ export default function ClientPortal() {
 
   if (authLoading) {
     return (
-      <DashboardLayout>
-        <ModuleLayout
-          breadcrumbs={[{ label: "Client Portal", href: "/client-portal" }]}
-          title="Client Portal"
-          description="Your project dashboard and documents"
-        >
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        </ModuleLayout>
-      </DashboardLayout>
+      <ModuleLayout
+        title="Client Portal"
+        icon={<Users className="h-5 w-5" />}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/" },
+          { label: "Client Portal" },
+        ]}
+      >
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </ModuleLayout>
     );
   }
 
@@ -144,57 +148,48 @@ export default function ClientPortal() {
   };
 
   return (
-    <DashboardLayout>
-      <ModuleLayout
-        breadcrumbs={[{ label: "Client Portal", href: "/crm/client-portal" }]}
-        title="Client Portal"
-        description="Your project dashboard and documents"
-      >
+    <ModuleLayout
+      title="Client Portal"
+      icon={<Users className="h-5 w-5" />}
+      description="Your project dashboard and documents"
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Client Portal" },
+      ]}
+    >
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-              <FolderOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{activeProjectsCount}</div>
-              <p className="text-xs text-muted-foreground">In progress</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Active Projects"
+            value={activeProjectsCount}
+            description="In progress"
+            icon={<FolderOpen className="h-5 w-5" />}
+            color="border-l-orange-500"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(totalSpent / 1000).toFixed(0)}K</div>
-              <p className="text-xs text-muted-foreground">Across all projects</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Spent"
+            value={<>Ksh {(totalSpent / 1000).toFixed(0)}K</>}
+            description="Across all projects"
+            icon={<DollarSign className="h-5 w-5" />}
+            color="border-l-purple-500"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingInvoices.length}</div>
-              <p className="text-xs text-muted-foreground">Ksh {(pendingAmount / 1000).toFixed(0)}K due</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Pending Invoices"
+            value={pendingInvoices.length}
+            description={<>Ksh {(pendingAmount / 1000).toFixed(0)}K due</>}
+            icon={<FileText className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Documents</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{documents.length}</div>
-              <p className="text-xs text-muted-foreground">Available to download</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Documents"
+            value={documents.length}
+            description="Available to download"
+            icon={<FileText className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
         </div>
 
         {/* Main Content Tabs */}
@@ -227,7 +222,7 @@ export default function ClientPortal() {
                       <div>
                         <CardTitle>{project.name}</CardTitle>
                         <CardDescription>
-                          {project.startDate} - {project.endDate}
+                          {project.startDate ? new Date(project.startDate).toLocaleDateString() : "-"} - {project.endDate ? new Date(project.endDate).toLocaleDateString() : "-"}
                         </CardDescription>
                       </div>
                       <Badge
@@ -310,7 +305,7 @@ export default function ClientPortal() {
                       </div>
                     )}
 
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" onClick={() => setLocation(`/projects/${project.id}`)}>
                       <Eye className="h-4 w-4 mr-2" />
                       View Project Details
                     </Button>
@@ -361,7 +356,7 @@ export default function ClientPortal() {
                           <div>
                             <p className="font-semibold">{invoice.id}</p>
                             <p className="text-sm text-muted-foreground">
-                              Issued: {invoice.date} • Due: {invoice.dueDate}
+                              Issued: {invoice.date ? new Date(invoice.date).toLocaleDateString() : "-"} • Due: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "-"}
                             </p>
                           </div>
                         </div>
@@ -383,7 +378,7 @@ export default function ClientPortal() {
                               {(invoice.status || 'draft').toUpperCase()}
                             </Badge>
                           </div>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => window.open(`/api/invoices/${invoice.id}/pdf`, "_blank")}>
                             <Download className="h-4 w-4" />
                           </Button>
                         </div>
@@ -493,7 +488,7 @@ export default function ClientPortal() {
                         <div>
                           <p className="font-semibold">{doc.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {doc.type} • {doc.date} • {doc.size}
+                            {doc.type} • {doc.date ? new Date(doc.date).toLocaleDateString() : "-"} • {doc.size}
                           </p>
                         </div>
                       </div>
@@ -534,14 +529,13 @@ export default function ClientPortal() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Account Manager</p>
-                    <p className="text-lg font-semibold">{clientData.accountManager || "N/A"}</p>
+                    <p className="text-lg font-semibold">{getUserName(clientData.accountManager) || "N/A"}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-      </ModuleLayout>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

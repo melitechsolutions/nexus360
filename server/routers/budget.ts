@@ -25,27 +25,20 @@ export const budgetRouter = router({
         limit: z.number().optional(),
         offset: z.number().optional(),
       }).optional())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const database = await getDb();
         if (!database) return [];
 
-        let query = database.select().from(projectBudgets);
+        const orgId = ctx.user.organizationId;
+        const conditions: any[] = [];
+        if (orgId) conditions.push(eq(projectBudgets.organizationId, orgId));
+        if (input?.projectId) conditions.push(eq(projectBudgets.projectId, input.projectId));
+        if (input?.status) conditions.push(eq(projectBudgets.budgetStatus, input.status));
 
-        if (input?.projectId) {
-          query = database
-            .select()
-            .from(projectBudgets)
-            .where(eq(projectBudgets.projectId, input.projectId)) as any;
-        }
+        const whereClause = conditions.length === 1 ? conditions[0] : conditions.length > 1 ? and(...conditions) : undefined;
 
-        if (input?.status) {
-          query = database
-            .select()
-            .from(projectBudgets)
-            .where(eq(projectBudgets.budgetStatus, input.status)) as any;
-        }
-
-        return await (query as any)
+        return await database.select().from(projectBudgets)
+          .where(whereClause)
           .orderBy(desc(projectBudgets.createdAt))
           .limit(input?.limit || 50)
           .offset(input?.offset || 0);
@@ -54,14 +47,16 @@ export const budgetRouter = router({
     // Get budget by ID
     getById: readProcedure
       .input(z.string())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const database = await getDb();
         if (!database) return null;
 
+        const orgId = ctx.user.organizationId;
+        const where = orgId ? and(eq(projectBudgets.id, input), eq(projectBudgets.organizationId, orgId)) : eq(projectBudgets.id, input);
         const result = await database
           .select()
           .from(projectBudgets)
-          .where(eq(projectBudgets.id, input))
+          .where(where)
           .limit(1);
 
         return result[0] || null;
@@ -86,6 +81,7 @@ export const budgetRouter = router({
         try {
           await database.insert(projectBudgets).values({
             id,
+            organizationId: ctx.user.organizationId ?? null,
             projectId: input.projectId,
             budgetedAmount: budgetedCents,
             spent: 0,
@@ -95,8 +91,8 @@ export const budgetRouter = router({
             endDate: input.endDate ? new Date(input.endDate) : null,
             notes: input.notes,
             createdBy: ctx.user.id,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
 
           await db.logActivity({
@@ -134,7 +130,11 @@ export const budgetRouter = router({
 
         if (!budget[0]) throw new Error("Budget not found");
 
-        const updates: any = { updatedAt: new Date() };
+        // Verify org ownership
+        const orgId = ctx.user.organizationId;
+        if (orgId && budget[0].organizationId !== orgId) throw new Error("Budget not found");
+
+        const updates: any = { updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)};
         let budgeted = budget[0].budgetedAmount;
         let spent = budget[0].spent;
 
@@ -185,6 +185,13 @@ export const budgetRouter = router({
         if (!database) throw new Error("Database not available");
 
         try {
+          // Verify org ownership
+          const orgId = ctx.user.organizationId;
+          if (orgId) {
+            const existing = await database.select().from(projectBudgets).where(eq(projectBudgets.id, input)).limit(1);
+            if (!existing.length || existing[0].organizationId !== orgId) throw new Error("Budget not found");
+          }
+
           await database.delete(projectBudgets).where(eq(projectBudgets.id, input));
 
           await db.logActivity({
@@ -213,36 +220,22 @@ export const budgetRouter = router({
         departmentId: z.string().optional(),
         status: z.enum(["under", "at", "over"]).optional(),
       }).optional())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const database = await getDb();
         if (!database) return [];
 
-        let query = database
-          .select()
-          .from(departmentBudgets)
-          .where(eq(departmentBudgets.year, input?.year || new Date().getFullYear()));
+        const orgId = ctx.user.organizationId;
+        const conditions: any[] = [];
+        conditions.push(eq(departmentBudgets.year, input?.year || new Date().getFullYear()));
+        if (orgId) conditions.push(eq(departmentBudgets.organizationId, orgId));
+        if (input?.departmentId) conditions.push(eq(departmentBudgets.departmentId, input.departmentId));
+        if (input?.status) conditions.push(eq(departmentBudgets.budgetStatus, input.status));
 
-        if (input?.departmentId) {
-          query = database
-            .select()
-            .from(departmentBudgets)
-            .where(and(
-              eq(departmentBudgets.year, input.year || new Date().getFullYear()),
-              eq(departmentBudgets.departmentId, input.departmentId)
-            )) as any;
-        }
+        const whereClause = conditions.length === 1 ? conditions[0] : and(...conditions);
 
-        if (input?.status) {
-          query = database
-            .select()
-            .from(departmentBudgets)
-            .where(and(
-              eq(departmentBudgets.year, input.year || new Date().getFullYear()),
-              eq(departmentBudgets.budgetStatus, input.status)
-            )) as any;
-        }
-
-        return await (query as any).orderBy(desc(departmentBudgets.createdAt));
+        return await database.select().from(departmentBudgets)
+          .where(whereClause)
+          .orderBy(desc(departmentBudgets.createdAt));
       }),
 
     // Create department budget
@@ -273,8 +266,8 @@ export const budgetRouter = router({
             category: input.category,
             notes: input.notes,
             createdBy: ctx.user.id,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           } as any);
 
           await db.logActivity({
@@ -292,18 +285,60 @@ export const budgetRouter = router({
         }
       }),
 
-    // Update department budget spent amount (based on actual expenses)
-    // TODO: Fix this mutation - expenses table doesn't have departmentId field
-    /*
+    // Update department budget spent amount (based on actual expenses linked via budgetAllocations)
     updateSpent: writeProcedure
       .input(z.object({
         departmentId: z.string(),
         year: z.number(),
       }))
       .mutation(async ({ input, ctx }) => {
-        // Disabled - schema mismatch
+        const database = await getDb();
+        if (!database) throw new Error("Database unavailable");
+        const orgId = ctx.user.organizationId;
+
+        try {
+          // Find the department budget
+          const budgetConditions = [
+            eq(departmentBudgets.departmentId, input.departmentId),
+            eq(departmentBudgets.year, input.year),
+          ];
+          if (orgId) budgetConditions.push(eq(departmentBudgets.organizationId, orgId));
+
+          const [budget] = await database.select().from(departmentBudgets)
+            .where(and(...budgetConditions)).limit(1);
+
+          if (!budget) throw new Error("Department budget not found");
+
+          // Sum approved expenses that belong to employees in this department
+          // Join through employees table to get department linkage
+          const yearStart = `${input.year}-01-01`;
+          const yearEnd = `${input.year}-12-31`;
+
+          const [result] = await (database as any).execute(
+            `SELECT COALESCE(SUM(e.amount), 0) as totalSpent
+             FROM expenses e
+             INNER JOIN employees emp ON e.createdBy = emp.userId
+             WHERE emp.department = (SELECT name FROM departments WHERE id = ?)
+             AND e.status = 'approved'
+             AND e.expenseDate BETWEEN ? AND ?
+             ${orgId ? 'AND e.organizationId = ?' : ''}`,
+            orgId ? [input.departmentId, yearStart, yearEnd, orgId] : [input.departmentId, yearStart, yearEnd]
+          );
+
+          const totalSpent = Number(result?.[0]?.totalSpent || 0);
+
+          await database.update(departmentBudgets).set({
+            spent: totalSpent,
+            budgetStatus: totalSpent > (budget as any).amount ? 'over' : 'under',
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          } as any).where(eq(departmentBudgets.id, (budget as any).id));
+
+          return { success: true, spent: totalSpent, budgetId: (budget as any).id };
+        } catch (error) {
+          console.error("Error updating department budget spent:", error);
+          throw new Error("Failed to update department budget spent amount");
+        }
       }),
-    */
   }),
 
   // ========== BUDGET DASHBOARD & ANALYTICS ==========
@@ -312,18 +347,20 @@ export const budgetRouter = router({
     // Get overall budget summary
     summary: readProcedure
       .input(z.object({ year: z.number().optional() }).optional())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const database = await getDb();
         if (!database) return null;
 
         const year = input?.year || new Date().getFullYear();
+        const orgId = ctx.user.organizationId;
 
         try {
-          const projectBudgetsData = await database.select().from(projectBudgets);
-          const deptBudgetData = await database
-            .select()
-            .from(departmentBudgets)
-            .where(eq(departmentBudgets.year, year));
+          const projectBudgetsData = orgId
+            ? await database.select().from(projectBudgets).where(eq(projectBudgets.organizationId, orgId))
+            : await database.select().from(projectBudgets);
+          const deptBudgetData = orgId
+            ? await database.select().from(departmentBudgets).where(and(eq(departmentBudgets.year, year), eq(departmentBudgets.organizationId, orgId)))
+            : await database.select().from(departmentBudgets).where(eq(departmentBudgets.year, year));
 
           const totalProjectBudget = projectBudgetsData.reduce((sum, b) => sum + (b.budgetedAmount || 0), 0);
           const totalProjectSpent = projectBudgetsData.reduce((sum, b) => sum + (b.spent || 0), 0);
@@ -363,17 +400,17 @@ export const budgetRouter = router({
     // Get budget vs actual comparison by department
     byDepartment: readProcedure
       .input(z.object({ year: z.number().optional() }).optional())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
         const database = await getDb();
         if (!database) return [];
 
         const year = input?.year || new Date().getFullYear();
+        const orgId = ctx.user.organizationId;
 
         try {
-          const deptBudgets = await database
-            .select()
-            .from(departmentBudgets)
-            .where(eq(departmentBudgets.year, year));
+          const deptBudgets = orgId
+            ? await database.select().from(departmentBudgets).where(and(eq(departmentBudgets.year, year), eq(departmentBudgets.organizationId, orgId)))
+            : await database.select().from(departmentBudgets).where(eq(departmentBudgets.year, year));
 
           return deptBudgets.map(budget => ({
             id: budget.id,
@@ -393,12 +430,15 @@ export const budgetRouter = router({
       }),
 
     // Get budget vs actual comparison by project
-    byProject: readProcedure.query(async () => {
+    byProject: readProcedure.query(async ({ ctx }) => {
       const database = await getDb();
       if (!database) return [];
 
       try {
-        const budgets = await database.select().from(projectBudgets);
+        const orgId = ctx.user.organizationId;
+        const budgets = orgId
+          ? await database.select().from(projectBudgets).where(eq(projectBudgets.organizationId, orgId))
+          : await database.select().from(projectBudgets);
 
         return budgets.map(budget => ({
           id: budget.id,
@@ -418,15 +458,15 @@ export const budgetRouter = router({
     }),
 
     // Get alerts for over-budget items
-    alerts: readProcedure.query(async () => {
+    alerts: readProcedure.query(async ({ ctx }) => {
       const database = await getDb();
       if (!database) return [];
 
       try {
-        const overBudget = await database
-          .select()
-          .from(departmentBudgets)
-          .where(eq(departmentBudgets.budgetStatus, "over"));
+        const orgId = ctx.user.organizationId;
+        const overBudget = orgId
+          ? await database.select().from(departmentBudgets).where(and(eq(departmentBudgets.budgetStatus, "over"), eq(departmentBudgets.organizationId, orgId)))
+          : await database.select().from(departmentBudgets).where(eq(departmentBudgets.budgetStatus, "over"));
 
         return overBudget.map(budget => ({
           id: budget.id,

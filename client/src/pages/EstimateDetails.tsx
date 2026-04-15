@@ -1,5 +1,5 @@
 import { useRoute, useLocation } from "wouter";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { generateDocumentHTML } from "@/lib/documentTemplate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,13 +19,21 @@ import {
   Printer,
   Check,
   Trash2,
+  Star,
+  Calendar,
+  DollarSign,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCurrencySettings } from "@/lib/currency";
 import { handleDelete } from "@/lib/actions";
+import { RichTextDisplay } from "@/components/RichTextEditor";
+import { FileText, Scale } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import mutateAsync from "@/lib/mutationHelpers";
 import { toast } from "sonner";
 import { useAuthWithPersistence } from "@/_core/hooks/useAuthWithPersistence";
 import { APP_TITLE } from "@/const";
+import { useFavorite } from "@/hooks/useFavorite";
 
 export default function EstimateDetails() {
   const [, params] = useRoute("/estimates/:id");
@@ -35,8 +43,14 @@ export default function EstimateDetails() {
   const { user } = useAuthWithPersistence();
 
   const { data: estimateData, isLoading } = trpc.estimates.getWithItems.useQuery(estimateId);
+  const { isStarred, toggleStar } = useFavorite("estimate", estimateId, estimateData?.estimateNumber);
   const { data: clientsData = [] } = trpc.clients.list.useQuery();
   const { data: rawCompanyInfo } = trpc.settings.getCompanyInfo.useQuery();
+  const { data: bankPayData } = trpc.settings.getByCategory.useQuery({ category: "payment_bank" });
+  const { data: mpesaPayData } = trpc.settings.getByCategory.useQuery({ category: "payment_mpesa" });
+  const { data: invoiceSettingsData } = trpc.settings.getByCategory.useQuery({ category: "invoice_settings" });
+  const { data: docTemplatesData } = trpc.settings.getByCategory.useQuery({ category: "document_templates" });
+  const { code: currencyCode } = useCurrencySettings();
 
   // Convert frozen Drizzle objects to plain objects to avoid React error #306
   const clientsDataPlain = clientsData ? JSON.parse(JSON.stringify(clientsData)) : [];
@@ -107,61 +121,163 @@ export default function EstimateDetails() {
       total: (estimate?.total || 0),
       taxType: (estimate as any)?.taxType || 'exclusive',
       notes: estimate?.notes,
-      termsAndConditions: (estimate as any)?.termsAndConditions || 'Valid for 30 days from date of issuance.',
-      bankName: 'Kenya Commercial Bank',
-      bankBranch: 'Kitengela',
-      bankAccount: '1295660644',
-      bankAccountName: 'Melitech Solutions',
-      mpesaPaybill: '522522',
-      mpesaAccountNumber: '1295660644',
+      termsAndConditions: invoiceSettingsData?.termsAndConditions || (estimate as any)?.termsAndConditions || '',
+      bankDetailsHtml: bankPayData?.enabled === 'true' ? bankPayData?.details : undefined,
+      bankName: undefined,
+      mpesaPaybill: mpesaPayData?.enabled === 'true' ? mpesaPayData?.paybillNumber : undefined,
+      mpesaAccountNumber: mpesaPayData?.enabled === 'true' ? mpesaPayData?.paybillNumber : undefined,
+      customTemplateHtml: docTemplatesData?.estimate || undefined,
     });
 
     printWindow.document.write(html);
     printWindow.document.close();
   };
 
-  if (isLoading) return <DashboardLayout><div className="p-8 text-center">Loading...</div></DashboardLayout>;
-  if (!estimate) return <DashboardLayout><div className="p-8 text-center">Not found</div></DashboardLayout>;
+  if (isLoading) return <ModuleLayout title="Estimate Details" icon={<FileText className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Estimates", href: "/estimates"}, {label: "Details"}]} backLink={{label: "Estimates", href: "/estimates"}}><div className="p-8 text-center">Loading...</div></ModuleLayout>;
+  if (!estimate) return <ModuleLayout title="Estimate Details" icon={<FileText className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Estimates", href: "/estimates"}, {label: "Details"}]} backLink={{label: "Estimates", href: "/estimates"}}><div className="p-8 text-center">Not found</div></ModuleLayout>;
+
+  const fmtAmt = (v: number) => new Intl.NumberFormat("en-KE", { style: "currency", currency: currencyCode }).format(v);
 
   const canApprove = (user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'accountant') && estimate.status === 'draft';
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/estimates")}><ArrowLeft className="h-4 w-4" /></Button>
-            <div><h1 className="text-3xl font-bold">{estimate?.estimateNumber || "N/A"}</h1><p className="text-muted-foreground">Quotation for {estimate?.client?.name || "Client"}</p></div>
+    <ModuleLayout title="Estimate Details" icon={<FileText className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Estimates", href: "/estimates"}, {label: "Details"}]} backLink={{label: "Estimates", href: "/estimates"}}>
+      <div className="space-y-4">
+        {/* Action bar */}
+        <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" onClick={toggleStar}><Star className={`h-4 w-4 ${isStarred ? "fill-amber-400 text-amber-400" : ""}`} /></Button>
+            {canApprove && <Button variant="ghost" size="icon" onClick={() => approveMutation.mutate({ id: estimate.id })}><Check className="h-4 w-4" /></Button>}
+            <Button variant="ghost" size="icon" onClick={handlePrint}><Printer className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/estimates/${estimateId}/edit`)}><Edit className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => handleDelete(estimateId, "estimate", () => mutateAsync(deleteMutation, estimateId))}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+        </div>
+
+        {/* Split Layout */}
+        <div className="flex gap-6">
+          {/* Left Sidebar */}
+          <div className="w-[320px] min-w-[320px] space-y-4">
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div>
+                  <h2 className="text-xl font-bold">{estimate?.estimateNumber}</h2>
+                  <p className="text-sm text-muted-foreground">Quotation</p>
+                </div>
+                <Badge>{estimate?.status?.toUpperCase() || "DRAFT"}</Badge>
+                <Separator />
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Client</p>
+                      <p className="font-medium">{estimate?.client?.name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Issue Date</p>
+                      <p className="font-medium">{estimate?.issueDate}</p>
+                    </div>
+                  </div>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Financial Summary</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>{fmtAmt(estimate.subtotal || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tax</span>
+                      <span>{fmtAmt(estimate.tax || 0)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-bold">
+                      <span>Total</span>
+                      <span>{fmtAmt(estimate.total || 0)}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <div className="flex gap-2">
-            {canApprove && <Button onClick={() => approveMutation.mutate({ id: estimate.id })}><Check className="mr-2 h-4 w-4" />Approve</Button>}
-            <Button variant="outline" size="icon" onClick={handlePrint}><Printer className="h-4 w-4" /></Button>
-            <Button variant="outline" onClick={() => navigate(`/estimates/${estimateId}/edit`)}><Edit className="mr-2 h-4 w-4" />Edit</Button>
-            <Button variant="destructive" onClick={() => handleDelete(estimateId, "estimate", () => mutateAsync(deleteMutation, estimateId))}>
-              <Trash2 className="mr-2 h-4 w-4" />Delete
-            </Button>
+
+          {/* Right Content */}
+          <div className="flex-1 min-w-0">
+            <Tabs defaultValue="items" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="items">Line Items</TabsTrigger>
+                <TabsTrigger value="notes">Notes & Terms</TabsTrigger>
+              </TabsList>
+              <TabsContent value="items">
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
+                      <CardTitle>Quotation Details</CardTitle>
+                      <p className="text-sm text-muted-foreground">Bill To: {estimate?.client?.name} — {estimate?.client?.address}</p>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="text-right">Qty</TableHead>
+                          <TableHead className="text-right">Rate</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Array.isArray(estimate?.items) && estimate.items.map((item: any, i: number) => (
+                          <TableRow key={item.id || `est-item-${i}`}>
+                            <TableCell>{item?.description || "N/A"}</TableCell>
+                            <TableCell className="text-right">{item?.quantity || 0}</TableCell>
+                            <TableCell className="text-right">{fmtAmt((item?.unitPrice || 0) / 100)}</TableCell>
+                            <TableCell className="text-right">{fmtAmt((item?.total || 0) / 100)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="notes">
+                {estimate?.notes && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Notes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <RichTextDisplay html={estimate.notes} />
+                    </CardContent>
+                  </Card>
+                )}
+                {(estimate as any)?.termsAndConditions && (
+                  <Card className="mt-4">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Scale className="h-5 w-5" />
+                        Terms & Conditions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <RichTextDisplay html={(estimate as any).termsAndConditions} />
+                    </CardContent>
+                  </Card>
+                )}
+                {!estimate?.notes && !(estimate as any)?.termsAndConditions && (
+                  <p className="text-muted-foreground text-sm py-4">No notes or terms added.</p>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
-        <Card>
-          <CardHeader><div className="flex justify-between items-center"><CardTitle>Quotation Details</CardTitle><Badge>{estimate?.status?.toUpperCase() || "DRAFT"}</Badge></div></CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div><p className="text-sm font-medium text-muted-foreground">Bill To</p><p className="font-semibold">{estimate?.client?.name || "Client"}</p><p className="text-sm">{estimate?.client?.address || "Address"}</p></div>
-              <div className="text-right"><p className="text-sm"><strong>Date:</strong> {estimate?.issueDate || "N/A"}</p></div>
-            </div>
-            <Separator />
-            <Table>
-              <TableHeader><TableRow><TableHead>Description</TableHead><TableHead className="text-right">Qty</TableHead><TableHead className="text-right">Rate</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {Array.isArray(estimate?.items) && estimate.items.map((item: any, i: number) => (
-                  <TableRow key={item.id || `est-item-${i}`}><TableCell>{item?.description || "N/A"}</TableCell><TableCell className="text-right">{item?.quantity || 0}</TableCell><TableCell className="text-right">KES {((item?.unitPrice || 0)/100).toLocaleString()}</TableCell><TableCell className="text-right">KES {((item?.total || 0)/100).toLocaleString()}</TableCell></TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="flex justify-end"><div className="w-64 space-y-2"><div className="flex justify-between"><span>Subtotal:</span><span>KES {((estimate.subtotal || 0)).toLocaleString()}</span></div><div className="flex justify-between"><span>Tax:</span><span>KES {((estimate.tax || 0)).toLocaleString()}</span></div><Separator /><div className="flex justify-between font-bold"><span>Total:</span><span>KES {((estimate.total || 0)).toLocaleString()}</span></div></div></div>
-          </CardContent>
-        </Card>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

@@ -104,7 +104,7 @@ export const notificationsRouter = router({
         .update(notifications)
         .set({
           isRead: 1,
-          readAt: new Date().toISOString(),
+          readAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         })
         .where(
           and(
@@ -120,6 +120,33 @@ export const notificationsRouter = router({
     }),
 
   /**
+   * Mark notification as unread
+   */
+  markAsUnread: createFeatureRestrictedProcedure("notifications:edit")
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(notifications)
+        .set({
+          isRead: 0,
+          readAt: null,
+        })
+        .where(
+          and(
+            eq(notifications.id, input.id),
+            eq(notifications.userId, ctx.user.id)
+          )
+        );
+
+      broadcastUnreadCountChanged(ctx.user.id, 1);
+
+      return { success: true };
+    }),
+
+  /**
    * Mark all notifications as read
    */
   markAllAsRead: createFeatureRestrictedProcedure("notifications:edit").mutation(async ({ ctx }) => {
@@ -130,7 +157,7 @@ export const notificationsRouter = router({
       .update(notifications)
       .set({
         isRead: 1,
-        readAt: new Date().toISOString(),
+        readAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       })
       .where(
         and(
@@ -182,9 +209,9 @@ export const notificationsRouter = router({
         entityId: input.entityId,
         actionUrl: input.actionUrl,
         priority: input.priority,
-        expiresAt: input.expiresAt?.toISOString(),
+        expiresAt: input.expiresAt?.toISOString().replace('T', ' ').substring(0, 19),
         isRead: 0,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         readAt: null,
       };
 

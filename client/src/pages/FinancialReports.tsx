@@ -1,5 +1,5 @@
 import { useState } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
 import { trpc } from "@/lib/trpc";
@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { BarChart3 } from "lucide-react";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 export default function FinancialReportsPage() {
   const { allowed, isLoading } = useRequireFeature("reports:financial");
@@ -34,17 +36,18 @@ export default function FinancialReportsPage() {
   };
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Financial Reports"
+      icon={<BarChart3 className="h-5 w-5" />}
+      description="Profit & Loss and balance sheet summaries"
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Finance", href: "/accounting" },
+        { label: "Reports" },
+      ]}
+      actions={<Button onClick={handleRun}>Run</Button>}
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Financial Reports</h1>
-            <p className="text-muted-foreground">Profit & Loss and balance sheet summaries</p>
-          </div>
-          <div>
-            <Button onClick={handleRun}>Run</Button>
-          </div>
-        </div>
 
         <Card>
           <CardHeader>
@@ -90,26 +93,26 @@ export default function FinancialReportsPage() {
               <CardTitle>Balance Sheet Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr>
-                    <th>Account Type</th>
-                    <th className="text-right">Balance</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Account Type</TableHead>
+                    <TableHead className="text-right">Balance</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {Object.entries(bsQuery.data).map(([type, amt]) => (
-                    <tr key={type} className="border-b">
-                      <td>{type}</td>
-                      <td className="text-right">Ksh {(amt / 100).toLocaleString('en-KE')}</td>
-                    </tr>
+                    <TableRow key={type}>
+                      <TableCell>{type}</TableCell>
+                      <TableCell className="text-right">Ksh {(amt / 100).toLocaleString('en-KE')}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         )}
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

@@ -1,14 +1,19 @@
 import { router } from "../_core/trpc";
 import { z } from "zod";
-import { getDb } from "../db";
-import { invoices, invoiceItems, activityLog, clients, receipts } from "../../drizzle/schema";
+import { getDb, logActivity, createNotification } from "../db";
+import { invoices, invoiceItems, activityLog, clients, receipts, clientSubscriptions } from "../../drizzle/schema";
 import { invoicePayments } from "../../drizzle/schema-extended";
-import { eq, desc, lt, ne, and } from "drizzle-orm";
+import { eq, desc, lt, ne, and, inArray } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { generateInvoicePDF } from "../utils/pdf-generator";
 import { triggerEventNotification } from "./emailNotifications";
 import { workflowTriggerEngine } from "../workflows/triggerEngine";
+import { notifyOrg } from "../sse";
 import { createFeatureRestrictedProcedure, createRoleRestrictedProcedure } from "../middleware/enhancedRbac";
+import { generateNextDocumentNumber } from "../utils/document-numbering";
+import { getCompanyInfo } from "../utils/company-info";
+import { verifyOrgOwnership } from "../middleware/orgIsolation";
+import { TRPCError } from "@trpc/server";
 
 // Permission-restricted procedure instances
 const viewProcedure = createFeatureRestrictedProcedure("accounting:invoices:view");
@@ -16,30 +21,9 @@ const createProcedure = createFeatureRestrictedProcedure("accounting:invoices:cr
 const approveProcedure = createFeatureRestrictedProcedure("accounting:invoices:approve");
 const deleteProcedure = createRoleRestrictedProcedure(["super_admin", "admin"]);
 
-// Helper function to generate next invoice number in format INV-000000
+// Use shared settings-aware document numbering
 async function generateNextInvoiceNumber(db: any): Promise<string> {
-  try {
-    // Find the highest invoice number (all invoices, not year-based)
-    const result = await db.select({ invNum: invoices.invoiceNumber })
-      .from(invoices)
-      .orderBy(desc(invoices.invoiceSequence))
-      .limit(1);
-    
-    let maxSequence = 0;
-    
-    if (result && result.length > 0 && result[0].invNum) {
-      const match = result[0].invNum.match(/(\d+)$/);
-      if (match) {
-        maxSequence = parseInt(match[1]);
-      }
-    }
-
-    const nextSequence = maxSequence + 1;
-    return `INV-${String(nextSequence).padStart(6, '0')}`;
-  } catch (err) {
-    console.warn("Error generating invoice number, using default:", err);
-    return `INV-000001`;
-  }
+  return generateNextDocumentNumber(db, "invoice");
 }
 
 // Validation schema for line items
@@ -80,7 +64,7 @@ async function sendInvoiceNotification(
       paid: "Payment Received",
     };
 
-    await db.createNotification({
+    await createNotification({
       userId,
       title: titles[action],
       message: messages[action],
@@ -99,14 +83,17 @@ async function sendInvoiceNotification(
 export const invoicesRouter = router({
   list: viewProcedure
     .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) {
           console.error("[Invoices] Database connection not available");
           return [];
         }
-        const result = await db.select().from(invoices).limit(input?.limit || 50).offset(input?.offset || 0);
+        const orgId = ctx.user.organizationId;
+        const result = orgId
+          ? await db.select().from(invoices).where(eq(invoices.organizationId, orgId)).limit(input?.limit || 50).offset(input?.offset || 0)
+          : await db.select().from(invoices).limit(input?.limit || 50).offset(input?.offset || 0);
         return result;
       } catch (error) {
         console.error("[Invoices] Error fetching invoices:", error);
@@ -125,23 +112,34 @@ export const invoicesRouter = router({
 
   getById: viewProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
+      
+      // STRICT: Get invoice without org filter
       const result = await db.select().from(invoices).where(eq(invoices.id, input)).limit(1);
+      if (!result[0]) return null;
+      
+      // STRICT: Verify user owns this invoice
+      verifyOrgOwnership(ctx, result[0].organizationId);
+      
       return result[0] || null;
     }),
 
   // Get invoice with all line items
   getWithItems: viewProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
       
+      // STRICT: Get invoice without org filter
       const invoice = await db.select().from(invoices).where(eq(invoices.id, input)).limit(1);
       if (!invoice[0]) return null;
 
+      // STRICT: Verify user owns this invoice
+      verifyOrgOwnership(ctx, invoice[0].organizationId);
+      
       const items = await db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, input));
       
       return {
@@ -152,9 +150,17 @@ export const invoicesRouter = router({
 
   byClient: viewProcedure
     .input(z.object({ clientId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
+      
+      // STRICT: First verify the client belongs to user's org
+      const clientResult = await db.select({ organizationId: clients.organizationId }).from(clients).where(eq(clients.id, input.clientId)).limit(1);
+      if (!clientResult[0]) return [];
+      
+      verifyOrgOwnership(ctx, clientResult[0].organizationId);
+      
+      // Now safe to return invoices for this client
       const result = await db.select().from(invoices).where(eq(invoices.clientId, input.clientId));
       return result;
     }),
@@ -226,6 +232,7 @@ export const invoicesRouter = router({
           paidAmount: invoiceData.paidAmount ?? 0,
           notes: invoiceData.notes || null,
           terms: invoiceData.terms || null,
+          organizationId: ctx.user.organizationId ?? null,
           createdBy: ctx.user.id,
           createdAt: now,
           updatedAt: now,
@@ -270,6 +277,18 @@ export const invoicesRouter = router({
 
       // Send notification
       await sendInvoiceNotification(db, ctx.user.id, "created", invoiceNumber, id);
+
+      // SSE: broadcast to org
+      if (ctx.user.organizationId) {
+        notifyOrg(ctx.user.organizationId, {
+          id: `invoice-created-${id}`,
+          type: "invoice_created",
+          title: "Invoice Created",
+          body: `Invoice ${invoiceNumber} has been created`,
+          href: `/org/${ctx.user.organizationSlug || ''}/invoices`,
+          timestamp: new Date().toISOString(),
+        });
+      }
 
       // Trigger email notification to accountant
       try {
@@ -348,8 +367,12 @@ export const invoicesRouter = router({
       
       const { id, lineItems, ...data } = input;
 
-      // Get current invoice to check status changes
-      const currentInvoice = await db.select().from(invoices).where(eq(invoices.id, id)).limit(1);
+      // STRICT: Get current invoice and verify org ownership
+      const currentInvoice = await db.select({ organizationId: invoices.organizationId, status: invoices.status }).from(invoices).where(eq(invoices.id, id)).limit(1);
+      if (!currentInvoice.length) throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found" });
+      
+      verifyOrgOwnership(ctx, currentInvoice[0].organizationId);
+      
       const oldStatus = currentInvoice[0]?.status;
       const newStatus = (data as any).status;
 
@@ -409,6 +432,17 @@ export const invoicesRouter = router({
         const invoiceNumber = currentInvoice[0]?.invoiceNumber || id;
         if (newStatus === "paid") {
           await sendInvoiceNotification(db, ctx.user.id, "paid", invoiceNumber, id);
+          // SSE: broadcast payment received
+          if (ctx.user.organizationId) {
+            notifyOrg(ctx.user.organizationId, {
+              id: `invoice-paid-${id}-${Date.now()}`,
+              type: "invoice_paid",
+              title: "Payment Received",
+              body: `Invoice ${invoiceNumber} has been marked as paid`,
+              href: `/org/${ctx.user.organizationSlug || ''}/invoices`,
+              timestamp: new Date().toISOString(),
+            });
+          }
           // Trigger workflows for invoice_paid
           try {
             await workflowTriggerEngine.trigger({
@@ -432,7 +466,7 @@ export const invoicesRouter = router({
               eventType: "invoice_sent",
               recipientEmail: "client@example.com",
               recipientName: "Client",
-              subject: `Invoice ${invoiceNumber} from Melitech Solutions`,
+              subject: `Invoice ${invoiceNumber} from ${(await getCompanyInfo()).name}`,
               htmlContent: `
                 <h2>Invoice Sent</h2>
                 <p>Invoice <strong>${invoiceNumber}</strong> has been sent.</p>
@@ -466,6 +500,12 @@ export const invoicesRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
+      // STRICT: Get invoice and verify org ownership
+      const invoice = await db.select({ organizationId: invoices.organizationId }).from(invoices).where(eq(invoices.id, input)).limit(1);
+      if (!invoice.length) throw new TRPCError({ code: "NOT_FOUND", message: "Invoice not found" });
+      
+      verifyOrgOwnership(ctx, invoice[0].organizationId);
+      
       // Delete line items first
       await db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, input));
       
@@ -484,6 +524,27 @@ export const invoicesRouter = router({
       });
 
       return { success: true };
+    }),
+
+  bulkDelete: deleteProcedure
+    .input(z.array(z.string()).min(1))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      // STRICT: Verify all invoices belong to user's org
+      const invoiceRecords = await db.select({ id: invoices.id, organizationId: invoices.organizationId }).from(invoices).where(inArray(invoices.id, input));
+      
+      for (const invoice of invoiceRecords) {
+        verifyOrgOwnership(ctx, invoice.organizationId);
+      }
+      
+      const verifiedIds = invoiceRecords.map(i => i.id);
+      
+      // Delete line items for all selected invoices first
+      await db.delete(invoiceItems).where(inArray(invoiceItems.invoiceId, verifiedIds));
+      await db.delete(invoices).where(inArray(invoices.id, verifiedIds));
+      return { success: true, count: verifiedIds.length };
     }),
 
   byStatus: viewProcedure
@@ -708,7 +769,7 @@ export const invoicesRouter = router({
             id,
             invoiceId: input.invoiceId,
             paymentAmount: input.paymentAmount,
-            paymentDate: convertToMySQLDateTime(input.paymentDate),
+            paymentDate: typeof input.paymentDate === 'string' ? new Date(input.paymentDate) : input.paymentDate,
             paymentMethod: input.paymentMethod,
             recordedBy: ctx.user.id,
           };
@@ -717,7 +778,6 @@ export const invoicesRouter = router({
           if (input.reference) paymentData.reference = input.reference;
           if (input.notes) paymentData.notes = input.notes;
           if (input.receiptId) paymentData.receiptId = input.receiptId;
-          if (input.accountId) paymentData.accountId = input.accountId;
 
           await db.insert(invoicePayments).values(paymentData);
         } catch (err) {
@@ -728,7 +788,7 @@ export const invoicesRouter = router({
         // Log activity
         const invoice = await db.select().from(invoices).where(eq(invoices.id, input.invoiceId)).limit(1);
         if (invoice.length > 0) {
-          await db.logActivity({
+          await logActivity({
             userId: ctx.user.id,
             action: "invoice_payment_recorded",
             entityType: "invoice",
@@ -823,18 +883,17 @@ export const invoicesRouter = router({
         const updates: any = {};
 
         if (input.paymentAmount !== undefined) updates.paymentAmount = input.paymentAmount;
-        if (input.paymentDate !== undefined) updates.paymentDate = convertToMySQLDateTime(input.paymentDate);
+        if (input.paymentDate !== undefined) updates.paymentDate = typeof input.paymentDate === 'string' ? new Date(input.paymentDate) : input.paymentDate;
         if (input.paymentMethod !== undefined) updates.paymentMethod = input.paymentMethod;
         if (input.reference !== undefined) updates.reference = input.reference;
         if (input.notes !== undefined) updates.notes = input.notes;
-        if (input.accountId !== undefined) updates.accountId = input.accountId;
 
         await db.update(invoicePayments)
           .set(updates)
           .where(eq(invoicePayments.id, input.id));
 
         // Log activity
-        await db.logActivity({
+        await logActivity({
           userId: ctx.user.id,
           action: "invoice_payment_updated",
           entityType: "invoicePayment",
@@ -863,7 +922,7 @@ export const invoicesRouter = router({
             .where(eq(invoicePayments.id, input.id));
 
           // Log activity
-          await db.logActivity({
+          await logActivity({
             userId: ctx.user.id,
             action: "invoice_payment_deleted",
             entityType: "invoice",
@@ -938,8 +997,8 @@ export const invoicesRouter = router({
         if (!db) return { payments: [], summary: {} };
 
         try {
-          const start = new Date(input.startDate).toISOString();
-          const end = new Date(input.endDate).toISOString();
+          const start = new Date(input.startDate).toISOString().replace('T', ' ').substring(0, 19);
+          const end = new Date(input.endDate).toISOString().replace('T', ' ').substring(0, 19);
 
           // Get all payments in date range
           let paymentsQuery = db
@@ -1081,7 +1140,7 @@ export const invoicesRouter = router({
             .from(invoices)
             .innerJoin(clients, eq(invoices.clientId, clients.id))
             .where(and(
-              lt(invoices.dueDate, now.toISOString()),
+              lt(invoices.dueDate, now.toISOString().replace('T', ' ').substring(0, 19)),
               ne(invoices.status, 'paid'),
               ne(invoices.status, 'cancelled')
             ));
@@ -1143,7 +1202,7 @@ export const invoicesRouter = router({
           const remaining = (inv.total || 0) - paid;
 
           // Log reminder activity
-          await db.logActivity({
+          await logActivity({
             userId: ctx.user.id,
             action: 'payment_reminder_sent',
             entityType: 'invoice',
@@ -1202,7 +1261,7 @@ export const invoicesRouter = router({
             .from(invoices)
             .where(
               require("drizzle-orm").and(
-                require("drizzle-orm").lt(invoices.dueDate, now.toISOString()),
+                require("drizzle-orm").lt(invoices.dueDate, now.toISOString().replace('T', ' ').substring(0, 19)),
                 ne(invoices.status, 'paid')
               )
             );
@@ -1235,7 +1294,7 @@ export const invoicesRouter = router({
         }
       }),
 
-    // Create recurring invoice
+    // Create recurring invoice + subscription
     createRecurring: createProcedure
       .input(z.object({
         clientId: z.string(),
@@ -1251,15 +1310,17 @@ export const invoicesRouter = router({
         if (!db) throw new Error("Database not available");
 
         try {
-          const { recurringInvoices } = await import("../../drizzle/schema");
-          const id = uuidv4();
+          const { recurringInvoices, invoices, clientSubscriptions } = await import("../../drizzle/schema");
+          const recurringId = uuidv4();
+          const subscriptionId = uuidv4();
           const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+          const orgId = ctx.user.organizationId || null;
           
           // Calculate next due date based on frequency
           const startDate = new Date(input.startDate);
           let nextDueDate = new Date(startDate);
           
-          const frequencyDays = {
+          const frequencyDays: Record<string, number> = {
             weekly: 7,
             biweekly: 14,
             monthly: 30,
@@ -1269,10 +1330,27 @@ export const invoicesRouter = router({
           
           nextDueDate.setDate(nextDueDate.getDate() + frequencyDays[input.frequency]);
 
-          const values: any = {
-            id,
+          // Get invoice details for subscription name/amount
+          let invoiceTotal = 0;
+          let invoiceTitle = "Auto-Recurring Invoice";
+          if (input.templateInvoiceId) {
+            const [inv] = await db.select({ total: invoices.total, title: invoices.title })
+              .from(invoices)
+              .where(eq(invoices.id, input.templateInvoiceId))
+              .limit(1);
+            if (inv) {
+              invoiceTotal = inv.total || 0;
+              invoiceTitle = inv.title || invoiceTitle;
+            }
+          }
+
+          // 1. Create the recurring invoice entry
+          const recurringValues: any = {
+            id: recurringId,
+            organizationId: orgId,
             clientId: input.clientId,
             templateInvoiceId: input.templateInvoiceId || null,
+            clientSubscriptionId: subscriptionId,
             frequency: input.frequency,
             startDate: startDate.toISOString().replace('T', ' ').substring(0, 19),
             endDate: input.endDate ? new Date(input.endDate).toISOString().replace('T', ' ').substring(0, 19) : null,
@@ -1286,7 +1364,41 @@ export const invoicesRouter = router({
             updatedAt: now,
           };
 
-          await db.insert(recurringInvoices).values(values);
+          await db.insert(recurringInvoices).values(recurringValues);
+
+          // 2. Create a client subscription
+          await db.insert(clientSubscriptions).values({
+            id: subscriptionId,
+            organizationId: orgId,
+            clientId: input.clientId,
+            name: invoiceTitle,
+            description: input.description || `Auto-recurring subscription for ${invoiceTitle}`,
+            status: 'active',
+            frequency: input.frequency,
+            amount: invoiceTotal,
+            startDate: startDate.toISOString().replace('T', ' ').substring(0, 19),
+            endDate: input.endDate ? new Date(input.endDate).toISOString().replace('T', ' ').substring(0, 19) : null,
+            nextBillingDate: nextDueDate.toISOString().replace('T', ' ').substring(0, 19),
+            templateInvoiceId: input.templateInvoiceId || null,
+            recurringInvoiceId: recurringId,
+            autoSendInvoice: 1,
+            totalBilled: 0,
+            invoiceCount: 0,
+            createdBy: ctx.user.id,
+            createdAt: now,
+            updatedAt: now,
+          });
+
+          // 3. Mark the template invoice as auto-recurring
+          if (input.templateInvoiceId) {
+            await db.update(invoices)
+              .set({
+                isAutoRecurring: 1,
+                recurringInvoiceId: recurringId,
+                clientSubscriptionId: subscriptionId,
+              })
+              .where(eq(invoices.id, input.templateInvoiceId));
+          }
 
           // Log activity
           await db.insert(activityLog).values({
@@ -1294,11 +1406,16 @@ export const invoicesRouter = router({
             userId: ctx.user.id,
             action: "recurring_invoice_created",
             entityType: "recurring_invoice",
-            entityId: id,
-            description: `Created recurring invoice with frequency: ${input.frequency}`,
+            entityId: recurringId,
+            description: `Created recurring invoice with frequency: ${input.frequency} and subscription ${subscriptionId}`,
           });
 
-          return { id, success: true, message: "Recurring invoice created successfully" };
+          return { 
+            id: recurringId,
+            subscriptionId,
+            success: true, 
+            message: "Recurring invoice and subscription created successfully" 
+          };
         } catch (error) {
           console.error("Error creating recurring invoice:", error);
           throw new Error("Failed to create recurring invoice");

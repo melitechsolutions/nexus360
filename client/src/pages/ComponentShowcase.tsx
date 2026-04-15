@@ -171,6 +171,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast as sonnerToast } from "sonner";
+import { ModuleLayout } from "@/components/ModuleLayout";
 
 export default function ComponentsShowcase() {
   const { theme, toggleTheme } = useTheme();
@@ -203,7 +204,11 @@ export default function ComponentsShowcase() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <ModuleLayout
+      title="Component Showcase"
+      icon={<LayoutGrid className="h-5 w-5" />}
+      breadcrumbs={[{ label: "Dashboard", href: "/crm-home" }, { label: "Tools" }, { label: "Component Showcase" }]}
+    >
       <main className="container max-w-6xl mx-auto">
         <div className="space-y-2 justify-between flex">
           <h2 className="text-3xl font-bold tracking-tight mb-6">
@@ -1374,6 +1379,6 @@ export default function ComponentsShowcase() {
           <p>Shadcn/ui Component Showcase</p>
         </div>
       </footer>
-    </div>
+    </ModuleLayout>
   );
 }

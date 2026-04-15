@@ -65,7 +65,7 @@ export default function CreateDepartment() {
       description="Add a new department to your organization"
       icon={<Building2 className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Departments", href: "/departments" },
         { label: "Create Department" },

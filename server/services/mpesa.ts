@@ -15,7 +15,21 @@ import axios, { AxiosInstance } from 'axios';
 import { TRPCError } from '@trpc/server';
 import crypto from 'crypto';
 import * as db from '../db';
+import { getDb } from '../db';
+import { settings } from '../../drizzle/schema';
+import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
+
+// Helper: read mpesa setting from DB (category "payment_mpesa")
+async function getMpesaSetting(key: string): Promise<string | undefined> {
+  try {
+    const database = getDb();
+    const rows = await database.select().from(settings)
+      .where(and(eq(settings.category, "payment_mpesa"), eq(settings.key, key)))
+      .limit(1);
+    return (rows[0]?.value as string) || undefined;
+  } catch { return undefined; }
+}
 
 interface StkPushRequest {
   invoiceId: string;
@@ -74,9 +88,21 @@ class MPesaService {
   }
 
   /**
+   * Load missing config from settings table if env vars not set
+   */
+  private async ensureConfig(): Promise<void> {
+    if (!this.consumerKey) this.consumerKey = (await getMpesaSetting("consumerKey")) || '';
+    if (!this.consumerSecret) this.consumerSecret = (await getMpesaSetting("consumerSecret")) || '';
+    if (!this.businessShortCode) this.businessShortCode = (await getMpesaSetting("shortCode")) || '';
+    if (!this.passkey) this.passkey = (await getMpesaSetting("passkey")) || '';
+    if (!this.callbackUrl) this.callbackUrl = (await getMpesaSetting("callbackUrl")) || '';
+  }
+
+  /**
    * Get access token from Daraja API
    */
   private async getAccessToken(): Promise<string> {
+    await this.ensureConfig();
     try {
       const now = Date.now();
       // Return cached token if still valid
@@ -277,7 +303,7 @@ class MPesaService {
             transactionDate: result.CallbackMetadata?.Item?.find(
               (item: any) => item.Name === 'TransactionDate'
             )?.Value,
-            completedAt: new Date(),
+            completedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(mpesaTransactions.id, transaction[0].id));
       }

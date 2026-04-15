@@ -124,7 +124,7 @@ export const intrachatRouter = router({
         // Update conversation's last message time
         await db
           .update(conversations)
-          .set({ lastMessageAt: new Date().toISOString() })
+          .set({ lastMessageAt: new Date().toISOString().replace('T', ' ').substring(0, 19) })
           .where(eq(conversations.id, input.conversationId));
 
         return {
@@ -289,7 +289,7 @@ export const intrachatRouter = router({
           id: nanoid(16),
           messageId: msg.id,
           userId: ctx.user.id,
-          readAt: new Date().toISOString(),
+          readAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         }));
 
         if (receipts.length > 0) {
@@ -331,7 +331,7 @@ export const intrachatRouter = router({
           .update(messages)
           .set({
             isDeleted: 1,
-            deletedAt: new Date().toISOString(),
+            deletedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             content: "[Deleted]",
           })
           .where(eq(messages.id, input.messageId));
@@ -357,7 +357,7 @@ export const intrachatRouter = router({
           .update(conversationMembers)
           .set({
             isActive: 0,
-            leftAt: new Date().toISOString(),
+            leftAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(
             and(

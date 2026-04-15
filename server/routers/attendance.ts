@@ -2,17 +2,20 @@ import { router, protectedProcedure, createFeatureRestrictedProcedure } from "..
 import { z } from "zod";
 import { getDb } from "../db";
 import { attendance } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
 export const attendanceRouter = router({
   list: protectedProcedure
     .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return [];
-        const rows = await db.select().from(attendance).limit(input?.limit || 50).offset(input?.offset || 0);
+        const orgId = ctx.user.organizationId;
+        const rows = orgId
+          ? await db.select().from(attendance).where(eq(attendance.organizationId, orgId)).limit(input?.limit || 50).offset(input?.offset || 0)
+          : await db.select().from(attendance).limit(input?.limit || 50).offset(input?.offset || 0);
         return rows.map((r: any) => ({
           ...r,
           checkIn: (r as any).checkIn || (r as any).checkInTime || null,
@@ -26,11 +29,13 @@ export const attendanceRouter = router({
 
   getById: protectedProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return null;
-        const result = await db.select().from(attendance).where(eq(attendance.id, input)).limit(1);
+        const orgId = ctx.user.organizationId;
+        const where = orgId ? and(eq(attendance.id, input), eq(attendance.organizationId, orgId)) : eq(attendance.id, input);
+        const result = await db.select().from(attendance).where(where).limit(1);
         const row = result[0] || null;
         if (!row) return null;
         return {
@@ -46,11 +51,13 @@ export const attendanceRouter = router({
 
   byEmployee: protectedProcedure
     .input(z.object({ employeeId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return [];
-        const result = await db.select().from(attendance).where(eq(attendance.employeeId, input.employeeId));
+        const orgId = ctx.user.organizationId;
+        const where = orgId ? and(eq(attendance.employeeId, input.employeeId), eq(attendance.organizationId, orgId)) : eq(attendance.employeeId, input.employeeId);
+        const result = await db.select().from(attendance).where(where);
         return result.map((r: any) => ({
           ...r,
           checkIn: (r as any).checkIn || (r as any).checkInTime || null,
@@ -78,14 +85,12 @@ export const attendanceRouter = router({
       const id = uuidv4();
       const insertData: any = {
         ...input,
-        date: input.date ? input.date.toISOString() : undefined,
-        checkInTime: input.checkInTime ? input.checkInTime.toISOString() : undefined,
-        checkOutTime: input.checkOutTime ? input.checkOutTime.toISOString() : undefined,
       };
 
       await db.insert(attendance).values({
         id,
         ...insertData,
+        organizationId: ctx.user.organizationId ?? null,
       });
       return { id };
     }),
@@ -100,29 +105,30 @@ export const attendanceRouter = router({
       status: z.enum(["present", "absent", "late", "leave"]).optional(),
       notes: z.string().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
       const { id, ...data } = input;
+      const orgId = ctx.user.organizationId;
+      const updateWhere = orgId ? and(eq(attendance.id, id), eq(attendance.organizationId, orgId)) : eq(attendance.id, id);
       const updateData: any = {
         ...data,
-        date: (data as any).date ? (data as any).date.toISOString() : undefined,
-        checkInTime: (data as any).checkInTime ? (data as any).checkInTime.toISOString() : undefined,
-        checkOutTime: (data as any).checkOutTime ? (data as any).checkOutTime.toISOString() : undefined,
       };
 
-      await db.update(attendance).set(updateData as any).where(eq(attendance.id, id));
+      await db.update(attendance).set(updateData as any).where(updateWhere);
       return { success: true };
     }),
 
   delete: createFeatureRestrictedProcedure("attendance:delete")
     .input(z.string())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      await db.delete(attendance).where(eq(attendance.id, input));
+      const orgId = ctx.user.organizationId;
+      const deleteWhere = orgId ? and(eq(attendance.id, input), eq(attendance.organizationId, orgId)) : eq(attendance.id, input);
+      await db.delete(attendance).where(deleteWhere);
       return { success: true };
     }),
 });

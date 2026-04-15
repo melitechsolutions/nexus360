@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from "react";
+import { useLocation } from "wouter";
 import { Bell, CreditCard, TrendingUp, Users, ArrowRight, RefreshCw } from "lucide-react";
 import ResponsiveLayout, { MobileCard, MobileList, MobileButton, MobileSheet } from "../Mobile/ResponsiveLayout";
 import { useDeviceInfo, useNetworkStatus, useScroll } from "../../hooks/useMobileHooks";
@@ -26,6 +27,7 @@ interface RecentTransaction {
 }
 
 export const MobileDashboard: React.FC = () => {
+  const [, navigate] = useLocation();
   const deviceInfo = useDeviceInfo();
   const { isOnline } = useNetworkStatus();
   const scrollInfo = useScroll();
@@ -204,7 +206,7 @@ export const MobileDashboard: React.FC = () => {
         <MobileCard
           title="Recent Alerts"
           actionLabel="View All"
-          onTap={() => console.log("View all alerts")}
+          onTap={() => navigate("/notifications")}
         >
           <div className="space-y-2">
             <div className="flex items-start gap-2">
@@ -316,7 +318,7 @@ export const MobileDashboard: React.FC = () => {
               size="sm"
               fullWidth
               className="mt-4"
-              onClick={() => console.log("View all transactions")}
+              onClick={() => navigate("/payments")}
             >
               View All Transactions
             </MobileButton>

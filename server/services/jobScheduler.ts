@@ -169,7 +169,7 @@ class JobSchedulerService {
           duration,
           itemsProcessed: result?.itemsProcessed || 0,
           itemsFailed: result?.itemsFailed || 0,
-          endTime: new Date(),
+          endTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
           stdout: JSON.stringify(result, null, 2),
         })
         .where(eq(jobExecutionLogs.id, logId));
@@ -177,7 +177,7 @@ class JobSchedulerService {
       // Update job metadata
       await database.update(scheduledJobs)
         .set({
-          lastRunAt: new Date(),
+          lastRunAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           lastRunStatus: 'success',
           lastRunDuration: duration,
           nextScheduledRun: this.getNextCronTime(jobName),
@@ -196,7 +196,7 @@ class JobSchedulerService {
         .set({
           status: 'failed',
           duration,
-          endTime: new Date(),
+          endTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
           errorMessage: errorMsg,
           stderr: errorMsg,
         })
@@ -211,7 +211,7 @@ class JobSchedulerService {
       if (jobRecord.length) {
         await database.update(scheduledJobs)
           .set({
-            lastRunAt: new Date(),
+            lastRunAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             lastRunStatus: 'failed',
             lastRunDuration: duration,
             lastFailureReason: errorMsg,
@@ -436,6 +436,16 @@ class JobSchedulerService {
       recurringInvoice: async () => {
         const { generateDueRecurringInvoices } = await import('../jobs/recurringInvoicesJob');
         return generateDueRecurringInvoices();
+      },
+
+      recurringExpense: async () => {
+        const { generateDueRecurringExpenses } = await import('../jobs/recurringExpensesJob');
+        return generateDueRecurringExpenses();
+      },
+
+      overdue_invoices: async () => {
+        const { markOverdueInvoices } = await import('../jobs/overdueInvoicesJob');
+        return markOverdueInvoices();
       },
 
       payment_reminder: async () => {

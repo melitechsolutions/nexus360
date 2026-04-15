@@ -6,6 +6,21 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import {
   LayoutDashboard,
   Users,
   FolderKanban,
@@ -23,6 +38,9 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
+  Banknote,
+  CalendarClock,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -54,6 +72,11 @@ export default function DashboardHome() {
 
   // Fetch dashboard metrics
   const { data: dashboardMetrics } = trpc.dashboard.metrics.useQuery();
+  const { data: financialSummary } = trpc.dashboard.financialSummary.useQuery();
+  const { data: monthlyChart } = trpc.dashboard.monthlyChart.useQuery({});
+  const { data: accountingMetrics } = trpc.dashboard.accountingMetrics.useQuery();
+  const { data: recentActivities = [] } = trpc.dashboard.recentActivity.useQuery({ limit: 8 });
+  const { data: dashboardStats } = trpc.dashboard.stats.useQuery();
 
   // Update metrics when data loads
   useEffect(() => {
@@ -231,14 +254,40 @@ export default function DashboardHome() {
       href: "/invoices",
     },
     {
-      title: "Revenue",
+      title: "Revenue This Month",
       value: `KES ${((metrics.monthlyRevenue) || 0).toLocaleString()}`,
-      description: "This month",
+      description: dashboardStats?.revenueGrowth
+        ? `${dashboardStats.revenueGrowth > 0 ? "+" : ""}${dashboardStats.revenueGrowth}% vs last month`
+        : "Total payments received",
       icon: <TrendingUp className="w-5 h-5" />,
-      color: "border-l-green-500 bg-green-50 dark:bg-green-900/20 dark:border-l-green-400",
+      color: "border-l-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 dark:border-l-emerald-400",
       href: "/accounting",
     },
-  ], [metrics]);
+    {
+      title: "Payments Today",
+      value: `KES ${((financialSummary?.paymentsToday ?? 0) / 100).toLocaleString()}`,
+      description: "Received today",
+      icon: <Banknote className="w-5 h-5" />,
+      color: "border-l-teal-500 bg-teal-50 dark:bg-teal-900/20 dark:border-l-teal-400",
+      href: "/payments",
+    },
+    {
+      title: "Invoices Due",
+      value: `KES ${((financialSummary?.invoicesDue ?? 0) / 100).toLocaleString()}`,
+      description: "Outstanding & upcoming",
+      icon: <CalendarClock className="w-5 h-5" />,
+      color: "border-l-amber-500 bg-amber-50 dark:bg-amber-900/20 dark:border-l-amber-400",
+      href: "/invoices",
+    },
+    {
+      title: "Overdue Invoices",
+      value: `KES ${((financialSummary?.invoicesOverdue ?? 0) / 100).toLocaleString()}`,
+      description: "Past due date",
+      icon: <AlertTriangle className="w-5 h-5" />,
+      color: "border-l-red-500 bg-red-50 dark:bg-red-900/20 dark:border-l-red-400",
+      href: "/invoices",
+    },
+  ], [metrics, financialSummary, dashboardStats]);
 
   return (
     <DashboardLayout>
@@ -311,7 +360,7 @@ export default function DashboardHome() {
         {/* Quick Overview Section */}
         <div className="space-y-4">
           <h2 className="text-2xl font-bold tracking-tight">Quick Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
             {overviewMetrics.map((metric) => (
               <button
                 key={metric.title}
@@ -340,11 +389,94 @@ export default function DashboardHome() {
           </div>
         </div>
 
+        {/* Charts Section */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold tracking-tight">Financial Overview</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Monthly Revenue vs Expenses Bar Chart */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-blue-600" />
+                  Monthly Income vs Expenses
+                </CardTitle>
+                <CardDescription>
+                  {monthlyChart?.year || new Date().getFullYear()} financial performance
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {monthlyChart?.months && monthlyChart.months.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={monthlyChart.months}>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 100).toLocaleString()}`} />
+                      <Tooltip
+                        formatter={(value: number) => [`KES ${(value / 100).toLocaleString()}`, undefined]}
+                        labelStyle={{ fontWeight: "bold" }}
+                      />
+                      <Legend />
+                      <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="expense" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                    No data available yet
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Financial Breakdown Pie Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                  Financial Breakdown
+                </CardTitle>
+                <CardDescription>Revenue, payments, and expenses</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {accountingMetrics ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: "Revenue", value: (accountingMetrics.totalRevenue || 0) / 100 },
+                          { name: "Payments", value: (accountingMetrics.totalPayments || 0) / 100 },
+                          { name: "Expenses", value: (accountingMetrics.totalExpenses || 0) / 100 },
+                        ].filter((d) => d.value > 0)}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={4}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        <Cell fill="#22c55e" />
+                        <Cell fill="#3b82f6" />
+                        <Cell fill="#ef4444" />
+                      </Pie>
+                      <Tooltip formatter={(value: number) => [`KES ${value.toLocaleString()}`, undefined]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                    No data available yet
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         {/* Recent Activity Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold tracking-tight">Recent Activity</h2>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => navigate("/audit-logs")}>
               View All
             </Button>
           </div>
@@ -356,17 +488,54 @@ export default function DashboardHome() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                      No recent activity
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Start by creating your first project or client
-                    </p>
+              <div className="space-y-1">
+                {recentActivities.length === 0 ? (
+                  <div className="flex items-center justify-between py-3">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                        No recent activity
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Start by creating your first project or client
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  recentActivities.map((activity: any) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700 last:border-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold",
+                          activity.action === "create" ? "bg-green-100 text-green-700" :
+                          activity.action === "update" ? "bg-blue-100 text-blue-700" :
+                          activity.action === "delete" ? "bg-red-100 text-red-700" :
+                          "bg-gray-100 text-gray-700"
+                        )}>
+                          {activity.action === "create" ? <Plus className="w-4 h-4" /> :
+                           activity.action === "update" ? <CheckCircle2 className="w-4 h-4" /> :
+                           activity.action === "delete" ? <AlertCircle className="w-4 h-4" /> :
+                           <Clock className="w-4 h-4" />}
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                            {activity.description || `${activity.action} ${activity.entityType}`}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">
+                            {activity.entityType?.replace(/_/g, " ")}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-400 whitespace-nowrap">
+                        {activity.createdAt ? new Date(activity.createdAt).toLocaleDateString("en-US", {
+                          month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+                        }) : ""}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

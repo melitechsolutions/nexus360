@@ -192,7 +192,7 @@ class SMSService {
             await database.update(smsQueue)
               .set({
                 status: 'sent' as any,
-                sentAt: new Date(),
+                sentAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
                 providerReference: result.reference,
               })
               .where(eq(smsQueue.id, sms.id));
@@ -345,7 +345,7 @@ class SMSService {
         await database.update(smsQueue)
           .set({
             status: status as any,
-            deliveredAt: new Date(),
+            deliveredAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             deliveryStatus: data.status,
           })
           .where(eq(smsQueue.id, message[0].id));
@@ -355,7 +355,7 @@ class SMSService {
           id: uuidv4(),
           queueId: message[0].id,
           eventType: status as any,
-          timestamp: new Date(),
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
           metadata: { data } as any,
         });
       }

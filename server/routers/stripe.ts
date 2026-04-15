@@ -6,6 +6,9 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import * as stripeService from "../services/stripe";
+import { settings } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
+import { getDb } from "../db";
 import * as db from "../db";
 import { TRPCError } from "@trpc/server";
 import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
@@ -30,7 +33,7 @@ export const stripeRouter = router({
     .input(z.object({
       invoiceId: z.string().uuid(),
       amount: z.number().positive(),
-      currency: z.string().default("KES"),
+      currency: z.string().optional(),
       description: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
@@ -42,11 +45,21 @@ export const stripeRouter = router({
           });
         }
 
+        // Read default currency from settings if not provided
+        let currency = input.currency;
+        if (!currency) {
+          const database = getDb();
+          const row = await database.select().from(settings)
+            .where(and(eq(settings.category, "currency"), eq(settings.key, "defaultCurrency")))
+            .limit(1);
+          currency = (row[0]?.value as string) || "KES";
+        }
+
         return await stripeService.createPaymentIntent({
           invoiceId: input.invoiceId,
           clientId: ctx.user.clientId,
           amount: input.amount,
-          currency: input.currency,
+          currency,
           description: input.description,
           receiptEmail: ctx.user.email,
         });

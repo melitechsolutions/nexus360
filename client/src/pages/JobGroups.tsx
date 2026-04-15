@@ -34,6 +34,7 @@ import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useCurrencySettings } from "@/lib/currency";
 
 interface JobGroup {
   id: string;
@@ -48,6 +49,7 @@ interface JobGroup {
 }
 
 export default function JobGroups() {
+  const { code: currencyCode } = useCurrencySettings();
   const { allowed, isLoading: permissionLoading } = useRequireFeature("jobGroups:read");
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -61,7 +63,7 @@ export default function JobGroups() {
     description: "",
     minSalary: "",
     maxSalary: "",
-    currency: "KES",
+    currency: currencyCode,
   });
 
   // Queries
@@ -72,7 +74,7 @@ export default function JobGroups() {
   const createMutation = trpc.jobGroups.create.useMutation({
     onSuccess: () => {
       toast.success("Job group created successfully");
-      setFormData({ name: "", description: "", minSalary: "", maxSalary: "", currency: "KES" });
+      setFormData({ name: "", description: "", minSalary: "", maxSalary: "", currency: currencyCode });
       setIsCreateDialogOpen(false);
       utils.jobGroups.list.invalidate();
     },
@@ -84,7 +86,7 @@ export default function JobGroups() {
   const updateMutation = trpc.jobGroups.update.useMutation({
     onSuccess: () => {
       toast.success("Job group updated successfully");
-      setFormData({ name: "", description: "", minSalary: "", maxSalary: "", currency: "KES" });
+      setFormData({ name: "", description: "", minSalary: "", maxSalary: "", currency: currencyCode });
       setIsEditDialogOpen(false);
       setEditingJobGroup(null);
       utils.jobGroups.list.invalidate();
@@ -155,7 +157,7 @@ export default function JobGroups() {
       description: jobGroup.description || "",
       minSalary: jobGroup.minSalary ? (jobGroup.minSalary / 100).toString() : "",
       maxSalary: jobGroup.maxSalary ? (jobGroup.maxSalary / 100).toString() : "",
-      currency: jobGroup.currency || "KES",
+      currency: jobGroup.currency || currencyCode,
     });
     setIsEditDialogOpen(true);
   };
@@ -171,7 +173,7 @@ export default function JobGroups() {
       description="Manage job grades, salary structures, and employee classifications"
       icon={<Building2 className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Job Groups" },
       ]}
@@ -303,7 +305,7 @@ export default function JobGroups() {
                         <TableCell className="text-sm">
                           {jobGroup.minSalary && jobGroup.maxSalary
                             ? `${(jobGroup.minSalary / 100).toLocaleString()} - ${(jobGroup.maxSalary / 100).toLocaleString()} ${
-                                jobGroup.currency || "KES"
+                                jobGroup.currency || currencyCode
                               }`
                             : "Not set"}
                         </TableCell>

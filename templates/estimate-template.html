@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Document Template</title>
+    <link rel="stylesheet" href="../styles/document-professional-template.css">
+</head>
+<body>
+    <div class="document-container" data-document-type="estimate">
+        
+        <!-- HEADER WITH BRANDING (ISO COMPLIANT) -->
+        <div class="document-header">
+            <div class="company-info">
+                <div class="company-logo" data-field="companyLogo">
+                    <img src="[COMPANY_LOGO]" alt="Company Logo" style="max-height: 60px;">
+                </div>
+                <div>
+                    <div class="company-name" data-field="companyName">[COMPANY_NAME]</div>
+                    <div class="company-tax-id" data-field="companyPin">Tax ID: [COMPANY_PIN]</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCUMENT TITLE AND METADATA (ISO COMPLIANT) -->
+        <div class="document-header-section">
+            <h1 class="document-title">QUOTATION / ESTIMATE</h1>
+            <div class="document-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Quotation #:</span>
+                    <span class="meta-value" data-field="quoteNumber">[QT-00001]</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Date:</span>
+                    <span class="meta-value" data-field="issueDate">[DD/MM/YYYY]</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Valid Until:</span>
+                    <span class="meta-value" data-field="expiryDate">[DD/MM/YYYY]</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUOTE TO / CLIENT DETAILS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Quote To</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Client Name:</strong> [Client Name]</div>
+                <div><strong>Company:</strong> [Client Company]</div>
+                <div><strong>Email:</strong> [client@email.com]</div>
+                <div><strong>Phone:</strong> [Client Phone]</div>
+                <div><strong>Address:</strong> [Client Address]</div>
+                <div><strong>KRA PIN:</strong> [Client Tax Number]</div>
+            </div>
+        </div>
+
+        <!-- CONTENT SECTIONS -->
+        <div class="section">
+            <h2 class="section-title">Description</h2>
+            <div class="section-content">
+                <p>Document content goes here. This template provides a professional, print-persistent format for all app documentation and reports.</p>
+            </div>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="section">
+            <h2 class="section-title">Items List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong>Website Development</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #636e72;">Web02 - Development Package</p>
+                        </td>
+                        <td>1</td>
+                        <td>KES 7,000.00</td>
+                        <td>KES 7,000.00</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Social Media Management</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #636e72;">SMM(Custom) - 22 posts on Facebook, Instagram, X and LinkedIn</p>
+                        </td>
+                        <td>1</td>
+                        <td>KES 4,000.00</td>
+                        <td>KES 4,000.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- HIGHLIGHT BOX -->
+        <div class="section">
+            <div class="highlight-box">
+                <div class="highlight-label">Total Amount Due</div>
+                <div class="highlight-value">KES 14,250.00</div>
+            </div>
+        </div>
+
+        <!-- QUOTATION TERMS & CONDITIONS SECTION -->
+        <div class="section">
+            <h2 class="section-title">Quotation Terms & Conditions</h2>
+            <div class="section-content" style="font-size: 13px; line-height: 1.6; color: var(--secondary-color);">
+                <ol style="margin-left: 20px;">
+                    <li><strong>Validity Period:</strong> Valid until the date specified above. Changes beyond this date may affect pricing.</li>
+                    <li><strong>Acceptance:</strong> Acceptance must be in writing. Verbal acceptance is not binding.</li>
+                    <li><strong>Price Guarantee:</strong> Prices guaranteed only for materials and labor included. Additional costs for scope changes quoted separately.</li>
+                    <li><strong>Payment Terms:</strong> 50% deposit upon confirming order; 50% balance due upon completion/delivery.</li>
+                    <li><strong>Revisions:</strong> Revisions after acceptance may incur additional charges.</li>
+                    <li><strong>Warranty:</strong> Services covered by supplier's standard warranty per industry standards.</li>
+                    <li><strong>Force Majeure:</strong> Timeline estimates exclude unforeseen circumstances beyond company control.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- FOOTER (ISO COMPLIANT - MINIMAL) -->
+        <div class="document-footer">
+            <div class="footer-info">
+                <span class="document-id" data-field="quoteNumber">Quote: [QT-00001]</span>
+                <span class="document-date" data-field="issueDate">Issued: [DD/MM/YYYY]</span>
+                <span class="page-number">Page <span class="current-page">1</span> of <span class="total-pages">1</span></span>
+            </div>
+            <div class="footer-company" data-field="companyName">[COMPANY_NAME]</div>
+        </div>
+
+    </div>
+
+</body>
+</html>

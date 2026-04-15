@@ -62,6 +62,8 @@ import {
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
+import { StatsCard } from "@/components/ui/stats-card";
+import { useCurrencySettings } from "@/lib/currency";
 
 interface ReceiptFilters {
   dateFrom?: Date;
@@ -85,6 +87,8 @@ export default function EnhancedReceiptManagement() {
 
   const utils = trpc.useUtils();
 
+  const { code: currencyCode } = useCurrencySettings();
+
   // Email mutation
   const emailReceiptsMutation = trpc.emailQueue.queueEmail.useMutation({
     onSuccess: (result) => {
@@ -97,9 +101,6 @@ export default function EnhancedReceiptManagement() {
       setIsEmailing(false);
     },
   });
-
-  if (permissionsLoading) return <Spinner className="w-8 h-8 mx-auto my-8" />;
-  if (!allowed) return null;
 
   // Transform and filter receipts
   const filteredReceipts = useMemo(() => {
@@ -147,11 +148,14 @@ export default function EnhancedReceiptManagement() {
     };
   }, [filteredReceipts]);
 
+  if (permissionsLoading) return <Spinner className="w-8 h-8 mx-auto my-8" />;
+  if (!allowed) return null;
+
   // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "KES",
+      currency: currencyCode,
     }).format(amount / 100);
   };
 
@@ -240,7 +244,7 @@ export default function EnhancedReceiptManagement() {
   return (
     <ModuleLayout
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Receipts", href: "/receipts" },
       ]}
       title="Receipt Management"
@@ -312,45 +316,13 @@ export default function EnhancedReceiptManagement() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Total Receipts</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground mt-1">{stats.issued} issued</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Receipts" value={stats.total} description={<>{stats.issued} issued</>} color="border-l-orange-500" />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(stats.totalAmount)}</div>
-              <p className="text-xs text-muted-foreground mt-1">Combined value</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Amount" value={formatCurrency(stats.totalAmount)} description="Combined value" color="border-l-purple-500" />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Issued</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.issued}</div>
-              <p className="text-xs text-muted-foreground mt-1">Active receipts</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Issued" value={stats.issued} description="Active receipts" color="border-l-green-500" />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Voided</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.voided}</div>
-              <p className="text-xs text-muted-foreground mt-1">Cancelled receipts</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Voided" value={stats.voided} description="Cancelled receipts" color="border-l-blue-500" />
         </div>
 
         {/* Filters */}

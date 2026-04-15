@@ -151,7 +151,7 @@ export const importValidationRouter = router({
     .input(
       z.object({
         importType: z.enum(["employees", "clients", "products"]),
-        data: z.array(z.record(z.any())),
+        data: z.array(z.record(z.string(), z.any())),
         batchSize: z.number().default(100),
         skipOnError: z.boolean().default(false),
       })
@@ -289,7 +289,7 @@ export const importValidationRouter = router({
     .input(
       z.object({
         importType: z.enum(["employees", "clients", "products"]),
-        data: z.array(z.record(z.any())),
+        data: z.array(z.record(z.string(), z.any())),
       })
     )
     .query(async ({ input }) => {

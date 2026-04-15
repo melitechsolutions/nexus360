@@ -169,7 +169,7 @@ export default function CreatePayroll() {
       description="Process employee payroll with automatic Kenyan calculation"
       icon={<Calculator className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Payroll", href: "/payroll" },
         { label: "Create Payroll" },

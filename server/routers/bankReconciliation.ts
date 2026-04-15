@@ -123,7 +123,7 @@ export const bankReconciliationRouter = router({
         id: `rec_${Date.now()}`,
         ...input,
         status: "recorded",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       };
     }),
 
@@ -145,7 +145,7 @@ export const bankReconciliationRouter = router({
         id,
         ...updates,
         status: "updated",
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       };
     }),
 

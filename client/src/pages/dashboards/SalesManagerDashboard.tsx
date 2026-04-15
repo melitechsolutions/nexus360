@@ -1,147 +1,115 @@
-import React, { Suspense } from "react";
+import { trpc } from "@/lib/trpc";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import DashboardLayout from "@/components/DashboardLayout";
+import { TrendingUp, Loader2 } from "lucide-react";
 
 const SalesManagerDashboard: React.FC = () => {
-  return (
-    <DashboardLayout title="Sales Manager Dashboard">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Month Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">KES 2.4M</div>
-            <p className="text-xs text-gray-600 mt-1">Target: KES 2.5M +12%</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Open Opportunities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">28</div>
-            <p className="text-xs text-gray-600 mt-1">Pipeline value +5</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">45</div>
-            <p className="text-xs text-gray-600 mt-1">YTD new: 8 +3</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">32%</div>
-            <p className="text-xs text-gray-600 mt-1">This month +2%</p>
-          </CardContent>
-        </Card>
-      </div>
+  const pipelineQuery = trpc.salesPipeline.getPipelineBoard.useQuery();
+  const winLossQuery = trpc.salesPipeline.getWinLossStats.useQuery();
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  if (pipelineQuery.isLoading || winLossQuery.isLoading) {
+    return (
+      <ModuleLayout
+        title="Sales Manager Dashboard"
+        icon={<TrendingUp className="h-5 w-5" />}
+        breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Sales" }]}
+      >
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </ModuleLayout>
+    );
+  }
+
+  if (pipelineQuery.error) {
+    return (
+      <ModuleLayout
+        title="Sales Manager Dashboard"
+        icon={<TrendingUp className="h-5 w-5" />}
+        breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Sales" }]}
+      >
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg">Error: {pipelineQuery.error.message}</div>
+      </ModuleLayout>
+    );
+  }
+
+  const pipeline = pipelineQuery.data as any;
+  const winLoss = winLossQuery.data as any;
+  const stages = (pipeline?.stages ?? []) as any[];
+
+  return (
+    <ModuleLayout
+      title="Sales Manager Dashboard"
+      icon={<TrendingUp className="h-5 w-5" />}
+      breadcrumbs={[{ label: "Dashboard", href: "/" }, { label: "Sales" }]}
+    >
+      <div className="space-y-6">
+        {/* Win/Loss Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Total Opportunities</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{winLoss?.totalOpportunities ?? 0}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Won</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{winLoss?.won ?? 0}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Lost</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{winLoss?.lost ?? 0}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{winLoss?.winRate ?? 0}%</div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Pipeline Stages */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Sales Pipeline</CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={<Skeleton className="h-40" />}>
+            {stages.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No data found.</p>
+            ) : (
               <div className="space-y-4">
-                {[
-                  { stage: "Prospecting", count: 12, value: "KES 450K" },
-                  { stage: "Qualification", count: 8, value: "KES 320K" },
-                  { stage: "Proposal", count: 5, value: "KES 280K" },
-                  { stage: "Negotiation", count: 3, value: "KES 150K" },
-                ].map((item) => (
-                  <div key={item.stage} className="flex items-center justify-between p-3 bg-slate-50 rounded">
+                {stages.map((stage: any, i: number) => (
+                  <div key={stage.name ?? i} className="flex items-center justify-between p-3 bg-slate-50 rounded">
                     <div className="flex-1">
-                      <p className="font-medium text-sm">{item.stage}</p>
-                      <p className="text-xs text-gray-600">{item.count} opportunities</p>
+                      <p className="font-medium text-sm">{stage.label ?? stage.name ?? "—"}</p>
+                      <p className="text-xs text-gray-600">{(stage.opportunities ?? []).length} opportunities</p>
                     </div>
                     <div className="text-right">
-                      <Badge variant="secondary">{item.value}</Badge>
+                      <Badge variant="secondary">
+                        KES {((stage.opportunities ?? []).reduce((sum: number, o: any) => sum + (o.value ?? 0), 0)).toLocaleString()}
+                      </Badge>
                     </div>
                   </div>
                 ))}
               </div>
-            </Suspense>
-          </CardContent>
-        </Card>
-
-        {/* Top Performers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Top Sales Quotes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Suspense fallback={<Skeleton className="h-40" />}>
-              <div className="space-y-4">
-                {[
-                  { client: "Acme Corp", estimate: "EST-2024-045", value: "KES 850K", status: "Sent" },
-                  { client: "Global Industries", estimate: "EST-2024-044", value: "KES 720K", status: "In Discussion" },
-                  { client: "Tech Innovations", estimate: "EST-2024-043", value: "KES 620K", status: "Pending" },
-                ].map((quote) => (
-                  <div key={quote.estimate} className="flex items-center justify-between p-3 bg-slate-50 rounded">
-                    <div>
-                      <p className="font-medium text-sm">{quote.client}</p>
-                      <p className="text-xs text-gray-600">{quote.estimate}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-sm">{quote.value}</p>
-                      <Badge variant={quote.status === "Sent" ? "outline" : "secondary"}>{quote.status}</Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Suspense>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Additional Sales Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Average Deal Size</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">KES 425K</p>
-            <p className="text-xs text-gray-600 mt-2">↑ 8% from last month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Sales Cycle</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">42 days</p>
-            <p className="text-xs text-gray-600 mt-2">Average time to close</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Win Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">32%</p>
-            <p className="text-xs text-gray-600 mt-2">Industry avg: 28%</p>
-          </CardContent>
-        </Card>
-      </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 };
 

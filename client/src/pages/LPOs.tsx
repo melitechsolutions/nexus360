@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
@@ -7,6 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -32,17 +34,37 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Download, Upload, Edit2, Trash2, Loader2, ShoppingCart, Search } from "lucide-react";
+import { Plus, Download, Upload, Edit2, Trash2, Loader2, ShoppingCart, Search, Eye, Copy, DollarSign, Clock, CheckCircle2 } from "lucide-react";
+import { useCurrencySettings } from "@/lib/currency";
+import { Checkbox } from "@/components/ui/checkbox";
+import { StatsCard } from "@/components/ui/stats-card";
+import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
+import { RowActionsMenu, actionIcons } from "@/components/list-page/RowActionsMenu";
+import { TableColumnSettings, useColumnVisibility, type ColumnConfig } from "@/components/list-page/TableColumnSettings";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction, bulkApproveAction, bulkEmailAction } from "@/components/list-page/EnhancedBulkActions";
 
 export default function LPOsPage() {
   const { allowed, isLoading } = useRequireFeature("procurement:lpo:view");
+  const { code: currencyCode } = useCurrencySettings();
   
   const { user } = useAuth();
+  const [, navigate] = useLocation();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedLPOs, setSelectedLPOs] = useState<Set<string>>(new Set());
+
+  const lpoColumns: ColumnConfig[] = [
+    { key: "lpoNumber", label: "LPO Number" },
+    { key: "vendor", label: "Vendor" },
+    { key: "amount", label: "Amount" },
+    { key: "deliveryDate", label: "Delivery Date" },
+    { key: "status", label: "Status" },
+    { key: "requestedBy", label: "Requested By" },
+  ];
+  const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(lpoColumns, "lpos");
   const [formData, setFormData] = useState({
     lpoNumber: "",
     vendorId: "",
@@ -248,129 +270,115 @@ export default function LPOsPage() {
       description="Create and manage local purchase orders for vendor procurement"
       icon={<ShoppingCart className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Procurement", href: "/procurement" },
         { label: "LPOs" },
       ]}
-      actions={
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleImport}
-            disabled={isImporting}
-            className="gap-2"
-          >
-            {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            Import
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExport}
-            disabled={isExporting}
-            className="gap-2"
-          >
-            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Export
-          </Button>
-          <Button onClick={() => { resetForm(); setIsCreateOpen(true); }} className="gap-2">
-            <Plus className="w-4 h-4" />
-            New LPO
-          </Button>
-        </div>
-      }
+      actions={<></>}
     >
       <div className="space-y-6">
-        {/* Search and Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by LPO number, vendor, or description..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 w-full"
-                  />
-                </div>
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="submitted">Submitted</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Stat Cards */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <StatsCard label="Total LPOs" value={filteredLPOs.length} icon={<ShoppingCart className="h-5 w-5" />} color="border-l-blue-500" />
+          <StatsCard label="Total Value" value={<>{currencyCode} {(filteredLPOs.reduce((s: number, l: any) => s + (l.amount || 0), 0) / 100).toLocaleString()}</>} icon={<DollarSign className="h-5 w-5" />} color="border-l-green-500" />
+          <StatsCard label="Approved" value={filteredLPOs.filter((l: any) => l.status === "approved").length} icon={<CheckCircle2 className="h-5 w-5" />} color="border-l-emerald-500" />
+          <StatsCard label="Draft" value={filteredLPOs.filter((l: any) => l.status === "draft").length} icon={<Clock className="h-5 w-5" />} color="border-l-yellow-500" />
+        </div>
+
+        {/* Toolbar */}
+        <ListPageToolbar
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search by LPO number, vendor, or description..."
+          onCreateClick={() => { resetForm(); setIsCreateOpen(true); }}
+          createLabel="New LPO"
+          onExportClick={handleExport}
+          onImportClick={handleImport}
+          onPrintClick={() => window.print()}
+          filterContent={
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="submitted">Submitted</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          }
+        />
+
+        {/* Bulk Actions */}
+        <EnhancedBulkActions
+          selectedCount={selectedLPOs.size}
+          onClear={() => setSelectedLPOs(new Set())}
+          actions={[
+            bulkExportAction(selectedLPOs, lpos, lpoColumns, "lpos"),
+            bulkCopyIdsAction(selectedLPOs),
+            bulkEmailAction(navigate),
+            bulkDeleteAction(selectedLPOs, (ids) => { ids.forEach((id) => deleteMutation.mutate(id)); setSelectedLPOs(new Set()); }),
+          ]}
+        />
 
         {/* LPOs Table */}
         <Card>
-          <CardHeader>
-            <CardTitle>All LPOs ({filteredLPOs.length})</CardTitle>
-            <CardDescription>Click on an LPO to view or edit details</CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <span className="text-sm text-muted-foreground">{filteredLPOs.length} LPOs</span>
+              <TableColumnSettings columns={lpoColumns} visibleColumns={visibleColumns} onToggleColumn={toggleColumn} onReset={reset} pageSize={pageSize} onPageSizeChange={updatePageSize} />
+            </div>
             {isLoadingLpos ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : filteredLPOs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No LPOs found. Click "New LPO" to get started.
+                No LPOs found. Click "+" to get started.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>LPO Number</TableHead>
-                      <TableHead>Vendor</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Delivery Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Requested By</TableHead>
+                      <TableHead className="w-10"><Checkbox checked={selectedLPOs.size === filteredLPOs.length && filteredLPOs.length > 0} onCheckedChange={() => { if (selectedLPOs.size === filteredLPOs.length) setSelectedLPOs(new Set()); else setSelectedLPOs(new Set(filteredLPOs.map((l: any) => l.id))); }} /></TableHead>
+                      {isVisible("lpoNumber") && <TableHead>LPO Number</TableHead>}
+                      {isVisible("vendor") && <TableHead>Vendor</TableHead>}
+                      {isVisible("amount") && <TableHead className="text-right">Amount</TableHead>}
+                      {isVisible("deliveryDate") && <TableHead>Delivery Date</TableHead>}
+                      {isVisible("status") && <TableHead>Status</TableHead>}
+                      {isVisible("requestedBy") && <TableHead>Requested By</TableHead>}
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredLPOs.map((lpo: any) => (
-                      <TableRow key={lpo.id}>
-                        <TableCell className="font-medium">{lpo.lpoNumber}</TableCell>
-                        <TableCell>{lpo.vendorName}</TableCell>
+                      <TableRow key={lpo.id} className={selectedLPOs.has(lpo.id) ? "bg-primary/5" : ""}>
+                        <TableCell><Checkbox checked={selectedLPOs.has(lpo.id)} onCheckedChange={() => { const next = new Set(selectedLPOs); if (next.has(lpo.id)) next.delete(lpo.id); else next.add(lpo.id); setSelectedLPOs(next); }} /></TableCell>
+                        {isVisible("lpoNumber") && <TableCell className="font-medium">{lpo.lpoNumber}</TableCell>}
+                        {isVisible("vendor") && <TableCell>{lpo.vendorName}</TableCell>}
+                        {isVisible("amount") && <TableCell className="text-right">
+                          {new Intl.NumberFormat("en-US", { style: "currency", currency: currencyCode }).format((lpo.amount || 0) / 100)}
+                        </TableCell>}
+                        {isVisible("deliveryDate") && <TableCell>{lpo.deliveryDate || "N/A"}</TableCell>}
+                        {isVisible("status") && <TableCell>
+                          <Badge className={getStatusColor(lpo.status)}>{lpo.status?.toUpperCase()}</Badge>
+                        </TableCell>}
+                        {isVisible("requestedBy") && <TableCell>{lpo.requestedBy || "N/A"}</TableCell>}
                         <TableCell className="text-right">
-                          {new Intl.NumberFormat("en-US", {
-                            style: "currency",
-                            currency: "KES",
-                          }).format((lpo.amount || 0) / 100)}
-                        </TableCell>
-                        <TableCell>{lpo.deliveryDate || "N/A"}</TableCell>
-                        <TableCell>
-                          <Badge className={getStatusColor(lpo.status)}>
-                            {lpo.status?.toUpperCase()}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{lpo.requestedBy || "N/A"}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteMutation.mutate(lpo.id)}
-                              disabled={deleteMutation.isPending}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                          <RowActionsMenu
+                            primaryActions={[
+                              { label: "View", icon: actionIcons.view, onClick: () => navigate(`/lpos/${lpo.id}`) },
+                              { label: "Delete", icon: actionIcons.delete, onClick: () => deleteMutation.mutate(lpo.id), variant: "destructive" },
+                            ]}
+                            menuActions={[
+                              { label: "Duplicate LPO", icon: actionIcons.copy, onClick: () => navigate(`/lpos/create?clone=${lpo.id}`) },
+                              { label: "Download PDF", icon: actionIcons.download, onClick: () => { navigate(`/lpos/${lpo.id}`); setTimeout(() => window.print(), 500); }, separator: true },
+                              { label: "Update Status", icon: <Edit2 className="h-4 w-4" />, onClick: () => navigate(`/lpos/${lpo.id}/edit`) },
+                            ]}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -465,28 +473,22 @@ export default function LPOsPage() {
               {/* Description */}
               <div className="space-y-2">
                 <Label htmlFor="description">Description / Items</Label>
-                <textarea
-                  id="description"
-                  name="description"
+                <RichTextEditor
                   value={formData.description}
-                  onChange={handleInputChange}
+                  onChange={(html) => setFormData(prev => ({ ...prev, description: html }))}
                   placeholder="List items or services to be procured"
-                  className="w-full p-2 border rounded text-sm"
-                  rows={3}
+                  minHeight="100px"
                 />
               </div>
 
               {/* Notes */}
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
-                <textarea
-                  id="notes"
-                  name="notes"
+                <RichTextEditor
                   value={formData.notes}
-                  onChange={handleInputChange}
+                  onChange={(html) => setFormData(prev => ({ ...prev, notes: html }))}
                   placeholder="Additional notes or special instructions"
-                  className="w-full p-2 border rounded text-sm"
-                  rows={2}
+                  minHeight="100px"
                 />
               </div>
             </div>

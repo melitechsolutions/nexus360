@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import ActionButtons from "@/components/ActionButtons";
-import { handleView, handleEdit, handleDelete } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +31,7 @@ import {
   Clock,
   Umbrella,
 } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
 
 interface LeaveRequest {
   id: string;
@@ -46,6 +47,7 @@ interface LeaveRequest {
 }
 
 export default function LeaveManagement() {
+  const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -55,6 +57,9 @@ export default function LeaveManagement() {
   // Fetch real data from backend - ensure we have array
   const { data: rawData = [], isLoading } = trpc.leave.list.useQuery();
   const utils = trpc.useUtils();
+  const deleteMutation = trpc.leave.delete.useMutation({
+    onSuccess: () => { utils.leave.list.invalidate(); },
+  });
 
   // whenever data updates, map it
   useEffect(() => {
@@ -152,7 +157,7 @@ export default function LeaveManagement() {
       description="Manage employee leave requests and approvals"
       icon={<Calendar className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Leave Management" },
       ]}
@@ -167,49 +172,37 @@ export default function LeaveManagement() {
 
         {/* Statistics Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Approved</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{approvedCount}</div>
-              <p className="text-xs text-muted-foreground">Leave requests approved</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Approved"
+            value={approvedCount}
+            description="Leave requests approved"
+            icon={<CheckCircle2 className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
 
-          <Card className="border-l-4 border-l-orange-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending</CardTitle>
-              <Clock className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingCount}</div>
-              <p className="text-xs text-muted-foreground">Awaiting approval</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Pending"
+            value={pendingCount}
+            description="Awaiting approval"
+            icon={<Clock className="h-5 w-5" />}
+            color="border-l-orange-500"
+          />
 
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Days</CardTitle>
-              <Calendar className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalDays}</div>
-              <p className="text-xs text-muted-foreground">Days approved</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Days"
+            value={totalDays}
+            description="Days approved"
+            icon={<Calendar className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
 
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">On Leave</CardTitle>
-              <Umbrella className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-xs text-muted-foreground">Currently on leave</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="On Leave"
+            value="2"
+            description="Currently on leave"
+            icon={<Umbrella className="h-5 w-5" />}
+            color="border-l-purple-500"
+          />
         </div>
 
         {/* Leave Requests */}
@@ -286,12 +279,13 @@ export default function LeaveManagement() {
                       <ActionButtons
                         id={request.id}
                         handlers={{
-                          onView: (id) => handleView(id, "leave-request"),
-                          onEdit: (id) => handleEdit(id, "leave-request"),
-                          onDelete: (id) =>
-                            handleDelete(id, "leave-request", () => {
-                              setRequests(requests.filter((req) => req.id !== id));
-                            }),
+                          onView: (id) => navigate(`/leave-management/${id}`),
+                          onEdit: (id) => navigate(`/leave-management/${id}/edit`),
+                          onDelete: (id) => {
+                            if (confirm("Delete this leave request?")) {
+                              deleteMutation.mutate(String(id));
+                            }
+                          },
                         }}
                         showView={true}
                         showEdit={true}

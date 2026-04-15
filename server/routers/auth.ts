@@ -4,6 +4,7 @@ import { z } from "zod";
 import { SignJWT, jwtVerify } from "jose";
 import * as bcrypt from "bcryptjs";
 import type { Request } from "express";
+import { v4 } from "uuid";
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
 import { getSessionCookieOptions } from "../_core/cookies";
@@ -57,6 +58,7 @@ const registerInput = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   name: z.string().min(2, "Name must be at least 2 characters"),
+  company: z.string().optional(),
 });
 
 const loginInput = z.object({
@@ -131,7 +133,13 @@ export const authRouter = router({
    * Get current user
    */
   me: publicProcedure.query(async ({ ctx }) => {
-    return ctx.user || null;
+    if (!ctx.user) return null;
+    let organizationSlug: string | null = null;
+    if (ctx.user.organizationId) {
+      const org = await db.getOrganization(ctx.user.organizationId);
+      organizationSlug = org?.slug || null;
+    }
+    return { ...ctx.user, organizationSlug };
   }),
 
   /**
@@ -160,11 +168,77 @@ export const authRouter = router({
           email: input.email,
           name: input.name,
           loginMethod: "local",
-          lastSignedIn: new Date(),
+          lastSignedIn: new Date().toISOString().replace('T', ' ').substring(0, 19),
         });
 
         // Store password hash
         await db.setUserPassword(userId, passwordHash);
+
+        // Handle organization creation/joining
+        let userRole = "user";
+        if (input.company && input.company.trim()) {
+          const companyName = input.company.trim();
+          const slug = companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          
+          // Check if organization exists by slug
+          let org = await db.getOrganizationBySlug(slug);
+          
+          if (org) {
+            // Join existing organization as regular user
+            await db.assignUserToOrganization(userId, org.id);
+          } else {
+            // Create new organization with trial plan, user becomes admin
+            const orgId = `org_${Date.now()}`;
+            const billingCycle = 'monthly'; // Default to monthly for signups
+            
+            await db.createOrganization({
+              id: orgId,
+              name: companyName,
+              slug,
+              plan: 'trial',
+              isActive: 1,
+              maxUsers: 5,
+              settings: { billingCycle },
+            });
+            await db.assignUserToOrganization(userId, orgId);
+            userRole = "admin";
+            
+            // Set default trial features
+            const trialFeatures = ['crm', 'invoicing', 'reports'];
+            for (const feature of trialFeatures) {
+              await db.setOrganizationFeature(orgId, feature, true);
+            }
+            
+            // Auto-create subscription for the organization
+            try {
+              const subscriptionId = `sub_${v4().replace(/-/g, '').slice(0, 20)}`;
+              const now = new Date();
+              const renewalDate = new Date();
+              
+              // Set renewal date based on billing cycle (default monthly)
+              renewalDate.setMonth(renewalDate.getMonth() + 1);
+              
+              // Get trial plan to retrieve pricing
+              const trialPlan = await db.getPricingPlan('trial');
+              const price = (trialPlan as any)?.monthlyPrice || 0;
+              
+              await db.createSubscription({
+                id: subscriptionId,
+                organizationId: orgId,
+                planId: 'trial',
+                status: 'trial',
+                billingCycle: 'monthly',
+                startDate: now.toISOString().replace('T', ' ').substring(0, 19),
+                renewalDate: renewalDate.toISOString().replace('T', ' ').substring(0, 19),
+                currentPrice: price,
+                autoRenew: 1,
+              });
+            } catch (error) {
+              console.error('[Auth] Failed to create subscription during signup:', error);
+              // Don't fail signup if subscription creation fails - log and continue
+            }
+          }
+        }
 
         // Generate JWT token
         const token = await generateJWT(userId);
@@ -183,7 +257,7 @@ export const authRouter = router({
             id: userId,
             email: input.email,
             name: input.name,
-            role: "user",
+            role: userRole,
           },
           // Return token for localStorage fallback
           token,
@@ -374,7 +448,7 @@ export const authRouter = router({
         // Update last signed in
         await db.upsertUser({
           id: user.id,
-          lastSignedIn: new Date(),
+          lastSignedIn: new Date().toISOString().replace('T', ' ').substring(0, 19),
         });
 
         // Generate JWT token
@@ -387,6 +461,12 @@ export const authRouter = router({
           maxAge: ONE_YEAR_MS,
         });
 
+        // Fetch organization info if user belongs to an org
+        let org = null;
+        if (user.organizationId) {
+          org = await db.getOrganization(user.organizationId);
+        }
+
         return {
           success: true,
           message: "Login successful",
@@ -395,6 +475,9 @@ export const authRouter = router({
             email: user.email,
             name: user.name,
             role: user.role,
+            organizationId: user.organizationId || null,
+            organizationSlug: org?.slug || null,
+            organizationName: org?.name || null,
           },
           // Return token for localStorage fallback
           token,
@@ -568,9 +651,33 @@ export const authRouter = router({
           description: `Password reset requested for ${user.email}`,
         });
 
-        // TODO: Send email with reset link
-        // const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-        // await sendEmail(user.email, "Password Reset", resetLink);
+        // Send email with reset link
+        const frontendUrl = process.env.FRONTEND_URL || `${ctx.req.protocol}://${ctx.req.get('host')}`;
+        const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+        try {
+          const { sendEmail } = await import('../_core/mail');
+          const { passwordResetEmail } = await import('../_core/emailTemplates');
+          const { getCompanyInfo } = await import('../utils/company-info');
+          const company = await getCompanyInfo();
+          const emailPayload = passwordResetEmail(
+            user.name || user.email,
+            resetLink,
+            {
+              companyName: company.name,
+              companyEmail: company.email,
+              logoUrl: company.logo,
+              brandColor: '#4F46E5',
+            }
+          );
+          await sendEmail({
+            to: user.email,
+            subject: emailPayload.subject,
+            html: emailPayload.html,
+            text: emailPayload.text,
+          });
+        } catch (emailError) {
+          console.error('[Auth] Failed to send password reset email:', emailError);
+        }
 
         return {
           success: true,
@@ -741,7 +848,7 @@ export const authRouter = router({
           device: "Chrome on Windows",
           location: "Unknown",
           lastActive: new Date().toISOString(),
-          createdAt: ctx.user.createdAt || new Date().toISOString(),
+          createdAt: ctx.user.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
           current: true,
         },
       ];

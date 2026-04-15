@@ -1,4 +1,5 @@
 import { ModuleLayout } from "@/components/ModuleLayout";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,8 +32,12 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { TrendingDown, TrendingUp, AlertTriangle, DollarSign, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { StatsCard } from "@/components/ui/stats-card";
+import { useCurrencySettings } from "@/lib/currency";
 
 export default function ExpenseBudgetReport() {
+  const { code: currencyCode } = useCurrencySettings();
+
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear().toString());
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(null);
@@ -112,7 +117,7 @@ export default function ExpenseBudgetReport() {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "KES",
+      currency: currencyCode,
       minimumFractionDigits: 0,
     }).format(value);
   };
@@ -154,38 +159,28 @@ export default function ExpenseBudgetReport() {
               </Select>
             </div>
             <div className="flex items-end">
-              <Button variant="outline">Generate Report</Button>
+              <Button variant="outline" onClick={() => { utils.budget.invalidate(); utils.expenses.invalidate(); toast.success("Report regenerated"); }}>Generate Report</Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Budgeted</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <DollarSign className="h-6 w-6 text-blue-500" />
-                {formatCurrency(stats.totalBudgeted)}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{budgets.length} Budget allocations</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Budgeted"
+            value={<><DollarSign className="h-6 w-6 text-blue-500" /> {formatCurrency(stats.totalBudgeted)}</>}
+            description={<>{budgets.length} Budget allocations</>}
+            icon={<DollarSign className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Spent</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <TrendingDown className="h-6 w-6 text-orange-500" />
-                {formatCurrency(stats.totalSpent)}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{stats.utilizationPercent}% utilization</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Spent"
+            value={<><TrendingDown className="h-6 w-6 text-orange-500" /> {formatCurrency(stats.totalSpent)}</>}
+            description={<>{stats.utilizationPercent}% utilization</>}
+            icon={<TrendingDown className="h-5 w-5" />}
+            color="border-l-orange-500"
+          />
 
           <Card>
             <CardHeader className="pb-3">
@@ -200,18 +195,13 @@ export default function ExpenseBudgetReport() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Over Budget</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <AlertTriangle className="h-6 w-6 text-red-500" />
-                {stats.overBudgetCount}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Departments/allocations</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Over Budget"
+            value={<><AlertTriangle className="h-6 w-6 text-red-500" /> {stats.overBudgetCount}</>}
+            description="Departments/allocations"
+            icon={<AlertTriangle className="h-5 w-5" />}
+            color="border-l-red-500"
+          />
         </div>
 
         {/* Charts */}

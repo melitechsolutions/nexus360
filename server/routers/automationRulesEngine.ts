@@ -36,7 +36,7 @@ const actionSchema = z.object({
     "send_sms",
     "webhook",
   ]),
-  config: z.record(z.any()),
+  config: z.record(z.string(), z.any()),
 });
 
 export const automationRulesRouter = router({
@@ -84,7 +84,7 @@ export const automationRulesRouter = router({
         isActive: input.isActive ? 1 : 0,
         priority: input.priority,
         createdBy: ctx.user.id,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       } as any);
 
       return { id, message: "Automation rule created successfully" };
@@ -167,7 +167,7 @@ export const automationRulesRouter = router({
       if (input.actions) updateData.actions = JSON.stringify(input.actions);
       if (input.isActive !== undefined) updateData.isActive = input.isActive ? 1 : 0;
       if (input.priority) updateData.priority = input.priority;
-      updateData.updatedAt = new Date().toISOString();
+      updateData.updatedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
       await db.update(workflows).set(updateData).where(eq(workflows.id, input.id));
 
@@ -204,7 +204,7 @@ export const automationRulesRouter = router({
         .update(workflows)
         .set({
           isActive: input.isActive ? 1 : 0,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         })
         .where(eq(workflows.id, input.id));
 
@@ -259,7 +259,7 @@ export const automationRulesRouter = router({
     .input(
       z.object({
         ruleId: z.string(),
-        sampleData: z.record(z.any()),
+        sampleData: z.record(z.string(), z.any()),
       })
     )
     .query(async ({ input }) => {
@@ -314,7 +314,7 @@ export const automationRulesRouter = router({
           .update(workflows)
           .set({
             isActive: input.isActive ? 1 : 0,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(workflows.id, id));
       }

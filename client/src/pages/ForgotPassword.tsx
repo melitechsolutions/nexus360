@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { APP_LOGO, APP_TITLE } from "@/const";
+import { Mail, ArrowLeft, CheckCircle2, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 
@@ -47,14 +46,28 @@ export default function ForgotPassword() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-violet-50">
+        <div className="p-4 sm:p-6">
+          <a
+            href="/"
+            onClick={(e) => { e.preventDefault(); setLocation("/"); }}
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to home
+          </a>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-xl border-gray-200">
           <CardHeader className="text-center">
-            {APP_LOGO && (
-              <div className="flex justify-center mb-4">
-                <img src={APP_LOGO} alt={APP_TITLE} className="h-16 w-auto" />
-              </div>
-            )}
+            <div className="flex justify-center mb-4">
+              <a href="/" onClick={(e) => { e.preventDefault(); setLocation("/"); }} className="flex items-center gap-2.5 no-underline">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-200">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-2xl font-bold text-gray-900 tracking-tight">Nexus<span className="text-indigo-600">360</span></span>
+              </a>
+            </div>
             <div className="flex justify-center mb-4">
               <div className="h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center">
                 <CheckCircle2 className="h-8 w-8 text-green-500" />
@@ -98,19 +111,34 @@ export default function ForgotPassword() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-violet-50">
+      <div className="p-4 sm:p-6">
+        <a
+          href="/"
+          onClick={(e) => { e.preventDefault(); setLocation("/"); }}
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to home
+        </a>
+      </div>
+      <div className="flex-1 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-xl border-gray-200">
         <CardHeader className="text-center">
-          {APP_LOGO && (
-            <div className="flex justify-center mb-4">
-              <img src={APP_LOGO} alt={APP_TITLE} className="h-16 w-auto" />
-            </div>
-          )}
+          <div className="flex justify-center mb-4">
+            <a href="/" onClick={(e) => { e.preventDefault(); setLocation("/"); }} className="flex items-center gap-2.5 no-underline">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-200">
+                <Zap className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-gray-900 tracking-tight">Nexus<span className="text-indigo-600">360</span></span>
+            </a>
+          </div>
           <CardTitle className="text-2xl">Reset Your Password</CardTitle>
           <CardDescription className="text-base mt-2">
             Enter your email address and we'll send you instructions to reset your password
@@ -134,7 +162,7 @@ export default function ForgotPassword() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200" disabled={isLoading}>
               {isLoading ? "Sending..." : "Send Reset Instructions"}
             </Button>
 
@@ -158,6 +186,7 @@ export default function ForgotPassword() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -87,12 +87,15 @@ export const timeEntriesRouter = router({
           ? Math.round((input.durationMinutes / 60) * input.hourlyRate)
           : 0;
 
+        // Convert ISO 8601 to MySQL datetime format
+        const entryDate = new Date(input.entryDate).toISOString().slice(0, 19).replace("T", " ");
+
         await db.insert(timeEntries).values({
           id,
           projectId: input.projectId,
           projectTaskId: input.projectTaskId,
           userId: ctx.user.id,
-          entryDate: input.entryDate,
+          entryDate,
           durationMinutes: input.durationMinutes,
           description: input.description,
           billable: input.billable ? 1 : 0,
@@ -115,7 +118,7 @@ export const timeEntriesRouter = router({
     }),
 
   list: readProcedure
-    .input(listEntriesSchema)
+    .input(listEntriesSchema.optional().default({}))
     .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
@@ -276,7 +279,7 @@ export const timeEntriesRouter = router({
             hourlyRate,
             amount,
             notes: input.notes,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(timeEntries.id, input.id));
 
@@ -368,7 +371,7 @@ export const timeEntriesRouter = router({
 
         const e = entry[0];
 
-        if (ctx.user.id !== e.userId && ctx.user.role !== "admin") {
+        if (ctx.user.id !== e.userId && ctx.user.role !== "admin" && ctx.user.role !== "super_admin") {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Not authorized to submit this entry",
@@ -386,7 +389,7 @@ export const timeEntriesRouter = router({
           .update(timeEntries)
           .set({
             status: "submitted",
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(timeEntries.id, input));
 
@@ -448,8 +451,8 @@ export const timeEntriesRouter = router({
           .set({
             status: input.approve ? "approved" : "rejected",
             approvedBy: ctx.user.id,
-            approvedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            approvedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(timeEntries.id, input.id));
 

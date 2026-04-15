@@ -4,7 +4,7 @@ import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -121,7 +121,7 @@ export default function EditOpportunity() {
         description="Loading opportunity details..."
         icon={<TrendingUp className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "Sales", href: "/sales" },
           { label: "Opportunities", href: "/opportunities" },
           { label: "Edit Opportunity" },
@@ -140,7 +140,7 @@ export default function EditOpportunity() {
       description="Update opportunity details"
       icon={<TrendingUp className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Sales", href: "/sales" },
         { label: "Opportunities", href: "/opportunities" },
         { label: "Edit Opportunity" },
@@ -188,14 +188,11 @@ export default function EditOpportunity() {
 
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Enter opportunity description"
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows={4}
+                  onChange={(v) => setFormData({ ...formData, description: v })}
+                  placeholder="Enter opportunity description"
+                  minHeight="120px"
                 />
               </div>
 
@@ -276,14 +273,11 @@ export default function EditOpportunity() {
 
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Enter any additional notes"
+                <RichTextEditor
                   value={formData.notes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
-                  rows={3}
+                  onChange={(v) => setFormData({ ...formData, notes: v })}
+                  placeholder="Enter any additional notes"
+                  minHeight="100px"
                 />
               </div>
 

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { v4 as uuidv4 } from "uuid";
 import { tickets, ticketComments, ticketTasks } from "../../drizzle/schema-extended";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 // Feature-based procedures
 const readProcedure = createFeatureRestrictedProcedure("tickets:read");
@@ -15,21 +15,25 @@ const deleteProcedure = createFeatureRestrictedProcedure("tickets:delete");
 export const ticketsRouter = router({
   list: readProcedure
     .input(z.object({ clientId: z.string().optional(), status: z.string().optional(), limit: z.number().optional(), offset: z.number().optional() }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      let q: any = db.select().from(tickets);
-      if (input?.clientId) q = q.where(eq(tickets.clientId, input.clientId));
-      if (input?.status) q = q.where(eq(tickets.status, input.status as any));
-      return await (q.limit(input?.limit || 100).offset(input?.offset || 0) as any);
+      const orgId = ctx.user.organizationId || "";
+      const filters: any[] = [eq(tickets.organizationId, orgId)];
+      if (input?.clientId) filters.push(eq(tickets.clientId, input.clientId));
+      if (input?.status) filters.push(eq(tickets.status, input.status as any));
+      const where = filters.length === 1 ? filters[0] : and(...filters);
+      return await db.select().from(tickets).where(where).limit(input?.limit || 100).offset(input?.offset || 0);
     }),
 
   getById: readProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
-      const rows = await db.select().from(tickets).where(eq(tickets.id, input)).limit(1);
+      const orgId = ctx.user.organizationId || "";
+      const where = and(eq(tickets.id, input), eq(tickets.organizationId, orgId));
+      const rows = await db.select().from(tickets).where(where).limit(1);
       if (rows.length === 0) return null;
       const ticket = rows[0];
       const comments = await db.select().from(ticketComments).where(eq(ticketComments.ticketId, input));
@@ -62,8 +66,8 @@ export const ticketsRouter = router({
         status: "new",
         requestedDueDate: input.requestedDueDate || null,
         createdBy: ctx.user.id,
+        organizationId: ctx.user.organizationId ?? null,
       } as any);
-      await db.logActivity({ userId: ctx.user.id, action: "ticket_created", entityType: "ticket", entityId: id, description: input.title });
       return { id };
     }),
 
@@ -83,9 +87,11 @@ export const ticketsRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("DB not available");
-      const existing = await db.select().from(tickets).where(eq(tickets.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const ownerCheck = orgId ? and(eq(tickets.id, input.id), eq(tickets.organizationId, orgId)) : eq(tickets.id, input.id);
+      const existing = await db.select().from(tickets).where(ownerCheck).limit(1);
       if (!existing.length) throw new Error("Ticket not found");
-      const upd: any = { updatedAt: new Date().toISOString() };
+      const upd: any = { updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) };
       if (input.title !== undefined) upd.title = input.title;
       if (input.description !== undefined) upd.description = input.description;
       if (input.category !== undefined) upd.category = input.category;
@@ -94,7 +100,6 @@ export const ticketsRouter = router({
       if (input.assignedTo !== undefined) upd.assignedTo = input.assignedTo;
       if (input.requestedDueDate !== undefined) upd.requestedDueDate = input.requestedDueDate;
       await db.update(tickets).set(upd).where(eq(tickets.id, input.id));
-      await db.logActivity({ userId: ctx.user.id, action: "ticket_updated", entityType: "ticket", entityId: input.id, description: `Updated ticket` });
       return { success: true };
     }),
 
@@ -103,8 +108,9 @@ export const ticketsRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("DB not available");
-      await db.delete(tickets).where(eq(tickets.id, input));
-      await db.logActivity({ userId: ctx.user.id, action: "ticket_deleted", entityType: "ticket", entityId: input, description: `Deleted ticket` });
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(tickets.id, input), eq(tickets.organizationId, orgId)) : eq(tickets.id, input);
+      await db.delete(tickets).where(where);
       return { success: true };
     }),
 
@@ -115,7 +121,6 @@ export const ticketsRouter = router({
       if (!db) throw new Error("DB not available");
       const id = uuidv4();
       await db.insert(ticketComments).values({ id, ticketId: input.ticketId, authorId: ctx.user.id, body: input.body } as any);
-      await db.logActivity({ userId: ctx.user.id, action: "ticket_comment_added", entityType: "ticket", entityId: input.ticketId, description: input.body });
       return { id };
     }),
 
@@ -135,7 +140,6 @@ export const ticketsRouter = router({
         budget: input.budget || null,
         dueDate: input.dueDate || null,
       } as any);
-      await db.logActivity({ userId: ctx.user.id, action: "ticket_task_created", entityType: "ticket", entityId: input.ticketId, description: `Task: ${input.serviceType}` });
       return { id };
     }),
 });

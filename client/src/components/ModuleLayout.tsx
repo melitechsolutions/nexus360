@@ -34,12 +34,10 @@ export function ModuleLayout({
     <div className="flex items-center gap-2">
       {backLink && (
         <Link href={backLink.href}>
-          <a>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to {backLink.label}
-            </Button>
-          </a>
+          <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10 hover:text-white">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to {backLink.label}
+          </Button>
         </Link>
       )}
       {actions}
@@ -66,4 +64,6 @@ export function ModuleLayout({
     </DashboardLayout>
   );
 }
+
+export default ModuleLayout;
 

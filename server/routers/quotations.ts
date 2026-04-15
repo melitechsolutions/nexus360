@@ -3,53 +3,60 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
 import { v4 as uuidv4 } from "uuid";
+import { getDb } from "../db";
+import { quotations } from "../../drizzle/schema";
+import { eq, desc, sql, and } from "drizzle-orm";
 
-// Permission-restricted procedures
 const viewProcedure = createFeatureRestrictedProcedure("quotations:view");
 const createProcedure = createFeatureRestrictedProcedure("quotations:create");
 const editProcedure = createFeatureRestrictedProcedure("quotations:edit");
 const deleteProcedure = createFeatureRestrictedProcedure("quotations:delete");
 
-// In-memory storage for demonstration (replace with database calls)
-const quotationsStore: Map<string, any> = new Map();
-
 export const quotationsRouter = router({
   list: viewProcedure
-    .input(z.object({ 
-      limit: z.number().optional(), 
+    .input(z.object({
+      limit: z.number().optional(),
       offset: z.number().optional(),
       status: z.string().optional(),
     }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       try {
-        const quotations = Array.from(quotationsStore.values());
-        
-        let filtered = quotations;
-        if (input?.status) {
-          filtered = filtered.filter(q => q.status === input.status);
-        }
-        
-        const offset = input?.offset || 0;
-        const limit = input?.limit || 50;
-        
-        return {
-          data: filtered.slice(offset, offset + limit),
-          total: filtered.length,
-        };
+        const conditions: any[] = [];
+        const orgId = ctx.user.organizationId;
+        if (orgId) conditions.push(eq(quotations.organizationId, orgId));
+        if (input?.status) conditions.push(eq(quotations.status, input.status as any));
+
+        const whereClause = conditions.length === 1 ? conditions[0] : conditions.length > 1 ? and(...conditions) : undefined;
+
+        const all = await db.select().from(quotations)
+          .where(whereClause)
+          .orderBy(desc(quotations.createdAt))
+          .limit(input?.limit || 50)
+          .offset(input?.offset || 0);
+
+        const countResult = await db.select({ count: sql<number>`count(*)` }).from(quotations)
+          .where(whereClause);
+
+        return { data: all, total: countResult[0]?.count || 0 };
       } catch (error) {
+        console.error("Error listing quotations:", error);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to fetch quotations" });
       }
     }),
 
   getById: viewProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       try {
-        const quotation = quotationsStore.get(input);
-        if (!quotation) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Quotation not found" });
-        }
-        return quotation;
+        const orgId = ctx.user.organizationId;
+        const where = orgId ? and(eq(quotations.id, input), eq(quotations.organizationId, orgId)) : eq(quotations.id, input);
+        const result = await db.select().from(quotations).where(where);
+        if (!result.length) throw new TRPCError({ code: "NOT_FOUND", message: "Quotation not found" });
+        return result[0];
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to fetch quotation" });
@@ -66,18 +73,25 @@ export const quotationsRouter = router({
       status: z.enum(["draft", "submitted", "under_review", "approved", "rejected"]).default("draft"),
     }))
     .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       try {
         const id = uuidv4();
-        const quotation = {
+        await db.insert(quotations).values({
           id,
-          ...input,
-          createdBy: ctx.user.id,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        quotationsStore.set(id, quotation);
-        return quotation;
+          organizationId: ctx.user?.organizationId ?? null,
+          rfqNo: input.rfqNo,
+          supplier: input.supplier,
+          description: input.description || null,
+          amount: Math.round(input.amount * 100),
+          dueDate: input.dueDate || null,
+          status: input.status,
+          createdBy: ctx.user?.id || "",
+        });
+        const created = await db.select().from(quotations).where(eq(quotations.id, id));
+        return created[0] || { id, ...input };
       } catch (error) {
+        console.error("Error creating quotation:", error);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create quotation" });
       }
     }),
@@ -93,22 +107,26 @@ export const quotationsRouter = router({
       status: z.enum(["draft", "submitted", "under_review", "approved", "rejected"]).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       try {
-        const quotation = quotationsStore.get(input.id);
-        if (!quotation) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Quotation not found" });
-        }
+        const orgId = ctx.user.organizationId;
+        const ownerCheck = orgId ? and(eq(quotations.id, input.id), eq(quotations.organizationId, orgId)) : eq(quotations.id, input.id);
+        const existing = await db.select().from(quotations).where(ownerCheck);
+        if (!existing.length) throw new TRPCError({ code: "NOT_FOUND", message: "Quotation not found" });
 
-        const updated = {
-          ...quotation,
-          ...input,
-          id: quotation.id,
-          updatedBy: ctx.user.id,
-          updatedAt: new Date().toISOString(),
-        };
-        
-        quotationsStore.set(input.id, updated);
-        return updated;
+        const { id, ...updates } = input;
+        const setObj: any = {};
+        if (updates.rfqNo !== undefined) setObj.rfqNo = updates.rfqNo;
+        if (updates.supplier !== undefined) setObj.supplier = updates.supplier;
+        if (updates.description !== undefined) setObj.description = updates.description;
+        if (updates.amount !== undefined) setObj.amount = Math.round(updates.amount * 100);
+        if (updates.dueDate !== undefined) setObj.dueDate = updates.dueDate;
+        if (updates.status !== undefined) setObj.status = updates.status;
+
+        await db.update(quotations).set(setObj).where(eq(quotations.id, id));
+        const updated = await db.select().from(quotations).where(eq(quotations.id, id));
+        return updated[0];
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to update quotation" });
@@ -117,13 +135,15 @@ export const quotationsRouter = router({
 
   delete: deleteProcedure
     .input(z.string())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
       try {
-        const exists = quotationsStore.has(input);
-        if (!exists) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Quotation not found" });
-        }
-        quotationsStore.delete(input);
+        const orgId = ctx.user.organizationId;
+        const where = orgId ? and(eq(quotations.id, input), eq(quotations.organizationId, orgId)) : eq(quotations.id, input);
+        const existing = await db.select().from(quotations).where(where);
+        if (!existing.length) throw new TRPCError({ code: "NOT_FOUND", message: "Quotation not found" });
+        await db.delete(quotations).where(where);
         return { success: true };
       } catch (error) {
         if (error instanceof TRPCError) throw error;

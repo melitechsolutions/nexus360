@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Note Template</title>
+    <link rel="stylesheet" href="../styles/document-professional-template.css">
+</head>
+<body>
+    <div class="document-container">
+        
+        <!-- HEADER WITH BRANDING -->
+        <div class="document-header">
+            <div class="company-info">
+                <h1 class="company-name">MELITECH SOLUTIONS</h1>
+                <p class="company-tagline">Redefining Technology!!!</p>
+                <div class="company-contact">
+                    <div class="company-contact-item">+254 712 236 643/ +254 713 822 486</div>
+                    <div class="company-contact-item">info@melitechsolutions.co.ke</div>
+                    <div class="company-contact-item">P.O Box 85845 - 00200</div>
+                    <div class="company-contact-item">Nairobi, Kenya</div>
+                </div>
+            </div>
+            
+            <div class="company-logo">
+                <img src="${companyInfo.companyLogo}" alt="Melitech Solutions Logo" style="max-height: 80px;">
+            </div>
+        </div>
+
+        <!-- DOCUMENT TITLE -->
+        <h1 class="document-title">CREDIT NOTE</h1>
+
+        <!-- DOCUMENT METADATA -->
+        <div class="document-meta">
+            <div class="meta-item">
+                <span class="meta-label">Credit Note #</span>
+                <span class="meta-value">CN-00001</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Date Issued</span>
+                <span class="meta-value">29 Jan 2025</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Related Invoice</span>
+                <span class="meta-value">INV-00001</span>
+            </div>
+        </div>
+
+        <!-- BILL TO / CLIENT DETAILS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Credit To / Customer</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Customer Name:</strong> [Customer Name]</div>
+                <div><strong>Company:</strong> [Company Name]</div>
+                <div><strong>Email:</strong> [customer@email.com]</div>
+                <div><strong>Phone:</strong> [Phone Number]</div>
+                <div><strong>Address:</strong> [Customer Address]</div>
+                <div><strong>KRA PIN:</strong> [Tax Number]</div>
+            </div>
+        </div>
+
+        <!-- REASON FOR CREDIT NOTE SECTION -->
+        <div class="section">
+            <h2 class="section-title">Reason for Credit Note</h2>
+            <div class="section-content">
+                <p><strong>Reason:</strong> [Select: Goods Returned / Service Cancelled / Discount Adjustment / Quality Issue / Billing Error / Other]</p>
+                <p><strong>Details:</strong> [Provide brief description and details of the adjustment]</p>
+            </div>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="section">
+            <h2 class="section-title">Items / Services Reversed</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Description</th>
+                        <th style="text-align: center;">Qty</th>
+                        <th style="text-align: right;">Unit Price</th>
+                        <th style="text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>[Item 1 Description]</td>
+                        <td style="text-align: center;">1</td>
+                        <td style="text-align: right;">KES 5,000.00</td>
+                        <td style="text-align: right;">KES 5,000.00</td>
+                    </tr>
+                    <tr>
+                        <td>[Item 2 Description]</td>
+                        <td style="text-align: center;">2</td>
+                        <td style="text-align: right;">KES 2,000.00</td>
+                        <td style="text-align: right;">KES 4,000.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TOTALS SECTION -->
+        <div class="section">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+                <div style="width: 300px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px; text-align: left;"><strong>Subtotal:</strong></td>
+                            <td style="padding: 8px; text-align: right;">KES 9,000.00</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px; text-align: left;"><strong>VAT (16%):</strong></td>
+                            <td style="padding: 8px; text-align: right;">KES 1,440.00</td>
+                        </tr>
+                        <tr style="border-bottom: 2px solid var(--primary-color); background-color: #f5f5f5;">
+                            <td style="padding: 8px; text-align: left;"><strong>Total Credit Amount:</strong></td>
+                            <td style="padding: 8px; text-align: right; font-weight: bold;">KES 10,440.00</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CREDIT APPLICATION SECTION -->
+        <div class="section">
+            <h2 class="section-title">Credit Application</h2>
+            <div class="section-content">
+                <p><strong>This credit will be applied as:</strong></p>
+                <ul>
+                    <li>☐ Adjustment to next invoice</li>
+                    <li>☐ Refund to customer account</li>
+                    <li>☐ Credit hold for future transactions</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CREDIT NOTE TERMS & CONDITIONS SECTION -->
+        <div class="section">
+            <h2 class="section-title">Credit Note Terms & Conditions</h2>
+            <div class="section-content" style="font-size: 13px; line-height: 1.6; color: var(--secondary-color);">
+                <ol style="margin-left: 20px;">
+                    <li><strong>Credit Validity:</strong> Credit must be utilized or settled within 90 days from issue date.</li>
+                    <li><strong>Application:</strong> Credit automatically applied to next invoice unless otherwise specified by customer.</li>
+                    <li><strong>Refund Policy:</strong> Refunds processed within 14 days of request; bank details must be verified.</li>
+                    <li><strong>Non-Transferable:</strong> Credit is non-transferable between customers and account-specific.</li>
+                    <li><strong>Documentation:</strong> Original invoice and supporting documentation retained for audit trail.</li>
+                    <li><strong>Tax Implications:</strong> Credit note processed per KRA regulations; tax adjustments made accordingly.</li>
+                    <li><strong>Disputes:</strong> Any disputes regarding credit note must be raised within 30 days of issue.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="document-footer">
+            <div class="contact-info">
+                <div class="contact-block">
+                    <span class="contact-label">MELITECH SOLUTIONS</span>
+                    <span class="contact-detail">Nairobi, KE</span>
+                    <span class="contact-detail">+254 712 236 643/ +254 713 822 486</span>
+                </div>
+                <div class="contact-block">
+                    <span class="contact-label">Contact Us</span>
+                    <span class="contact-detail">info@melitechsolutions.co.ke</span>
+                    <span class="contact-detail">www.melitechsolutions.co.ke</span>
+                </div>
+            </div>
+            <div class="footer-note">
+                For more information or queries, feel free to talk to us or send us an email on info@melitechsolutions.co.ke
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Print Button (hidden in print) -->
+    <div class="no-print" style="text-align: center; margin-top: 30px; padding: 20px;">
+        <button onclick="window.print()" style="
+            padding: 12px 24px;
+            background: #ff9f43;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        " onmouseover="this.style.background='#e07d2c'" onmouseout="this.style.background='#ff9f43'">
+            Print Document
+        </button>
+    </div>
+
+</body>
+</html>

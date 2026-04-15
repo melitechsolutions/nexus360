@@ -36,12 +36,13 @@ import {
 } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, Plus, Search, Edit, Trash2, TrendingUp, TrendingDown, Loader2, DollarSign } from "lucide-react";
+import { BookOpen, Eye, Plus, Search, Edit, Trash2, TrendingUp, TrendingDown, Loader2, DollarSign } from "lucide-react";
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { ChartOfAccountsHierarchy } from "@/components/ChartOfAccountsHierarchy";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function ChartOfAccounts() {
   const [, navigate] = useLocation();
@@ -168,7 +169,7 @@ export default function ChartOfAccounts() {
       description="Manage your accounting chart of accounts"
       icon={<BookOpen className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Accounting", href: "/accounting" },
         { label: "Chart of Accounts", href: "/chart-of-accounts" },
       ]}
@@ -288,55 +289,40 @@ export default function ChartOfAccounts() {
 
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-5">
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-              <TrendingUp className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(summary.totalAssets / 100).toLocaleString()}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Assets"
+            value={<>Ksh {(summary.totalAssets / 100).toLocaleString()}</>}
+            icon={<TrendingUp className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
 
-          <Card className="border-l-4 border-l-red-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(summary.totalLiabilities / 100).toLocaleString()}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Liabilities"
+            value={<>Ksh {(summary.totalLiabilities / 100).toLocaleString()}</>}
+            icon={<TrendingDown className="h-5 w-5" />}
+            color="border-l-red-500"
+          />
 
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Equity</CardTitle>
-              <BookOpen className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(summary.totalEquity / 100).toLocaleString()}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Equity"
+            value={<>Ksh {(summary.totalEquity / 100).toLocaleString()}</>}
+            icon={<BookOpen className="h-5 w-5" />}
+            color="border-l-purple-500"
+          />
 
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(summary.totalRevenue / 100).toLocaleString()}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Revenue"
+            value={<>Ksh {(summary.totalRevenue / 100).toLocaleString()}</>}
+            icon={<TrendingUp className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
 
-          <Card className="border-l-4 border-l-orange-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-              <TrendingDown className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(summary.totalExpenses / 100).toLocaleString()}</div>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Expenses"
+            value={<>Ksh {(summary.totalExpenses / 100).toLocaleString()}</>}
+            icon={<TrendingDown className="h-5 w-5" />}
+            color="border-l-orange-500"
+          />
         </div>
 
         <Tabs defaultValue="list" className="w-full">
@@ -421,6 +407,14 @@ export default function ChartOfAccounts() {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title="View"
+                                  onClick={() => navigate(`/chart-of-accounts/${account.id}`)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
                                 <Button 
                                   variant="ghost" 
                                   size="icon"

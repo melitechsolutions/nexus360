@@ -1,6 +1,6 @@
 import { router, protectedProcedure, createFeatureRestrictedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getDb } from "../db";
+import { getDb, createNotification } from "../db";
 import { payments, invoices, estimates, receipts } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
@@ -10,6 +10,7 @@ import { triggerEventNotification } from "./emailNotifications";
 import { workflowTriggerEngine } from "../workflows/triggerEngine";
 import { generateNextDocumentNumber } from "../utils/document-numbering";
 import { createFeatureRestrictedProcedure, createRoleRestrictedProcedure } from "../middleware/enhancedRbac";
+import { combineOrgFilters, validateOwnership, auditLogSensitiveOperation } from "../middleware/organizationIsolationEnforcer";
 
 // Permission-restricted procedure instances
 const viewProcedure = createFeatureRestrictedProcedure("accounting:payments:view");
@@ -67,7 +68,7 @@ async function sendPaymentNotification(
       approved: "Payment Approved",
     };
 
-    await database.createNotification?.({
+    await createNotification({
       userId,
       title: titles[action],
       message: messages[action],
@@ -86,11 +87,15 @@ async function sendPaymentNotification(
 export const paymentsRouter = router({
   list: viewProcedure
     .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const database = await getDb();
         if (!database) return [];
-        return await database.select().from(payments).limit(input?.limit || 50).offset(input?.offset || 0);
+        const orgId = ctx.user.organizationId;
+        const query = orgId
+          ? database.select().from(payments).where(eq(payments.organizationId, orgId))
+          : database.select().from(payments);
+        return await (query as any).limit(input?.limit || 50).offset(input?.offset || 0);
       } catch (error) {
         console.error("Error fetching payments list:", error);
         return [];
@@ -108,28 +113,34 @@ export const paymentsRouter = router({
 
   getById: viewProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return null;
-      const result = await database.select().from(payments).where(eq(payments.id, input)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(payments.id, input), eq(payments.organizationId, orgId)) : eq(payments.id, input);
+      const result = await database.select().from(payments).where(where).limit(1);
       return result[0] || null;
     }),
 
   byInvoice: viewProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return [];
-      const result = await database.select().from(payments).where(eq(payments.invoiceId, input));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(payments.invoiceId, input), eq(payments.organizationId, orgId)) : eq(payments.invoiceId, input);
+      const result = await database.select().from(payments).where(where);
       return result;
     }),
 
   byClient: viewProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return [];
-      const result = await database.select().from(payments).where(eq(payments.clientId, input));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(payments.clientId, input), eq(payments.organizationId, orgId)) : eq(payments.clientId, input);
+      const result = await database.select().from(payments).where(where);
       return result;
     }),
 
@@ -172,6 +183,7 @@ export const paymentsRouter = router({
         const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
         await database.insert(payments).values({
           id,
+          organizationId: ctx.user.organizationId ?? null,
           invoiceId: paymentData.invoiceId,
           clientId: paymentData.clientId,
           accountId: null,  // Default null - will be set during payment processing
@@ -344,7 +356,10 @@ export const paymentsRouter = router({
       }
 
       // Get the current payment to check what's being updated
-      const currentPayment = await database.select().from(payments).where(eq(payments.id, id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const ownerCheck = orgId ? and(eq(payments.id, id), eq(payments.organizationId, orgId)) : eq(payments.id, id);
+      const currentPayment = await database.select().from(payments).where(ownerCheck).limit(1);
+      if (!currentPayment.length) throw new Error("Payment not found");
       const payment = currentPayment[0];
 
       await database.update(payments).set(formattedData).where(eq(payments.id, id));
@@ -415,7 +430,9 @@ export const paymentsRouter = router({
       const database = await getDb();
       if (!database) throw new Error("Database not available");
 
-      await database.delete(payments).where(eq(payments.id, input));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(payments.id, input), eq(payments.organizationId, orgId)) : eq(payments.id, input);
+      await database.delete(payments).where(where);
 
       await db.logActivity({
         userId: ctx.user.id,

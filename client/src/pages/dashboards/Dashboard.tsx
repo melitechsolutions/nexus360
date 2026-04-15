@@ -1,242 +1,158 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { useMemo } from "react";
+import { trpc } from "@/lib/trpc";
 import {
   Users,
   FolderKanban,
   FileText,
   DollarSign,
   TrendingUp,
-  TrendingDown,
   ArrowRight,
-  Calendar,
   Clock,
   Receipt,
   FileSpreadsheet,
+  Loader2,
+  LayoutDashboard,
 } from "lucide-react";
-
-const iconMap = {
-  DollarSign,
-  FolderKanban,
-  Users,
-  FileText,
-};
 
 export default function Dashboard() {
   const [, navigate] = useLocation();
+  const statsQuery = trpc.dashboard.stats.useQuery();
+  const activityQuery = trpc.dashboard.recentActivity.useQuery({ limit: 10 });
 
-  const stats = useMemo(() => [
-    {
-      title: "Total Revenue",
-      value: "Ksh 4,350,000",
-      change: "+12.5%",
-      trend: "up",
-      iconName: "DollarSign" as keyof typeof iconMap,
-      description: "This month",
-    },
-    {
-      title: "Active Projects",
-      value: "2",
-      change: "+2",
-      trend: "up",
-      iconName: "FolderKanban" as keyof typeof iconMap,
-      description: "In progress",
-    },
-    {
-      title: "Total Clients",
-      value: "3",
-      change: "+1",
-      trend: "up",
-      iconName: "Users" as keyof typeof iconMap,
-      description: "Active clients",
-    },
-    {
-      title: "Pending Invoices",
-      value: "0",
-      change: "0",
-      trend: "neutral",
-      iconName: "FileText" as keyof typeof iconMap,
-      description: "Awaiting payment",
-    },
-  ], []);
+  if (statsQuery.isLoading) {
+    return (
+      <ModuleLayout
+        title="Dashboard"
+        icon={<LayoutDashboard className="h-5 w-5" />}
+        breadcrumbs={[{ label: "Dashboard" }]}
+      >
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </ModuleLayout>
+    );
+  }
 
-  const recentProjects = [
-    {
-      name: "Website Redesign",
-      client: "Acme Corporation",
-      progress: 65,
-      status: "active",
-      dueDate: "Apr 30, 2024",
-    },
-    {
-      name: "Mobile App Development",
-      client: "TechStart Solutions",
-      progress: 40,
-      status: "active",
-      dueDate: "Jun 30, 2024",
-    },
-    {
-      name: "CRM System Implementation",
-      client: "Global Enterprises Ltd",
-      progress: 0,
-      status: "planning",
-      dueDate: "Aug 31, 2024",
-    },
-  ];
+  if (statsQuery.error) {
+    return (
+      <ModuleLayout
+        title="Dashboard"
+        icon={<LayoutDashboard className="h-5 w-5" />}
+        breadcrumbs={[{ label: "Dashboard" }]}
+      >
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg">Error: {statsQuery.error.message}</div>
+      </ModuleLayout>
+    );
+  }
 
-  const recentActivity = useMemo(() => [
-    {
-      action: "Project created",
-      details: "Website Redesign for Acme Corporation",
-      time: "2 hours ago",
-      iconName: "FolderKanban" as keyof typeof iconMap,
-    },
-    {
-      action: "Client added",
-      details: "TechStart Solutions",
-      time: "5 hours ago",
-      iconName: "Users" as keyof typeof iconMap,
-    },
-    {
-      action: "Invoice sent",
-      details: "INV-2024-001 to Acme Corporation",
-      time: "1 day ago",
-      iconName: "FileText" as keyof typeof iconMap,
-    },
-    {
-      action: "Payment received",
-      details: "Ksh 500,000 from TechStart Solutions",
-      time: "2 days ago",
-      iconName: "DollarSign" as keyof typeof iconMap,
-    },
-  ], []);
+  const s = statsQuery.data as any;
+  const activities = (activityQuery.data ?? []) as any[];
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Dashboard"
+      description="Welcome back! Here's what's happening with your business."
+      icon={<LayoutDashboard className="h-5 w-5" />}
+      breadcrumbs={[{ label: "Dashboard" }]}
+      actions={
+        <Button onClick={() => navigate("/projects")}>
+          <FolderKanban className="mr-2 h-4 w-4" />
+          New Project
+        </Button>
+      }
+    >
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back! Here's what's happening with your business.
-            </p>
-          </div>
-          <Button onClick={() => navigate("/projects")}>
-            <FolderKanban className="mr-2 h-4 w-4" />
-            New Project
-          </Button>
-        </div>
 
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => {
-            const Icon = iconMap[stat.iconName];
-            return (
-              <Card key={stat.title}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{stat.title || ""}</CardTitle>
-                  {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value || ""}</div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className={`flex items-center ${
-                      stat.trend === "up" ? "text-green-500" :
-                      stat.trend === "down" ? "text-red-500" :
-                      ""
-                    }`}>
-                      {stat.trend === "up" && <TrendingUp className="mr-1 h-3 w-3" />}
-                      {stat.trend === "down" && <TrendingDown className="mr-1 h-3 w-3" />}
-                      {stat.change || ""}
-                    </span>
-                    <span>{stat.description || ""}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Recent Projects */}
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Recent Projects</CardTitle>
-                  <CardDescription>Your active and upcoming projects</CardDescription>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/projects")}>
-                  View All
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
+              <div className="text-2xl font-bold">Ksh {(s?.totalRevenue ?? 0).toLocaleString()}</div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className={`flex items-center ${(s?.revenueGrowth ?? 0) >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  <TrendingUp className="mr-1 h-3 w-3" />
+                  {s?.revenueGrowth ?? 0}%
+                </span>
+                <span>vs last month</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
+              <FolderKanban className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{s?.activeProjects ?? 0}</div>
+              <div className="text-xs text-muted-foreground">+{s?.newProjects ?? 0} new this month</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{s?.totalClients ?? 0}</div>
+              <div className="text-xs text-muted-foreground">+{s?.newClients ?? 0} new this month</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{s?.pendingInvoices ?? 0}</div>
+              <div className="text-xs text-muted-foreground">Awaiting payment</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Activity */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Latest updates and changes</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {activities.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No data found.</p>
+            ) : (
               <div className="space-y-4">
-                {Array.isArray(recentProjects) && recentProjects.map((project, index) => (
-                  <div key={`project-${project.name || index}`} className="space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <p className="font-medium">{project.name || "Unnamed Project"}</p>
-                        <p className="text-sm text-muted-foreground">{project.client || "No client"}</p>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {project.dueDate || "No date"}
-                      </div>
+                {activities.map((activity: any, index: number) => (
+                  <div key={activity.id ?? index} className="flex gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+                      <FileText className="h-4 w-4" />
                     </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">{project.progress || 0}%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary transition-all"
-                          style={{ width: `${project.progress || 0}%` }}
-                        />
+                    <div className="flex-1 space-y-1">
+                      <p className="text-sm font-medium">{activity.action ?? "—"}</p>
+                      <p className="text-sm text-muted-foreground">{activity.description ?? "—"}</p>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {activity.createdAt ?? "—"}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest updates and changes</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => {
-                  const Icon = iconMap[activity.iconName];
-                  const activityKey = `${activity.action}-${activity.details}-${index}`;
-                  return (
-                    <div key={activityKey} className="flex gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
-                        {Icon && <Icon className="h-4 w-4" />}
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium">{activity.action || ""}</p>
-                        <p className="text-sm text-muted-foreground">{activity.details || ""}</p>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {activity.time || ""}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Quick Actions */}
         <Card>
@@ -270,7 +186,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }
 

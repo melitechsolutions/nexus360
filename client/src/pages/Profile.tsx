@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import mutateAsync from "@/lib/mutationHelpers";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -145,14 +145,16 @@ export default function Profile() {
   }, [profileData]);
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="My Profile"
+      description="Manage your personal information and preferences"
+      icon={<User className="h-6 w-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Profile" },
+      ]}
+    >
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
-          <p className="text-muted-foreground">
-            Manage your personal information and preferences
-          </p>
-        </div>
 
         <div className="grid gap-6 md:grid-cols-3">
           {/* Avatar Section */}
@@ -266,7 +268,7 @@ export default function Profile() {
                         value={formData.company}
                         onChange={handleInputChange}
                         className="pl-9"
-                        placeholder="Melitech Solutions"
+                        placeholder="Your Company"
                       />
                     </div>
                   </div>
@@ -335,7 +337,7 @@ export default function Profile() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }
 

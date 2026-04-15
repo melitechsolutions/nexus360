@@ -2,6 +2,8 @@ import { ModuleLayout } from "@/components/ModuleLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import {
   Palette,
   Layout,
@@ -10,48 +12,59 @@ import {
   BookOpen,
   ArrowRight,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const TOOLS = [
   {
     id: "theme-customization",
     title: "Theme Customization",
     description: "Customize light & dark modes, card backgrounds, and theme presets for your application",
-    icon: <Palette className="h-8 w-8" />,
+    icon: <Palette className="h-5 w-5" />,
     href: "/tools/theme-customization",
-    color: "bg-gradient-to-br from-purple-100 to-purple-50 dark:from-purple-950 dark:to-purple-900",
+    borderColor: "border-l-purple-500",
+    iconBg: "bg-purple-50 dark:bg-purple-950",
+    iconColor: "text-purple-600 dark:text-purple-300",
     badge: "NEW",
   },
   {
     id: "brand-customization",
     title: "Brand Customization",
     description: "Set company branding, colors, typography, and visual guidelines that integrate with your theme",
-    icon: <Zap className="h-8 w-8" />,
+    icon: <Zap className="h-5 w-5" />,
     href: "/tools/brand-customization",
-    color: "bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-950 dark:to-blue-900",
+    borderColor: "border-l-blue-500",
+    iconBg: "bg-blue-50 dark:bg-blue-950",
+    iconColor: "text-blue-600 dark:text-blue-300",
   },
   {
     id: "homepage-builder",
     title: "Homepage Builder",
     description: "Customize your dashboard homepage with widgets and cards. Configure which modules appear on your dashboard",
-    icon: <Layout className="h-8 w-8" />,
+    icon: <Layout className="h-5 w-5" />,
     href: "/tools/homepage-builder",
-    color: "bg-gradient-to-br from-green-100 to-green-50 dark:from-green-950 dark:to-green-900",
+    borderColor: "border-l-green-500",
+    iconBg: "bg-green-50 dark:bg-green-950",
+    iconColor: "text-green-600 dark:text-green-300",
   },
   {
     id: "system-settings",
     title: "System Settings",
     description: "Configure application-wide settings, permissions, and system preferences",
-    icon: <Settings className="h-8 w-8" />,
+    icon: <Settings className="h-5 w-5" />,
     href: "/tools/system-settings",
-    color: "bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-950 dark:to-orange-900",
+    borderColor: "border-l-orange-500",
+    iconBg: "bg-orange-50 dark:bg-orange-950",
+    iconColor: "text-orange-600 dark:text-orange-300",
   },
   {
     id: "integration-guides",
     title: "Integration Guides",
     description: "Documentation and guides for integrating brand settings into your codebase",
-    icon: <BookOpen className="h-8 w-8" />,
+    icon: <BookOpen className="h-5 w-5" />,
     href: "/tools/integration-guides",
-    color: "bg-gradient-to-br from-red-100 to-red-50 dark:from-red-950 dark:to-red-900",
+    borderColor: "border-l-red-500",
+    iconBg: "bg-red-50 dark:bg-red-950",
+    iconColor: "text-red-600 dark:text-red-300",
   },
 ];
 
@@ -64,7 +77,7 @@ export default function Tools() {
       description="Master control center for application customization, branding, and settings"
       icon={<Settings className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Tools" },
       ]}
     >
@@ -101,53 +114,41 @@ export default function Tools() {
           </CardContent>
         </Card>
 
-        {/* Tools Grid */}
+        {/* Tools Grid - Unified Card Style */}
         <div>
           <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Available Tools</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {TOOLS.map((tool) => (
-              <Card
+              <button
                 key={tool.id}
-                className={`cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
-                  tool.disabled ? "opacity-60 cursor-not-allowed bg-slate-50 dark:bg-slate-800" : ""
-                }`}
                 onClick={() => !tool.disabled && navigate(tool.href)}
+                disabled={tool.disabled}
+                className={cn(
+                  "group relative overflow-hidden rounded-xl border-l-4 p-4 sm:p-5 text-left transition-all duration-300",
+                  "bg-white dark:bg-slate-800/60 border-t border-r border-b border-slate-200 dark:border-slate-700",
+                  "hover:shadow-xl hover:-translate-y-1 cursor-pointer",
+                  tool.disabled && "opacity-60 cursor-not-allowed",
+                  tool.borderColor
+                )}
               >
-                <CardHeader>
-                  <div className={`${tool.color} rounded-lg p-4 w-fit mb-4`}>
-                    <div className="text-slate-700 dark:text-slate-300">
-                      {tool.icon}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-[0.07] transition-opacity duration-300 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 pointer-events-none" />
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`p-2.5 rounded-lg ${tool.iconBg}`}>
+                      <div className={tool.iconColor}>{tool.icon}</div>
                     </div>
+                    <ArrowRight className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 group-hover:translate-x-1 transition-all" />
                   </div>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{tool.title}</CardTitle>
-                      {tool.badge && (
-                        <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded">
-                          {tool.badge}
-                        </span>
-                      )}
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-slate-50">{tool.title}</h3>
+                    {tool.badge && (
+                      <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded">{tool.badge}</span>
+                    )}
                   </div>
-                  <CardDescription className="text-sm mt-2">
-                    {tool.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    className="w-full"
-                    variant={tool.disabled ? "outline" : "default"}
-                    disabled={tool.disabled}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      !tool.disabled && navigate(tool.href);
-                    }}
-                  >
-                    {tool.disabled ? "Coming Soon" : "Open Tool"}
-                    {!tool.disabled && <ArrowRight className="ml-2 h-4 w-4" />}
-                  </Button>
-                </CardContent>
-              </Card>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{tool.description}</p>
+                </div>
+                <div className="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full transition-all duration-500 bg-gradient-to-r from-transparent via-current to-transparent"></div>
+              </button>
             ))}
           </div>
         </div>
@@ -192,12 +193,27 @@ export default function Tools() {
               </Button>
               <Button
                 variant="outline"
-                className="justify-start h-auto p-4 opacity-50 cursor-not-allowed"
-                disabled
+                className="justify-start h-auto p-4"
+                onClick={() => {
+                  const theme = document.documentElement.style.cssText;
+                  const config = {
+                    exportedAt: new Date().toISOString(),
+                    cssVariables: theme,
+                    source: "crm-platform",
+                  };
+                  const blob = new Blob([JSON.stringify(config, null, 2)], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "theme-config.json";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success("Theme configuration exported");
+                }}
               >
                 <div className="text-left">
                   <div className="font-semibold">Export Theme Configuration</div>
-                  <div className="text-xs text-muted-foreground">Coming soon - download your theme as JSON</div>
+                  <div className="text-xs text-muted-foreground">Download your theme as JSON</div>
                 </div>
               </Button>
             </div>

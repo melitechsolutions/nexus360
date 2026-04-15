@@ -1,11 +1,13 @@
 import { router, createFeatureRestrictedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { getDb } from "../db";
-import { projects, projectTasks, employees } from "../../drizzle/schema";
+import { getDb, logActivity } from "../db";
+import { projects, projectTasks, employees, settings, clients } from "../../drizzle/schema";
 import { projectTeamMembers, invoicePayments } from "../../drizzle/schema-extended";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray, isNull, or } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import * as db from "../db";
+import { triggerEventNotification } from "./emailNotifications";
+import fs from "fs";
+import path from "path";
 
 const readProcedure = createFeatureRestrictedProcedure("projects:read");
 const createProcedure = createFeatureRestrictedProcedure("projects:create");
@@ -15,13 +17,13 @@ const deleteProcedure = createFeatureRestrictedProcedure("projects:delete");
 export const projectsRouter = router({
   list: readProcedure
     .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const result = await db.select().from(projects)
-        .orderBy(desc(projects.createdAt))
-        .limit(input?.limit || 50)
-        .offset(input?.offset || 0);
+      const orgId = ctx.user.organizationId;
+      const result = orgId
+        ? await db.select().from(projects).where(eq(projects.organizationId, orgId)).orderBy(desc(projects.createdAt)).limit(input?.limit || 50).offset(input?.offset || 0)
+        : await db.select().from(projects).orderBy(desc(projects.createdAt)).limit(input?.limit || 50).offset(input?.offset || 0);
       // Convert frozen Drizzle objects to plain objects to avoid React error #306
       return result.map(project => ({
         id: project.id,
@@ -43,28 +45,34 @@ export const projectsRouter = router({
 
   getById: readProcedure
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
-      const result = await db.select().from(projects).where(eq(projects.id, input)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(projects.id, input), eq(projects.organizationId, orgId)) : eq(projects.id, input);
+      const result = await db.select().from(projects).where(where).limit(1);
       return result[0] || null;
     }),
 
   byClient: readProcedure
     .input(z.object({ clientId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const result = await db.select().from(projects).where(eq(projects.clientId, input.clientId));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(projects.clientId, input.clientId), eq(projects.organizationId, orgId)) : eq(projects.clientId, input.clientId);
+      const result = await db.select().from(projects).where(where);
       return result;
     }),
 
   byStatus: readProcedure
     .input(z.object({ status: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const result = await db.select().from(projects).where(eq(projects.status, input.status as any));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(projects.status, input.status as any), eq(projects.organizationId, orgId)) : eq(projects.status, input.status as any);
+      const result = await db.select().from(projects).where(where);
       return result;
     }),
 
@@ -81,13 +89,26 @@ export const projectsRouter = router({
       progress: z.number().min(0).max(100).optional(),
       // Accept progressPercentage from some frontend forms and map to progress
       progressPercentage: z.union([z.string(), z.number()]).optional(),
+      // Extended project fields
+      assignedTo: z.string().optional(),
+      projectManager: z.string().optional(),
+      tags: z.string().optional(),
+      notes: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
       const id = uuidv4();
-      const projectNumber = `PRJ-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}`;
+      // Read project prefix from settings
+      let prjPrefix = "PRJ";
+      try {
+        const prefixRows = await db.select().from(settings)
+          .where(and(eq(settings.category, "numbering"), eq(settings.key, "projectPrefix")))
+          .limit(1);
+        if (prefixRows.length > 0 && prefixRows[0].value) prjPrefix = prefixRows[0].value;
+      } catch { /* use default */ }
+      const projectNumber = `${prjPrefix}-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}`;
       
       await db.insert(projects).values({
         id,
@@ -99,11 +120,35 @@ export const projectsRouter = router({
         priority: input.priority || 'medium',
         startDate: input.startDate || null,
         endDate: input.endDate || null,
-        // Store budget in cents to match currency conventions used elsewhere
         budget: input.budget !== undefined ? Math.round(input.budget * 100) : 0,
-        progress: input.progress ?? (input.progressPercentage ? Math.min(100, Math.max(0, typeof input.progressPercentage === 'string' ? parseInt(input.progressPercentage) : input.progressPercentage)) : 0),
+        progress: input.progress ?? (input.progressPercentage != null && input.progressPercentage !== '' ? Math.min(100, Math.max(0, typeof input.progressPercentage === 'string' ? (Number.isNaN(parseInt(input.progressPercentage)) ? 0 : parseInt(input.progressPercentage)) : input.progressPercentage)) : 0),
+        assignedTo: input.assignedTo || null,
+        projectManager: input.projectManager || null,
+        tags: input.tags || null,
+        notes: input.notes || null,
         createdBy: ctx.user.id,
+        organizationId: ctx.user.organizationId ?? null,
       } as any);
+
+      // Email notification
+      try {
+        if (ctx.user.email) {
+          await triggerEventNotification({
+            userId: ctx.user.id,
+            eventType: "project_created",
+            recipientEmail: ctx.user.email,
+            recipientName: ctx.user.name,
+            subject: `New Project Created: ${input.name}`,
+            htmlContent: `<h2>New Project Created</h2><p>Project <strong>${input.name}</strong> (${projectNumber}) has been created.</p>${input.status ? `<p><strong>Status:</strong> ${input.status}</p>` : ''}<p><a href="/projects/${id}">View Project</a></p>`,
+            entityType: "project",
+            entityId: id,
+            actionUrl: `/projects/${id}`,
+          });
+        }
+      } catch (notifError) {
+        console.error("[Projects] Failed to send email notification:", notifError);
+      }
+
       return { id };
     }),
 
@@ -121,11 +166,15 @@ export const projectsRouter = router({
       progress: z.number().min(0).max(100).optional(),
       progressPercentage: z.union([z.string(), z.number()]).optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
       const { id, ...data } = input;
+      const orgId = ctx.user.organizationId;
+      const ownerCheck = orgId ? and(eq(projects.id, id), eq(projects.organizationId, orgId)) : eq(projects.id, id);
+      const existing = await db.select({ id: projects.id }).from(projects).where(ownerCheck).limit(1);
+      if (!existing.length) throw new Error("Project not found");
       const updateData: any = { ...data };
       
       // Handle dates - convert to MySQL format (YYYY-MM-DD HH:MM:SS)
@@ -141,8 +190,9 @@ export const projectsRouter = router({
       // Handle progress
       if (data.progress !== undefined) {
         updateData.progress = data.progress;
-      } else if ((data as any).progressPercentage !== undefined) {
-        updateData.progress = Math.min(100, Math.max(0, parseInt((data as any).progressPercentage)));
+      } else if ((data as any).progressPercentage !== undefined && (data as any).progressPercentage !== '') {
+        const parsed = typeof (data as any).progressPercentage === 'string' ? parseInt((data as any).progressPercentage) : (data as any).progressPercentage;
+        updateData.progress = Number.isNaN(parsed) ? 0 : Math.min(100, Math.max(0, parsed));
       }
 
       // Normalize budget: accept major units from client and store as cents
@@ -201,11 +251,13 @@ export const projectsRouter = router({
 
   delete: deleteProcedure
     .input(z.string())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      await db.delete(projects).where(eq(projects.id, input));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(projects.id, input), eq(projects.organizationId, orgId)) : eq(projects.id, input);
+      await db.delete(projects).where(where);
       return { success: true };
     }),
 
@@ -241,9 +293,74 @@ export const projectsRouter = router({
         }
       }),
 
+    // List all tasks across all projects AND standalone tasks for the organization
+    listAll: readProcedure
+      .input(z.object({
+        status: z.enum(['todo','in_progress','review','completed','blocked']).optional(),
+        assignedTo: z.string().optional(),
+        priority: z.enum(['low','medium','high','urgent']).optional(),
+      }).optional())
+      .query(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) return [];
+
+        try {
+          const orgId = ctx.user.organizationId;
+          // Get all project IDs for this org
+          const orgProjects = orgId
+            ? await db.select({ id: projects.id, name: projects.name }).from(projects).where(eq(projects.organizationId, orgId))
+            : await db.select({ id: projects.id, name: projects.name }).from(projects);
+
+          const projectIds = orgProjects.map(p => p.id);
+          const projectMap: Record<string, string> = {};
+          orgProjects.forEach(p => { projectMap[p.id] = p.name; });
+
+          // Get clients for client name lookup on standalone tasks
+          const orgClients = orgId
+            ? await db.select({ id: clients.id, name: clients.companyName }).from(clients).where(eq(clients.organizationId as any, orgId))
+            : await db.select({ id: clients.id, name: clients.companyName }).from(clients);
+          const clientMap: Record<string, string> = {};
+          orgClients.forEach((c: any) => { clientMap[c.id] = c.name; });
+
+          // Include tasks attached to org projects OR standalone tasks (no projectId) created by org members
+          const statusFilters: any[] = [];
+          if (input?.status) statusFilters.push(eq(projectTasks.status, input.status));
+          if (input?.assignedTo) statusFilters.push(eq(projectTasks.assignedTo, input.assignedTo));
+          if (input?.priority) statusFilters.push(eq(projectTasks.priority, input.priority));
+
+          // Build org-scoped filter: either has a projectId in org, or has clientId in org (standalone)
+          const orgFilter = projectIds.length > 0
+            ? or(
+                inArray(projectTasks.projectId, projectIds),
+                isNull(projectTasks.projectId)
+              )
+            : isNull(projectTasks.projectId);
+
+          const allFilters = statusFilters.length > 0
+            ? and(orgFilter, ...statusFilters)
+            : orgFilter;
+
+          const tasks = await db
+            .select()
+            .from(projectTasks)
+            .where(allFilters)
+            .orderBy(desc(projectTasks.createdAt));
+
+          return tasks.map((t: any) => ({
+            ...t,
+            projectName: t.projectId ? (projectMap[t.projectId] || 'Unknown Project') : null,
+            clientName: t.clientId ? (clientMap[t.clientId] || null) : null,
+          }));
+        } catch (error) {
+          console.error("Error listing all tasks:", error);
+          return [];
+        }
+      }),
+
     create: createProcedure
       .input(z.object({
-        projectId: z.string(),
+        projectId: z.string().optional(),
+        clientId: z.string().optional(),
         title: z.string(),
         description: z.string().optional(),
         status: z.enum(['todo','in_progress','review','completed','blocked']).optional(),
@@ -252,6 +369,10 @@ export const projectsRouter = router({
         dueDate: z.date().or(z.string()).optional(),
         estimatedHours: z.number().optional(),
         parentTaskId: z.string().optional(),
+        tags: z.string().optional(),
+        targetDate: z.string().optional(),
+        billable: z.number().optional(),
+        visibleToClient: z.number().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const db = await getDb();
@@ -272,7 +393,8 @@ export const projectsRouter = router({
 
         await db.insert(projectTasks).values({
           id,
-          projectId: input.projectId,
+          projectId: input.projectId || null,
+          clientId: input.clientId || null,
           title: input.title,
           description: input.description || null,
           status: input.status || 'todo',
@@ -281,6 +403,10 @@ export const projectsRouter = router({
           dueDate: dueDate,
           estimatedHours: input.estimatedHours || null,
           parentTaskId: input.parentTaskId || null,
+          tags: input.tags || null,
+          targetDate: input.targetDate ? convertToMySQLDateTime(input.targetDate) : null,
+          billable: input.billable ?? 1,
+          visibleToClient: input.visibleToClient ?? 1,
           order: 0,
           createdBy: ctx.user.id,
           createdAt: now,
@@ -288,7 +414,7 @@ export const projectsRouter = router({
         } as any);
 
         // Log activity
-        await db.logActivity({
+        await logActivity({
           userId: ctx.user.id,
           action: "task_created",
           entityType: "projectTask",
@@ -299,9 +425,33 @@ export const projectsRouter = router({
         return { id };
       }),
 
+    // Upload a file attachment for a task, returns a URL
+    uploadAttachment: createProcedure
+      .input(z.object({
+        filename: z.string().max(255),
+        dataUrl: z.string().max(15_000_000), // ~11MB base64
+        fileType: z.enum(['image', 'document']).default('document'),
+      }))
+      .mutation(async ({ input }) => {
+        const uploadDir = process.env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
+        const tasksDir = path.join(uploadDir, 'tasks');
+        if (!fs.existsSync(tasksDir)) fs.mkdirSync(tasksDir, { recursive: true });
+
+        const safeName = input.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const ext = path.extname(safeName) || '.bin';
+        const newFilename = `${uuidv4()}${ext}`;
+        const base64Data = input.dataUrl.replace(/^data:[^;]+;base64,/, '');
+
+        fs.writeFileSync(path.join(tasksDir, newFilename), Buffer.from(base64Data, 'base64'));
+
+        return { url: `/uploads/tasks/${newFilename}`, filename: input.filename };
+      }),
+
     update: updateProcedure
       .input(z.object({
         id: z.string(),
+        projectId: z.string().optional().nullable(),
+        clientId: z.string().optional().nullable(),
         title: z.string().optional(),
         description: z.string().optional(),
         status: z.enum(['todo','in_progress','review','completed','blocked']).optional(),
@@ -311,6 +461,10 @@ export const projectsRouter = router({
         estimatedHours: z.number().optional(),
         actualHours: z.number().optional(),
         parentTaskId: z.string().optional(),
+        tags: z.string().optional(),
+        targetDate: z.string().optional(),
+        billable: z.number().optional(),
+        visibleToClient: z.number().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const db = await getDb();
@@ -321,7 +475,7 @@ export const projectsRouter = router({
 
         // Handle date conversion to MySQL format
         if (updates.dueDate) {
-          const dateStr = typeof updates.dueDate === 'string' ? updates.dueDate : updates.dueDate.toISOString();
+          const dateStr = typeof updates.dueDate === 'string' ? updates.dueDate : updates.dueDate.toISOString().replace('T', ' ').substring(0, 19);
           updateData.dueDate = dateStr.replace('T', ' ').substring(0, 19);
         }
 
@@ -335,7 +489,7 @@ export const projectsRouter = router({
         await db.update(projectTasks).set(updateData).where(eq(projectTasks.id, id));
 
         // Log activity
-        await db.logActivity({
+        await logActivity({
           userId: ctx.user.id,
           action: "task_updated",
           entityType: "projectTask",
@@ -355,7 +509,7 @@ export const projectsRouter = router({
         await db.delete(projectTasks).where(eq(projectTasks.id, input));
 
         // Log activity
-        await db.logActivity({
+        await logActivity({
           userId: ctx.user.id,
           action: "task_deleted",
           entityType: "projectTask",
@@ -502,7 +656,7 @@ export const projectsRouter = router({
           }).where(eq(projectTasks.id, input.id));
 
           // Log activity
-          await db.logActivity({
+          await logActivity({
             userId: ctx.user.id,
             action: "task_approved",
             entityType: "projectTask",
@@ -541,7 +695,7 @@ export const projectsRouter = router({
           }).where(eq(projectTasks.id, input.id));
 
           // Log activity
-          await db.logActivity({
+          await logActivity({
             userId: ctx.user.id,
             action: "task_rejected",
             entityType: "projectTask",
@@ -578,7 +732,7 @@ export const projectsRouter = router({
           }).where(eq(projectTasks.id, input.id));
 
           // Log activity
-          await db.logActivity({
+          await logActivity({
             userId: ctx.user.id,
             action: "task_revision_requested",
             entityType: "projectTask",
@@ -612,7 +766,7 @@ export const projectsRouter = router({
         .where(eq(projects.id, input.id));
 
       // Log activity
-      await db.logActivity({
+      await logActivity({
         userId: ctx.user.id,
         action: "project_manager_assigned",
         entityType: "project",
@@ -669,7 +823,7 @@ export const projectsRouter = router({
         if (!database) throw new Error("Database not available");
 
         const id = uuidv4();
-        const now = new Date().toISOString();
+        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
         
         try {
           await database.insert(projectTeamMembers).values({
@@ -678,8 +832,8 @@ export const projectsRouter = router({
             employeeId: input.employeeId,
             role: input.role || undefined,
             hoursAllocated: input.hoursAllocated || undefined,
-            startDate: input.startDate ? new Date(input.startDate).toISOString() : undefined,
-            endDate: input.endDate ? new Date(input.endDate).toISOString() : undefined,
+            startDate: input.startDate ? new Date(input.startDate).toISOString().replace('T', ' ').substring(0, 19) : undefined,
+            endDate: input.endDate ? new Date(input.endDate).toISOString().replace('T', ' ').substring(0, 19) : undefined,
             isActive: true,
             createdBy: ctx.user.id,
             createdAt: now,
@@ -701,7 +855,8 @@ export const projectsRouter = router({
           return { success: true, id };
         } catch (error) {
           console.error("Error creating team member:", error);
-          throw new Error("Failed to add team member. Please ensure database is migrated.");
+          const msg = error instanceof Error ? error.message : String(error);
+          throw new Error(`Failed to add team member: ${msg}`);
         }
       }),
 
@@ -722,8 +877,8 @@ export const projectsRouter = router({
         
         if (input.role !== undefined) updates.role = input.role;
         if (input.hoursAllocated !== undefined) updates.hoursAllocated = input.hoursAllocated;
-        if (input.startDate !== undefined) updates.startDate = new Date(input.startDate).toISOString();
-        if (input.endDate !== undefined) updates.endDate = new Date(input.endDate).toISOString();
+        if (input.startDate !== undefined) updates.startDate = new Date(input.startDate).toISOString().replace('T', ' ').substring(0, 19);
+        if (input.endDate !== undefined) updates.endDate = new Date(input.endDate).toISOString().replace('T', ' ').substring(0, 19);
         if (input.isActive !== undefined) updates.isActive = input.isActive;
 
         try {
@@ -823,7 +978,7 @@ export const projectsRouter = router({
                 .update(projectTeamMembers)
                 .set({
                   projectId: input.newProjectId,
-                  updatedAt: new Date(),
+                  updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
                 })
                 .where(eq(projectTeamMembers.id, memberId));
 
@@ -873,13 +1028,13 @@ export const projectsRouter = router({
 
         try {
           const updateObj: any = {
-            updatedAt: new Date(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           };
 
           if (input.updates.role !== undefined) updateObj.role = input.updates.role;
           if (input.updates.hoursAllocated !== undefined) updateObj.hoursAllocated = input.updates.hoursAllocated;
-          if (input.updates.startDate !== undefined) updateObj.startDate = new Date(input.updates.startDate).toISOString();
-          if (input.updates.endDate !== undefined) updateObj.endDate = new Date(input.updates.endDate).toISOString();
+          if (input.updates.startDate !== undefined) updateObj.startDate = new Date(input.updates.startDate).toISOString().replace('T', ' ').substring(0, 19);
+          if (input.updates.endDate !== undefined) updateObj.endDate = new Date(input.updates.endDate).toISOString().replace('T', ' ').substring(0, 19);
           if (input.updates.isActive !== undefined) updateObj.isActive = input.updates.isActive;
 
           for (const memberId of input.memberIds) {

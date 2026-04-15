@@ -3,11 +3,11 @@ import { useParams, useLocation } from "wouter";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
 import { CountrySelect, CitySelect } from "@/components/LocationSelects";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Save, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Loader2, Edit } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import mutateAsync from "@/lib/mutationHelpers";
 
@@ -25,11 +25,13 @@ export default function EditClient() {
   const params = useParams();
   const [, setLocation] = useLocation();
   const { allowed, isLoading: isLoadingPermissions } = useRequireFeature("clients:edit");
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     companyName: "",
     contactPerson: "",
     email: "",
     phone: "",
+    secondaryPhone: "",
     address: "",
     city: "",
     country: "",
@@ -37,7 +39,21 @@ export default function EditClient() {
     taxId: "",
     website: "",
     industry: "",
+    businessType: "",
+    registrationNumber: "",
+    yearEstablished: "",
+    numberOfEmployees: "",
+    businessLicense: "",
+    paymentTerms: "",
+    creditLimit: "",
+    bankName: "",
+    bankCode: "",
+    branch: "",
+    bankAccountNumber: "",
+    currency: "KES",
+    leadSource: "",
     status: "active" as "active" | "inactive" | "prospect" | "archived",
+    assignedTo: "",
     notes: "",
   });
 
@@ -73,29 +89,45 @@ export default function EditClient() {
     },
   });
   
-  if (isLoadingPermissions) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
-  if (!allowed) return null;
-
   // Load client data when component mounts
   useEffect(() => {
     if (clientData) {
+      const d = clientData as any;
       setFormData({
-        companyName: clientData.companyName || "",
-        contactPerson: clientData.contactPerson || "",
-        email: clientData.email || "",
-        phone: clientData.phone || "",
-        address: clientData.address || "",
-        city: clientData.city || "",
-        country: clientData.country || "",
-        postalCode: clientData.postalCode || "",
-        taxId: clientData.taxId || "",
-        website: clientData.website || "",
-        industry: clientData.industry || "",
-        status: (clientData.status || "active") as "active" | "inactive" | "prospect" | "archived",
-        notes: clientData.notes || "",
+        companyName: d.companyName || "",
+        contactPerson: d.contactPerson || "",
+        email: d.email || "",
+        phone: d.phone || "",
+        secondaryPhone: d.secondaryPhone || "",
+        address: d.address || "",
+        city: d.city || "",
+        country: d.country || "",
+        postalCode: d.postalCode || "",
+        taxId: d.taxId || "",
+        website: d.website || "",
+        industry: d.industry || "",
+        businessType: d.businessType || "",
+        registrationNumber: d.registrationNumber || "",
+        yearEstablished: d.yearEstablished || "",
+        numberOfEmployees: d.numberOfEmployees || "",
+        businessLicense: d.businessLicense || "",
+        paymentTerms: d.paymentTerms || "",
+        creditLimit: d.creditLimit || "",
+        bankName: d.bankName || "",
+        bankCode: d.bankCode || "",
+        branch: d.branch || "",
+        bankAccountNumber: d.bankAccountNumber || "",
+        currency: d.currency || "KES",
+        leadSource: d.leadSource || "",
+        status: (d.status || "active") as "active" | "inactive" | "prospect" | "archived",
+        assignedTo: d.assignedTo || "",
+        notes: d.notes || "",
       });
     }
   }, [clientData]);
+
+  if (isLoadingPermissions) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
+  if (!allowed) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,33 +156,37 @@ export default function EditClient() {
 
   if (isLoadingClient) {
     return (
-      <DashboardLayout>
+      <ModuleLayout
+        title="Edit Client"
+        description="Update client information"
+        icon={<Edit className="w-5 h-5" />}
+        backLink={{ label: "Clients", href: "/clients" }}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/crm-home" },
+          { label: "Clients", href: "/clients" },
+          { label: "Edit" },
+        ]}
+      >
         <div className="flex items-center justify-center h-96">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Edit Client"
+      description="Update client information"
+      icon={<Edit className="w-5 h-5" />}
+      backLink={{ label: "Clients", href: "/clients" }}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Clients", href: "/clients" },
+        { label: "Edit" },
+      ]}
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setLocation(`/clients/${params.id}`)}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Edit Client</h1>
-            <p className="text-muted-foreground">Update client information</p>
-          </div>
-        </div>
-
         {/* Form */}
         <Card>
           <CardHeader>
@@ -206,6 +242,27 @@ export default function EditClient() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="secondaryPhone">Secondary Phone</Label>
+                  <Input
+                    id="secondaryPhone"
+                    value={formData.secondaryPhone}
+                    onChange={(e) => setFormData({ ...formData, secondaryPhone: e.target.value })}
+                    placeholder="+254 700 000 001"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website</Label>
+                  <Input
+                    id="website"
+                    value={formData.website}
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                    placeholder="www.example.com"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="address">Address</Label>
                   <Input
                     id="address"
@@ -255,18 +312,6 @@ export default function EditClient() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="website">Website</Label>
-                  <Input
-                    id="website"
-                    value={formData.website}
-                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                    placeholder="www.example.com"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
                   <Label htmlFor="industry">Industry</Label>
                   <Input
                     id="industry"
@@ -275,33 +320,216 @@ export default function EditClient() {
                     placeholder="Technology"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) => setFormData({ ...formData, status: value as any })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="prospect">Prospect</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="businessType">Business Type</Label>
+                  <Input
+                    id="businessType"
+                    value={formData.businessType}
+                    onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}
+                    placeholder="e.g., Sole Proprietor, LLC"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="registrationNumber">Registration Number</Label>
+                  <Input
+                    id="registrationNumber"
+                    value={formData.registrationNumber}
+                    onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
+                    placeholder="Company registration number"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="yearEstablished">Year Established</Label>
+                  <Input
+                    id="yearEstablished"
+                    value={formData.yearEstablished}
+                    onChange={(e) => setFormData({ ...formData, yearEstablished: e.target.value })}
+                    placeholder="2020"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="numberOfEmployees">No. of Employees</Label>
+                  <Input
+                    id="numberOfEmployees"
+                    value={formData.numberOfEmployees}
+                    onChange={(e) => setFormData({ ...formData, numberOfEmployees: e.target.value })}
+                    placeholder="e.g., 50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="businessLicense">Business License</Label>
+                  <Input
+                    id="businessLicense"
+                    value={formData.businessLicense}
+                    onChange={(e) => setFormData({ ...formData, businessLicense: e.target.value })}
+                    placeholder="License number"
+                  />
+                </div>
+              </div>
+
+              {/* Financial Details */}
+              <div className="pt-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Financial Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="paymentTerms">Payment Terms</Label>
+                    <Select
+                      value={formData.paymentTerms}
+                      onValueChange={(value) => setFormData({ ...formData, paymentTerms: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select payment terms" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Due on Receipt">Due on Receipt</SelectItem>
+                        <SelectItem value="Net 7">Net 7</SelectItem>
+                        <SelectItem value="Net 14">Net 14</SelectItem>
+                        <SelectItem value="Net 30">Net 30</SelectItem>
+                        <SelectItem value="Net 45">Net 45</SelectItem>
+                        <SelectItem value="Net 60">Net 60</SelectItem>
+                        <SelectItem value="Net 90">Net 90</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="creditLimit">Credit Limit (KES)</Label>
+                    <Input
+                      id="creditLimit"
+                      value={formData.creditLimit}
+                      onChange={(e) => setFormData({ ...formData, creditLimit: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankName">Bank Name</Label>
+                    <Input
+                      id="bankName"
+                      value={formData.bankName}
+                      onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+                      placeholder="Bank name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bankCode">Bank Code</Label>
+                    <Input
+                      id="bankCode"
+                      value={formData.bankCode}
+                      onChange={(e) => setFormData({ ...formData, bankCode: e.target.value })}
+                      placeholder="Bank code"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="branch">Branch</Label>
+                    <Input
+                      id="branch"
+                      value={formData.branch}
+                      onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                      placeholder="Branch name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bankAccountNumber">Account Number</Label>
+                    <Input
+                      id="bankAccountNumber"
+                      value={formData.bankAccountNumber}
+                      onChange={(e) => setFormData({ ...formData, bankAccountNumber: e.target.value })}
+                      placeholder="Account number"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="currency">Currency</Label>
+                    <Select
+                      value={formData.currency}
+                      onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="KES">KES</SelectItem>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                        <SelectItem value="TZS">TZS</SelectItem>
+                        <SelectItem value="UGX">UGX</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Classification */}
+              <div className="pt-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Classification</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="leadSource">Lead Source</Label>
+                    <Select
+                      value={formData.leadSource}
+                      onValueChange={(value) => setFormData({ ...formData, leadSource: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select source" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="referral">Referral</SelectItem>
+                        <SelectItem value="website">Website</SelectItem>
+                        <SelectItem value="social_media">Social Media</SelectItem>
+                        <SelectItem value="cold_call">Cold Call</SelectItem>
+                        <SelectItem value="trade_show">Trade Show</SelectItem>
+                        <SelectItem value="advertisement">Advertisement</SelectItem>
+                        <SelectItem value="tender">Tender</SelectItem>
+                        <SelectItem value="existing_client">Existing Client</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => setFormData({ ...formData, status: value as any })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="prospect">Prospect</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="assignedTo">Assigned To</Label>
+                    <Input
+                      id="assignedTo"
+                      value={formData.assignedTo}
+                      onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                      placeholder="Team member"
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
+                <RichTextEditor
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(v) => setFormData({ ...formData, notes: v })}
                   placeholder="Additional notes about the client"
-                  rows={4}
+                  minHeight="120px"
                 />
               </div>
 
@@ -342,6 +570,6 @@ export default function EditClient() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

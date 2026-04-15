@@ -22,21 +22,26 @@ export const serviceTemplatesRouter = router({
       category: z.string().optional(),
       search: z.string().optional(),
     }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const database = await getDb();
       if (!database) return [];
+
+      const orgId = ctx.user?.organizationId;
+      const baseConditions = orgId
+        ? [eq(serviceTemplates.isActive, true), eq(serviceTemplates.organizationId, orgId)]
+        : [eq(serviceTemplates.isActive, true)];
 
       let query = database
         .select()
         .from(serviceTemplates)
-        .where(eq(serviceTemplates.isActive, true));
+        .where(and(...baseConditions));
 
       if (input?.category) {
         query = database
           .select()
           .from(serviceTemplates)
           .where(and(
-            eq(serviceTemplates.isActive, true),
+            ...baseConditions,
             eq(serviceTemplates.category, input.category)
           )) as any;
       }
@@ -46,7 +51,7 @@ export const serviceTemplatesRouter = router({
           .select()
           .from(serviceTemplates)
           .where(and(
-            eq(serviceTemplates.isActive, true),
+            ...baseConditions,
             like(serviceTemplates.name, `%${input.search}%`)
           )) as any;
       }
@@ -145,6 +150,7 @@ export const serviceTemplatesRouter = router({
       try {
         await database.insert(serviceTemplates).values({
           id,
+          organizationId: ctx.user?.organizationId || null,
           name: input.name,
           description: input.description,
           category: input.category,
@@ -157,8 +163,8 @@ export const serviceTemplatesRouter = router({
           terms: input.terms,
           isActive: true,
           createdBy: ctx.user.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         } as any);
 
         await db.logActivity({
@@ -196,7 +202,7 @@ export const serviceTemplatesRouter = router({
       if (!database) throw new Error("Database not available");
 
       const updates: any = {
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
       };
 
       if (input.name) updates.name = input.name;
@@ -293,8 +299,8 @@ export const serviceTemplatesRouter = router({
           status: input.status,
           notes: input.notes,
           createdBy: ctx.user.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         } as any);
 
         await db.logActivity({
@@ -383,7 +389,9 @@ export const serviceTemplatesRouter = router({
       .from(serviceTemplates)
       .where(eq(serviceTemplates.isActive, true));
 
-    const categories = [...new Set(templates.map(t => t.category).filter(Boolean))];
+    const catSet = new Set(templates.map(t => t.category).filter(Boolean));
+    const categories: string[] = [];
+    catSet.forEach(c => categories.push(c as string));
     return categories.sort();
   }),
 

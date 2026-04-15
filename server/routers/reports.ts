@@ -125,8 +125,8 @@ export const reportsRouter = router({
         .select()
         .from(invoices)
         .where(and(
-          gte(invoices.issueDate, input.startDate.toISOString()),
-          lte(invoices.issueDate, input.endDate.toISOString())
+          gte(invoices.issueDate, input.startDate.toISOString().replace('T', ' ').substring(0, 19)),
+          lte(invoices.issueDate, input.endDate.toISOString().replace('T', ' ').substring(0, 19))
         ));
 
       // Get clients for names
@@ -196,8 +196,8 @@ export const reportsRouter = router({
         .select()
         .from(payments)
         .where(and(
-          gte(payments.paymentDate, input.startDate.toISOString()),
-          lte(payments.paymentDate, input.endDate.toISOString())
+          gte(payments.paymentDate, input.startDate.toISOString().replace('T', ' ').substring(0, 19)),
+          lte(payments.paymentDate, input.endDate.toISOString().replace('T', ' ').substring(0, 19))
         ));
 
       // Get expenses in date range
@@ -205,8 +205,8 @@ export const reportsRouter = router({
         .select()
         .from(expenses)
         .where(and(
-          gte(expenses.expenseDate, input.startDate.toISOString()),
-          lte(expenses.expenseDate, input.endDate.toISOString())
+          gte(expenses.expenseDate, input.startDate.toISOString().replace('T', ' ').substring(0, 19)),
+          lte(expenses.expenseDate, input.endDate.toISOString().replace('T', ' ').substring(0, 19))
         ));
 
       const totalInflow = paymentData.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -325,7 +325,7 @@ export const reportsRouter = router({
       const payments = await database
         .select()
         .from(paymentsTable)
-        .where(and(gte(paymentsTable.paymentDate, lookbackStart.toISOString()), lte(paymentsTable.paymentDate, now.toISOString())));
+        .where(and(gte(paymentsTable.paymentDate, lookbackStart.toISOString().replace('T', ' ').substring(0, 19)), lte(paymentsTable.paymentDate, now.toISOString().replace('T', ' ').substring(0, 19))));
 
       const totalInflow = payments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
       const avgMonthly = totalInflow / 3;

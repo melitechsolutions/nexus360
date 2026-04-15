@@ -18,6 +18,7 @@ import {
   UserCog,
   ArrowRight,
 } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function Home() {
   const { user, loading, isAuthenticated, logout } = useAuth();
@@ -141,7 +142,7 @@ export default function Home() {
       description="Manage your clients, projects, invoices, and more from one powerful platform"
       icon={<FolderKanban className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
       ]}
     >
       <div className="space-y-8">
@@ -180,49 +181,31 @@ export default function Home() {
         <div className="mt-12">
           <h3 className="text-2xl font-bold mb-6">Quick Overview</h3>
           <div className="grid gap-4 md:grid-cols-4">
-            <Card className="border-l-4 border-l-blue-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
-                <FolderKanban className="h-4 w-4 text-blue-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">Get started by creating a project</p>
-              </CardContent>
-            </Card>
+            <StatsCard
+              label="Total Projects"
+              value="0"
+              description="Get started by creating a project"
+              icon={<FolderKanban className="h-5 w-5" />}
+              color="border-l-blue-500"
+            />
 
-            <Card className="border-l-4 border-l-green-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
-                <Users className="h-4 w-4 text-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">Add your first client</p>
-              </CardContent>
-            </Card>
+            <StatsCard
+              label="Active Clients"
+              value="0"
+              description="Add your first client"
+              icon={<Users className="h-5 w-5" />}
+              color="border-l-green-500"
+            />
 
-            <Card className="border-l-4 border-l-purple-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
-                <FileText className="h-4 w-4 text-purple-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">No pending invoices</p>
-              </CardContent>
-            </Card>
+            <StatsCard
+              label="Pending Invoices"
+              value="0"
+              description="No pending invoices"
+              icon={<FileText className="h-5 w-5" />}
+              color="border-l-purple-500"
+            />
 
-            <Card className="border-l-4 border-l-emerald-500">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-emerald-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">KES 0</div>
-                <p className="text-xs text-muted-foreground">This month</p>
-              </CardContent>
-            </Card>
+            <StatsCard label="Revenue" value="KES 0" description="This month" icon={<DollarSign className="h-5 w-5" />} color="border-l-emerald-500" />
           </div>
         </div>
       </div>

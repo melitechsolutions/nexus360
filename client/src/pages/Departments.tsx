@@ -22,8 +22,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DepartmentForm } from "@/components/DepartmentForm";
-import { Building2, Plus, Search, Edit, Trash2, Users } from "lucide-react";
+import { Building2, Eye, Plus, Search, Edit, Trash2, Users } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function Departments() {
   const [, navigate] = useLocation();
@@ -31,13 +33,17 @@ export default function Departments() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState(null);
+
+  // Fetch real data from backend (must be before any early returns to satisfy React hooks rules)
+  const { data: departmentsData = [], isLoading: departmentsLoading } = trpc.departments.list.useQuery();
+  const utils = trpc.useUtils();
+  const deleteMutation = trpc.departments.delete.useMutation({
+    onSuccess: () => { utils.departments.list.invalidate(); toast.success("Department deleted"); },
+    onError: (err: any) => toast.error(err.message || "Failed to delete department"),
+  });
   
   if (isLoading) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
   if (!allowed) return null;
-
-  // Fetch real data from backend
-  const { data: departmentsData = [], isLoading: departmentsLoading } = trpc.departments.list.useQuery();
-  const utils = trpc.useUtils();
 
   // Transform backend data to display format
   const departments = (departmentsData as any[]).map((dept: any) => ({
@@ -46,7 +52,7 @@ export default function Departments() {
       code: dept.code || `DEPT-${dept.id.slice(0, 3).toUpperCase()}`,
       manager: dept.manager || "Unassigned",
       employeeCount: dept.employeeCount || 0,
-      budget: (dept.budget || 0) / 100,
+      budget: dept.budget || 0,
       description: dept.description || "",
     }));
 
@@ -65,7 +71,7 @@ export default function Departments() {
       description="Manage organizational departments, teams, and resources"
       icon={<Building2 className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/crm" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Departments" },
       ]}
@@ -109,49 +115,37 @@ export default function Departments() {
       <div className="space-y-6">
         {/* Statistics Cards */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Departments</CardTitle>
-              <Building2 className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{departments.length}</div>
-              <p className="text-xs text-muted-foreground">Active departments</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Departments"
+            value={departments.length}
+            description="Active departments"
+            icon={<Building2 className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
 
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-              <Users className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalEmployees}</div>
-              <p className="text-xs text-muted-foreground">Across all departments</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Employees"
+            value={totalEmployees}
+            description="Across all departments"
+            icon={<Users className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
 
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
-              <Building2 className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Ksh {(totalBudget || 0).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Annual allocation</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Budget"
+            value={<>Ksh {(totalBudget || 0).toLocaleString()}</>}
+            description="Annual allocation"
+            icon={<Building2 className="h-5 w-5" />}
+            color="border-l-purple-500"
+          />
 
-          <Card className="border-l-4 border-l-orange-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg. Team Size</CardTitle>
-              <Users className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{Math.round(totalEmployees / departments.length)}</div>
-              <p className="text-xs text-muted-foreground">Employees per dept</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Avg. Team Size"
+            value={departments.length > 0 ? Math.round(totalEmployees / departments.length) : 0}
+            description="Employees per dept"
+            icon={<Users className="h-5 w-5" />}
+            color="border-l-orange-500"
+          />
         </div>
 
         <Card>
@@ -200,6 +194,10 @@ export default function Departments() {
                     <TableCell className="max-w-xs truncate">{dept.description}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" title="View"
+                          onClick={() => navigate(`/departments/${dept.id}`)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -216,7 +214,8 @@ export default function Departments() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" title="Delete">
+                        <Button variant="ghost" size="icon" title="Delete"
+                          onClick={() => { if (confirm(`Delete department "${dept.name}"?`)) deleteMutation.mutate(dept.id); }}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

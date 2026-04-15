@@ -8,7 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
 import * as db from "../db";
-import nodemailer from "nodemailer";
+import { sendEmail as sendCoreEmail } from "../_core/mail";
 import { v4 as uuidv4 } from "uuid";
 import { communicationLogs } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -98,35 +98,9 @@ async function sendEmailViaSmtp(
   cc?: string,
   bcc?: string
 ): Promise<boolean> {
-  try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '465'),
-      secure: true,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    });
-
-    const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER;
-    const fromName = process.env.SMTP_FROM_NAME || 'Melitech Solutions';
-    const from = `"${fromName}" <${fromEmail}>`;
-
-    await transporter.sendMail({
-      from,
-      to,
-      cc,
-      bcc,
-      subject,
-      html: body,
-    });
-
-    return true;
-  } catch (error) {
-    console.error('SMTP email send failed:', error);
-    throw error;
-  }
+  // Delegate to shared mail module which reads SMTP config from env vars AND DB settings
+  await sendCoreEmail({ to, subject, html: body, cc, bcc });
+  return true;
 }
 
 export const communicationsRouter = router({
@@ -159,6 +133,11 @@ export const communicationsRouter = router({
 
         // Build dynamic filters
         const filters: any[] = [];
+
+        const orgId = ctx.user.organizationId;
+        if (orgId) {
+          filters.push(eq(communicationLogs.organizationId, orgId));
+        }
 
         if (input.type) {
           filters.push(eq(communicationLogs.type, input.type));
@@ -285,7 +264,7 @@ export const communicationsRouter = router({
         return {
           id: templateId,
           ...input,
-          createdAt: new Date(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         };
       } catch (error: any) {
         console.error('Create template error:', error);
@@ -360,6 +339,7 @@ export const communicationsRouter = router({
     .input(sendEmailSchema)
     .mutation(async ({ input, ctx }) => {
       try {
+        const database = await db.getDb();
         let emailBody = input.body;
 
         // If template is provided, load and use template
@@ -370,6 +350,22 @@ export const communicationsRouter = router({
 
         // Send via SMTP
         await sendEmailViaSmtp(input.to, input.subject, emailBody, input.cc, input.bcc);
+
+        // Persist to communication logs so it appears in communications modules.
+        if (database) {
+          await database.insert(communicationLogs).values({
+            id: uuidv4(),
+            organizationId: ctx.user.organizationId ?? null,
+            type: 'email',
+            recipient: input.to,
+            subject: input.subject,
+            body: emailBody,
+            status: 'sent',
+            sentAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            createdBy: ctx.user.id,
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          } as any);
+        }
 
         // Log email activity
         await db.logActivity({
@@ -418,7 +414,7 @@ export const communicationsRouter = router({
           id: messageId,
           ...input,
           senderId: ctx.user.id,
-          sentAt: new Date(),
+          sentAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           isRead: false,
         };
       } catch (error: any) {
@@ -582,7 +578,7 @@ export const communicationsRouter = router({
             isRecurring: input.isRecurring,
             assignedTo: input.assignedTo || [ctx.user.id],
             createdBy: ctx.user.id,
-            createdAt: new Date(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           },
         ];
 
@@ -620,14 +616,14 @@ export const communicationsRouter = router({
               id: uuidv4(),
               title: input.title,
               description: input.description,
-              dueDate: currentDate.toISOString().split('T')[0],
+              dueDate: currentDate.toISOString().replace('T', ' ').substring(0, 19).split('T')[0],
               eventType: input.eventType,
               linkedEntityId: input.linkedEntityId,
               linkedEntityType: input.linkedEntityType,
               isRecurring: true,
               assignedTo: input.assignedTo || [ctx.user.id],
               createdBy: ctx.user.id,
-              createdAt: new Date(),
+              createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             });
           }
         }
@@ -771,7 +767,7 @@ export const communicationsRouter = router({
         return {
           id: recurringId,
           ...input,
-          createdAt: new Date(),
+          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           success: true,
           message: 'Recurring invoice created successfully',
         };

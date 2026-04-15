@@ -1,15 +1,47 @@
 import { router } from "../_core/trpc";
 import { z } from "zod";
-import { getDb } from "../db";
+import { getDb, createNotification } from "../db";
 import { v4 as uuidv4 } from "uuid";
 import { sendEmail } from "../_core/mail";
 import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
+import { settings } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
+import { getCompanyInfo } from "../utils/company-info";
 
 const notificationCreateProcedure = createFeatureRestrictedProcedure("notifications:create");
 
+// Map event types to notification preference keys (from Settings → Notifications)
+const EVENT_TO_PREF_KEY: Record<string, string> = {
+  invoice_created: "invoiceDue",
+  invoice_sent: "invoiceDue",
+  invoice_overdue: "invoiceDue",
+  payment_received: "paymentReceived",
+  client_created: "newClient",
+  proposal_sent: "invoiceDue",
+  estimate_converted: "invoiceDue",
+  project_created: "invoiceDue",
+};
+
+/** Check if notification pref is enabled in settings (defaults to enabled) */
+async function isNotificationEnabled(eventType: string): Promise<boolean> {
+  const prefKey = EVENT_TO_PREF_KEY[eventType];
+  if (!prefKey) return true; // unknown events default to enabled
+  try {
+    const db = await getDb();
+    if (!db) return true;
+    const rows = await db.select().from(settings)
+      .where(and(eq(settings.category, "notifications"), eq(settings.key, prefKey)))
+      .limit(1);
+    if (!rows.length) return true; // not configured = enabled
+    return rows[0].value !== "false" && rows[0].value !== "0";
+  } catch {
+    return true;
+  }
+}
+
 interface NotificationTriggerInput {
   userId: string;
-  eventType: "invoice_created" | "invoice_sent" | "payment_received" | "invoice_overdue" | "proposal_sent" | "estimate_converted";
+  eventType: "invoice_created" | "invoice_sent" | "payment_received" | "invoice_overdue" | "proposal_sent" | "estimate_converted" | "client_created" | "project_created" | "opportunity_created" | "employee_created" | string;
   recipientEmail: string;
   recipientName?: string;
   subject: string;
@@ -20,7 +52,8 @@ interface NotificationTriggerInput {
 }
 
 /**
- * Send email and create database notification for event
+ * Send email and create database notification for event.
+ * Respects notification preferences from Settings → Notifications.
  */
 export async function triggerEventNotification(input: NotificationTriggerInput) {
   const db = await getDb();
@@ -29,10 +62,17 @@ export async function triggerEventNotification(input: NotificationTriggerInput) 
     return;
   }
 
+  // Check notification preferences
+  const enabled = await isNotificationEnabled(input.eventType);
+  if (!enabled) {
+    console.log(`[NOTIFY] Skipping ${input.eventType} — disabled in settings`);
+    return;
+  }
+
   try {
     // Create database notification record
     const notificationId = uuidv4();
-    await db.createNotification({
+    await createNotification({
       userId: input.userId,
       title: input.subject,
       message: input.htmlContent.substring(0, 200), // Truncate for preview
@@ -156,7 +196,7 @@ export const emailNotificationRouter = router({
         eventType: "invoice_sent",
         recipientEmail: input.clientEmail,
         recipientName: input.clientName,
-        subject: `Invoice ${input.invoiceNumber} from Melitech Solutions`,
+        subject: `Invoice ${input.invoiceNumber} from ${(await getCompanyInfo()).name}`,
         htmlContent,
         entityType: "invoice",
         entityId: input.invoiceId,
@@ -312,7 +352,7 @@ export const emailNotificationRouter = router({
         eventType: "proposal_sent",
         recipientEmail: input.clientEmail,
         recipientName: input.clientName,
-        subject: `Proposal ${input.proposalNumber} from Melitech Solutions`,
+        subject: `Proposal ${input.proposalNumber} from ${(await getCompanyInfo()).name}`,
         htmlContent,
         entityType: "proposal",
         entityId: input.proposalId,

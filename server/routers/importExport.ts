@@ -352,7 +352,7 @@ export const importExportRouter = router({
             departmentId: departmentId,
             position: employeeData.jobTitle ?? null,
             baseSalary: employeeData.salary ?? 0,
-            dateOfJoining: employeeData.startDate ? new Date(employeeData.startDate) : new Date(),
+            dateOfJoining: employeeData.startDate ? new Date(employeeData.startDate) : new Date().toISOString().replace('T', ' ').substring(0, 19),
             status: employeeData.status ?? 'active',
             idNumber: employeeData.idNumber ?? null,
             nssf: null,
@@ -479,7 +479,7 @@ export const importExportRouter = router({
           entityType: 'payroll',
           importedIds,
           userId: ctx.user.id,
-          timestamp: new Date(),
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
         });
       }
 
@@ -710,8 +710,8 @@ export const importExportRouter = router({
             notes: supplierData.notes,
             isActive: true,
             createdBy: ctx.user.id,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           });
 
           results.imported++;

@@ -29,7 +29,7 @@ export const taxComplianceRouter = router({
       
       const { from, to, employeeId, departmentId } = input;
       const fromStr = typeof from === 'string' ? from : from.toISOString().slice(0, 10);
-      const toStr = typeof to === 'string' ? to : to.toISOString().slice(0, 10);
+      const toStr = typeof to === 'string' ? to : to.toISOString().replace('T', ' ').substring(0, 19).slice(0, 10);
       
       try {
         const rows = await database
@@ -47,7 +47,21 @@ export const taxComplianceRouter = router({
         console.error("PAYE Report error:", error);
         return [];
       }
+    }),
+
+  /**
+   * NSSF contributions report
+   */
+  getNSSFReport: readProcedure
+    .input(dateRangeSchema)
+    .query(async ({ input }) => {
+      const database = await getDb();
+      if (!database) return [];
       
+      const { from, to } = input;
+      const fromStr = typeof from === 'string' ? from : from.toISOString().slice(0, 10);
+      const toStr = typeof to === 'string' ? to : to.toISOString().replace('T', ' ').substring(0, 19).slice(0, 10);
+
       try {
         const rows = await database
           .select({
@@ -77,7 +91,7 @@ export const taxComplianceRouter = router({
       
       const { from, to, employeeId, departmentId } = input;
       const fromStr = typeof from === 'string' ? from : from.toISOString().slice(0, 10);
-      const toStr = typeof to === 'string' ? to : to.toISOString().slice(0, 10);
+      const toStr = typeof to === 'string' ? to : to.toISOString().replace('T', ' ').substring(0, 19).slice(0, 10);
       
       try {
         const rows = await database
@@ -108,7 +122,7 @@ export const taxComplianceRouter = router({
       
       const { from, to, employeeId, departmentId } = input;
       const fromStr = typeof from === 'string' ? from : from.toISOString().slice(0, 10);
-      const toStr = typeof to === 'string' ? to : to.toISOString().slice(0, 10);
+      const toStr = typeof to === 'string' ? to : to.toISOString().replace('T', ' ').substring(0, 19).slice(0, 10);
       
       try {
         const rows = await database
@@ -139,7 +153,7 @@ export const taxComplianceRouter = router({
       
       const { from, to } = input;
       const fromStr = typeof from === 'string' ? from : from.toISOString().slice(0, 10);
-      const toStr = typeof to === 'string' ? to : to.toISOString().slice(0, 10);
+      const toStr = typeof to === 'string' ? to : to.toISOString().replace('T', ' ').substring(0, 19).slice(0, 10);
       
       try {
         const records = await database

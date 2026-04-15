@@ -2,7 +2,6 @@ import { protectedProcedure, router, createFeatureRestrictedProcedure } from "..
 import { z } from "zod";
 import { recurringInvoices, invoices, lineItems } from "../../drizzle/schema";
 import { getDb } from "../db";
-import * as dbFunctions from "../db";
 import { eq, and, lte, gte, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { TRPCError } from "@trpc/server";
@@ -12,6 +11,19 @@ const readProcedure = createFeatureRestrictedProcedure("invoices:read");
 const createProcedure = createFeatureRestrictedProcedure("invoices:create");
 const updateProcedure = createFeatureRestrictedProcedure("invoices:update");
 const deleteProcedure = createFeatureRestrictedProcedure("invoices:delete");
+
+// Helper to convert ISO date to MySQL format
+const toMySqlDateFormat = (isoString: string): string => {
+  try {
+    // Handle both ISO strings and already-formatted strings
+    if (isoString.includes('T')) {
+      return isoString.split('T')[0] + ' ' + isoString.split('T')[1].substring(0, 8);
+    }
+    return isoString; // Already in MySQL format
+  } catch {
+    return isoString; // Passthrough if conversion fails
+  }
+};
 
 const createRecurringInvoiceSchema = z.object({
   clientId: z.string(),
@@ -31,6 +43,17 @@ const updateRecurringInvoiceSchema = z.object({
   description: z.string().optional(),
   noteToInvoice: z.string().optional(),
 });
+
+function parseIsoDateInput(value: string): Date {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Invalid date value",
+    });
+  }
+  return d;
+}
 
 // Calculate next due date based on frequency
 function calculateNextDueDate(currentDate: Date, frequency: string): Date {
@@ -66,6 +89,7 @@ export const recurringInvoicesRouter = router({
     .input(createRecurringInvoiceSchema)
     .mutation(async ({ input, ctx }) => {
       try {
+        const db = await getDb();
         // Verify template invoice exists
         const templateInvoice = await db
           .select()
@@ -81,17 +105,23 @@ export const recurringInvoicesRouter = router({
         }
 
         const id = nanoid();
-        const startDate = new Date(input.startDate);
-        const nextDueDate = calculateNextDueDate(startDate, input.frequency);
+        // Parse ISO date to Date object for calculation
+        const startDateObj = parseIsoDateInput(input.startDate);
+        const nextDueDate = calculateNextDueDate(startDateObj, input.frequency);
+
+        // Convert ISO dates to MySQL format for storage
+        const mysqlStartDate = toMySqlDateFormat(input.startDate);
+        const mysqlEndDate = input.endDate ? toMySqlDateFormat(input.endDate) : undefined;
+        const mysqlNextDueDate = toMySqlDateFormat(nextDueDate.toISOString());
 
         await db.insert(recurringInvoices).values({
           id,
           clientId: input.clientId,
           templateInvoiceId: input.templateInvoiceId,
-          frequency: input.frequency as any,
-          startDate: input.startDate,
-          endDate: input.endDate,
-          nextDueDate: nextDueDate.toISOString(),
+          frequency: input.frequency,
+          startDate: mysqlStartDate,
+          endDate: mysqlEndDate,
+          nextDueDate: mysqlNextDueDate,
           lastGeneratedDate: null,
           isActive: 1,
           description: input.description,
@@ -119,6 +149,7 @@ export const recurringInvoicesRouter = router({
     )
     .query(async ({ input }) => {
       try {
+        const db = await getDb();
         const filters = [];
         if (input.clientId) {
           filters.push(eq(recurringInvoices.clientId, input.clientId));
@@ -147,6 +178,7 @@ export const recurringInvoicesRouter = router({
     .input(z.string())
     .query(async ({ input }) => {
       try {
+        const db = await getDb();
         const result = await db
           .select()
           .from(recurringInvoices)
@@ -175,6 +207,7 @@ export const recurringInvoicesRouter = router({
     .input(updateRecurringInvoiceSchema)
     .mutation(async ({ input, ctx }) => {
       try {
+        const db = await getDb();
         const { id, ...updateData } = input;
 
         const existing = await db
@@ -191,7 +224,7 @@ export const recurringInvoicesRouter = router({
         }
 
         const updates: any = {
-          updatedAt: new Date().toISOString(),
+          updatedAt: toMySqlDateFormat(new Date().toISOString()),
         };
 
         if (updateData.frequency) {
@@ -201,11 +234,11 @@ export const recurringInvoicesRouter = router({
             new Date(existing[0].nextDueDate),
             updateData.frequency
           );
-          updates.nextDueDate = nextDueDate.toISOString();
+          updates.nextDueDate = toMySqlDateFormat(nextDueDate.toISOString());
         }
 
         if (updateData.endDate !== undefined) {
-          updates.endDate = updateData.endDate;
+          updates.endDate = toMySqlDateFormat(updateData.endDate);
         }
 
         if (updateData.isActive !== undefined) {
@@ -245,11 +278,12 @@ export const recurringInvoicesRouter = router({
     )
     .mutation(async ({ input }) => {
       try {
+        const db = await getDb();
         await db
           .update(recurringInvoices)
           .set({
             isActive: input.isActive ? 1 : 0,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(recurringInvoices.id, input.id));
 
@@ -265,6 +299,7 @@ export const recurringInvoicesRouter = router({
 
   delete: deleteProcedure.input(z.string()).mutation(async ({ input }) => {
     try {
+      const db = await getDb();
       await db
         .delete(recurringInvoices)
         .where(eq(recurringInvoices.id, input));
@@ -284,6 +319,7 @@ export const recurringInvoicesRouter = router({
     .input(z.string())
     .mutation(async ({ input, ctx }) => {
       try {
+        const db = await getDb();
         const recurringInvoice = await db
           .select()
           .from(recurringInvoices)
@@ -326,11 +362,11 @@ export const recurringInvoicesRouter = router({
           template[0].invoiceNumber
         );
         const now = new Date();
-        const issueDate = now.toISOString();
+        const issueDate = now.toISOString().replace('T', ' ').substring(0, 19);
         const dueDate = calculateNextDueDate(
           now,
           recurringInvoice[0].frequency
-        ).toISOString();
+        ).toISOString().replace('T', ' ').substring(0, 19);
 
         // Create new invoice from template
         await db.insert(invoices).values({
@@ -384,9 +420,9 @@ export const recurringInvoicesRouter = router({
         await db
           .update(recurringInvoices)
           .set({
-            nextDueDate: nextDueDate.toISOString(),
-            lastGeneratedDate: now.toISOString(),
-            updatedAt: now.toISOString(),
+            nextDueDate: nextDueDate.toISOString().replace('T', ' ').substring(0, 19),
+            lastGeneratedDate: now.toISOString().replace('T', ' ').substring(0, 19),
+            updatedAt: now.toISOString().replace('T', ' ').substring(0, 19),
           })
           .where(eq(recurringInvoices.id, input));
 

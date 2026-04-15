@@ -45,7 +45,7 @@ export const userManagementRouter = router({
           deletedReason: input.reason || "Deleted by admin",
           deletedBy: ctx.user.id,
           archived: 1,
-          deletedAt: new Date().toISOString(),
+          deletedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         };
 
         // Insert deletion record
@@ -56,7 +56,7 @@ export const userManagementRouter = router({
           .update(users)
           .set({
             isActive: 0,
-            lastSignedIn: new Date().toISOString(), // Update to prevent confusion
+            lastSignedIn: new Date().toISOString().replace('T', ' ').substring(0, 19), // Update to prevent confusion
           })
           .where(eq(users.id, input.userId));
 
@@ -133,7 +133,7 @@ export const userManagementRouter = router({
           .update(userDeletions)
           .set({
             archived: 0,
-            restoredAt: new Date().toISOString(),
+            restoredAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
             restoredBy: ctx.user.id,
           })
           .where(eq(userDeletions.userId, input.userId));
@@ -219,7 +219,7 @@ export const userManagementRouter = router({
           where: and(
             eq(users.isActive, 1),
             (db as any).raw(
-              `lastSignedIn < '${sinceDate.toISOString()}' OR lastSignedIn IS NULL`
+              `lastSignedIn < '${sinceDate.toISOString().replace('T', ' ').substring(0, 19)}' OR lastSignedIn IS NULL`
             )
           ),
           limit: input.limit,

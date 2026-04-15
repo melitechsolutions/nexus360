@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { usePermissions } from "@/_core/hooks/usePermissions";
-import DashboardLayout from "@/components/DashboardLayout";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -141,16 +140,16 @@ export default function ProjectsManagement() {
   const canDelete = hasPermission("projects_delete") || ["super_admin"].includes(user?.role || "");
 
   return (
-    <DashboardLayout>
-      <ModuleLayout
-        breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Projects", href: "/projects" },
-          { label: "Management", href: "/projects/management" },
-        ]}
-        title="Project Management"
-        description="Manage and track all projects with role-based access control"
-      >
+    <ModuleLayout
+      title="Projects Management"
+      icon={<Briefcase className="h-5 w-5" />}
+      description="Manage and track all projects with role-based access control"
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Projects", href: "/projects" },
+        { label: "Management" },
+      ]}
+    >
         {/* Management Sections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {managementSections.map((section) => (
@@ -323,7 +322,6 @@ export default function ProjectsManagement() {
             )}
           </CardContent>
         </Card>
-      </ModuleLayout>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

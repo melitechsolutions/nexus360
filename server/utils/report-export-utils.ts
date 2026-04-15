@@ -5,6 +5,7 @@
 import { getDb } from '../db';
 import { invoices, expenses } from '../../drizzle/schema';
 import { gte, lte } from 'drizzle-orm';
+import { getCompanyInfo } from './company-info';
 
 interface ReportConfig {
   title: string;
@@ -100,11 +101,12 @@ const formatCurrency = (amount: number) => {
  */
 export async function generateFinancialReportCSV(config: ReportConfig): Promise<Buffer> {
   const data = await fetchFinancialData(config);
+  const companyInfo = await getCompanyInfo();
 
   let csv = '';
 
   // Add header
-  csv += 'Melitech Solutions - Financial Report\n';
+  csv += `${companyInfo.name} - Financial Report\n`;
   csv += `Report: ${config.title}\n`;
   const periodText =
     config.startDate && config.endDate
@@ -151,13 +153,14 @@ export async function generateFinancialReportCSV(config: ReportConfig): Promise<
  */
 export async function generateFinancialReportTXT(config: ReportConfig): Promise<Buffer> {
   const data = await fetchFinancialData(config);
+  const companyInfo = await getCompanyInfo();
 
   let txt = '';
 
   // Add header
   const headerLine = '═'.repeat(70);
   txt += `${headerLine}\n`;
-  txt += 'MELITECH SOLUTIONS - FINANCIAL REPORT\n';
+  txt += `${companyInfo.name.toUpperCase()} - FINANCIAL REPORT\n`;
   txt += `${headerLine}\n\n`;
 
   txt += `Report: ${config.title}\n`;

@@ -32,14 +32,31 @@ export default function EditEmployee() {
     lastName: "",
     email: "",
     phone: "",
+    gender: "",
+    maritalStatus: "",
     dateOfBirth: "",
     hireDate: new Date().toISOString().split("T")[0],
+    probationEndDate: "",
+    contractEndDate: "",
     department: "",
     position: "",
     jobGroupId: "",
     salary: "",
     employmentType: "full_time",
+    status: "active",
     photoUrl: "",
+    nationalId: "",
+    taxId: "",
+    nhifNumber: "",
+    nssfNumber: "",
+    address: "",
+    emergencyContactName: "",
+    emergencyContactRelationship: "",
+    emergencyContactPhone: "",
+    emergencyContact: "",
+    bankName: "",
+    bankBranch: "",
+    bankAccountNumber: "",
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -53,27 +70,49 @@ export default function EditEmployee() {
   // Update form when employee data loads
   useEffect(() => {
     if (employee) {
+      const e = employee as any;
       setFormData({
-        employeeNumber: employee.employeeNumber || "",
-        firstName: employee.firstName || "",
-        lastName: employee.lastName || "",
-        email: employee.email || "",
-        phone: employee.phone || "",
-        dateOfBirth: employee.dateOfBirth
-          ? new Date(employee.dateOfBirth).toISOString().split("T")[0]
+        employeeNumber: e.employeeNumber || "",
+        firstName: e.firstName || "",
+        lastName: e.lastName || "",
+        email: e.email || "",
+        phone: e.phone || "",
+        gender: e.gender || "",
+        maritalStatus: e.maritalStatus || "",
+        dateOfBirth: e.dateOfBirth
+          ? new Date(e.dateOfBirth).toISOString().split("T")[0]
           : "",
-        hireDate: employee.hireDate
-          ? new Date(employee.hireDate).toISOString().split("T")[0]
+        hireDate: e.hireDate
+          ? new Date(e.hireDate).toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0],
-        department: employee.department || "",
-        position: employee.position || "",
-        jobGroupId: employee.jobGroupId || "",
-        salary: employee.salary ? (employee.salary / 100).toString() : "",
-        employmentType: employee.employmentType || "full-time",
-        photoUrl: employee.photoUrl || "",
+        probationEndDate: e.probationEndDate
+          ? new Date(e.probationEndDate).toISOString().split("T")[0]
+          : "",
+        contractEndDate: e.contractEndDate
+          ? new Date(e.contractEndDate).toISOString().split("T")[0]
+          : "",
+        department: e.department || "",
+        position: e.position || "",
+        jobGroupId: e.jobGroupId || "",
+        salary: e.salary ? e.salary.toString() : "",
+        employmentType: e.employmentType || "full-time",
+        status: e.status || "active",
+        photoUrl: e.photoUrl || "",
+        nationalId: e.nationalId || "",
+        taxId: e.taxId || "",
+        nhifNumber: e.nhifNumber || "",
+        nssfNumber: e.nssfNumber || "",
+        address: e.address || "",
+        emergencyContactName: e.emergencyContactName || "",
+        emergencyContactRelationship: e.emergencyContactRelationship || "",
+        emergencyContactPhone: e.emergencyContactPhone || "",
+        emergencyContact: e.emergencyContact || "",
+        bankName: e.bankName || "",
+        bankBranch: e.bankBranch || "",
+        bankAccountNumber: e.bankAccountNumber || "",
       });
-      if (employee.photoUrl) {
-        setPhotoPreview(employee.photoUrl);
+      if (e.photoUrl) {
+        setPhotoPreview(e.photoUrl);
       }
       setIsLoading(false);
     }
@@ -154,13 +193,30 @@ export default function EditEmployee() {
           lastName: formData.lastName,
           email: formData.email || undefined,
           phone: formData.phone || undefined,
+          gender: formData.gender || undefined,
+          maritalStatus: formData.maritalStatus || undefined,
           dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined,
           hireDate: new Date(formData.hireDate),
+          probationEndDate: formData.probationEndDate || undefined,
+          contractEndDate: formData.contractEndDate || undefined,
           department: formData.department || undefined,
           position: formData.position || undefined,
           jobGroupId: formData.jobGroupId || undefined,
-          salary: formData.salary ? Math.round(parseFloat(formData.salary) * 100) : undefined,
+          salary: formData.salary ? Math.round(parseFloat(formData.salary)) : undefined,
           employmentType: formData.employmentType || undefined,
+          status: formData.status || undefined,
+          nationalId: formData.nationalId || undefined,
+          taxId: formData.taxId || undefined,
+          nhifNumber: formData.nhifNumber || undefined,
+          nssfNumber: formData.nssfNumber || undefined,
+          address: formData.address || undefined,
+          emergencyContactName: formData.emergencyContactName || undefined,
+          emergencyContactRelationship: formData.emergencyContactRelationship || undefined,
+          emergencyContactPhone: formData.emergencyContactPhone || undefined,
+          emergencyContact: formData.emergencyContact || undefined,
+          bankName: formData.bankName || undefined,
+          bankBranch: formData.bankBranch || undefined,
+          bankAccountNumber: formData.bankAccountNumber || undefined,
           photoUrl: photoDataUrl,
         } as any);
       };
@@ -174,13 +230,30 @@ export default function EditEmployee() {
         lastName: formData.lastName,
         email: formData.email || undefined,
         phone: formData.phone || undefined,
+        gender: formData.gender || undefined,
+        maritalStatus: formData.maritalStatus || undefined,
         dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined,
         hireDate: new Date(formData.hireDate),
+        probationEndDate: formData.probationEndDate || undefined,
+        contractEndDate: formData.contractEndDate || undefined,
         department: formData.department || undefined,
         position: formData.position || undefined,
         jobGroupId: formData.jobGroupId || undefined,
-        salary: formData.salary ? Math.round(parseFloat(formData.salary) * 100) : undefined,
+        salary: formData.salary ? Math.round(parseFloat(formData.salary)) : undefined,
         employmentType: formData.employmentType || undefined,
+        status: formData.status || undefined,
+        nationalId: formData.nationalId || undefined,
+        taxId: formData.taxId || undefined,
+        nhifNumber: formData.nhifNumber || undefined,
+        nssfNumber: formData.nssfNumber || undefined,
+        address: formData.address || undefined,
+        emergencyContactName: formData.emergencyContactName || undefined,
+        emergencyContactRelationship: formData.emergencyContactRelationship || undefined,
+        emergencyContactPhone: formData.emergencyContactPhone || undefined,
+        emergencyContact: formData.emergencyContact || undefined,
+        bankName: formData.bankName || undefined,
+        bankBranch: formData.bankBranch || undefined,
+        bankAccountNumber: formData.bankAccountNumber || undefined,
       } as any);
     }
   };
@@ -198,7 +271,7 @@ export default function EditEmployee() {
         description="Update employee details"
         icon={<Users className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "HR", href: "/hr" },
           { label: "Employees", href: "/employees" },
           { label: "Edit Employee" },
@@ -217,7 +290,7 @@ export default function EditEmployee() {
       description="Update employee details"
       icon={<Users className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Employees", href: "/employees" },
         { label: "Edit Employee" },
@@ -313,6 +386,62 @@ export default function EditEmployee() {
                 </div>
               </div>
 
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gender</Label>
+                  <Select
+                    value={formData.gender}
+                    onValueChange={(value) => setFormData({ ...formData, gender: value })}
+                  >
+                    <SelectTrigger id="gender">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="maritalStatus">Marital Status</Label>
+                  <Select
+                    value={formData.maritalStatus}
+                    onValueChange={(value) => setFormData({ ...formData, maritalStatus: value })}
+                  >
+                    <SelectTrigger id="maritalStatus">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Single</SelectItem>
+                      <SelectItem value="married">Married</SelectItem>
+                      <SelectItem value="divorced">Divorced</SelectItem>
+                      <SelectItem value="widowed">Widowed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value })}
+                  >
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="on_leave">On Leave</SelectItem>
+                      <SelectItem value="suspended">Suspended</SelectItem>
+                      <SelectItem value="terminated">Terminated</SelectItem>
+                      <SelectItem value="resigned">Resigned</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="dateOfBirth">Date of Birth</Label>
@@ -354,6 +483,27 @@ export default function EditEmployee() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
+                  <Label htmlFor="probationEndDate">Probation End Date</Label>
+                  <Input
+                    id="probationEndDate"
+                    type="date"
+                    value={formData.probationEndDate}
+                    onChange={(e) => setFormData({ ...formData, probationEndDate: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contractEndDate">Contract End Date</Label>
+                  <Input
+                    id="contractEndDate"
+                    type="date"
+                    value={formData.contractEndDate}
+                    onChange={(e) => setFormData({ ...formData, contractEndDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
                   <Label htmlFor="department">Department</Label>
                   <div className="flex gap-2">
                     <Select value={formData.department} onValueChange={(value) => setFormData({ ...formData, department: value })}>
@@ -362,11 +512,11 @@ export default function EditEmployee() {
                       </SelectTrigger>
                       <SelectContent>
                         {departmentsLoading ? (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="__loading__" disabled>
                             Loading departments...
                           </SelectItem>
                         ) : departmentsData.length === 0 ? (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="__empty__" disabled>
                             No departments available
                           </SelectItem>
                         ) : (
@@ -412,11 +562,11 @@ export default function EditEmployee() {
                     </SelectTrigger>
                     <SelectContent>
                       {jobGroupsLoading ? (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="__loading__" disabled>
                           Loading job groups...
                         </SelectItem>
                       ) : jobGroupsData.length === 0 ? (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="__empty__" disabled>
                           No job groups available
                         </SelectItem>
                       ) : (
@@ -443,6 +593,139 @@ export default function EditEmployee() {
                     step="0.01"
                     min="0"
                   />
+                </div>
+              </div>
+
+              {/* Identity & Government IDs */}
+              <div className="pt-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Identity & Government IDs</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="nationalId">National ID</Label>
+                    <Input
+                      id="nationalId"
+                      value={formData.nationalId}
+                      onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })}
+                      placeholder="National ID number"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taxId">Tax ID / KRA PIN</Label>
+                    <Input
+                      id="taxId"
+                      value={formData.taxId}
+                      onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
+                      placeholder="A123456789X"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="nhifNumber">NHIF Number</Label>
+                    <Input
+                      id="nhifNumber"
+                      value={formData.nhifNumber}
+                      onChange={(e) => setFormData({ ...formData, nhifNumber: e.target.value })}
+                      placeholder="NHIF number"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nssfNumber">NSSF Number</Label>
+                    <Input
+                      id="nssfNumber"
+                      value={formData.nssfNumber}
+                      onChange={(e) => setFormData({ ...formData, nssfNumber: e.target.value })}
+                      placeholder="NSSF number"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Address & Emergency Contact */}
+              <div className="pt-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Address & Emergency Contact</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="Residential address"
+                  />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
+                    <Input
+                      id="emergencyContactName"
+                      value={formData.emergencyContactName}
+                      onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
+                      placeholder="Full name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="emergencyContactRelationship">Relationship</Label>
+                    <Input
+                      id="emergencyContactRelationship"
+                      value={formData.emergencyContactRelationship}
+                      onChange={(e) => setFormData({ ...formData, emergencyContactRelationship: e.target.value })}
+                      placeholder="e.g., Spouse, Parent"
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="emergencyContactPhone">Emergency Phone</Label>
+                    <Input
+                      id="emergencyContactPhone"
+                      value={formData.emergencyContactPhone}
+                      onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
+                      placeholder="+254 700 000 000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="emergencyContact">Emergency Notes</Label>
+                    <Input
+                      id="emergencyContact"
+                      value={formData.emergencyContact}
+                      onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })}
+                      placeholder="Additional emergency info"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Banking */}
+              <div className="pt-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Banking Details</h3>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="bankName">Bank Name</Label>
+                    <Input
+                      id="bankName"
+                      value={formData.bankName}
+                      onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+                      placeholder="Bank name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bankBranch">Bank Branch</Label>
+                    <Input
+                      id="bankBranch"
+                      value={formData.bankBranch}
+                      onChange={(e) => setFormData({ ...formData, bankBranch: e.target.value })}
+                      placeholder="Branch name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bankAccountNumber">Account Number</Label>
+                    <Input
+                      id="bankAccountNumber"
+                      value={formData.bankAccountNumber}
+                      onChange={(e) => setFormData({ ...formData, bankAccountNumber: e.target.value })}
+                      placeholder="Account number"
+                    />
+                  </div>
                 </div>
               </div>
 

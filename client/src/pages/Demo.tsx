@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { ModuleLayout } from "@/components/ModuleLayout";
-import DashboardLayout from "@/components/DashboardLayout";
+import { WebsiteNav } from "@/pages/website/WebsiteNav";
+import { WebsiteFooter } from "@/pages/website/WebsiteFooter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +20,12 @@ import {
   Edit2,
   Trash2,
   Plus,
+  Layout,
+  Play,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
+import { StatsCard } from "@/components/ui/stats-card";
 
 /**
  * Demo Dashboard
@@ -132,16 +136,32 @@ export default function DemoPage() {
   };
 
   return (
-    <DashboardLayout isDemoMode={true}>
-      <ModuleLayout
-        breadcrumbs={[
-          { label: "Dashboard", href: "/" },
-          { label: "Demo", href: "/demo" },
-        ]}
-        title="Melitech CRM Demo"
-        description="Interactive demonstration of all features and modules"
-        icon={<BarChart3 className="w-6 h-6" />}
-      >
+    <div className="min-h-screen bg-white text-gray-900">
+      <WebsiteNav />
+
+      {/* Hero */}
+      <section className="relative pt-32 pb-16 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/80 via-white to-white" />
+        <div className="absolute top-20 left-1/4 w-96 h-96 rounded-full bg-indigo-100/60 blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-violet-100/40 blur-3xl" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 text-sm font-medium text-indigo-600 mb-6">
+            <Play className="w-3.5 h-3.5" />
+            Interactive Demo
+          </div>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent">
+              Experience Nexus360
+            </span>
+          </h1>
+          <p className="text-lg sm:text-xl text-gray-500 max-w-3xl mx-auto">
+            Explore every module and feature in our interactive demo. See how Nexus360 transforms your business operations.
+          </p>
+        </div>
+      </section>
+
+      {/* Demo Content */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -153,49 +173,37 @@ export default function DemoPage() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-                  <Users className="h-4 w-4 text-blue-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{demoStats.activeUsers}</div>
-                  <p className="text-xs text-muted-foreground">Across all roles</p>
-                </CardContent>
-              </Card>
+              <StatsCard
+                label="Active Users"
+                value={demoStats.activeUsers}
+                description="Across all roles"
+                icon={<Users className="h-5 w-5" />}
+                color="border-l-blue-500"
+              />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-                  <BarChart3 className="h-4 w-4 text-green-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{demoStats.activeProjects}</div>
-                  <p className="text-xs text-muted-foreground">In progress</p>
-                </CardContent>
-              </Card>
+              <StatsCard
+                label="Active Projects"
+                value={demoStats.activeProjects}
+                description="In progress"
+                icon={<BarChart3 className="h-5 w-5" />}
+                color="border-l-green-500"
+              />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                  <DollarSign className="h-4 w-4 text-green-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">Ksh {(demoStats.totalRevenue / 1000).toFixed(0)}K</div>
-                  <p className="text-xs text-muted-foreground">This period</p>
-                </CardContent>
-              </Card>
+              <StatsCard
+                label="Total Revenue"
+                value={<>Ksh {(demoStats.totalRevenue / 1000).toFixed(0)}K</>}
+                description="This period"
+                icon={<DollarSign className="h-5 w-5" />}
+                color="border-l-green-500"
+              />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
-                  <AlertCircle className="h-4 w-4 text-orange-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{demoStats.pendingInvoices}</div>
-                  <p className="text-xs text-muted-foreground">Awaiting action</p>
-                </CardContent>
-              </Card>
+              <StatsCard
+                label="Pending Invoices"
+                value={demoStats.pendingInvoices}
+                description="Awaiting action"
+                icon={<AlertCircle className="h-5 w-5" />}
+                color="border-l-orange-500"
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -222,7 +230,7 @@ export default function DemoPage() {
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full mt-4">View All Invoices</Button>
+                  <Button className="w-full mt-4" onClick={() => toast.info("Navigate to Invoices from the sidebar")}>View All Invoices</Button>
                 </CardContent>
               </Card>
 
@@ -255,7 +263,7 @@ export default function DemoPage() {
                       </div>
                     ))}
                   </div>
-                  <Button className="w-full mt-4">View All Projects</Button>
+                  <Button className="w-full mt-4" onClick={() => toast.info("Navigate to Projects from the sidebar")}>View All Projects</Button>
                 </CardContent>
               </Card>
             </div>
@@ -411,7 +419,32 @@ export default function DemoPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </ModuleLayout>
-    </DashboardLayout>
+      </section>
+
+      {/* CTA */}
+      <section className="border-t border-gray-100 bg-gradient-to-b from-gray-50/50 to-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+          <Sparkles className="w-8 h-8 text-indigo-600 mx-auto mb-4" />
+          <h2 className="text-3xl font-bold mb-4">Ready to get started?</h2>
+          <p className="text-gray-500 mb-8 max-w-xl mx-auto">
+            Sign up for a free trial and experience the full power of Nexus360 with your own data.
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <a href="/signup">
+              <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200">
+                Start Free Trial
+              </Button>
+            </a>
+            <a href="/contact">
+              <Button size="lg" variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50">
+                Contact Sales
+              </Button>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <WebsiteFooter />
+    </div>
   );
 }

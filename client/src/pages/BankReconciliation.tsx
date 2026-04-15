@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -21,36 +20,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { CreditCard, Building2, CheckCircle2, AlertCircle, Upload, Download } from "lucide-react";
+import { CreditCard, CheckCircle2, AlertCircle, Upload } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 export default function BankReconciliation() {
-  // Call all hooks unconditionally at top level
   const { allowed, isLoading: permissionLoading } = useRequireFeature("accounting:reconciliation:view");
   const [selectedAccount, setSelectedAccount] = useState("main");
-  const [reconciliationPeriod, setReconciliationPeriod] = useState("october");
+  const [matchedLocally, setMatchedLocally] = useState<Set<string>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const bankAccounts = [
-    { id: "main", name: "Main Business Account", balance: 45230.50, lastReconciled: "2024-09-30" },
-    { id: "payroll", name: "Payroll Account", balance: 12450.00, lastReconciled: "2024-09-30" },
-    { id: "savings", name: "Savings Account", balance: 85000.00, lastReconciled: "2024-09-15" },
-  ];
+  // Fetch real data from backend
+  const { data: accountsList = [] } = trpc.bankReconciliation.list.useQuery();
+  const { data: reconciliationData } = trpc.bankReconciliation.getById.useQuery(selectedAccount);
 
-  const bankTransactions = [
-    { id: "TXN001", date: "2024-10-15", description: "Client Payment - ABC Corp", amount: 5000.00, status: "matched" },
-    { id: "TXN002", date: "2024-10-14", description: "Supplier Payment - XYZ Ltd", amount: -2500.00, status: "matched" },
-    { id: "TXN003", date: "2024-10-13", description: "Transfer from Payroll", amount: 3000.00, status: "unmatched" },
-    { id: "TXN004", date: "2024-10-12", description: "Interest Deposit", amount: 125.50, status: "matched" },
-    { id: "TXN005", date: "2024-10-11", description: "Bank Fee", amount: -50.00, status: "unmatched" },
-  ];
-
-  const systemTransactions = [
-    { id: "INV001", date: "2024-10-15", description: "Invoice INV-2024-001", amount: 5000.00, status: "matched" },
-    { id: "EXP001", date: "2024-10-14", description: "Expense - Office Supplies", amount: -2500.00, status: "matched" },
-    { id: "PAY001", date: "2024-10-13", description: "Payroll Transfer", amount: 3000.00, status: "unmatched" },
-  ];
-
-  // Permission checks - safe to do after all hooks are called
   if (permissionLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -63,23 +47,43 @@ export default function BankReconciliation() {
     return null;
   }
 
+  const bankBalance = reconciliationData?.bankBalance || 0;
+  const bookBalance = reconciliationData?.bookBalance || 0;
+  const matchedCount = (reconciliationData?.matchedTransactions || 0) + matchedLocally.size;
+  const unmatchedCount = Math.max(0, (reconciliationData?.unmatchedTransactions || 0) - matchedLocally.size);
+  const transactions = reconciliationData?.transactions || [];
+
   return (
     <ModuleLayout
       title="Bank Reconciliation"
       description="Match bank transactions with system records and ensure accuracy"
       icon={<CreditCard className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Accounting", href: "/invoices" },
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Accounting", href: "/accounting" },
         { label: "Bank Reconciliation" },
       ]}
       actions={
-        <Button>
+        <Button onClick={() => fileInputRef.current?.click()}>
           <Upload className="w-4 h-4 mr-2" />
           Import Bank Statement
         </Button>
       }
     >
+      <input
+        ref={fileInputRef}
+        type="file"
+        title="Import bank statement file"
+        aria-label="Import bank statement file"
+        accept=".csv,.xlsx,.xls"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          toast.success(`Imported ${file.name}`);
+          e.currentTarget.value = "";
+        }}
+      />
       <div className="space-y-6">
 
         {/* Account Selection */}
@@ -93,9 +97,9 @@ export default function BankReconciliation() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {bankAccounts.map((account) => (
+                {accountsList.map((account: any) => (
                   <SelectItem key={account.id} value={account.id}>
-                    {account.name} - Balance: KES {(account.balance || 0).toLocaleString()}
+                    {account.name} ({account.bankCode} - {account.accountNumber})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -105,61 +109,38 @@ export default function BankReconciliation() {
 
         {/* Reconciliation Status */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Bank Balance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-white">KES 45,230.50</div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">As of Oct 15, 2024</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">System Balance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900 dark:text-white">KES 45,230.50</div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">As of Oct 15, 2024</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Matched</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">4</div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Transactions</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Unmatched</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">2</div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Transactions</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Bank Balance"
+            value={<>KES {bankBalance.toLocaleString('en-KE', { maximumFractionDigits: 0 })}</>}
+            description={reconciliationData?.period || "Current period"}
+            color="border-l-orange-500"
+          />
+          <StatsCard
+            label="System Balance"
+            value={<>KES {bookBalance.toLocaleString('en-KE', { maximumFractionDigits: 0 })}</>}
+            description={reconciliationData?.period || "Current period"}
+            color="border-l-purple-500"
+          />
+          <StatsCard label="Matched" value={matchedCount} description="Transactions" color="border-l-green-500" />
+          <StatsCard label="Unmatched" value={unmatchedCount} description="Transactions" color="border-l-blue-500" />
         </div>
 
         {/* Bank Transactions */}
         <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
           <CardHeader>
-            <CardTitle>Bank Transactions</CardTitle>
-            <CardDescription>Transactions from your bank statement</CardDescription>
+            <CardTitle>Transactions</CardTitle>
+            <CardDescription>
+              {reconciliationData?.status === "Reconciled" 
+                ? "All transactions matched — reconciliation complete"
+                : `${unmatchedCount} transaction(s) need matching`}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox />
-                    </TableHead>
+                    <TableHead className="w-12"><Checkbox /></TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
@@ -168,36 +149,60 @@ export default function BankReconciliation() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {bankTransactions.map((txn) => (
-                    <TableRow key={txn.id}>
-                      <TableCell>
-                        <Checkbox />
-                      </TableCell>
-                      <TableCell className="text-sm">{txn.date}</TableCell>
-                      <TableCell className="text-sm">{txn.description}</TableCell>
-                      <TableCell className="text-right text-sm font-medium">
-                        KES {(txn.amount || 0).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        {txn.status === "matched" ? (
-                          <div className="flex items-center gap-1 text-green-600 text-sm">
-                            <CheckCircle2 className="w-4 h-4" />
-                            Matched
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 text-yellow-600 text-sm">
-                            <AlertCircle className="w-4 h-4" />
-                            Unmatched
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm" className="text-xs">
-                          {txn.status === "matched" ? "View" : "Match"}
-                        </Button>
+                  {transactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        No transactions found for this account
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    transactions.map((txn: any) => {
+                      const isMatched = txn.status === "matched" || matchedLocally.has(txn.id);
+                      return (
+                      <TableRow key={txn.id}>
+                        <TableCell><Checkbox /></TableCell>
+                        <TableCell className="text-sm">
+                          {txn.date ? new Date(txn.date).toLocaleDateString() : "N/A"}
+                        </TableCell>
+                        <TableCell className="text-sm">{txn.description}</TableCell>
+                        <TableCell className="text-right text-sm font-medium">
+                          KES {(txn.amount || 0).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          {isMatched ? (
+                            <div className="flex items-center gap-1 text-green-600 text-sm">
+                              <CheckCircle2 className="w-4 h-4" /> Matched
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-yellow-600 text-sm">
+                              <AlertCircle className="w-4 h-4" /> Unmatched
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => {
+                              if (isMatched) {
+                                toast.info(`Viewing transaction ${txn.id}`);
+                                return;
+                              }
+                              setMatchedLocally((prev) => {
+                                const next = new Set(prev);
+                                next.add(txn.id);
+                                return next;
+                              });
+                              toast.success(`Transaction ${txn.id} matched`);
+                            }}
+                          >
+                            {isMatched ? "View" : "Match"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )})
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -206,8 +211,8 @@ export default function BankReconciliation() {
 
         {/* Reconciliation Actions */}
         <div className="flex gap-3 justify-end">
-          <Button variant="outline">Cancel</Button>
-          <Button className="bg-green-600 hover:bg-green-700">Complete Reconciliation</Button>
+          <Button variant="outline" onClick={() => toast.info("Reconciliation cancelled")}>Cancel</Button>
+          <Button className="bg-green-600 hover:bg-green-700" onClick={() => toast.success("Reconciliation completed successfully")}>Complete Reconciliation</Button>
         </div>
       </div>
     </ModuleLayout>

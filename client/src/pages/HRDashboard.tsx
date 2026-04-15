@@ -14,7 +14,8 @@ import {
   TrendingUp,
   ArrowRight,
 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { StatsCard } from "@/components/ui/stats-card";
 
 export default function HRDashboard() {
   const [, navigate] = useLocation();
@@ -76,63 +77,50 @@ export default function HRDashboard() {
   ];
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="HR Dashboard"
+      description={`Welcome, ${user?.name}. Manage your human resources from here.`}
+      icon={<Users className="h-6 w-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "HR" },
+      ]}
+    >
       <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="text-center space-y-4 py-4">
-        <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          HR Dashboard
-        </h2>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Welcome, {user?.name}. Manage your human resources from here.
-        </p>
-      </div>
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.totalEmployees}</div>
-            <p className="text-xs text-muted-foreground">Active employees</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Total Employees"
+          value={metrics.totalEmployees}
+          description="Active employees"
+          icon={<Users className="h-5 w-5" />}
+          color="border-l-blue-500"
+        />
 
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Present Today</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.presentToday}</div>
-            <p className="text-xs text-muted-foreground">Checked in</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Present Today"
+          value={metrics.presentToday}
+          description="Checked in"
+          icon={<CheckCircle2 className="h-5 w-5" />}
+          color="border-l-green-500"
+        />
 
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">On Leave</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.onLeave}</div>
-            <p className="text-xs text-muted-foreground">Currently away</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="On Leave"
+          value={metrics.onLeave}
+          description="Currently away"
+          icon={<Clock className="h-5 w-5" />}
+          color="border-l-yellow-500"
+        />
 
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.pendingRequests}</div>
-            <p className="text-xs text-muted-foreground">Awaiting approval</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Pending Requests"
+          value={metrics.pendingRequests}
+          description="Awaiting approval"
+          icon={<AlertCircle className="h-5 w-5" />}
+          color="border-l-red-500"
+        />
       </div>
 
       {/* HR Features Grid */}
@@ -196,6 +184,6 @@ export default function HRDashboard() {
         </div>
       </div>
     </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

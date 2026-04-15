@@ -1,10 +1,17 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
 import { z } from "zod";
-import { getDb } from "../db";
+import { getPool } from "../db";
 import { TRPCError } from "@trpc/server";
 import { v4 as uuidv4 } from "uuid";
-import { eq, desc, like, and, gte, lte } from "drizzle-orm";
+
+/** Execute raw SQL via mysql2 pool. Returns the rows array. */
+async function rawQuery(query: string, params?: any[]): Promise<any[]> {
+  const pool = getPool();
+  if (!pool) throw new Error("Database pool not available");
+  const [rows] = await pool.execute(query, params ?? []);
+  return rows as any[];
+}
 
 // Feature-based procedures
 const readProcedure = createFeatureRestrictedProcedure("procurement:read");
@@ -79,9 +86,9 @@ const budgetUpdateSchema = z.object({
 // UTILITIES
 // ============================================================================
 
-async function generateLPONumber(db: any): Promise<string> {
+async function generateLPONumber(): Promise<string> {
   try {
-    const result = await db.raw(
+    const result = await rawQuery(
       `SELECT lpoNumber FROM lpos ORDER BY createdAt DESC LIMIT 1`
     );
     let seq = 0;
@@ -95,9 +102,9 @@ async function generateLPONumber(db: any): Promise<string> {
   }
 }
 
-async function generateOrderNumber(db: any): Promise<string> {
+async function generateOrderNumber(): Promise<string> {
   try {
-    const result = await db.raw(
+    const result = await rawQuery(
       `SELECT orderNumber FROM purchase_orders ORDER BY createdAt DESC LIMIT 1`
     );
     let seq = 0;
@@ -127,8 +134,6 @@ export const procurementRouter = router({
       offset: z.number().default(0),
     }).optional())
     .query(async ({ input = {} }) => {
-      const db = await getDb();
-      if (!db) return [];
       try {
         let query = `SELECT * FROM lpos WHERE 1=1`;
         const params: any[] = [];
@@ -150,7 +155,7 @@ export const procurementRouter = router({
         query += ` ORDER BY createdAt DESC LIMIT ? OFFSET ?`;
         params.push(input.limit, input.offset);
         
-        return await db.raw(query, params) || [];
+        return await rawQuery(query, params) || [];
       } catch (error) {
         console.error("LPO list error:", error);
         return [];
@@ -160,10 +165,8 @@ export const procurementRouter = router({
   lpoGetById: readProcedure
     .input(z.string())
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) return null;
       try {
-        const result = await db.raw(
+        const result = await rawQuery(
           `SELECT * FROM lpos WHERE id = ? LIMIT 1`,
           [input]
         );
@@ -177,15 +180,13 @@ export const procurementRouter = router({
   lpoCreate: writeProcedure
     .input(lpoCreateSchema)
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       
       try {
         const id = uuidv4();
-        const lpoNumber = input.lpoNumber || await generateLPONumber(db);
+        const lpoNumber = input.lpoNumber || await generateLPONumber();
         const now = new Date().toISOString();
 
-        await db.raw(
+        await rawQuery(
           `INSERT INTO lpos (id, lpoNumber, vendorName, vendorId, description, items, totalAmount, budgetLine, expectedDelivery, terms, status, createdBy, createdAt, updatedAt)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -197,7 +198,7 @@ export const procurementRouter = router({
         );
 
         // Log activity
-        await db.raw(
+        await rawQuery(
           `INSERT INTO activity_logs (id, userId, action, entityType, entityId, description, createdAt)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [uuidv4(), ctx.user?.id || 'system', 'CREATE_LPO', 'LPO', id, `Created LPO ${lpoNumber}`, now]
@@ -226,8 +227,6 @@ export const procurementRouter = router({
       expectedDelivery: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       
       try {
         const now = new Date().toISOString();
@@ -245,13 +244,13 @@ export const procurementRouter = router({
         values.push(now);
         values.push(input.id);
 
-        await db.raw(
+        await rawQuery(
           `UPDATE lpos SET ${updates.join(', ')} WHERE id = ?`,
           values
         );
 
         // Log activity
-        await db.raw(
+        await rawQuery(
           `INSERT INTO activity_logs (id, userId, action, entityType, entityId, description, createdAt)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [uuidv4(), ctx.user?.id || 'system', 'UPDATE_LPO', 'LPO', input.id, `Updated LPO ${input.id}`, now]
@@ -267,14 +266,12 @@ export const procurementRouter = router({
   lpoDelete: writeProcedure
     .input(z.string())
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       
       try {
         const now = new Date().toISOString();
-        await db.raw(`DELETE FROM lpos WHERE id = ?`, [input]);
+        await rawQuery(`DELETE FROM lpos WHERE id = ?`, [input]);
         
-        await db.raw(
+        await rawQuery(
           `INSERT INTO activity_logs (id, userId, action, entityType, entityId, description, createdAt)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [uuidv4(), ctx.user?.id || 'system', 'DELETE_LPO', 'LPO', input, `Deleted LPO`, now]
@@ -298,8 +295,6 @@ export const procurementRouter = router({
       offset: z.number().default(0),
     }).optional())
     .query(async ({ input = {} }) => {
-      const db = await getDb();
-      if (!db) return [];
       try {
         let query = `SELECT * FROM purchase_orders WHERE 1=1`;
         const params: any[] = [];
@@ -321,7 +316,7 @@ export const procurementRouter = router({
         query += ` ORDER BY createdAt DESC LIMIT ? OFFSET ?`;
         params.push(input.limit, input.offset);
         
-        return await db.raw(query, params) || [];
+        return await rawQuery(query, params) || [];
       } catch (error) {
         console.error("Order list error:", error);
         return [];
@@ -331,10 +326,8 @@ export const procurementRouter = router({
   orderGetById: readProcedure
     .input(z.string())
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) return null;
       try {
-        const result = await db.raw(
+        const result = await rawQuery(
           `SELECT * FROM purchase_orders WHERE id = ? LIMIT 1`,
           [input]
         );
@@ -348,15 +341,13 @@ export const procurementRouter = router({
   orderCreate: writeProcedure
     .input(orderCreateSchema)
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       
       try {
         const id = uuidv4();
-        const orderNumber = input.orderNumber || await generateOrderNumber(db);
+        const orderNumber = input.orderNumber || await generateOrderNumber();
         const now = new Date().toISOString();
 
-        await db.raw(
+        await rawQuery(
           `INSERT INTO purchase_orders (id, orderNumber, supplierId, supplierName, description, items, totalAmount, deliveryAddress, expectedDelivery, paymentTerms, status, createdBy, createdAt, updatedAt)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -368,7 +359,7 @@ export const procurementRouter = router({
         );
 
         // Log activity
-        await db.raw(
+        await rawQuery(
           `INSERT INTO activity_logs (id, userId, action, entityType, entityId, description, createdAt)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [uuidv4(), ctx.user?.id || 'system', 'CREATE_ORDER', 'PurchaseOrder', id, `Created Order ${orderNumber}`, now]
@@ -397,8 +388,6 @@ export const procurementRouter = router({
       expectedDelivery: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       
       try {
         const now = new Date().toISOString();
@@ -416,13 +405,13 @@ export const procurementRouter = router({
         values.push(now);
         values.push(input.id);
 
-        await db.raw(
+        await rawQuery(
           `UPDATE purchase_orders SET ${updates.join(', ')} WHERE id = ?`,
           values
         );
 
         // Log activity
-        await db.raw(
+        await rawQuery(
           `INSERT INTO activity_logs (id, userId, action, entityType, entityId, description, createdAt)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [uuidv4(), ctx.user?.id || 'system', 'UPDATE_ORDER', 'PurchaseOrder', input.id, `Updated Order`, now]
@@ -438,14 +427,12 @@ export const procurementRouter = router({
   orderDelete: writeProcedure
     .input(z.string())
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       
       try {
         const now = new Date().toISOString();
-        await db.raw(`DELETE FROM purchase_orders WHERE id = ?`, [input]);
+        await rawQuery(`DELETE FROM purchase_orders WHERE id = ?`, [input]);
         
-        await db.raw(
+        await rawQuery(
           `INSERT INTO activity_logs (id, userId, action, entityType, entityId, description, createdAt)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [uuidv4(), ctx.user?.id || 'system', 'DELETE_ORDER', 'PurchaseOrder', input, `Deleted Order`, now]
@@ -469,8 +456,6 @@ export const procurementRouter = router({
       offset: z.number().default(0),
     }).optional())
     .query(async ({ input = {} }) => {
-      const db = await getDb();
-      if (!db) return [];
       try {
         let query = `SELECT * FROM imprests WHERE 1=1`;
         const params: any[] = [];
@@ -492,7 +477,7 @@ export const procurementRouter = router({
         query += ` ORDER BY createdAt DESC LIMIT ? OFFSET ?`;
         params.push(input.limit, input.offset);
         
-        return await db.raw(query, params) || [];
+        return await rawQuery(query, params) || [];
       } catch (error) {
         console.error("Imprest list error:", error);
         return [];
@@ -502,15 +487,13 @@ export const procurementRouter = router({
   imprestCreate: writeProcedure
     .input(imprestCreateSchema)
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       
       try {
         const id = uuidv4();
         const now = new Date().toISOString();
         const imprestNumber = `IMP-${String(Date.now()).slice(-6)}`;
 
-        await db.raw(
+        await rawQuery(
           `INSERT INTO imprests (id, imprestNumber, employeeId, employeeName, purpose, amount, justification, expectedReturnDate, status, createdBy, createdAt, updatedAt)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -521,7 +504,7 @@ export const procurementRouter = router({
         );
 
         // Log activity
-        await db.raw(
+        await rawQuery(
           `INSERT INTO activity_logs (id, userId, action, entityType, entityId, description, createdAt)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [uuidv4(), ctx.user?.id || 'system', 'CREATE_IMPREST', 'Imprest', id, `Created Imprest ${imprestNumber}`, now]
@@ -542,8 +525,6 @@ export const procurementRouter = router({
       purpose: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       
       try {
         const now = new Date().toISOString();
@@ -558,13 +539,13 @@ export const procurementRouter = router({
         values.push(now);
         values.push(input.id);
 
-        await db.raw(
+        await rawQuery(
           `UPDATE imprests SET ${updates.join(', ')} WHERE id = ?`,
           values
         );
 
         // Log activity
-        await db.raw(
+        await rawQuery(
           `INSERT INTO activity_logs (id, userId, action, entityType, entityId, description, createdAt)
            VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [uuidv4(), ctx.user?.id || 'system', 'UPDATE_IMPREST', 'Imprest', input.id, `Updated Imprest status to ${input.status}`, now]

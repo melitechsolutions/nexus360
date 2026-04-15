@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +69,7 @@ export default function PaymentReports() {
 
   const handleExportCSV = () => {
     if (!reportData || !reportData.payments || reportData.payments.length === 0) {
-      alert("No payments to export");
+      toast.warning("No payments to export");
       return;
     }
 

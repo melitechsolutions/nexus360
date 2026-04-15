@@ -84,9 +84,8 @@ export const schedulerRouter = router({
       const scheduledJobs = (await import('../../drizzle/schema')).scheduledJobs;
       const jobLogs = (await import('../../drizzle/schema')).jobExecutionLogs;
 
-      const job = await database.query.scheduledJobs.findFirst({
-        where: eq(scheduledJobs.id, input.jobId),
-      });
+      const jobRows = await database.select().from(scheduledJobs).where(eq(scheduledJobs.id, input.jobId)).limit(1);
+      const job = jobRows[0];
 
       if (!job) {
         throw new TRPCError({
@@ -159,9 +158,7 @@ export const schedulerRouter = router({
       if (!database) throw new Error('Database unavailable');
 
       const scheduledJobs = (await import('../../drizzle/schema')).scheduledJobs;
-      const job = await database.query.scheduledJobs.findFirst({
-        where: eq(scheduledJobs.id, input.jobId),
-      });
+      const [job] = await database.select().from(scheduledJobs).where(eq(scheduledJobs.id, input.jobId)).limit(1);
 
       if (!job) {
         throw new TRPCError({
@@ -177,14 +174,89 @@ export const schedulerRouter = router({
         });
       }
 
-      // TODO: Implement actual job triggering via jobScheduler singleton
-      // For now, just mark as triggered
-      console.log(`[Scheduler] Manual trigger requested for job: ${job.jobName}`);
+      // Execute the job based on jobName
+      const jobLogs = (await import('../../drizzle/schema')).jobExecutionLogs;
+      const logId = `log-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const startTime = Date.now();
+      let jobResult: { success: boolean; itemsProcessed: number; itemsFailed: number; message: string; errors: string[] } = { success: false, itemsProcessed: 0, itemsFailed: 0, message: '', errors: [] };
+
+      try {
+        switch (job.jobName) {
+          case 'generateRecurringExpenses': {
+            const { generateDueRecurringExpenses } = await import('../jobs/recurringExpensesJob');
+            const result = await generateDueRecurringExpenses();
+            jobResult = { success: result.success, itemsProcessed: result.itemsProcessed, itemsFailed: result.itemsFailed, message: result.message, errors: result.errors };
+            break;
+          }
+          case 'generateRecurringInvoices':
+          case 'generateInvoices': {
+            const { generateDueRecurringInvoices } = await import('../jobs/recurringInvoicesJob');
+            const result = await generateDueRecurringInvoices();
+            jobResult = { success: result.success, itemsProcessed: result.itemsProcessed || 0, itemsFailed: result.itemsFailed || 0, message: result.message, errors: result.errors || [] };
+            break;
+          }
+          case 'markOverdueInvoices': {
+            const { markOverdueInvoices } = await import('../jobs/overdueInvoicesJob');
+            const result = await markOverdueInvoices();
+            jobResult = { success: result.success, itemsProcessed: result.count || 0, itemsFailed: result.errors?.length || 0, message: result.message, errors: result.errors || [] };
+            break;
+          }
+          case 'sendInvoiceReminders': {
+            const { processInvoiceReminders } = await import('../jobs/invoiceReminders');
+            await processInvoiceReminders();
+            jobResult = { success: true, itemsProcessed: 1, itemsFailed: 0, message: 'Invoice reminders processed', errors: [] };
+            break;
+          }
+          case 'sendUsageReminders': {
+            const { sendUsageReminders } = await import('../jobs/usageReminders');
+            const result = await sendUsageReminders();
+            jobResult = { success: true, itemsProcessed: result.sent || 0, itemsFailed: result.errors || 0, message: `Usage reminders: ${result.sent} sent, ${result.skipped} skipped`, errors: [] };
+            break;
+          }
+          default:
+            jobResult = { success: false, itemsProcessed: 0, itemsFailed: 0, message: `Unknown job type: ${job.jobName}`, errors: [`No handler registered for job: ${job.jobName}`] };
+        }
+
+        const durationMs = Date.now() - startTime;
+
+        // Log execution result
+        await database.insert(jobLogs).values({
+          id: logId,
+          jobId: job.id,
+          executedAt: new Date(),
+          status: jobResult.success ? 'success' : 'failed',
+          durationMs,
+          itemsProcessed: jobResult.itemsProcessed,
+          itemsFailed: jobResult.itemsFailed,
+          errorMessage: jobResult.errors.length > 0 ? jobResult.errors.join('; ') : null,
+          stdout: jobResult.message,
+        } as any);
+
+        // Update job's lastExecutedAt
+        await database.update(scheduledJobs).set({ lastExecutedAt: new Date() } as any).where(eq(scheduledJobs.id, job.id));
+
+        console.log(`[Scheduler] Job "${job.jobName}" completed: ${jobResult.message}`);
+      } catch (execError: any) {
+        const durationMs = Date.now() - startTime;
+        await database.insert(jobLogs).values({
+          id: logId,
+          jobId: job.id,
+          executedAt: new Date(),
+          status: 'failed',
+          durationMs,
+          itemsProcessed: 0,
+          itemsFailed: 1,
+          errorMessage: execError?.message || 'Unknown execution error',
+        } as any).catch(() => {});
+        console.error(`[Scheduler] Job "${job.jobName}" failed:`, execError);
+      }
 
       return {
-        success: true,
-        message: `Job "${job.jobName}" has been triggered`,
+        success: jobResult.success,
+        message: jobResult.success ? `Job "${job.jobName}" completed: ${jobResult.message}` : `Job "${job.jobName}" failed: ${jobResult.message}`,
         jobId: job.id,
+        itemsProcessed: jobResult.itemsProcessed,
+        itemsFailed: jobResult.itemsFailed,
       };
     } catch (error) {
       console.error('[schedulerRouter] triggerJobNow error:', error);
@@ -350,9 +422,7 @@ export const schedulerRouter = router({
       if (!database) throw new Error('Database unavailable');
 
       const alertRules = (await import('../../drizzle/schema')).jobAlertRules;
-      const rule = await database.query.jobAlertRules.findFirst({
-        where: eq(alertRules.id, input.ruleId),
-      });
+      const [rule] = await database.select().from(alertRules).where(eq(alertRules.id, input.ruleId)).limit(1);
 
       if (!rule) {
         throw new TRPCError({

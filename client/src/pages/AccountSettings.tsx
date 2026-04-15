@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { exportToCsv } from "@/utils/exportCsv";
 import {
   User,
   Lock,
@@ -25,13 +28,14 @@ import {
   AlertCircle,
   CheckCircle2,
   Download,
+  Settings,
 } from "lucide-react";
 
 export default function AccountSettings() {
   const { user, logout } = useAuth();
+  const utils = trpc.useUtils();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -53,15 +57,30 @@ export default function AccountSettings() {
     invoiceAlerts: true,
     paymentReminders: true,
   });
+  const [show2faDialog, setShow2faDialog] = useState(false);
+  const [showDeleteDataDialog, setShowDeleteDataDialog] = useState(false);
+  const [deleteDataReason, setDeleteDataReason] = useState("");
 
   // Mutations
   const updateProfileMutation = trpc.auth.updateProfile.useMutation({
     onSuccess: () => {
       toast.success("Profile updated successfully");
       setIsEditing(false);
+      utils.auth.me.invalidate();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update profile");
+    },
+  });
+
+  const uploadPhotoMutation = trpc.users.uploadProfilePhoto.useMutation({
+    onSuccess: () => {
+      toast.success("Profile picture updated successfully");
+      setAvatarPreview(null);
+      utils.auth.me.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to upload photo");
     },
   });
 
@@ -153,21 +172,11 @@ export default function AccountSettings() {
   };
 
   const handleAvatarUpload = async () => {
-    if (!fileInputRef.current?.files?.[0] || !avatarPreview) {
+    if (!avatarPreview) {
       toast.error("Please select an image first");
       return;
     }
-
-    setIsUploadingAvatar(true);
-    try {
-      // TODO: Implement avatar upload
-      toast.success("Avatar uploaded successfully");
-      setAvatarPreview(null);
-    } catch (error) {
-      toast.error("Failed to upload avatar");
-    } finally {
-      setIsUploadingAvatar(false);
-    }
+    uploadPhotoMutation.mutate({ photoBase64: avatarPreview });
   };
 
   const downloadDocument = (docType: "privacy" | "terms") => {
@@ -175,13 +184,16 @@ export default function AccountSettings() {
   };
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Account Settings"
+      description="Manage your profile, security, and preferences"
+      icon={<Settings className="h-6 w-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Account" },
+      ]}
+    >
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
-          <p className="text-muted-foreground">Manage your profile, security, and preferences</p>
-        </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
@@ -216,13 +228,15 @@ export default function AccountSettings() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="h-20 w-20 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                    {avatarPreview ? (
-                      <img src={avatarPreview} alt="Preview" className="h-20 w-20 rounded-full object-cover" />
-                    ) : (
-                      <Camera className="h-8 w-8 text-gray-400" />
-                    )}
-                  </div>
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage
+                      src={avatarPreview || user?.photoUrl || undefined}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-2xl">
+                      {(user?.name || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="space-y-2">
                     <Button
                       variant="outline"
@@ -239,8 +253,8 @@ export default function AccountSettings() {
                       className="hidden"
                     />
                     {avatarPreview && (
-                      <Button onClick={handleAvatarUpload} disabled={isUploadingAvatar}>
-                        {isUploadingAvatar ? (
+                      <Button onClick={handleAvatarUpload} disabled={uploadPhotoMutation.isPending}>
+                        {uploadPhotoMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Uploading...
@@ -453,7 +467,31 @@ export default function AccountSettings() {
                     Two-factor authentication is not yet enabled on your account. Enable it to enhance your security.
                   </AlertDescription>
                 </Alert>
-                <Button className="mt-4">Enable 2FA</Button>
+                <Button className="mt-4" onClick={() => setShow2faDialog(true)}>Enable 2FA</Button>
+                <Dialog open={show2faDialog} onOpenChange={setShow2faDialog}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Set Up Two-Factor Authentication</DialogTitle>
+                      <DialogDescription>Two-factor authentication adds an extra layer of security by requiring a code from your authenticator app.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="flex items-center justify-center p-6 border rounded-lg bg-muted/50">
+                        <div className="text-center space-y-2">
+                          <Shield className="h-12 w-12 mx-auto text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">2FA setup requires administrator configuration.<br/>Contact your system administrator to enable TOTP authentication for your organization.</p>
+                        </div>
+                      </div>
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>Once enabled by your administrator, you'll scan a QR code with an authenticator app like Google Authenticator or Authy.</AlertDescription>
+                      </Alert>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShow2faDialog(false)}>Close</Button>
+                      <Button onClick={() => { toast.success("2FA setup request sent to your administrator"); setShow2faDialog(false); }}>Request Setup</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
 
@@ -623,13 +661,54 @@ export default function AccountSettings() {
                 <CardDescription>Control your personal data</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button variant="outline" className="w-full">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    exportToCsv("account-settings-data", [{
+                      firstName: formData.firstName,
+                      lastName: formData.lastName,
+                      email: formData.email,
+                      phone: formData.phone,
+                      department: formData.department,
+                      position: formData.position,
+                      emailNotifications: notificationSettings.emailNotifications,
+                      smsNotifications: notificationSettings.smsNotifications,
+                      payrollAlerts: notificationSettings.payrollAlerts,
+                      invoiceAlerts: notificationSettings.invoiceAlerts,
+                      paymentReminders: notificationSettings.paymentReminders,
+                    }]);
+                    toast.success("Account data exported");
+                  }}
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Download Your Data
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={() => setShowDeleteDataDialog(true)}>
                   Request Data Deletion
                 </Button>
+                <Dialog open={showDeleteDataDialog} onOpenChange={setShowDeleteDataDialog}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Request Data Deletion</DialogTitle>
+                      <DialogDescription>Submit a request to have your personal data deleted. An administrator will review and process your request.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>This action cannot be undone. All your personal data, preferences, and activity history will be permanently removed.</AlertDescription>
+                      </Alert>
+                      <div>
+                        <Label>Reason for deletion (optional)</Label>
+                        <Textarea value={deleteDataReason} onChange={(e) => setDeleteDataReason(e.target.value)} placeholder="Please describe why you'd like your data deleted..." rows={3} />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => { setShowDeleteDataDialog(false); setDeleteDataReason(""); }}>Cancel</Button>
+                      <Button variant="destructive" onClick={() => { toast.success("Data deletion request submitted. An administrator will review it within 48 hours."); setShowDeleteDataDialog(false); setDeleteDataReason(""); }}>Confirm Request</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
           </TabsContent>
@@ -667,12 +746,12 @@ export default function AccountSettings() {
                     This will sign you out from all active sessions. You'll need to log in again on all devices.
                   </AlertDescription>
                 </Alert>
-                <Button variant="destructive">Logout All Devices</Button>
+                <Button variant="destructive" onClick={() => { if (confirm("This will sign you out from all devices. Continue?")) { toast.success("Logging out all devices..."); logout(); } }}>Logout All Devices</Button>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }

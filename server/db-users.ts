@@ -11,7 +11,13 @@ import {
   userProjectAssignments,
   projectComments,
   staffTasks,
+  activityLog,
+  auditLogs,
+  settings,
+  apiKeys,
+  webhooks,
 } from "../drizzle/schema";
+import { organizationMembers } from "../drizzle/schema-extended";
 
 // legacy/compat types - schema doesn't export DTO insert types in this repo
 type InsertUser = any;
@@ -25,22 +31,27 @@ type StaffTask = any;
 import { getDb } from "./db";
 
 /**
- * Get all users with optional filtering
+ * Get all users with optional filtering by search, role, and organization
  */
-export async function getAllUsers(searchTerm?: string, role?: string) {
+export async function getAllUsers(searchTerm?: string, role?: string, organizationId?: string) {
   const db = await getDb();
   if (!db) return [];
 
   try {
-    if (searchTerm && role) {
-      return await db.select().from(users).where(and(
-        like(users.name, `%${searchTerm}%`),
-        eq(users.role, role as any)
-      ));
-    } else if (searchTerm) {
-      return await db.select().from(users).where(like(users.name, `%${searchTerm}%`));
-    } else if (role) {
-      return await db.select().from(users).where(eq(users.role, role as any));
+    const conditions: any[] = [];
+    
+    if (searchTerm) {
+      conditions.push(like(users.name, `%${searchTerm}%`));
+    }
+    if (role) {
+      conditions.push(eq(users.role, role as any));
+    }
+    if (organizationId) {
+      conditions.push(eq(users.organizationId, organizationId));
+    }
+
+    if (conditions.length > 0) {
+      return await db.select().from(users).where(and(...conditions));
     }
 
     return await db.select().from(users);
@@ -113,6 +124,7 @@ export async function createUser(userData: InsertUser): Promise<User | null> {
       department: userData.department,
       isActive: userData.isActive !== false ? 1 : 0,
       clientId: userData.clientId,
+      organizationId: userData.organizationId,
       permissions: userData.permissions,
       loginMethod: userData.loginMethod,
       passwordHash: userData.passwordHash,
@@ -131,6 +143,26 @@ export async function createUser(userData: InsertUser): Promise<User | null> {
     });
 
     await db.insert(users).values(newUser);
+    
+    // Auto-add user to organizationMembers if they belong to an org
+    if (userData.organizationId) {
+      try {
+        const memberId = `om_${userData.id}`;
+        await db.insert(organizationMembers).values({
+          id: memberId,
+          organizationId: userData.organizationId,
+          userId: userData.id,
+          role: userData.role || "user",
+          status: "active",
+          isActive: true,
+          joinedAt: new Date(),
+        }).onDuplicateKeyUpdate({ set: { status: "active", isActive: true, updatedAt: new Date() } });
+        console.log("[Database] Added user to organizationMembers:", memberId);
+      } catch (omErr: any) {
+        console.warn("[Database] Failed to add org member (non-fatal):", omErr?.message);
+      }
+    }
+
     const result = await getUserById(userData.id);
     console.log("[Database] User created successfully:", result?.id);
     return result || null;
@@ -165,6 +197,7 @@ export async function updateUser(userId: string, updates: Partial<InsertUser>): 
     if (updates.clientId !== undefined) updateData.clientId = updates.clientId;
     if (updates.permissions !== undefined) updateData.permissions = updates.permissions;
     if (updates.passwordHash !== undefined) updateData.passwordHash = updates.passwordHash;
+    if (updates.organizationId !== undefined) updateData.organizationId = updates.organizationId;
 
     // Profile fields
     if (updates.phone !== undefined) updateData.phone = updates.phone;
@@ -225,20 +258,17 @@ export async function hardDeleteUser(userId: string): Promise<boolean> {
     // Delete audit logs
     await db.delete(auditLogs).where(eq(auditLogs.userId, userId));
 
-    // Delete notification preferences/settings
-    await db.delete(settings).where(eq(settings.userId, userId));
+    // Nullify settings updatedBy references for this user
+    await db.update(settings).set({ updatedBy: null }).where(eq(settings.updatedBy, userId));
+
+    // Delete user roles
+    await db.delete(userRoles).where(eq(userRoles.userId, userId));
 
     // Delete API keys
-    const apiKeysTable = (db._.schema as any).apiKeys;
-    if (apiKeysTable) {
-      await db.delete(apiKeysTable).where(eq(apiKeysTable.userId, userId));
-    }
+    try { await db.delete(apiKeys).where(eq(apiKeys.userId, userId)); } catch { /* table may not exist */ }
 
     // Delete webhooks
-    const webhooksTable = (db._.schema as any).webhooks;
-    if (webhooksTable) {
-      await db.delete(webhooksTable).where(eq(webhooksTable.userId, userId));
-    }
+    try { await db.delete(webhooks).where(eq(webhooks.userId, userId)); } catch { /* table may not exist */ }
 
     // Finally, delete the user record itself
     await db.delete(users).where(eq(users.id, userId));
@@ -480,13 +510,14 @@ export async function getRolePermissions(roleId: string): Promise<Permission[]> 
   if (!db) return [];
 
   try {
+    // NOTE: the legacy `permissions` table is no longer part of the active schema.
+    // rolePermissions.permissionId currently stores the effective permission key.
     const perms = await db
-      .select({ permission: permissions })
+      .select({ permissionId: rolePermissions.permissionId })
       .from(rolePermissions)
-      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
       .where(eq(rolePermissions.roleId, roleId));
 
-    return perms.map(p => p.permission);
+    return perms.map((p) => ({ id: p.permissionId, permissionName: p.permissionId } as any));
   } catch (error) {
     console.error("[Database] Failed to get role permissions:", error);
     return [];

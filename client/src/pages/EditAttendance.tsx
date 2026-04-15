@@ -96,7 +96,7 @@ export default function EditAttendance() {
         description="Update attendance record"
         icon={<Clock className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "HR", href: "/hr" },
           { label: "Attendance", href: "/attendance" },
           { label: "Edit Attendance" },
@@ -115,7 +115,7 @@ export default function EditAttendance() {
       description="Update attendance record"
       icon={<Clock className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Attendance", href: "/attendance" },
         { label: "Edit Attendance" },

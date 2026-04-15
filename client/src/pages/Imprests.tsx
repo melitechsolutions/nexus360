@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
@@ -6,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -31,11 +33,15 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Download, Upload, Trash2, Loader2, Wallet, Search } from "lucide-react";
+import { Plus, Download, Upload, Trash2, Loader2, Wallet, Search, User, Coins, CalendarDays, StickyNote, Eye } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { useCurrencySettings } from "@/lib/currency";
 
 export default function ImprestsPage() {
   // CALL ALL HOOKS UNCONDITIONALLY AT TOP LEVEL
   const { allowed, isLoading } = useRequireFeature("procurement:imprest:view");
+  const { code: currencyCode } = useCurrencySettings();
+  const [, setLocation] = useLocation();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -268,7 +274,7 @@ export default function ImprestsPage() {
       description="Manage cash advances and imprest requests for employees"
       icon={<Wallet className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Procurement", href: "/procurement" },
         { label: "Imprests" },
       ]}
@@ -374,11 +380,11 @@ export default function ImprestsPage() {
                           <TableCell className="text-right">
                             {new Intl.NumberFormat("en-US", {
                               style: "currency",
-                              currency: "KES",
+                              currency: currencyCode,
                             }).format((imp.amount || 0) / 100)}
                           </TableCell>
                           <TableCell className="max-w-xs truncate">{imp.purpose}</TableCell>
-                          <TableCell>{imp.dateNeeded || "N/A"}</TableCell>
+                          <TableCell>{imp.dateNeeded ? new Date(imp.dateNeeded).toLocaleDateString() : "N/A"}</TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(imp.approvalStatus)}>
                               {imp.approvalStatus?.toUpperCase()}
@@ -388,6 +394,13 @@ export default function ImprestsPage() {
                             <div className="flex justify-end gap-2">
                               <Button
                                 variant="ghost"
+                                size="sm"
+                                onClick={() => setLocation(`/imprests/${imp.id}`)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   setSelectedImprest(imp);
@@ -419,7 +432,7 @@ export default function ImprestsPage() {
 
         {/* Create Imprest Dialog */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Imprest Request</DialogTitle>
               <DialogDescription>
@@ -427,106 +440,131 @@ export default function ImprestsPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-              {/* Imprest Number and Employee */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="imprestNumber">Imprest Number *</Label>
-                  <Input
-                    id="imprestNumber"
-                    name="imprestNumber"
-                    value={formData.imprestNumber}
-                    onChange={handleInputChange}
-                    placeholder="e.g., IMP-2026-001"
-                  />
-                </div>
+            <div className="space-y-6">
+              {/* Request Details */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <User className="w-4 h-4 text-blue-600" />
+                    Request Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="imprestNumber">Imprest Number *</Label>
+                      <Input
+                        id="imprestNumber"
+                        name="imprestNumber"
+                        value={formData.imprestNumber}
+                        onChange={handleInputChange}
+                        placeholder="e.g., IMP-2026-001"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="userId">Select Employee *</Label>
+                      <Select value={formData.userId} onValueChange={handleEmployeeSelect}>
+                        <SelectTrigger id="userId">
+                          <SelectValue placeholder="Select an employee" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {employees.map((emp: any) => (
+                            <SelectItem key={emp.id} value={emp.id}>
+                              {emp.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                <div className="space-y-2">
-                  <Label htmlFor="userId">Select Employee *</Label>
-                  <Select value={formData.userId} onValueChange={handleEmployeeSelect}>
-                    <SelectTrigger id="userId">
-                      <SelectValue placeholder="Select an employee" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {employees.map((emp: any) => (
-                        <SelectItem key={emp.id} value={emp.id}>
-                          {emp.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              {/* Financial & Schedule */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-green-600" />
+                    Financial & Schedule
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="amount">Amount (KES) *</Label>
+                      <div className="relative">
+                        <Coins className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="amount"
+                          name="amount"
+                          type="number"
+                          value={formData.amount}
+                          onChange={handleInputChange}
+                          placeholder="0.00"
+                          step="0.01"
+                          className="pl-8"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="dateRequested">Date Requested</Label>
+                      <Input
+                        id="dateRequested"
+                        name="dateRequested"
+                        type="date"
+                        value={formData.dateRequested}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="dateNeeded">Date Needed</Label>
+                      <Input
+                        id="dateNeeded"
+                        name="dateNeeded"
+                        type="date"
+                        value={formData.dateNeeded}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              {/* Amount and Date Requested */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount (KES) *</Label>
-                  <Input
-                    id="amount"
-                    name="amount"
-                    type="number"
-                    value={formData.amount}
-                    onChange={handleInputChange}
-                    placeholder="0.00"
-                    step="0.01"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dateRequested">Date Requested</Label>
-                  <Input
-                    id="dateRequested"
-                    name="dateRequested"
-                    type="date"
-                    value={formData.dateRequested}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              {/* Date Needed */}
-              <div className="space-y-2">
-                <Label htmlFor="dateNeeded">Date Needed</Label>
-                <Input
-                  id="dateNeeded"
-                  name="dateNeeded"
-                  type="date"
-                  value={formData.dateNeeded}
-                  onChange={handleInputChange}
-                />
-              </div>
-
-              {/* Purpose */}
-              <div className="space-y-2">
-                <Label htmlFor="purpose">Purpose *</Label>
-                <textarea
-                  id="purpose"
-                  name="purpose"
-                  value={formData.purpose}
-                  onChange={handleInputChange}
-                  placeholder="Describe the purpose of this imprest"
-                  className="w-full p-2 border rounded text-sm"
-                  rows={3}
-                />
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  placeholder="Additional notes or comments"
-                  className="w-full p-2 border rounded text-sm"
-                  rows={2}
-                />
-              </div>
+              {/* Purpose & Notes */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <StickyNote className="w-4 h-4 text-purple-600" />
+                    Purpose & Notes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="purpose">Purpose *</Label>
+                    <RichTextEditor
+                      value={formData.purpose}
+                      onChange={(html) => setFormData(prev => ({ ...prev, purpose: html }))}
+                      placeholder="Describe the purpose of this imprest"
+                      minHeight="100px"
+                    />
+                  </div>
+                  <Separator />
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <RichTextEditor
+                      value={formData.notes}
+                      onChange={(html) => setFormData(prev => ({ ...prev, notes: html }))}
+                      placeholder="Additional notes or comments"
+                      minHeight="80px"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
                 Cancel
               </Button>
@@ -557,7 +595,7 @@ export default function ImprestsPage() {
                   <p className="text-2xl font-bold">
                     {new Intl.NumberFormat("en-US", {
                       style: "currency",
-                      currency: "KES",
+                      currency: currencyCode,
                     }).format((selectedImprest.amount || 0) / 100)}
                   </p>
                 </div>
@@ -581,18 +619,11 @@ export default function ImprestsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="surrenderNotes">Notes</Label>
-                  <textarea
-                    id="surrenderNotes"
+                  <RichTextEditor
                     value={surrenderData.notes}
-                    onChange={(e) =>
-                      setSurrenderData((prev) => ({
-                        ...prev,
-                        notes: e.target.value,
-                      }))
-                    }
+                    onChange={(html) => setSurrenderData(prev => ({ ...prev, notes: html }))}
                     placeholder="Any notes about the surrender"
-                    className="w-full p-2 border rounded text-sm"
-                    rows={2}
+                    minHeight="100px"
                   />
                 </div>
               </div>

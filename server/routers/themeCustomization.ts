@@ -140,7 +140,7 @@ export const themeCustomizationRouter = router({
 
         const configWithTimestamp = {
           ...input,
-          lastUpdated: new Date().toISOString(),
+          lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 19),
         };
 
         const existingSetting = await db
@@ -211,7 +211,7 @@ export const themeCustomizationRouter = router({
       const settingId = uuid();
       const defaultConfigWithTimestamp = {
         ...DEFAULT_THEME_CONFIG,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 19),
       };
 
       const existingSetting = await db
@@ -297,7 +297,7 @@ export const themeCustomizationRouter = router({
         }
 
         config.customDarkPresets.push(input);
-        config.lastUpdated = new Date().toISOString();
+        config.lastUpdated = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
         if (currentConfig.length === 0) {
           await db.insert(systemSettings).values({

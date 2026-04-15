@@ -13,8 +13,8 @@ export const financialReportsRouter = router({
       const db = await getDb();
       if (!db) return { revenue: 0, expenses: 0, netProfit: 0, netMarginPercentage: 0 };
 
-      const start = new Date(input.startDate).toISOString();
-      const end = new Date(input.endDate).toISOString();
+      const start = new Date(input.startDate).toISOString().replace('T', ' ').substring(0, 19);
+      const end = new Date(input.endDate).toISOString().replace('T', ' ').substring(0, 19);
 
       // revenue is recognized when invoice is issued (exclude cancelled)
       const revRows: Array<{ amt: number }> = await db

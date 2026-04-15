@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Document Template</title>
+    <link rel="stylesheet" href="../styles/document-professional-template.css">
+</head>
+<body>
+    <div class="document-container" data-document-type="lpo">
+        
+        <!-- HEADER WITH BRANDING (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-header" style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+          <div class="company-info" style="flex: 1;">
+            <h1 class="company-name" data-field="companyName">[COMPANY_NAME]</h1>
+            <div class="company-contact">
+              <span class="company-tax-id" data-field="companyPin">Tax ID: [COMPANY_PIN]</span>
+              <span class="company-contact-item">[COMPANY_PHONE]</span>
+              <span class="company-contact-item">[COMPANY_EMAIL]</span>
+              <span class="company-contact-item">[COMPANY_ADDRESS]</span>
+            </div>
+          </div>
+          <div class="company-logo" style="flex-shrink: 0;">
+            <img src="[COMPANY_LOGO]" alt="Company Logo" style="max-height: 80px;">
+          </div>
+        </div>
+
+        <!-- DOCUMENT TITLE AND METADATA (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-header-section" style="display: flex; align-items: center; gap: 24px;">
+          <h1 class="document-title" style="flex: 1;">LOCAL PURCHASE ORDER</h1>
+          <div class="document-meta" style="display: flex; flex-direction: column; gap: 4px;">
+            <div class="meta-item"><span class="meta-label">LPO #:</span> <span class="meta-value" data-field="lpoNumber">[LPO-00001]</span></div>
+            <div class="meta-item"><span class="meta-label">Date:</span> <span class="meta-value" data-field="issueDate">[DD/MM/YYYY]</span></div>
+            <div class="meta-item"><span class="meta-label">Required Delivery:</span> <span class="meta-value" data-field="deliveryDate">[DD/MM/YYYY]</span></div>
+            <div class="meta-item"><span class="meta-label">Tax Rate:</span> <span class="meta-value">VAT 16% (Inclusive/Exclusive)</span></div>
+          </div>
+        </div>
+
+        <!-- SUPPLIER DETAILS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Supplier Details</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Supplier Name:</strong> [Supplier Name]</div>
+                <div><strong>Registration #:</strong> [Registration Number]</div>
+                <div><strong>Email:</strong> [supplier@email.com]</div>
+                <div><strong>Phone:</strong> [Supplier Phone]</div>
+                <div><strong>Address:</strong> [Supplier Address]</div>
+                <div><strong>Bank Details:</strong> [Bank Account Information]</div>
+            </div>
+        </div>
+        
+        <!-- DELIVERY ADDRESS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Delivery To</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Location:</strong> [Delivery Location]</div>
+                <div><strong>Contact Person:</strong> [Contact Name]</div>
+                <div><strong>Phone:</strong> [Contact Phone]</div>
+                <div><strong>Address:</strong> [Full Delivery Address]</div>
+            </div>
+        </div>
+
+        <!-- CONTENT SECTIONS -->
+        <div class="section">
+            <h2 class="section-title">Description</h2>
+            <div class="section-content">
+                <p>Document content goes here. This template provides a professional, print-persistent format for all app documentation and reports.</p>
+            </div>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="section">
+            <h2 class="section-title">Items List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong>Website Development</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #636e72;">Web02 - Development Package</p>
+                        </td>
+                        <td>1</td>
+                        <td>KES 7,000.00</td>
+                        <td>KES 7,000.00</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Social Media Management</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #636e72;">SMM(Custom) - 22 posts on Facebook, Instagram, X and LinkedIn</p>
+                        </td>
+                        <td>1</td>
+                        <td>KES 4,000.00</td>
+                        <td>KES 4,000.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- HIGHLIGHT BOX -->
+        <div class="section">
+            <div class="highlight-box">
+                <div class="highlight-label">Total Amount Due</div>
+                <div class="highlight-value">KES 14,250.00</div>
+            </div>
+        </div>
+
+        <!-- LPO TERMS & CONDITIONS SECTION -->
+        <div class="section">
+            <h2 class="section-title">Local Purchase Order Terms & Conditions</h2>
+            <div class="section-content" style="font-size: 13px; line-height: 1.6; color: var(--secondary-color);">
+                <ol style="margin-left: 20px;">
+                    <li><strong>Order Binding:</strong> Supplier commits to deliver goods/services per specifications and dates stated herein.</li>
+                    <li><strong>Delivery Terms:</strong> Delivery at specified location by required date. Late delivery may result in cancellation.</li>
+                    <li><strong>Quality Assurance:</strong> All goods must meet specified quality standards. Defective deliveries will be rejected and returned at supplier's cost.</li>
+                    <li><strong>Pricing:</strong> Prices quoted remain fixed for duration of order unless variation agreed in writing.</li>
+                    <li><strong>Inspection:</strong> Buyer reserves right to inspect goods upon delivery. Defective items replaced at no additional cost.</li>
+                    <li><strong>Payment Terms:</strong> Payment within 30 days of delivery upon receipt of invoice and inspection approval.</li>
+                    <li><strong>Supplier Compliance:</strong> Supplier warrants compliance with all applicable laws and regulations.</li>
+                    <li><strong>Cancellation:</strong> Order may be cancelled if delivery delayed beyond 14 days without written notice.</li>
+                </ol>
+            </div>
+        </div>
+
+                <!-- FOOTER (UNIFIED COLUMN LAYOUT) -->
+                <div class="document-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+                    <div class="footer-info" style="flex: 1;">
+                        <span class="document-id" data-field="lpoNumber">LPO: [LPO-00001]</span>
+                        <span class="document-date" data-field="issueDate">Issued: [DD/MM/YYYY]</span>
+                        <span class="page-number">Page <span class="current-page">1</span> of <span class="total-pages">1</span></span>
+                    </div>
+                    <div class="footer-company" data-field="companyName">[COMPANY_NAME]</div>
+                </div>
+
+                <!-- Print Button (unified area, hidden in print) -->
+                <div class="no-print print-area" style="text-align: right; margin-top: 24px; padding: 16px;">
+                    <button onclick="window.print()" class="print-btn">
+                        Print Document
+                    </button>
+                </div>
+
+        </div>
+
+</body>
+</html>

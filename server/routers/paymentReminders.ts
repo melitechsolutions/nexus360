@@ -22,7 +22,7 @@ export async function getOverdueInvoices(options?: {
   try {
     let query = db.collection("invoices")
       .where("status", "in", ["overdue", "sent"])
-      .where("dueDate", "<", new Date().toISOString())
+      .where("dueDate", "<", new Date().toISOString().replace('T', ' ').substring(0, 19))
       .where("paidAmount", "<", db.raw("total"));
 
     if (options?.clientId) {
@@ -84,7 +84,7 @@ export async function recordReminderSent(
       reminderType: reminderType as any,
       clientEmail,
       sentBy: userId,
-      sentAt: new Date().toISOString(),
+      sentAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
     });
   } catch (error) {
     console.error("[OVERDUE REMINDERS] Error recording reminder:", error);
@@ -101,7 +101,11 @@ function generateOverdueReminderTemplate(input: {
   daysOverdue: number;
   dueDate: string;
   link: string;
+  appName?: string;
+  currency?: string;
 }): { html: string; text: string } {
+  const appName = input.appName || 'CRM';
+  const cur = input.currency || 'KES';
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #d32f2f;">Payment Reminder - Invoice Overdue</h2>
@@ -114,7 +118,7 @@ function generateOverdueReminderTemplate(input: {
       
       <div style="background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0;">
         <p style="margin: 5px 0;"><strong>Invoice #:</strong> ${input.invoiceNumber}</p>
-        <p style="margin: 5px 0;"><strong>Amount Due:</strong> KES ${input.amount.toLocaleString()}</p>
+        <p style="margin: 5px 0;"><strong>Amount Due:</strong> ${cur} ${input.amount.toLocaleString()}</p>
         <p style="margin: 5px 0;"><strong>Original Due Date:</strong> ${new Date(input.dueDate).toLocaleDateString()}</p>
         <p style="margin: 5px 0;"><strong>Days Overdue:</strong> ${input.daysOverdue}</p>
       </div>
@@ -130,7 +134,7 @@ function generateOverdueReminderTemplate(input: {
       <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
       
       <p style="color: #999; font-size: 12px;">
-        Melitech CRM - Financial Management System<br>
+        ${appName} - Financial Management System<br>
         This is an automated reminder. Please do not reply to this email.
       </p>
     </div>
@@ -144,7 +148,7 @@ Dear ${input.clientName},
 This invoice is now ${input.daysOverdue} days overdue.
 
 Invoice #: ${input.invoiceNumber}
-Amount Due: KES ${input.amount.toLocaleString()}
+Amount Due: ${cur} ${input.amount.toLocaleString()}
 Original Due Date: ${new Date(input.dueDate).toLocaleDateString()}
 Days Overdue: ${input.daysOverdue}
 
@@ -153,7 +157,7 @@ Please arrange payment at your earliest convenience. If you have already sent th
 View Invoice: ${input.link}
 
 ---
-Melitech CRM - Financial Management System
+${appName} - Financial Management System
 This is an automated reminder. Please do not reply to this email.
   `;
 
@@ -170,6 +174,17 @@ export async function sendOverdueReminders() {
     console.error("[OVERDUE REMINDERS] Database not available");
     return { sent: 0, skipped: 0, errors: 0 };
   }
+
+  // Fetch company name and currency from settings
+  let appName = 'CRM';
+  let cur = 'KES';
+  const baseUrl = process.env.APP_URL || '';
+  try {
+    const { getCompanyInfo } = await import('../utils/company-info');
+    const info = await getCompanyInfo();
+    if (info.name) appName = info.name;
+    if (info.currency) cur = info.currency;
+  } catch {}
 
   let sent = 0;
   let skipped = 0;
@@ -215,7 +230,9 @@ export async function sendOverdueReminders() {
             amount: invoice.total - invoice.paidAmount,
             daysOverdue,
             dueDate: invoice.dueDate,
-            link: `https://crm.melitech.local/invoices/${invoice.id}`,
+            link: `${baseUrl}/invoices/${invoice.id}`,
+            appName,
+            currency: cur,
           });
 
           // Queue email (use queueEmail for better reliability)
@@ -324,6 +341,16 @@ export const paymentRemindersRouter = router({
           return { success: false, error: "Client has no email address" };
         }
 
+        // Fetch company name for branding
+        let appName = 'CRM';
+        let cur = 'KES';
+        try {
+          const { getCompanyInfo } = await import('../utils/company-info');
+          const info = await getCompanyInfo();
+          if (info.name) appName = info.name;
+          if (info.currency) cur = info.currency;
+        } catch {}
+
         // Generate email
         const { html, text } = generateOverdueReminderTemplate({
           clientName: client.companyName,
@@ -331,7 +358,9 @@ export const paymentRemindersRouter = router({
           amount: invoice.total - invoice.paidAmount,
           daysOverdue,
           dueDate: invoice.dueDate,
-          link: `https://crm.melitech.local/invoices/${invoice.id}`,
+          link: `${process.env.APP_URL || ''}/invoices/${invoice.id}`,
+          appName,
+          currency: cur,
         });
 
         // Queue email
@@ -392,7 +421,7 @@ export const paymentRemindersRouter = router({
    * Manually trigger overdue reminder process (admin)
    */
   processOverdueReminders: writeProcedure.mutation(async ({ ctx }) => {
-    if (ctx.user?.role !== "admin" && ctx.user?.role !== "system") {
+    if (ctx.user?.role !== "admin" && ctx.user?.role !== "super_admin" && ctx.user?.role !== "system") {
       throw new Error("Unauthorized - admin only");
     }
 

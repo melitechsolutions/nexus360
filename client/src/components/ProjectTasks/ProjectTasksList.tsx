@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import {
@@ -69,7 +70,8 @@ export function ProjectTasksList({
   const filteredTasks = tasks.filter((task) => {
     if (filterStatus !== "all" && task.status !== filterStatus) return false;
     if (filterPriority !== "all" && task.priority !== filterPriority) return false;
-    if (filterAssignee !== "all" && task.assignedTo !== filterAssignee) return false;
+    if (filterAssignee === "__unassigned__" && task.assignedTo) return false;
+    if (filterAssignee !== "all" && filterAssignee !== "__unassigned__" && task.assignedTo !== filterAssignee) return false;
     if (filterApproval !== "all" && task.approvalStatus !== filterApproval) return false;
     return true;
   });
@@ -82,7 +84,7 @@ export function ProjectTasksList({
         onRefresh?.();
       } catch (error) {
         console.error("Failed to delete task:", error);
-        alert("Failed to delete task");
+        toast.error("Failed to delete task");
       }
     }
   };
@@ -188,7 +190,7 @@ export function ProjectTasksList({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Assignees</SelectItem>
-            <SelectItem value="">Unassigned</SelectItem>
+            <SelectItem value="__unassigned__">Unassigned</SelectItem>
             {teamMembers.map((member) => (
               <SelectItem key={member.id} value={member.id}>
                 {member.name}

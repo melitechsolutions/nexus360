@@ -647,33 +647,33 @@ export default function ImportExcel() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="overflow-x-auto max-h-64 border rounded">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-100 sticky top-0">
-                      <tr>
-                        <th className="px-4 py-2 text-left font-semibold">#</th>
+                  <Table className="w-full text-sm">
+                    <TableHeader className="bg-gray-100 sticky top-0">
+                      <TableRow>
+                        <TableHead className="px-4 py-2 text-left font-semibold">#</TableHead>
                         {requiredFields.slice(0, 5).map((field) => (
-                          <th key={field} className="px-4 py-2 text-left font-semibold">
+                          <TableHead key={field} className="px-4 py-2 text-left font-semibold">
                             {field}
-                          </th>
+                          </TableHead>
                         ))}
-                      </tr>
-                    </thead>
-                    <tbody>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {previewRows.slice(0, 10).map((row, idx) => (
-                        <tr key={`row-${idx}`} className="border-t hover:bg-gray-50">
-                          <td className="px-4 py-2 text-gray-500">{idx + 1}</td>
+                        <TableRow key={`row-${idx}`} className="border-t hover:bg-gray-50">
+                          <TableCell className="px-4 py-2 text-gray-500">{idx + 1}</TableCell>
                           {requiredFields.slice(0, 5).map((field) => (
-                            <td
+                            <TableCell
                               key={`${idx}-${field}`}
                               className="px-4 py-2 text-gray-700 text-xs"
                             >
                               {String(row[fieldMap[field] || field] || "―").substring(0, 20)}
-                            </td>
+                            </TableCell>
                           ))}
-                        </tr>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
 
                 <div className="flex gap-3 justify-end">

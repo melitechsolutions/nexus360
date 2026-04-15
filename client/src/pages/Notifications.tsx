@@ -33,6 +33,7 @@ import {
   Filter,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { StatsCard } from "@/components/ui/stats-card";
 
 interface Notification {
   id: string;
@@ -159,42 +160,18 @@ export default function Notifications() {
       description="View and manage your notifications"
       icon={<Bell className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Notifications" },
       ]}
     >
       <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Notifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{notifications.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">All time</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Notifications" value={notifications.length} description="All time" color="border-l-purple-500" />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Unread</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{unreadCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">Need attention</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Unread" value={unreadCount} description="Need attention" color="border-l-green-500" />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Read</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{notifications.length - unreadCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">Reviewed</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Read" value={notifications.length - unreadCount} description="Reviewed" color="border-l-blue-500" />
         </div>
 
         {/* Filters */}
@@ -312,9 +289,9 @@ export default function Notifications() {
                             size="sm"
                             onClick={() => {
                               if (notif.isRead) {
-                                markAsUnreadMutation.mutate(notif.id);
+                                markAsUnreadMutation.mutate({ id: notif.id });
                               } else {
-                                markAsReadMutation.mutate(notif.id);
+                                markAsReadMutation.mutate({ id: notif.id });
                               }
                             }}
                             title={notif.isRead ? "Mark as unread" : "Mark as read"}

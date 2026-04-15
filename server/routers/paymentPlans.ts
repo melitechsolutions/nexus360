@@ -70,7 +70,7 @@ export const paymentPlansRouter = router({
           installmentAmount,
           frequencyDays: input.frequencyDays,
           startDate: input.startDate,
-          nextInstallmentDue: startDate.toISOString(),
+          nextInstallmentDue: startDate.toISOString().replace('T', ' ').substring(0, 19),
           completedInstallments: 0,
           totalPaid: 0,
           status: "active",
@@ -88,7 +88,7 @@ export const paymentPlansRouter = router({
             id: nanoid(),
             paymentPlanId: planId,
             installmentNumber: i,
-            dueDate: dueDate.toISOString(),
+            dueDate: dueDate.toISOString().replace('T', ' ').substring(0, 19),
             amount:
               i === input.numInstallments
                 ? inv.total - installmentAmount * (input.numInstallments - 1)
@@ -98,7 +98,7 @@ export const paymentPlansRouter = router({
             paidAmount: null,
             paymentId: null,
             notes: null,
-            createdAt: new Date().toISOString(),
+            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
           });
         }
 
@@ -222,7 +222,7 @@ export const paymentPlansRouter = router({
         }
 
         const updates: any = {
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         };
 
         if (updateData.status) {
@@ -316,7 +316,7 @@ export const paymentPlansRouter = router({
           .update(paymentPlanInstallments)
           .set({
             status: "paid",
-            paidDate: new Date().toISOString(),
+            paidDate: new Date().toISOString().replace('T', ' ').substring(0, 19),
             paidAmount: input.paidAmount,
             paymentId: input.paymentId,
             notes: input.notes,
@@ -340,7 +340,7 @@ export const paymentPlansRouter = router({
         const planUpdates: any = {
           completedInstallments: completedCount,
           totalPaid,
-          updatedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
         };
 
         if (completedCount === pln.numInstallments) {
@@ -372,6 +372,8 @@ export const paymentPlansRouter = router({
   getInstallments: viewProcedure
     .input(z.string())
     .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
       try {
         const installments = await db
           .select()
@@ -390,6 +392,8 @@ export const paymentPlansRouter = router({
     }),
 
   getUpcomingInstallments: viewProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
     try {
       const now = new Date();
       const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -407,8 +411,8 @@ export const paymentPlansRouter = router({
         .where(
           and(
             eq(paymentPlanInstallments.status, "pending"),
-            gte(paymentPlanInstallments.dueDate, now.toISOString()),
-            lte(paymentPlanInstallments.dueDate, thirtyDaysFromNow.toISOString()),
+            gte(paymentPlanInstallments.dueDate, now.toISOString().replace('T', ' ').substring(0, 19)),
+            lte(paymentPlanInstallments.dueDate, thirtyDaysFromNow.toISOString().replace('T', ' ').substring(0, 19)),
             eq(paymentPlans.status, "active")
           )
         )
@@ -425,6 +429,8 @@ export const paymentPlansRouter = router({
   }),
 
   getOverdueInstallments: viewProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
     try {
       const now = new Date();
 
@@ -441,7 +447,7 @@ export const paymentPlansRouter = router({
         .where(
           and(
             eq(paymentPlanInstallments.status, "pending"),
-            lte(paymentPlanInstallments.dueDate, now.toISOString()),
+            lte(paymentPlanInstallments.dueDate, now.toISOString().replace('T', ' ').substring(0, 19)),
             eq(paymentPlans.status, "active")
           )
         )

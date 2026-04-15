@@ -10,8 +10,11 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { sseHandler } from "../sse";
 import { setupPaymentWebhooks } from "../lib/paymentWebhooks";
 import { serveStatic, setupVite } from "./vite";
+import * as path from "path";
+import * as fs from "fs";
 import { initializeScheduledJobs } from "../jobs/invoiceReminders";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -132,6 +135,15 @@ async function startServer() {
   
   // Setup payment webhooks (Stripe & M-Pesa) - MUST be before tRPC middleware and JSON parser
   setupPaymentWebhooks(app);
+
+  // Real-time SSE notifications endpoint (before tRPC)
+  app.get("/api/sse/notifications", sseHandler);
+
+  // Serve uploaded documents
+  const uploadDir = process.env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+  app.use("/uploads", express.static(uploadDir));
+
   
   // Error logging middleware for API requests
   app.use("/api", (req, res, next) => {

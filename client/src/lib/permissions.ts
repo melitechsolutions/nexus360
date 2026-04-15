@@ -32,9 +32,11 @@ export const FEATURE_ACCESS: Record<string, UserRole[]> = {
   "admin:manage_users": ["super_admin"],
   "admin:manage_roles": ["super_admin"],
   "admin:settings": ["super_admin", "admin"],
+  "admin:maintenance": ["super_admin", "ict_manager"],
   "admin:system": ["super_admin", "admin"],
 
   // Accounting Features
+  "accounting:dashboard:view": ["super_admin", "admin", "accountant"],
   "accounting:invoices": ["super_admin", "admin", "accountant", "project_manager"],
   "accounting:invoices:view": ["super_admin", "admin", "accountant", "project_manager"],
   "accounting:invoices:create": ["super_admin", "admin", "accountant"],
@@ -103,6 +105,11 @@ export const FEATURE_ACCESS: Record<string, UserRole[]> = {
   "hr:departments:create": ["super_admin", "admin", "hr"],
   "hr:departments:edit": ["super_admin", "admin", "hr"],
   "hr:departments:delete": ["super_admin", "admin"],
+
+  "hr:onboarding": ["super_admin", "admin", "hr"],
+  "hr:holidays": ["super_admin", "admin", "hr"],
+  "hr:payslips": ["super_admin", "admin", "hr"],
+  "hr:training": ["super_admin", "admin", "hr"],
 
   // Reports Features
   "reports:view": ["super_admin", "admin", "accountant", "project_manager", "hr", "sales_manager", "ict_manager"],
@@ -209,15 +216,38 @@ export const FEATURE_ACCESS: Record<string, UserRole[]> = {
   "communications:email": ["super_admin", "admin", "project_manager"],
   "communications:email_queue": ["super_admin", "admin", "ict_manager"],
   
-  // ICT Manager specific features
+  // ICT Manager specific features - COMPREHENSIVE ACCESS
   "ict:system_health": ["super_admin", "admin", "ict_manager"],
+  "ict:system_health:view": ["super_admin", "admin", "ict_manager"],
+  "ict:system_health:edit": ["super_admin", "admin", "ict_manager"],
   "ict:users": ["super_admin", "admin", "ict_manager"],
   "ict:users:view": ["super_admin", "admin", "ict_manager"],
+  "ict:users:manage": ["super_admin", "admin", "ict_manager"],
+  "ict:users:disable": ["super_admin", "admin", "ict_manager"],
+  "ict:users:sessions": ["super_admin", "admin", "ict_manager"],
   "ict:security": ["super_admin", "admin", "ict_manager"],
   "ict:security:view": ["super_admin", "admin", "ict_manager"],
+  "ict:security:policies": ["super_admin", "admin", "ict_manager"],
+  "ict:security:access_control": ["super_admin", "admin", "ict_manager"],
+  "ict:security:audit": ["super_admin", "admin", "ict_manager"],
   "ict:backups": ["super_admin", "admin", "ict_manager"],
+  "ict:backups:view": ["super_admin", "admin", "ict_manager"],
+  "ict:backups:create": ["super_admin", "admin", "ict_manager"],
+  "ict:backups:restore": ["super_admin", "admin"],
   "ict:logs": ["super_admin", "admin", "ict_manager"],
+  "ict:logs:view": ["super_admin", "admin", "ict_manager"],
+  "ict:logs:download": ["super_admin", "admin", "ict_manager"],
+  "ict:logs:archive": ["super_admin", "admin", "ict_manager"],
   "ict:database": ["super_admin", "admin", "ict_manager"],
+  "ict:database:view": ["super_admin", "admin", "ict_manager"],
+  "ict:database:query": ["super_admin", "admin", "ict_manager"],
+  "ict:database:maintenance": ["super_admin", "admin", "ict_manager"],
+  "ict:network": ["super_admin", "admin", "ict_manager"],
+  "ict:network:view": ["super_admin", "admin", "ict_manager"],
+  "ict:notifications": ["super_admin", "admin", "ict_manager"],
+  "ict:notifications:view": ["super_admin", "admin", "ict_manager"],
+  "ict:notifications:config": ["super_admin", "admin", "ict_manager"],
+  "ict:dashboard": ["super_admin", "admin", "ict_manager"],
 
   // Approvals Features
   "approvals:view": ["super_admin", "admin", "accountant", "hr"],
@@ -318,6 +348,12 @@ export const MODULE_ACCESS: Record<string, UserRole[]> = {
   payroll: ["super_admin", "admin", "hr", "staff", "accountant"],
   "leave-management": ["super_admin", "admin", "hr", "staff", "project_manager"],
   departments: ["super_admin", "admin", "hr", "staff"],
+  "performance-reviews": ["super_admin", "admin", "hr"],
+  "employee-contracts": ["super_admin", "admin", "hr"],
+  "leave-balances": ["super_admin", "admin", "hr"],
+  disciplinary: ["super_admin", "admin", "hr"],
+  recruitment: ["super_admin", "admin", "hr"],
+  "hr-automation": ["super_admin", "admin", "hr"],
 
   // Finance modules
   invoices: ["super_admin", "admin", "accountant", "user", "client", "sales_manager"],
@@ -356,23 +392,26 @@ export const MODULE_ACCESS: Record<string, UserRole[]> = {
  * Determines which dashboard a user should access
  */
 export const ROLE_DASHBOARDS: Record<UserRole, string> = {
-  super_admin: "/crm/super-admin",
-  admin: "/crm/admin",
-  accountant: "/crm/accountant",
-  hr: "/crm/hr",
-  project_manager: "/crm/project-manager",
-  staff: "/crm/staff",
-  user: "/crm",
-  client: "/crm/client-portal",
-  procurement_manager: "/crm/procurement",
-  ict_manager: "/crm/ict",
-  sales_manager: "/crm/sales",
+  super_admin: "/crm-home",
+  admin: "/crm-home",
+  accountant: "/crm-home",
+  hr: "/crm-home",
+  project_manager: "/crm-home",
+  staff: "/crm-home",
+  user: "/crm-home",
+  client: "/crm-home",
+  procurement_manager: "/crm-home",
+  ict_manager: "/crm-home",
+  sales_manager: "/crm-home",
 };
 
 /**
  * Check if user has access to a feature
  */
 export function canAccessFeature(userRole: UserRole | string, feature: string): boolean {
+  // Super admin has unrestricted access to all features
+  if (userRole === "super_admin") return true;
+
   const allowedRoles = FEATURE_ACCESS[feature];
   if (!allowedRoles) return false;
   return allowedRoles.includes(userRole as UserRole);
@@ -382,6 +421,9 @@ export function canAccessFeature(userRole: UserRole | string, feature: string): 
  * Check if user has access to a module
  */
 export function canAccessModule(userRole: UserRole | string, module: string): boolean {
+  // Super admin has unrestricted access to all modules
+  if (userRole === "super_admin") return true;
+
   const allowedRoles = MODULE_ACCESS[module];
   if (!allowedRoles) return false;
   return allowedRoles.includes(userRole as UserRole);
@@ -405,6 +447,11 @@ export function getDashboardUrl(userRole: UserRole | string): string {
  * Get all accessible features for a user role
  */
 export function getAccessibleFeatures(userRole: UserRole | string): Set<string> {
+  // Super admin has access to all features
+  if (userRole === "super_admin") {
+    return new Set(Object.keys(FEATURE_ACCESS));
+  }
+
   return new Set(
     Object.entries(FEATURE_ACCESS)
       .filter(([_, roles]) => roles.includes(userRole as UserRole))
@@ -516,6 +563,10 @@ export function useRequireRole(requiredRoles: UserRole[]) {
   const [, navigate] = useLocation();
   const { user, loading } = useAuthPersistent();
 
+  // Serialize roles to a stable string to avoid re-running the effect
+  // when callers pass a new array literal on every render
+  const rolesKey = requiredRoles.join(",");
+
   useEffect(() => {
     if (loading) return;
 
@@ -530,7 +581,7 @@ export function useRequireRole(requiredRoles: UserRole[]) {
       navigate(getDashboardUrl(user.role));
       return;
     }
-  }, [user, loading, requiredRoles]);
+  }, [user, loading, rolesKey]);
 
   return {
     allowed: !loading && user && hasRole(user.role, requiredRoles),
@@ -637,6 +688,61 @@ export const NAVIGATION_ITEMS: NavItem[] = [
         label: "Departments",
         href: "/departments",
         roles: ["super_admin", "admin", "staff"],
+      },
+      {
+        label: "Training",
+        href: "/training",
+        roles: ["super_admin", "admin", "hr"],
+      },
+      {
+        label: "Performance Reviews",
+        href: "/performance-reviews",
+        roles: ["super_admin", "admin", "hr"],
+      },
+      {
+        label: "Onboarding",
+        href: "/onboarding",
+        roles: ["super_admin", "admin", "hr"],
+      },
+      {
+        label: "Holidays",
+        href: "/holidays",
+        roles: ["super_admin", "admin", "hr", "staff"],
+      },
+      {
+        label: "Payslips",
+        href: "/payslips",
+        roles: ["super_admin", "admin", "hr", "accountant"],
+      },
+      {
+        label: "HR Analytics",
+        href: "/hr-analytics",
+        roles: ["super_admin", "admin", "hr"],
+      },
+      {
+        label: "Contracts",
+        href: "/employee-contracts",
+        roles: ["super_admin", "admin", "hr"],
+      },
+      {
+        label: "Leave Balances",
+        href: "/leave-balances",
+        roles: ["super_admin", "admin", "hr"],
+      },
+      {
+        label: "Disciplinary",
+        href: "/disciplinary",
+        roles: ["super_admin", "admin", "hr"],
+      },
+      {
+        label: "Recruitment",
+        href: "/recruitment",
+        roles: ["super_admin", "admin", "hr"],
+      },
+      {
+        label: "HR Automation",
+        href: "/hr-automation",
+        roles: ["super_admin", "admin", "hr"],
       },
     ],
   },
@@ -941,15 +1047,168 @@ export function getNavigationForRole(userRole: UserRole | undefined): NavItem[] 
 /**
  * Check if a user can access a specific route
  */
+/**
+ * Route prefix to allowed roles mapping for client-side RBAC enforcement.
+ * More specific prefixes are checked first (e.g., "crm/super-admin" before "crm").
+ */
+export const ROUTE_ROLES: Record<string, UserRole[]> = {
+  // Role-specific dashboards
+  "crm/super-admin": ["super_admin"],
+  "crm/admin": ["super_admin", "admin"],
+  "crm/hr": ["super_admin", "admin", "hr"],
+  "crm/accountant": ["super_admin", "admin", "accountant"],
+  "crm/project-manager": ["super_admin", "admin", "project_manager"],
+  "crm/procurement": ["super_admin", "admin", "procurement_manager"],
+  "crm/sales": ["super_admin", "admin", "sales_manager"],
+  "crm/staff": ["super_admin", "admin", "staff"],
+  "crm/ict": ["super_admin", "admin", "ict_manager"],
+  "crm/client-portal": ["client"],
+  // Admin & Enterprise
+  "admin/cron-jobs": ["super_admin", "admin", "ict_manager"],
+  "admin/email-templates": ["super_admin", "admin", "ict_manager"],
+  "admin": ["super_admin", "admin", "ict_manager"],
+  "enterprise": ["super_admin"],
+  "users": ["super_admin", "admin"],
+  "roles": ["super_admin", "admin"],
+  // HR Module
+  "hr": ["super_admin", "admin", "hr", "ict_manager"],
+  "employees": ["super_admin", "admin", "hr", "staff", "project_manager", "ict_manager"],
+  "attendance": ["super_admin", "admin", "hr", "staff", "project_manager"],
+  "payroll": ["super_admin", "admin", "hr", "staff", "accountant"],
+  "leave-management": ["super_admin", "admin", "hr", "staff", "project_manager"],
+  "departments": ["super_admin", "admin", "hr", "staff"],
+  "job-groups": ["super_admin", "admin", "hr"],
+  "performance-reviews": ["super_admin", "admin", "hr"],
+  "onboarding": ["super_admin", "admin", "hr"],
+  "holidays": ["super_admin", "admin", "hr", "staff"],
+  "payslips": ["super_admin", "admin", "hr", "accountant"],
+  "training": ["super_admin", "admin", "hr"],
+  "hr-analytics": ["super_admin", "admin", "hr"],
+  "employee-contracts": ["super_admin", "admin", "hr"],
+  "leave-balances": ["super_admin", "admin", "hr"],
+  "disciplinary": ["super_admin", "admin", "hr"],
+  "recruitment": ["super_admin", "admin", "hr"],
+  "hr-automation": ["super_admin", "admin", "hr"],
+  // Finance / Accounting
+  "accounting": ["super_admin", "admin", "accountant", "project_manager", "sales_manager", "procurement_manager"],
+  "invoices": ["super_admin", "admin", "accountant", "user", "client", "sales_manager"],
+  "recurring-invoices": ["super_admin", "admin", "accountant"],
+  "recurring-expenses": ["super_admin", "admin", "accountant"],
+  "payments": ["super_admin", "admin", "accountant", "user", "client"],
+  "payment-plans": ["super_admin", "admin", "accountant"],
+  "expenses": ["super_admin", "admin", "accountant", "project_manager"],
+  "budgets": ["super_admin", "admin", "accountant", "project_manager"],
+  "bank-reconciliation": ["super_admin", "admin", "accountant"],
+  "chart-of-accounts": ["super_admin", "admin", "accountant"],
+  "receipts": ["super_admin", "admin", "accountant", "user"],
+  "receipts-advanced": ["super_admin", "admin", "accountant"],
+  "billing": ["super_admin", "admin"],
+  "financial-dashboard": ["super_admin", "admin", "accountant"],
+  "finance": ["super_admin", "admin", "accountant"],
+  "forecasting": ["super_admin", "admin", "accountant"],
+  "credit-notes": ["super_admin", "admin", "accountant"],
+  "debit-notes": ["super_admin", "admin", "accountant"],
+  "service-invoices": ["super_admin", "admin", "accountant", "sales_manager"],
+  // Sales & Projects
+  "sales": ["super_admin", "admin", "project_manager", "sales_manager"],
+  "sales-pipeline": ["super_admin", "admin", "project_manager", "sales_manager"],
+  "clients": ["super_admin", "admin", "user", "project_manager", "sales_manager"],
+  "contacts": ["super_admin", "admin", "user", "project_manager", "sales_manager"],
+  "projects": ["super_admin", "admin", "user", "client", "project_manager"],
+  "project-milestones": ["super_admin", "admin", "project_manager"],
+  "time-tracking": ["super_admin", "admin", "project_manager", "staff"],
+  "estimates": ["super_admin", "admin", "user", "project_manager", "sales_manager"],
+  "opportunities": ["super_admin", "admin", "user", "project_manager", "sales_manager"],
+  "proposals": ["super_admin", "admin", "project_manager", "sales_manager"],
+  "proposals/templates": ["super_admin", "admin", "project_manager", "sales_manager"],
+  "project-analytics": ["super_admin", "admin", "project_manager"],
+  // Procurement
+  "procurement": ["super_admin", "admin", "procurement_manager", "accountant"],
+  "suppliers": ["super_admin", "admin", "procurement_manager", "accountant"],
+  "lpos": ["super_admin", "admin", "accountant", "project_manager", "procurement_manager"],
+  "orders": ["super_admin", "admin", "accountant", "project_manager", "procurement_manager"],
+  "imprests": ["super_admin", "admin", "accountant", "project_manager", "procurement_manager"],
+  "quotations": ["super_admin", "admin", "procurement_manager", "accountant"],
+  "delivery-notes": ["super_admin", "admin", "procurement_manager", "accountant", "staff"],
+  "grn": ["super_admin", "admin", "procurement_manager", "accountant", "staff"],
+  "contracts": ["super_admin", "admin", "procurement_manager", "accountant"],
+  "contracts/templates": ["super_admin", "admin", "procurement_manager", "accountant"],
+  "assets": ["super_admin", "admin", "ict_manager", "procurement_manager"],
+  "warranty": ["super_admin", "admin", "ict_manager", "procurement_manager"],
+  "work-orders": ["super_admin", "admin", "procurement_manager"],
+  "inventory": ["super_admin", "admin", "accountant", "staff", "project_manager"],
+  "create-imprest": ["super_admin", "admin", "staff", "procurement_manager"],
+  "create-purchase-order": ["super_admin", "admin", "procurement_manager"],
+  // Products / Services
+  "products": ["super_admin", "admin", "user", "project_manager"],
+  "services": ["super_admin", "admin", "user", "project_manager"],
+  "service-templates": ["super_admin", "admin"],
+  // Reports & Analytics
+  "reports": ["super_admin", "admin", "accountant", "staff", "project_manager", "ict_manager", "sales_manager", "procurement_manager"],
+  "report-builder": ["super_admin", "admin", "accountant"],
+  "kpi-tracking": ["super_admin", "admin", "project_manager", "sales_manager"],
+  "advanced-analytics": ["super_admin", "admin", "accountant", "project_manager", "ict_manager"],
+  "activity-trail": ["super_admin", "admin", "ict_manager"],
+  // Communications
+  "communications": ["super_admin", "admin", "ict_manager", "staff", "project_manager", "hr"],
+  "staff-chat": ["super_admin", "admin", "staff", "project_manager", "hr", "user"],
+  // System / Tools
+  "tools": ["super_admin", "admin", "ict_manager"],
+  "settings": ["super_admin", "admin", "ict_manager"],
+  "system-health": ["super_admin", "admin", "ict_manager"],
+  "automation": ["super_admin", "admin"],
+  "workflow-automation": ["super_admin", "admin"],
+  "integrations": ["super_admin", "admin", "ict_manager"],
+  "import-excel": ["super_admin", "admin"],
+  // AI
+  "ai-hub": ["super_admin", "admin", "project_manager"],
+};
+
+/** Public routes that don't require authentication */
+export const PUBLIC_ROUTES = [
+  "/login", "/signup", "/forgot-password", "/reset-password",
+  "/", "/home", "/demo", "/landing",
+  "/features", "/pricing", "/about", "/contact",
+  "/privacy-policy", "/terms-and-conditions", "/documentation",
+  "/user-guide", "/troubleshooting",
+];
+
+/** Routes accessible by any authenticated user */
+const AUTHENTICATED_ANY = [
+  "crm", "crm/home", "dashboards", "dashboard-home", "dashboard",
+  "rbd", "account", "profile", "security", "mfa",
+  "change-password", "change-password-enhanced",
+  "notifications", "messages", "activity", "search",
+  "tickets", "approvals", "test-pdf",
+];
+
 export function canAccessRoute(userRole: UserRole | undefined, route: string): boolean {
   if (!userRole) return false;
 
-  // Extract module from route (e.g., /employees/create -> employees)
-  const routeParts = route.split("/").filter(Boolean);
-  if (routeParts.length === 0) return true; // Allow root
+  const path = route.replace(/^\//, ""); // strip leading /
+  if (!path) return true; // root
 
-  const module = routeParts[0];
-  return hasModuleAccess(userRole, module);
+  // Check specific route prefixes (longest match first)
+  const sortedKeys = Object.keys(ROUTE_ROLES).sort((a, b) => b.length - a.length);
+  for (const prefix of sortedKeys) {
+    if (path === prefix || path.startsWith(prefix + "/")) {
+      return ROUTE_ROLES[prefix].includes(userRole);
+    }
+  }
+
+  // Check if it's an any-authenticated route
+  const firstSegment = path.split("/")[0];
+  const twoSegments = path.split("/").slice(0, 2).join("/");
+  if (AUTHENTICATED_ANY.includes(twoSegments) || AUTHENTICATED_ANY.includes(firstSegment)) {
+    return true;
+  }
+
+  // Fall back to MODULE_ACCESS
+  const allowedRoles = MODULE_ACCESS[firstSegment];
+  if (allowedRoles) return allowedRoles.includes(userRole);
+
+  // Default: allow (server enforces final authorization)
+  return true;
 }
 
 /**

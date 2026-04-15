@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { APP_LOGO, APP_TITLE } from "@/const";
+import { Eye, EyeOff, Lock, Mail, Zap, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getDashboardUrl } from "@/lib/permissions";
 
 /**
  * Login component with proper authentication flow
@@ -24,14 +25,25 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+
+  // If already authenticated, redirect immediately
+  useEffect(() => {
+    if (authLoading || !isAuthenticated || !user) return;
+    const orgSlug = (user as any).organizationSlug;
+    if (user.organizationId && orgSlug) {
+      window.location.replace(`/org/${orgSlug}/dashboard`);
+    } else {
+      window.location.replace(getDashboardUrl(user.role));
+    }
+  }, [isAuthenticated, authLoading, user]);
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
       const userRole = data.user.role;
+      const organizationId = data.user.organizationId;
+      const organizationSlug = data.user.organizationSlug;
       
       // Store token in localStorage for fallback when cookies fail
       if (data.token) {
@@ -46,38 +58,31 @@ export default function Login() {
       // Check if user needs to change password on first login
       if (data.user.requiresPasswordChange) {
         localStorage.setItem("requiresPasswordChange", "true");
-        setLocation("/change-password");
+        window.location.replace("/change-password");
         return;
       }
       
-      // Redirect based on role to appropriate dashboard
-      switch (userRole) {
-        case "super_admin":
-          setLocation("/crm/super-admin");
-          break;
-        case "admin":
-          setLocation("/crm/admin");
-          break;
-        case "hr":
-          setLocation("/crm/hr");
-          break;
-        case "accountant":
-          setLocation("/crm/accountant");
-          break;
-        case "project_manager":
-          setLocation("/crm/project-manager");
-          break;
-        case "staff":
-          setLocation("/crm/staff");
-          break;
-        case "client":
-          setLocation("/crm/client-portal");
-          break;
-        case "user":
-        default:
-          setLocation("/crm/home");
-          break;
+      // If user belongs to an organization, route to org-scoped dashboard
+      if (organizationId && organizationSlug) {
+        window.location.replace(`/org/${organizationSlug}/dashboard`);
+        return;
       }
+      
+      // Otherwise, redirect based on role to Melitech global dashboard
+      let dest = "/crm/home";
+      switch (userRole) {
+        case "super_admin": dest = "/crm/super-admin"; break;
+        case "admin": dest = "/crm/admin"; break;
+        case "hr": dest = "/crm/hr"; break;
+        case "accountant": dest = "/crm/accountant"; break;
+        case "project_manager": dest = "/crm/project-manager"; break;
+        case "procurement_manager": dest = "/crm/procurement"; break;
+        case "ict_manager": dest = "/crm/ict"; break;
+        case "sales_manager": dest = "/crm/sales"; break;
+        case "staff": dest = "/crm/staff"; break;
+        case "client": dest = "/crm/client-portal"; break;
+      }
+      window.location.replace(dest);
     },
     onError: (error) => {
       setError(error.message || "Login failed. Please check your credentials.");
@@ -100,17 +105,41 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="space-y-4">
-          <div className="flex justify-center">
-            <img src={APP_LOGO} alt={APP_TITLE} className="h-16 w-auto" />
-          </div>
-          <div className="text-center">
-            <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-            <CardDescription>Sign in to your account to continue</CardDescription>
-          </div>
-        </CardHeader>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-violet-50">
+      {/* Top bar */}
+      <div className="p-4 sm:p-6">
+        <a
+          href="/"
+          onClick={(e) => { e.preventDefault(); setLocation("/"); }}
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to home
+        </a>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-xl border-gray-200">
+          <CardHeader className="space-y-4">
+            <div className="flex justify-center">
+              <a
+                href="/"
+                onClick={(e) => { e.preventDefault(); setLocation("/"); }}
+                className="flex items-center gap-2.5 no-underline"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-200">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-2xl font-bold text-gray-900 tracking-tight">
+                  Nexus<span className="text-indigo-600">360</span>
+                </span>
+              </a>
+            </div>
+            <div className="text-center">
+              <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+              <CardDescription>Sign in to your account to continue</CardDescription>
+            </div>
+          </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
@@ -163,23 +192,32 @@ export default function Login() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
-            <div className="text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <button
-                type="button"
-                onClick={() => setLocation("/signup")}
-                className="text-primary hover:underline font-medium"
-                disabled={loading}
+            <div className="flex items-center justify-between w-full">
+              <a
+                href="/forgot-password"
+                onClick={(e) => { e.preventDefault(); setLocation("/forgot-password"); }}
+                className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
               >
-                Sign up
-              </button>
+                Forgot password?
+              </a>
+              <span className="text-xs text-muted-foreground">
+                No account?{" "}
+                <a
+                  href="/signup"
+                  onClick={(e) => { e.preventDefault(); setLocation("/signup"); }}
+                  className="text-indigo-600 hover:text-indigo-800 hover:underline font-medium"
+                >
+                  Sign up
+                </a>
+              </span>
             </div>
           </CardFooter>
         </form>
       </Card>
+      </div>
     </div>
   );
 }

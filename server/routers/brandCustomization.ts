@@ -118,7 +118,7 @@ export const brandCustomizationRouter = router({
           .limit(1);
 
         const settingId = uuid();
-        const now = new Date().toISOString();
+        const now = new Date().toISOString().slice(0, 19).replace("T", " ");
 
         if (existingSetting.length === 0) {
           // Create new setting
@@ -187,7 +187,7 @@ export const brandCustomizationRouter = router({
       }
 
       const settingId = uuid();
-      const now = new Date().toISOString();
+      const now = new Date().toISOString().slice(0, 19).replace("T", " ");
 
       const existingSetting = await db
         .select()

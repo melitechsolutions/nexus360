@@ -3,10 +3,11 @@ import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
-import { employees, jobGroups, users } from "../../drizzle/schema";
-import { eq, desc, gt, inArray } from "drizzle-orm";
+import { employees, jobGroups, users, departments, customRoles } from "../../drizzle/schema";
+import { eq, desc, gt, inArray, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { generatePassword, hashPassword } from "../lib/passwordUtils";
+import { enforceOrganizationIsolation, combineOrgFilters } from "../middleware/organizationIsolationEnforcer";
 
 // Helper function to generate next employee number
 async function generateNextEmployeeNumber(db: any): Promise<string> {
@@ -40,15 +41,20 @@ async function generateNextEmployeeNumber(db: any): Promise<string> {
 export const employeesRouter = router({
   list: createFeatureRestrictedProcedure("employees:read")
     .input(z.object({ limit: z.number().optional(), offset: z.number().optional() }).optional())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) {
           console.error("[Employees] Database connection not available");
           return [];
         }
+        const orgFilter = enforceOrganizationIsolation(ctx.user, employees.organizationId, false);
         console.log("[Employees] Attempting to fetch employees with limit:", input?.limit || 50);
-        const result = await db.select().from(employees).limit(input?.limit || 50).offset(input?.offset || 0);
+        const limit = input?.limit || 50;
+        const offset = input?.offset || 0;
+        const result = orgFilter
+          ? await db.select().from(employees).where(orgFilter).limit(limit).offset(offset)
+          : await db.select().from(employees).limit(limit).offset(offset);
         console.log("[Employees] Successfully fetched", result?.length || 0, "employees");
         return result;
       } catch (error) {
@@ -61,28 +67,32 @@ export const employeesRouter = router({
 
   getById: createFeatureRestrictedProcedure("employees:read")
     .input(z.string())
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
-      const result = await db.select().from(employees).where(eq(employees.id, input)).limit(1);
+      const orgFilter = enforceOrganizationIsolation(ctx.user, employees.organizationId, false);
+      const where = orgFilter ? and(eq(employees.id, input), orgFilter) : eq(employees.id, input);
+      const result = await db.select().from(employees).where(where).limit(1);
       return result[0] || null;
     }),
 
   byDepartment: createFeatureRestrictedProcedure("employees:read")
     .input(z.object({ department: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const result = await db.select().from(employees).where(eq(employees.department, input.department));
+      const where = combineOrgFilters(ctx.user, employees.organizationId, eq(employees.department, input.department), false);
+      const result = where ? await db.select().from(employees).where(where) : await db.select().from(employees).where(eq(employees.department, input.department));
       return result;
     }),
 
   byJobGroup: createFeatureRestrictedProcedure("employees:read")
     .input(z.object({ jobGroupId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const result = await db.select().from(employees).where(eq(employees.jobGroupId, input.jobGroupId));
+      const where = combineOrgFilters(ctx.user, employees.organizationId, eq(employees.jobGroupId, input.jobGroupId), false);
+      const result = where ? await db.select().from(employees).where(where) : await db.select().from(employees).where(eq(employees.jobGroupId, input.jobGroupId));
       return result;
     }),
 
@@ -102,8 +112,12 @@ export const employeesRouter = router({
       lastName: z.string(),
       email: z.string().optional(),
       phone: z.string().optional(),
+      gender: z.enum(['male','female','other']).optional(),
+      maritalStatus: z.enum(['single','married','divorced','widowed']).optional(),
       dateOfBirth: z.date().optional(),
       hireDate: z.date(),
+      probationEndDate: z.date().optional(),
+      contractEndDate: z.date().optional(),
       department: z.string().optional(),
       position: z.string().optional(),
       jobGroupId: z.string(),
@@ -112,8 +126,15 @@ export const employeesRouter = router({
       status: z.string().optional(),
       photoUrl: z.string().optional(),
       address: z.string().optional(),
+      emergencyContactName: z.string().optional(),
+      emergencyContactRelationship: z.string().optional(),
+      emergencyContactPhone: z.string().optional(),
       emergencyContact: z.string().optional(),
+      bankName: z.string().optional(),
+      bankBranch: z.string().optional(),
       bankAccountNumber: z.string().optional(),
+      nhifNumber: z.string().optional(),
+      nssfNumber: z.string().optional(),
       taxId: z.string().optional(),
       nationalId: z.string().optional(),
     }))
@@ -164,6 +185,39 @@ export const employeesRouter = router({
             .limit(1);
           
           if (!userExists || userExists.length === 0) {
+            // Determine role from department's defaultRole setting
+            let assignedRole: string = 'staff';
+            let assignedCustomRoleId: string | null = null;
+
+            if (input.department) {
+              try {
+                // Look up department by name to find defaultRole
+                const deptResult = await db.select().from(departments)
+                  .where(eq(departments.name, input.department))
+                  .limit(1);
+                
+                if (deptResult.length > 0 && deptResult[0].defaultRole) {
+                  const defaultRole = deptResult[0].defaultRole;
+                  // Check if defaultRole is a system role enum value
+                  const systemRoles = ['user','admin','staff','accountant','client','super_admin','project_manager','hr','ict_manager','procurement_manager','sales_manager'];
+                  if (systemRoles.includes(defaultRole)) {
+                    assignedRole = defaultRole;
+                  } else {
+                    // It's a custom role ID - verify it exists and is active
+                    const customRole = await db.select().from(customRoles)
+                      .where(and(eq(customRoles.id, defaultRole), eq(customRoles.isActive, 1)))
+                      .limit(1);
+                    if (customRole.length > 0) {
+                      assignedCustomRoleId = customRole[0].id;
+                      assignedRole = (customRole[0].baseRole as string) || 'staff';
+                    }
+                  }
+                }
+              } catch (deptErr) {
+                console.warn("Failed to look up department default role:", deptErr);
+              }
+            }
+
             // Generate a strong password
             generatedPassword = generatePassword(14);
             const passwordHash = await hashPassword(generatedPassword);
@@ -172,9 +226,11 @@ export const employeesRouter = router({
               id: userId,
               name: `${input.firstName} ${input.lastName}`.trim(),
               email: input.email,
-              role: 'staff',
+              role: assignedRole,
               passwordHash: passwordHash,
               isActive: 1,
+              organizationId: ctx.user.organizationId ?? null,
+              customRoleId: assignedCustomRoleId,
               createdAt: now,
             } as any);
           } else {
@@ -195,8 +251,12 @@ export const employeesRouter = router({
         lastName: input.lastName,
         email: input.email || null,
         phone: input.phone || null,
+        gender: input.gender || null,
+        maritalStatus: input.maritalStatus || null,
         dateOfBirth: input.dateOfBirth ? input.dateOfBirth.toISOString().replace('T', ' ').substring(0, 19) : null,
         hireDate,
+        probationEndDate: input.probationEndDate ? input.probationEndDate.toISOString().replace('T', ' ').substring(0, 19) : null,
+        contractEndDate: input.contractEndDate ? input.contractEndDate.toISOString().replace('T', ' ').substring(0, 19) : null,
         department: input.department || null,
         position: input.position || null,
         jobGroupId: input.jobGroupId,
@@ -205,13 +265,21 @@ export const employeesRouter = router({
         status: input.status || 'active',
         photoUrl: input.photoUrl || null,
         address: input.address || null,
+        emergencyContactName: input.emergencyContactName || null,
+        emergencyContactRelationship: input.emergencyContactRelationship || null,
+        emergencyContactPhone: input.emergencyContactPhone || null,
         emergencyContact: input.emergencyContact || null,
+        bankName: input.bankName || null,
+        bankBranch: input.bankBranch || null,
         bankAccountNumber: input.bankAccountNumber || null,
+        nhifNumber: input.nhifNumber || null,
+        nssfNumber: input.nssfNumber || null,
         taxId: input.taxId || null,
         nationalId: input.nationalId || null,
         createdBy: ctx.user.id,
         createdAt: now,
         updatedAt: now,
+        organizationId: ctx.user.organizationId ?? null,
       } as any);
       
       return { id, employeeNumber, generatedPassword, userId };
@@ -225,8 +293,12 @@ export const employeesRouter = router({
       lastName: z.string().optional(),
       email: z.string().optional(),
       phone: z.string().optional(),
+      gender: z.string().optional(),
+      maritalStatus: z.string().optional(),
       dateOfBirth: z.date().optional(),
       hireDate: z.date().optional(),
+      probationEndDate: z.string().optional(),
+      contractEndDate: z.string().optional(),
       department: z.string().optional(),
       position: z.string().optional(),
       jobGroupId: z.string().optional(),
@@ -234,17 +306,31 @@ export const employeesRouter = router({
       employmentType: z.string().optional(),
       status: z.string().optional(),
       photoUrl: z.string().optional(),
+      nationalId: z.string().optional(),
+      taxId: z.string().optional(),
+      nhifNumber: z.string().optional(),
+      nssfNumber: z.string().optional(),
+      address: z.string().optional(),
+      emergencyContactName: z.string().optional(),
+      emergencyContactRelationship: z.string().optional(),
+      emergencyContactPhone: z.string().optional(),
+      emergencyContact: z.string().optional(),
+      bankName: z.string().optional(),
+      bankBranch: z.string().optional(),
+      bankAccountNumber: z.string().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
       const { id, ...data } = input;
+      const orgId = ctx.user.organizationId;
+      const ownerCheck = orgId ? and(eq(employees.id, id), eq(employees.organizationId, orgId)) : eq(employees.id, id);
 
       // If jobGroupId or salary is being updated, validate
       if (data.jobGroupId || data.salary !== undefined) {
         const currentEmployee = await db.select().from(employees)
-          .where(eq(employees.id, id))
+          .where(ownerCheck)
           .limit(1);
         
         if (!currentEmployee || currentEmployee.length === 0) {
@@ -295,11 +381,13 @@ export const employeesRouter = router({
 
   delete: createFeatureRestrictedProcedure("employees:delete")
     .input(z.string())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      await db.delete(employees).where(eq(employees.id, input));
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(eq(employees.id, input), eq(employees.organizationId, orgId)) : eq(employees.id, input);
+      await db.delete(employees).where(where);
       return { success: true };
     }),
 
@@ -308,10 +396,12 @@ export const employeesRouter = router({
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+      const orgId = ctx.user.organizationId;
+      const where = orgId ? and(inArray(employees.id, input.employeeIds), eq(employees.organizationId, orgId)) : inArray(employees.id, input.employeeIds);
       await db
         .update(employees)
-        .set({ status: input.status as any, updatedAt: new Date().toISOString() as any })
-        .where(inArray(employees.id, input.employeeIds));
+        .set({ status: input.status as any, updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) as any })
+        .where(where);
       return { success: true, count: input.employeeIds.length };
     }),
 
@@ -322,7 +412,7 @@ export const employeesRouter = router({
       if (!db) throw new Error("Database not available");
       await db
         .update(employees)
-        .set({ department: input.department, updatedAt: new Date().toISOString() as any })
+        .set({ department: input.department, updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 19) as any })
         .where(inArray(employees.id, input.employeeIds));
       return { success: true, count: input.employeeIds.length };
     }),

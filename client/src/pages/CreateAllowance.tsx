@@ -82,7 +82,7 @@ export default function CreateAllowance() {
       description="Add a new salary allowance for an employee"
       icon={<Percent className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Payroll", href: "/payroll" },
         { label: "Create Allowance" },
       ]}

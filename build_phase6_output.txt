@@ -1,0 +1,17 @@
+npm warn Unknown project config "network-timeout". This will stop working in the next major version of npm.
+
+> melitech_crm@1.0.0 build
+> vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 1035 modules transformed.
+Ô£ù Build failed in 5.23s
+error during build:
+Could not resolve "./pages/AdvancedAnalytics" from "client/src/App.tsx"
+file: E:/melitech_crm/client/src/App.tsx
+    at getRollupError (file:///E:/melitech_crm/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/parseAst.js:402:41)
+    at error (file:///E:/melitech_crm/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/parseAst.js:398:42)
+    at ModuleLoader.handleInvalidResolvedId (file:///E:/melitech_crm/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:21710:24)
+    at ModuleLoader.resolveDynamicImport (file:///E:/melitech_crm/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:21770:58)
+    at async file:///E:/melitech_crm/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:21654:32

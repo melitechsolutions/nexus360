@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Document Template</title>
+    <link rel="stylesheet" href="../styles/document-professional-template.css">
+</head>
+<body>
+    <div class="document-container" data-document-type="delivery-note">
+        
+        <!-- HEADER WITH BRANDING (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-header" style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+          <div class="company-info" style="flex: 1;">
+            <h1 class="company-name" data-field="companyName">[COMPANY_NAME]</h1>
+            <div class="company-contact">
+              <span class="company-tax-id" data-field="companyPin">Tax ID: [COMPANY_PIN]</span>
+              <span class="company-contact-item">[COMPANY_PHONE]</span>
+              <span class="company-contact-item">[COMPANY_EMAIL]</span>
+              <span class="company-contact-item">[COMPANY_ADDRESS]</span>
+            </div>
+          </div>
+          <div class="company-logo" style="flex-shrink: 0;">
+            <img src="[COMPANY_LOGO]" alt="Company Logo" style="max-height: 80px;">
+          </div>
+        </div>
+
+        <!-- DOCUMENT TITLE AND METADATA (UNIFIED COLUMN LAYOUT) -->
+        <div class="document-header-section" style="display: flex; align-items: center; gap: 24px;">
+          <h1 class="document-title" style="flex: 1;">DELIVERY NOTE</h1>
+          <div class="document-meta" style="display: flex; flex-direction: column; gap: 4px;">
+            <div class="meta-item"><span class="meta-label">DN #:</span> <span class="meta-value" data-field="dnNumber">[DN-00001]</span></div>
+            <div class="meta-item"><span class="meta-label">Date:</span> <span class="meta-value" data-field="issueDate">[DD/MM/YYYY]</span></div>
+            <div class="meta-item"><span class="meta-label">Reference PO:</span> <span class="meta-value" data-field="poNumber">[PO-Number]</span></div>
+            <div class="meta-item"><span class="meta-label">Tax Rate:</span> <span class="meta-value">VAT 16% (Inclusive/Exclusive)</span></div>
+          </div>
+        </div>
+
+        <!-- CONSIGNOR / SENDER DETAILS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Consignor / Sender</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Name:</strong> [Consignor Name]</div>
+                <div><strong>Company:</strong> [Company Name]</div>
+                <div><strong>Contact:</strong> [Phone Number]</div>
+                <div><strong>Address:</strong> [Pickup Address]</div>
+            </div>
+        </div>
+        
+        <!-- CONSIGNEE / RECEIVER DETAILS SECTION -->
+        <div class="client-details info-box" style="margin-bottom: 24px;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-color); margin-bottom: 6px;">Consignee / Receiver</div>
+            <div style="font-size: 14px; color: var(--secondary-color);">
+                <div><strong>Name:</strong> [Receiver Name]</div>
+                <div><strong>Company:</strong> [Company Name]</div>
+                <div><strong>Contact:</strong> [Phone Number]</div>
+                <div><strong>Address:</strong> [Delivery Address]</div>
+                <div><strong>Signature:</strong> ________________________</div>
+                <div><strong>Date Received:</strong> ________________________</div>
+            </div>
+        </div>
+
+        <!-- CONTENT SECTIONS -->
+        <div class="section">
+            <h2 class="section-title">Description</h2>
+            <div class="section-content">
+                <p>Document content goes here. This template provides a professional, print-persistent format for all app documentation and reports.</p>
+            </div>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="section">
+            <h2 class="section-title">Items List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong>Website Development</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #636e72;">Web02 - Development Package</p>
+                        </td>
+                        <td>1</td>
+                        <td>KES 7,000.00</td>
+                        <td>KES 7,000.00</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Social Media Management</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #636e72;">SMM(Custom) - 22 posts on Facebook, Instagram, X and LinkedIn</p>
+                        </td>
+                        <td>1</td>
+                        <td>KES 4,000.00</td>
+                        <td>KES 4,000.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- HIGHLIGHT BOX -->
+        <div class="section">
+            <div class="highlight-box">
+                <div class="highlight-label">Total Amount Due</div>
+                <div class="highlight-value">KES 14,250.00</div>
+            </div>
+        </div>
+
+        <!-- DELIVERY NOTE TERMS & CONDITIONS SECTION -->
+        <div class="section">
+            <h2 class="section-title">Delivery Note Terms & Conditions</h2>
+            <div class="section-content" style="font-size: 13px; line-height: 1.6; color: var(--secondary-color);">
+                <ol style="margin-left: 20px;">
+                    <li><strong>Item Verification:</strong> Receiver must verify items, quantities, and condition at time of delivery.</li>
+                    <li><strong>Damage Reporting:</strong> Any damages must be documented and reported within 24 hours of delivery.</li>
+                    <li><strong>Signing Responsibility:</strong> Receiver's signature confirms receipt of items in good condition as per delivery note.</li>
+                    <li><strong>Discrepancies:</strong> Quantity or item discrepancies must be reported immediately upon receipt.</li>
+                    <li><strong>Liability:</strong> Company not liable for damages not reported within 24 hours of delivery.</li>
+                    <li><strong>Return of Goods:</strong> Goods may not be returned without prior written authorization.</li>
+                    <li><strong>Insurance:</strong> Transit insurance valid only to point of delivery as per related document.</li>
+                </ol>
+            </div>
+        </div>
+
+                <!-- FOOTER (UNIFIED COLUMN LAYOUT) -->
+                <div class="document-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+                    <div class="footer-info" style="flex: 1;">
+                        <span class="document-id" data-field="dnNumber">DN: [DN-00001]</span>
+                        <span class="document-date" data-field="issueDate">Issued: [DD/MM/YYYY]</span>
+                        <span class="page-number">Page <span class="current-page">1</span> of <span class="total-pages">1</span></span>
+                    </div>
+                    <div class="footer-company" data-field="companyName">[COMPANY_NAME]</div>
+                </div>
+
+                <!-- Print Button (unified area, hidden in print) -->
+                <div class="no-print print-area" style="text-align: right; margin-top: 24px; padding: 16px;">
+                    <button onclick="window.print()" class="print-btn">
+                        Print Document
+                    </button>
+                </div>
+
+        </div>
+
+</body>
+</html>

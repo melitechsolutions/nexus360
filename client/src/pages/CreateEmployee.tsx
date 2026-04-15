@@ -1,10 +1,12 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useLocation } from "wouter";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -14,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Users, ArrowLeft, Plus, Upload, X, Copy, Check } from "lucide-react";
+import { Users, UserPlus, Plus, Upload, X, Copy, Check, Save, Shield, CreditCard, MapPin, ArrowLeft } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function CreateEmployee() {
@@ -39,14 +41,34 @@ export default function CreateEmployee() {
     lastName: "",
     email: "",
     phone: "",
+    gender: "",
+    maritalStatus: "",
     dateOfBirth: "",
     hireDate: new Date().toISOString().split("T")[0],
+    probationEndDate: "",
+    contractEndDate: "",
     department: "",
     position: "",
     jobGroupId: "",
     salary: "",
     employmentType: "full_time",
+    status: "active",
     photoUrl: "",
+    // Identity & Government IDs
+    nationalId: "",
+    taxId: "",
+    nhifNumber: "",
+    nssfNumber: "",
+    // Address & Emergency Contact
+    address: "",
+    emergencyContactName: "",
+    emergencyContactRelationship: "",
+    emergencyContactPhone: "",
+    emergencyContact: "",
+    // Banking
+    bankName: "",
+    bankBranch: "",
+    bankAccountNumber: "",
   });
 
   const createEmployeeMutation = trpc.employees.create.useMutation({
@@ -107,14 +129,31 @@ export default function CreateEmployee() {
           lastName: formData.lastName,
           email: formData.email || undefined,
           phone: formData.phone || undefined,
+          gender: formData.gender || undefined,
+          maritalStatus: formData.maritalStatus || undefined,
           dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined,
           hireDate: new Date(formData.hireDate),
+          probationEndDate: formData.probationEndDate ? new Date(formData.probationEndDate) : undefined,
+          contractEndDate: formData.contractEndDate ? new Date(formData.contractEndDate) : undefined,
           department: formData.department || undefined,
           position: formData.position || undefined,
           jobGroupId: formData.jobGroupId,
-          salary: formData.salary ? Math.round(parseFloat(formData.salary) * 100) : undefined,
+          salary: formData.salary ? Math.round(parseFloat(formData.salary)) : undefined,
           employmentType: formData.employmentType || undefined,
+          status: (formData.status as any) || undefined,
           photoUrl: photoDataUrl,
+          nationalId: formData.nationalId || undefined,
+          taxId: formData.taxId || undefined,
+          nhifNumber: formData.nhifNumber || undefined,
+          nssfNumber: formData.nssfNumber || undefined,
+          address: formData.address || undefined,
+          emergencyContactName: formData.emergencyContactName || undefined,
+          emergencyContactRelationship: formData.emergencyContactRelationship || undefined,
+          emergencyContactPhone: formData.emergencyContactPhone || undefined,
+          emergencyContact: formData.emergencyContact || undefined,
+          bankName: formData.bankName || undefined,
+          bankBranch: formData.bankBranch || undefined,
+          bankAccountNumber: formData.bankAccountNumber || undefined,
         } as any);
       };
       reader.readAsDataURL(photoFile);
@@ -125,13 +164,30 @@ export default function CreateEmployee() {
         lastName: formData.lastName,
         email: formData.email || undefined,
         phone: formData.phone || undefined,
+        gender: formData.gender || undefined,
+        maritalStatus: formData.maritalStatus || undefined,
         dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined,
         hireDate: new Date(formData.hireDate),
+        probationEndDate: formData.probationEndDate ? new Date(formData.probationEndDate) : undefined,
+        contractEndDate: formData.contractEndDate ? new Date(formData.contractEndDate) : undefined,
         department: formData.department || undefined,
         position: formData.position || undefined,
         jobGroupId: formData.jobGroupId,
-        salary: formData.salary ? Math.round(parseFloat(formData.salary) * 100) : undefined,
+        salary: formData.salary ? Math.round(parseFloat(formData.salary)) : undefined,
         employmentType: formData.employmentType || undefined,
+        status: (formData.status as any) || undefined,
+        nationalId: formData.nationalId || undefined,
+        taxId: formData.taxId || undefined,
+        nhifNumber: formData.nhifNumber || undefined,
+        nssfNumber: formData.nssfNumber || undefined,
+        address: formData.address || undefined,
+        emergencyContactName: formData.emergencyContactName || undefined,
+        emergencyContactRelationship: formData.emergencyContactRelationship || undefined,
+        emergencyContactPhone: formData.emergencyContactPhone || undefined,
+        emergencyContact: formData.emergencyContact || undefined,
+        bankName: formData.bankName || undefined,
+        bankBranch: formData.bankBranch || undefined,
+        bankAccountNumber: formData.bankAccountNumber || undefined,
       } as any);
     }
   };
@@ -139,243 +195,409 @@ export default function CreateEmployee() {
   return (
     <ModuleLayout
       title="Add Employee"
-      description="Create a new employee record"
-      icon={<Users className="w-6 h-6" />}
+      description="Create a new employee record in your organisation"
+      icon={<UserPlus className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "HR", href: "/hr" },
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "HR", href: "/employees" },
         { label: "Employees", href: "/employees" },
-        { label: "Add Employee" },
+        { label: "Add" },
       ]}
+      backLink={{ label: "Employees", href: "/employees" }}
     >
-      <div className="max-w-3xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Add Employee</CardTitle>
-            <CardDescription>
-              Enter the employee details below to add a new employee to your organization
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-6 max-w-5xl">
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Section 1: Employment */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Users className="h-4 w-4" />Employment Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="employeeNumber">Employee Number *</Label>
+                  <Label>Employee Number <span className="text-destructive">*</span></Label>
                   <Input
-                    id="employeeNumber"
                     placeholder="e.g., EMP-001"
                     value={formData.employeeNumber}
-                    onChange={(e) =>
-                      setFormData({ ...formData, employeeNumber: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, employeeNumber: e.target.value })}
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="hireDate">Hire Date *</Label>
+                  <Label>Hire Date <span className="text-destructive">*</span></Label>
                   <Input
-                    id="hireDate"
                     type="date"
                     value={formData.hireDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, hireDate: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, hireDate: e.target.value })}
                   />
                 </div>
               </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name *</Label>
+                  <Label>First Name <span className="text-destructive">*</span></Label>
                   <Input
-                    id="firstName"
-                    placeholder="John"
+                    placeholder="e.g., John"
                     value={formData.firstName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, firstName: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Label>Last Name <span className="text-destructive">*</span></Label>
                   <Input
-                    id="lastName"
-                    placeholder="Doe"
+                    placeholder="e.g., Kamau"
                     value={formData.lastName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, lastName: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   />
                 </div>
               </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label>Email Address</Label>
                   <Input
-                    id="email"
                     type="email"
-                    placeholder="john@example.com"
+                    placeholder="john@company.co.ke"
                     value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label>Phone Number</Label>
                   <Input
-                    id="phone"
                     placeholder="+254 712 345 678"
                     value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
                 </div>
               </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Date of Birth</Label>
+                <Input
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) =>
-                      setFormData({ ...formData, dateOfBirth: e.target.value })
-                    }
-                  />
+                  <Label>Gender</Label>
+                  <Select value={formData.gender} onValueChange={(v) => setFormData({ ...formData, gender: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
+                  <Label>Marital Status</Label>
+                  <Select value={formData.maritalStatus} onValueChange={(v) => setFormData({ ...formData, maritalStatus: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Single</SelectItem>
+                      <SelectItem value="married">Married</SelectItem>
+                      <SelectItem value="divorced">Divorced</SelectItem>
+                      <SelectItem value="widowed">Widowed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 2: Role & Compensation */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Save className="h-4 w-4" />Role & Compensation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Department</Label>
                   <div className="flex gap-2">
-                    <Select value={formData.department} onValueChange={(value) => setFormData({ ...formData, department: value })}>
-                      <SelectTrigger id="department" className="flex-1">
-                        <SelectValue placeholder="Select a department" />
-                      </SelectTrigger>
+                    <Select value={formData.department} onValueChange={(v) => setFormData({ ...formData, department: v })}>
+                      <SelectTrigger className="flex-1"><SelectValue placeholder="Select department" /></SelectTrigger>
                       <SelectContent>
                         {departmentsLoading ? (
-                          <SelectItem value="" disabled>
-                            Loading departments...
-                          </SelectItem>
+                          <SelectItem value="loading" disabled>Loading...</SelectItem>
                         ) : departmentsData.length === 0 ? (
-                          <SelectItem value="" disabled>
-                            No departments available
-                          </SelectItem>
+                          <SelectItem value="none" disabled>No departments</SelectItem>
                         ) : (
                           departmentsData.map((dept: any) => (
-                            <SelectItem key={dept.id} value={dept.name}>
-                              {dept.name}
-                            </SelectItem>
+                            <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
                           ))
                         )}
                       </SelectContent>
                     </Select>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => navigate("/departments/create")}
-                      title="Create new department"
-                    >
+                    <Button type="button" variant="outline" size="icon" onClick={() => navigate("/departments/create")} title="Create department">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="position">Position</Label>
+                  <Label>Position / Job Title</Label>
                   <Input
-                    id="position"
-                    placeholder="e.g., Senior Developer"
+                    placeholder="e.g., Senior Software Developer"
                     value={formData.position}
-                    onChange={(e) =>
-                      setFormData({ ...formData, position: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                   />
                 </div>
-
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="jobGroupId">Job Group *</Label>
-                  <Select value={formData.jobGroupId} onValueChange={(value) => setFormData({ ...formData, jobGroupId: value })}>
-                    <SelectTrigger id="jobGroupId">
-                      <SelectValue placeholder="Select a job group" />
-                    </SelectTrigger>
+                  <Label>Job Group <span className="text-destructive">*</span></Label>
+                  <Select value={formData.jobGroupId} onValueChange={(v) => setFormData({ ...formData, jobGroupId: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select job group" /></SelectTrigger>
                     <SelectContent>
                       {jobGroupsLoading ? (
-                        <SelectItem value="" disabled>
-                          Loading job groups...
-                        </SelectItem>
+                        <SelectItem value="loading" disabled>Loading...</SelectItem>
                       ) : jobGroupsData.length === 0 ? (
-                        <SelectItem value="" disabled>
-                          No job groups available
-                        </SelectItem>
+                        <SelectItem value="none" disabled>No job groups</SelectItem>
                       ) : (
                         jobGroupsData.map((jg: any) => (
-                          <SelectItem key={jg.id} value={jg.id}>
-                            {jg.name} ({jg.minimumGrossSalary} - {jg.maximumGrossSalary})
-                          </SelectItem>
+                          <SelectItem key={jg.id} value={jg.id}>{jg.name} ({jg.minimumGrossSalary} – {jg.maximumGrossSalary})</SelectItem>
                         ))
                       )}
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="salary">Salary (Ksh)</Label>
+                  <Label>Gross Salary (KES)</Label>
                   <Input
-                    id="salary"
                     type="number"
                     placeholder="0.00"
                     value={formData.salary}
-                    onChange={(e) =>
-                      setFormData({ ...formData, salary: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
                     step="0.01"
                     min="0"
                   />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="employmentType">Employment Type</Label>
-                <Select value={formData.employmentType} onValueChange={(value) => setFormData({ ...formData, employmentType: value })}>
-                  <SelectTrigger id="employmentType">
-                    <SelectValue placeholder="Select employment type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full_time">Full-time</SelectItem>
-                    <SelectItem value="part_time">Part-time</SelectItem>
-                    <SelectItem value="contract">Contract</SelectItem>
-                    <SelectItem value="contractual">Contractual</SelectItem>
-                    <SelectItem value="hourly">Hourly</SelectItem>
-                    <SelectItem value="wage">Wage</SelectItem>
-                    <SelectItem value="temporary">Temporary</SelectItem>
-                    <SelectItem value="seasonal">Seasonal</SelectItem>
-                    <SelectItem value="intern">Intern</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Employment Type</Label>
+                  <Select value={formData.employmentType} onValueChange={(v) => setFormData({ ...formData, employmentType: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full_time">Full-time (Permanent)</SelectItem>
+                      <SelectItem value="part_time">Part-time</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="contractual">Contractual</SelectItem>
+                      <SelectItem value="hourly">Hourly</SelectItem>
+                      <SelectItem value="wage">Wage</SelectItem>
+                      <SelectItem value="temporary">Temporary</SelectItem>
+                      <SelectItem value="seasonal">Seasonal</SelectItem>
+                      <SelectItem value="intern">Intern / Attachment</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Employment Status</Label>
+                  <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">🟢 Active</SelectItem>
+                      <SelectItem value="on_leave">🟡 On Leave</SelectItem>
+                      <SelectItem value="suspended">🟠 Suspended</SelectItem>
+                      <SelectItem value="terminated">🔴 Terminated</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Probation End Date</Label>
+                  <Input
+                    type="date"
+                    value={formData.probationEndDate}
+                    onChange={(e) => setFormData({ ...formData, probationEndDate: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Contract End Date</Label>
+                  <Input
+                    type="date"
+                    value={formData.contractEndDate}
+                    onChange={(e) => setFormData({ ...formData, contractEndDate: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">For contract/temporary employees</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-              {/* Photo Upload Section */}
-              <div className="space-y-3">
-                <Label>Employee Photo</Label>
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={photoPreview || undefined} />
-                    <AvatarFallback>
-                      {formData.firstName.charAt(0)}{formData.lastName.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="space-y-2 flex-1">
+          {/* Section 3: Government IDs */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Shield className="h-4 w-4" />Identity & Government IDs
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>National ID / Passport Number</Label>
+                  <Input
+                    placeholder="e.g., 12345678"
+                    value={formData.nationalId}
+                    onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>KRA PIN (Tax ID)</Label>
+                  <Input
+                    placeholder="e.g., A001234567T"
+                    value={formData.taxId}
+                    onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>NHIF Number</Label>
+                  <Input
+                    placeholder="e.g., 1234567890"
+                    value={formData.nhifNumber}
+                    onChange={(e) => setFormData({ ...formData, nhifNumber: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>NSSF Number</Label>
+                  <Input
+                    placeholder="e.g., 12345678"
+                    value={formData.nssfNumber}
+                    onChange={(e) => setFormData({ ...formData, nssfNumber: e.target.value })}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">Required for payroll, PAYE, NSSF and NHIF computations.</p>
+            </CardContent>
+          </Card>
+
+          {/* Section 4: Address & Emergency Contact */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <MapPin className="h-4 w-4" />Address & Emergency Contact
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Home / Residential Address</Label>
+                <Textarea
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="Street, Estate, Town, County"
+                  rows={2}
+                />
+              </div>
+              <Separator />
+              <p className="text-sm font-medium">Emergency / Next of Kin</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Contact Name</Label>
+                  <Input
+                    placeholder="e.g., Jane Kamau"
+                    value={formData.emergencyContactName}
+                    onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Relationship</Label>
+                  <Select value={formData.emergencyContactRelationship} onValueChange={(v) => setFormData({ ...formData, emergencyContactRelationship: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="spouse">Spouse</SelectItem>
+                      <SelectItem value="parent">Parent</SelectItem>
+                      <SelectItem value="sibling">Sibling</SelectItem>
+                      <SelectItem value="child">Child</SelectItem>
+                      <SelectItem value="friend">Friend</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Phone Number</Label>
+                  <Input
+                    placeholder="+254 722 000 000"
+                    value={formData.emergencyContactPhone}
+                    onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 5: Banking */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CreditCard className="h-4 w-4" />Banking Details (for Salary Disbursement)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Bank Name</Label>
+                  <Select value={formData.bankName} onValueChange={(v) => setFormData({ ...formData, bankName: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select bank" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="KCB Bank">KCB Bank</SelectItem>
+                      <SelectItem value="Equity Bank">Equity Bank</SelectItem>
+                      <SelectItem value="Co-operative Bank">Co-operative Bank</SelectItem>
+                      <SelectItem value="ABSA Bank">ABSA Bank</SelectItem>
+                      <SelectItem value="Standard Chartered">Standard Chartered</SelectItem>
+                      <SelectItem value="NCBA Bank">NCBA Bank</SelectItem>
+                      <SelectItem value="I&M Bank">I&M Bank</SelectItem>
+                      <SelectItem value="Diamond Trust Bank">Diamond Trust Bank</SelectItem>
+                      <SelectItem value="Stanbic Bank">Stanbic Bank</SelectItem>
+                      <SelectItem value="Family Bank">Family Bank</SelectItem>
+                      <SelectItem value="M-Pesa">M-Pesa (Safaricom)</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Bank Branch</Label>
+                  <Input
+                    placeholder="e.g., Westlands Branch"
+                    value={formData.bankBranch}
+                    onChange={(e) => setFormData({ ...formData, bankBranch: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Bank Account Number / M-Pesa Number</Label>
+                <Input
+                  placeholder="e.g., 0123456789 or +254 712 345 678"
+                  value={formData.bankAccountNumber}
+                  onChange={(e) => setFormData({ ...formData, bankAccountNumber: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">Enter bank account number or M-Pesa number for payroll disbursement</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Section 6: Photo */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Upload className="h-4 w-4" />Employee Photo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={photoPreview || undefined} />
+                  <AvatarFallback>
+                    {formData.firstName.charAt(0)}{formData.lastName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-2 flex-1">
                     <div className="relative">
                       <Input
                         id="photo"
@@ -457,33 +679,24 @@ export default function CreateEmployee() {
                       </Button>
                     )}
                     <p className="text-xs text-muted-foreground">
-                      JPG, PNG or GIF - Max 5MB
+                      JPG, PNG or GIF – Max 5MB
                     </p>
                   </div>
                 </div>
-              </div>
+            </CardContent>
+          </Card>
 
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/employees")}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createEmployeeMutation.isPending}
-                >
-                  {createEmployeeMutation.isPending
-                    ? "Creating..."
-                    : "Add Employee"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+          {/* Actions */}
+          <div className="flex gap-3 justify-between pb-8">
+            <Button type="button" variant="outline" onClick={() => navigate("/employees")}>
+              <ArrowLeft className="h-4 w-4 mr-2" />Cancel
+            </Button>
+            <Button type="submit" disabled={createEmployeeMutation.isPending} size="lg">
+              <Save className="h-4 w-4 mr-2" />
+              {createEmployeeMutation.isPending ? "Saving..." : "Add Employee"}
+            </Button>
+          </div>
+        </form>
       </div>
 
       {/* Password Display Modal */}
@@ -492,9 +705,9 @@ export default function CreateEmployee() {
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle>User Account Created</CardTitle>
-              <CardDescription>
+              <p className="text-sm text-muted-foreground mt-1">
                 A user account has been created for {formData.firstName} {formData.lastName}
-              </CardDescription>
+              </p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>

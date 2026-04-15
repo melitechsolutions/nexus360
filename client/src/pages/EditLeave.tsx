@@ -114,7 +114,7 @@ export default function EditLeave() {
         description="Update leave request"
         icon={<Calendar className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "HR", href: "/hr" },
           { label: "Leave Management", href: "/leave-management" },
           { label: "Edit Leave Request" },
@@ -133,7 +133,7 @@ export default function EditLeave() {
       description="Update leave request"
       icon={<Calendar className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Leave Management", href: "/leave-management" },
         { label: "Edit Leave Request" },

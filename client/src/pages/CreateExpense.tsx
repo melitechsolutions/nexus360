@@ -6,6 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Select,
   SelectContent,
@@ -15,14 +21,31 @@ import {
 } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Receipt, ArrowLeft, Save, Download, Loader2, AlertCircle } from "lucide-react";
+import { Receipt, ArrowLeft, Save, Download, Loader2, AlertCircle, Plus, Trash2, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { APP_TITLE } from "@/const";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
+import { Switch } from "@/components/ui/switch";
+
+interface ExpenseLineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  rate: number;
+  taxRate: number;
+  amount: number;
+  taxAmount: number;
+}
+
+function createEmptyItem(): ExpenseLineItem {
+  return { id: crypto.randomUUID(), description: "", quantity: 1, rate: 0, taxRate: 0, amount: 0, taxAmount: 0 };
+}
 
 export default function CreateExpense() {
   // CALL ALL HOOKS UNCONDITIONALLY AT TOP LEVEL
   const { allowed, isLoading } = useRequireFeature("accounting:expenses:create");
+  const companyInfo = useCompanyInfo();
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -41,7 +64,19 @@ export default function CreateExpense() {
 
   const [isLoadingNumber, setIsLoadingNumber] = useState(true);
   const [selectedBudgetAllocation, setSelectedBudgetAllocation] = useState<any>(null);
+  const [lineItemsData, setLineItemsData] = useState<ExpenseLineItem[]>([createEmptyItem()]);
+  const [useLineItems, setUseLineItems] = useState(false);
+  const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   const getNextNumberMutation = trpc.settings.getNextDocumentNumber.useMutation();
+
+  // Recurring expense state
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringFrequency, setRecurringFrequency] = useState<string>("monthly");
+  const [recurringStartDate, setRecurringStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [recurringEndDate, setRecurringEndDate] = useState("");
+  const [recurringNoEnd, setRecurringNoEnd] = useState(true);
+  const [recurringDayOfMonth, setRecurringDayOfMonth] = useState(1);
+  const [recurringReminderDays, setRecurringReminderDays] = useState(3);
 
   // Generate expense number on component mount
   useEffect(() => {
@@ -75,71 +110,43 @@ export default function CreateExpense() {
 
   // Handle budget allocation selection
   const handleBudgetAllocationChange = (budgetId: string) => {
-    setFormData({ ...formData, budgetAllocationId: budgetId });
-    const selected = budgetAllocations.find((b: any) => b.id === budgetId);
+    const actualId = budgetId === "__none__" ? "" : budgetId;
+    setFormData({ ...formData, budgetAllocationId: actualId });
+    const selected = budgetAllocations.find((b: any) => b.id === actualId);
     setSelectedBudgetAllocation(selected);
   };
+
+  const createRecurringExpenseMutation = trpc.expenses.createRecurringExpense.useMutation({
+    onSuccess: () => toast.success("Recurring expense schedule created!"),
+    onError: (e: any) => toast.error(`Failed to create recurring schedule: ${e.message}`),
+  });
 
   const createExpenseMutation = trpc.expenses.create.useMutation({
     onSuccess: () => {
       toast.success("Expense created successfully!");
       utils.expenses.list.invalidate();
+      // Also create recurring schedule if toggled
+      if (isRecurring) {
+        createRecurringExpenseMutation.mutate({
+          category: formData.category,
+          vendor: formData.vendor || undefined,
+          amount: Math.round(parseFloat(formData.amount || "0") * 100),
+          description: formData.description || undefined,
+          paymentMethod: (formData.paymentMethod as any) || undefined,
+          frequency: recurringFrequency as any,
+          startDate: recurringStartDate,
+          endDate: recurringNoEnd ? undefined : recurringEndDate || undefined,
+          dayOfMonth: recurringDayOfMonth,
+          reminderDaysBefore: recurringReminderDays,
+          chartOfAccountId: formData.chartOfAccountId ? parseInt(formData.chartOfAccountId) : undefined,
+        });
+      }
       navigate("/expenses");
     },
     onError: (error: any) => {
       toast.error(`Failed to create expense: ${error.message}`);
     },
   });
-
-  // NOW SAFE TO CHECK CONDITIONAL RETURNS (ALL HOOKS ALREADY CALLED)
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Spinner className="size-8" />
-      </div>
-    );
-  }
-
-  if (!allowed) {
-    return null;
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.category || !formData.amount || !formData.chartOfAccountId) {
-      toast.error("Please fill in all required fields (Category, Amount, and Chart of Account)");
-      return;
-    }
-
-    const accountId = parseInt(formData.chartOfAccountId);
-    if (isNaN(accountId)) {
-      toast.error("Invalid Chart of Account selection");
-      return;
-    }
-
-    createExpenseMutation.mutate({
-      expenseNumber: formData.expenseNumber,
-      category: formData.category,
-      vendor: formData.vendor || undefined,
-      amount: Math.round(parseFloat(formData.amount) * 100),
-      expenseDate: new Date(formData.expenseDate).toISOString().split("T")[0],
-      paymentMethod: formData.paymentMethod as any,
-      description: formData.description || undefined,
-      status: formData.status as any,
-      chartOfAccountId: accountId,
-      budgetAllocationId: formData.budgetAllocationId || undefined,
-    });
-  };
-
-  const handleSaveDraft = () => {
-    const draftData = {
-      ...formData,
-      savedAt: new Date().toISOString(),
-    };
-    localStorage.setItem('expense_draft', JSON.stringify(draftData));
-    toast.success("Expense draft saved locally");
-  };
 
   const handleDownloadPDF = useCallback(async () => {
     setIsGeneratingPDF(true);
@@ -184,10 +191,9 @@ export default function CreateExpense() {
             </div>
             <div class="company-info">
               <strong>${APP_TITLE}</strong><br>
-              P.O. Box 12345-00100<br>
-              Nairobi, Kenya<br>
-              info@melitechsolutions.co.ke<br>
-              +254 700 000 000
+              ${companyInfo.address ? companyInfo.address + '<br>' : ''}
+              ${companyInfo.email ? companyInfo.email + '<br>' : ''}
+              ${companyInfo.phone || ''}
             </div>
           </div>
           
@@ -245,148 +251,213 @@ export default function CreateExpense() {
     }
   }, [formData]);
 
+  // NOW SAFE TO CHECK CONDITIONAL RETURNS (ALL HOOKS ALREADY CALLED)
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spinner className="size-8" />
+      </div>
+    );
+  }
+
+  if (!allowed) {
+    return null;
+  }
+
+  const updateLineItem = (id: string, field: keyof ExpenseLineItem, value: any) => {
+    setLineItemsData(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      const updated = { ...item, [field]: value };
+      updated.amount = updated.quantity * updated.rate;
+      updated.taxAmount = Math.round(updated.amount * (updated.taxRate / 100));
+      return updated;
+    }));
+  };
+
+  const addLineItem = () => setLineItemsData(prev => [...prev, createEmptyItem()]);
+  const removeLineItem = (id: string) => setLineItemsData(prev => prev.length > 1 ? prev.filter(i => i.id !== id) : prev);
+
+  const lineItemsTotal = lineItemsData.reduce((sum, item) => sum + item.amount + item.taxAmount, 0);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.category || !formData.chartOfAccountId) {
+      toast.error("Please fill in all required fields (Category and Chart of Account)");
+      return;
+    }
+
+    // Use line items total if line items enabled, otherwise use manual amount
+    const finalAmount = useLineItems ? lineItemsTotal : parseFloat(formData.amount);
+    if (!finalAmount || finalAmount <= 0) {
+      toast.error("Amount must be greater than 0");
+      return;
+    }
+
+    if (useLineItems) {
+      const emptyItems = lineItemsData.filter(i => !i.description.trim() || i.rate <= 0);
+      if (emptyItems.length > 0) {
+        toast.error("All line items must have a description and rate");
+        return;
+      }
+    }
+
+    const accountId = parseInt(formData.chartOfAccountId);
+    if (isNaN(accountId)) {
+      toast.error("Invalid Chart of Account selection");
+      return;
+    }
+
+    const amountInCents = useLineItems
+      ? Math.round(lineItemsTotal * 100)
+      : Math.round(parseFloat(formData.amount) * 100);
+
+    createExpenseMutation.mutate({
+      expenseNumber: formData.expenseNumber,
+      category: formData.category,
+      vendor: formData.vendor || undefined,
+      amount: amountInCents,
+      expenseDate: new Date(formData.expenseDate).toISOString().split("T")[0],
+      paymentMethod: formData.paymentMethod as any,
+      description: formData.description || undefined,
+      status: formData.status as any,
+      chartOfAccountId: accountId,
+      budgetAllocationId: formData.budgetAllocationId || undefined,
+      items: useLineItems ? lineItemsData.map(item => ({
+        description: item.description,
+        quantity: item.quantity,
+        rate: Math.round(item.rate * 100),
+        amount: Math.round(item.amount * 100),
+        taxRate: item.taxRate,
+        taxAmount: Math.round(item.taxAmount * 100),
+      })) : undefined,
+    });
+  };
+
+  const handleSaveDraft = () => {
+    const draftData = {
+      ...formData,
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem('expense_draft', JSON.stringify(draftData));
+    toast.success("Expense draft saved locally");
+  };
+
   return (
     <ModuleLayout
       title="Record Expense"
       description="Add a new expense to your records"
       icon={<Receipt className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Accounting", href: "/accounting" },
         { label: "Expenses", href: "/expenses" },
         { label: "Record Expense" },
       ]}
     >
-      <div className="max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Record Expense</CardTitle>
-            <CardDescription>
-              Enter the expense details below to record a new expense
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      <div className={useLineItems ? "max-w-5xl" : "max-w-2xl"}>
+        <Card className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="expenseNumber">Expense Number</Label>
+              <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+                <Label className="text-right text-sm">Number</Label>
                 <Input
-                  id="expenseNumber"
                   value={formData.expenseNumber}
                   readOnly
-                  className="bg-gray-100 cursor-not-allowed font-mono"
+                  className="bg-muted cursor-not-allowed font-mono max-w-xs"
                   placeholder={isLoadingNumber ? "Generating..." : ""}
                 />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <Input
-                    id="category"
-                    placeholder="e.g., Office Supplies"
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="vendor">Vendor</Label>
-                  <Input
-                    id="vendor"
-                    placeholder="e.g., ABC Supplies Ltd"
-                    value={formData.vendor}
-                    onChange={(e) =>
-                      setFormData({ ...formData, vendor: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount (Ksh) *</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="0.00"
-                    value={formData.amount}
-                    onChange={(e) =>
-                      setFormData({ ...formData, amount: e.target.value })
-                    }
-                    step="0.01"
-                    min="0"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="expenseDate">Expense Date *</Label>
-                  <Input
-                    id="expenseDate"
-                    type="date"
-                    value={formData.expenseDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, expenseDate: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="paymentMethod">Payment Method *</Label>
-                  <Select
-                    value={formData.paymentMethod}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, paymentMethod: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                      <SelectItem value="cheque">Cheque</SelectItem>
-                      <SelectItem value="card">Card</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status *</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, status: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="chartOfAccountId">Chart of Account *</Label>
+              <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+                <Label className="text-right text-sm">Category *</Label>
                 <Select
-                  value={formData.chartOfAccountId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, chartOfAccountId: value })
-                  }
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account" />
+                  <SelectTrigger className="max-w-xs">
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Office Supplies">Office Supplies</SelectItem>
+                    <SelectItem value="Travel">Travel</SelectItem>
+                    <SelectItem value="Utilities">Utilities</SelectItem>
+                    <SelectItem value="Rent">Rent</SelectItem>
+                    <SelectItem value="Software">Software</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Equipment">Equipment</SelectItem>
+                    <SelectItem value="Meals & Entertainment">Meals & Entertainment</SelectItem>
+                    <SelectItem value="Professional Services">Professional Services</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+                <Label className="text-right text-sm">Vendor</Label>
+                <Input
+                  placeholder="e.g., ABC Supplies Ltd"
+                  value={formData.vendor}
+                  onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
+                  className="max-w-xs"
+                />
+              </div>
+
+              {!useLineItems && (
+              <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+                <Label className="text-right text-sm">Amount (Ksh) *</Label>
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  step="0.01"
+                  min="0"
+                  className="max-w-xs"
+                />
+              </div>
+              )}
+
+              <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+                <Label className="text-right text-sm">Date *</Label>
+                <Input
+                  type="date"
+                  value={formData.expenseDate}
+                  onChange={(e) => setFormData({ ...formData, expenseDate: e.target.value })}
+                  className="max-w-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+                <Label className="text-right text-sm">Method *</Label>
+                <Select value={formData.paymentMethod} onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}>
+                  <SelectTrigger className="max-w-xs"><SelectValue placeholder="Select method" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="cheque">Cheque</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+                <Label className="text-right text-sm">Status *</Label>
+                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger className="max-w-xs"><SelectValue placeholder="Select status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-[140px_1fr] items-center gap-3">
+                <Label className="text-right text-sm">Account *</Label>
+                <Select value={formData.chartOfAccountId} onValueChange={(value) => setFormData({ ...formData, chartOfAccountId: value })}>
+                  <SelectTrigger className="max-w-xs"><SelectValue placeholder="Select account" /></SelectTrigger>
                   <SelectContent>
                     {chartOfAccounts.map((account: any) => (
                       <SelectItem key={account.id} value={account.id.toString()}>
@@ -407,7 +478,7 @@ export default function CreateExpense() {
                     <SelectValue placeholder="Select budget allocation" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="__none__">None</SelectItem>
                     {budgetAllocations.map((allocation: any) => (
                       <SelectItem key={allocation.id} value={allocation.id}>
                         {allocation.categoryName} - Ksh {(allocation.remaining / 100).toLocaleString('en-KE')} remaining
@@ -449,18 +520,194 @@ export default function CreateExpense() {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Enter expense description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows={4}
+              <Separator className="my-4" />
+
+              {/* Line Items Toggle */}
+              <div className="flex items-center gap-3 pt-2 border-t">
+                <input
+                  type="checkbox"
+                  id="useLineItems"
+                  checked={useLineItems}
+                  onChange={(e) => setUseLineItems(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
                 />
+                <Label htmlFor="useLineItems" className="text-sm font-medium cursor-pointer">
+                  Use line items (multiple items in this expense)
+                </Label>
               </div>
+
+              {/* Line Items Section */}
+              {useLineItems && (
+                <Card className="border-dashed">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">Line Items</CardTitle>
+                      <Button type="button" variant="outline" size="sm" onClick={addLineItem}>
+                        <Plus className="h-4 w-4 mr-1" /> Add Item
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {/* Header */}
+                    <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
+                      <div className="col-span-4">Description</div>
+                      <div className="col-span-1">Qty</div>
+                      <div className="col-span-2">Rate (Ksh)</div>
+                      <div className="col-span-1">Tax %</div>
+                      <div className="col-span-2">Amount</div>
+                      <div className="col-span-1">Tax</div>
+                      <div className="col-span-1"></div>
+                    </div>
+
+                    {lineItemsData.map((item, idx) => (
+                      <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
+                        <Input
+                          className="col-span-4 text-sm"
+                          placeholder="Item description"
+                          value={item.description}
+                          onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
+                        />
+                        <Input
+                          className="col-span-1 text-sm"
+                          type="number" min="1"
+                          value={item.quantity}
+                          onChange={(e) => updateLineItem(item.id, "quantity", parseInt(e.target.value) || 1)}
+                        />
+                        <Input
+                          className="col-span-2 text-sm"
+                          type="number" step="0.01" min="0"
+                          value={item.rate || ""}
+                          onChange={(e) => updateLineItem(item.id, "rate", parseFloat(e.target.value) || 0)}
+                        />
+                        <Input
+                          className="col-span-1 text-sm"
+                          type="number" min="0" max="100"
+                          value={item.taxRate || ""}
+                          onChange={(e) => updateLineItem(item.id, "taxRate", parseFloat(e.target.value) || 0)}
+                        />
+                        <div className="col-span-2 text-sm font-mono px-2">
+                          {item.amount.toLocaleString("en-KE", { minimumFractionDigits: 2 })}
+                        </div>
+                        <div className="col-span-1 text-sm font-mono text-muted-foreground px-1">
+                          {item.taxAmount.toLocaleString("en-KE", { minimumFractionDigits: 2 })}
+                        </div>
+                        <Button
+                          type="button" variant="ghost" size="sm"
+                          className="col-span-1 h-8 w-8 p-0 text-destructive"
+                          onClick={() => removeLineItem(item.id)}
+                          disabled={lineItemsData.length <= 1}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+
+                    {/* Totals */}
+                    <div className="border-t pt-3 flex justify-end">
+                      <div className="text-right space-y-1">
+                        <div className="text-sm">
+                          Subtotal: <span className="font-mono font-bold">
+                            Ksh {lineItemsData.reduce((s, i) => s + i.amount, 0).toLocaleString("en-KE", { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Tax: <span className="font-mono">
+                            Ksh {lineItemsData.reduce((s, i) => s + i.taxAmount, 0).toLocaleString("en-KE", { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="text-base font-bold">
+                          Total: <span className="font-mono text-primary">
+                            Ksh {lineItemsTotal.toLocaleString("en-KE", { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Separator className="my-4" />
+
+              {/* Additional Information - Collapsible */}
+              <Collapsible open={showAdditionalInfo} onOpenChange={setShowAdditionalInfo}>
+                <CollapsibleTrigger asChild>
+                  <button type="button" className="flex items-center justify-between w-full py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    <span>Additional Information</span>
+                    {showAdditionalInfo ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-3">
+                  <div className="grid grid-cols-[140px_1fr] items-start gap-3">
+                    <Label className="text-right text-sm pt-2">Description</Label>
+                    <Textarea
+                      placeholder="Enter expense description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      rows={4}
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              <Separator className="my-4" />
+
+              {/* Recurring Options */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                    <Label className="text-sm font-medium">Recurring Expense</Label>
+                  </div>
+                  <Switch checked={isRecurring} onCheckedChange={setIsRecurring} />
+                </div>
+                <p className="text-xs text-muted-foreground">Enable to auto-remind and repeat this expense on a schedule</p>
+                {isRecurring && (
+                  <div className="space-y-3 p-4 bg-muted/50 rounded-lg border">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Frequency</Label>
+                        <Select value={recurringFrequency} onValueChange={setRecurringFrequency}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="biweekly">Bi-Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="quarterly">Quarterly</SelectItem>
+                            <SelectItem value="annually">Annually</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Day of Month (for monthly+)</Label>
+                        <Input type="number" min={1} max={28} value={recurringDayOfMonth} onChange={(e) => setRecurringDayOfMonth(parseInt(e.target.value) || 1)} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Start Date</Label>
+                        <Input type="date" value={recurringStartDate} onChange={(e) => setRecurringStartDate(e.target.value)} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs flex items-center justify-between">
+                          End Date
+                          <span className="flex items-center gap-1 text-[10px] font-normal">
+                            <Switch checked={recurringNoEnd} onCheckedChange={setRecurringNoEnd} className="scale-75" />
+                            No end
+                          </span>
+                        </Label>
+                        <Input type="date" value={recurringEndDate} onChange={(e) => setRecurringEndDate(e.target.value)} disabled={recurringNoEnd} className={recurringNoEnd ? "opacity-50" : ""} />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Reminder (days before due)</Label>
+                      <Input type="number" min={0} max={30} value={recurringReminderDays} onChange={(e) => setRecurringReminderDays(parseInt(e.target.value) || 0)} className="max-w-[120px]" />
+                      <p className="text-[10px] text-muted-foreground">E.g. "Internet Subscription is due in 3 days"</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator className="my-4" />
 
               <div className="flex gap-2">
                 <Button
@@ -503,7 +750,6 @@ export default function CreateExpense() {
                 </Button>
               </div>
             </form>
-          </CardContent>
         </Card>
       </div>
     </ModuleLayout>

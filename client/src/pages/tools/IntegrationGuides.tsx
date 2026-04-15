@@ -155,7 +155,7 @@ const INTEGRATION_GUIDES: IntegrationGuide[] = [
   {
     id: "api-integration",
     title: "API Integration Guide",
-    description: "Integrate Melitech CRM APIs into your external systems",
+    description: "Integrate CRM APIs into your external systems",
     icon: <Code className="h-6 w-6" />,
     category: "api",
     difficulty: "advanced",
@@ -235,8 +235,8 @@ export default function IntegrationGuides() {
       description="Complete documentation for integrating brand and theme customization into your applications"
       icon={<BookOpen className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-        { label: "Tools", href: "/tools" },
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Settings", href: "/settings" },
         { label: "Integration Guides" },
       ]}
     >

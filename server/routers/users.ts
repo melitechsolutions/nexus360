@@ -9,6 +9,9 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
 import * as dbUsers from "../db-users";
 import * as db from "../db";
+import { getDb } from "../db";
+import { contacts } from "../../drizzle/schema";
+import { v4 as uuidv4 } from "uuid";
 
 // Feature-based procedures
 const userReadProcedure = protectedProcedure;
@@ -86,17 +89,53 @@ export const staffAssignmentProcedure = protectedProcedure.use(({ ctx, next }) =
   return next({ ctx });
 });
 
+function assertOrgScopedAccess(actorOrgId: string | undefined, targetOrgId: string | null | undefined) {
+  if (actorOrgId && targetOrgId !== actorOrgId) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'You can only access users in your organization',
+    });
+  }
+}
+
 export const usersRouter = router({
   /**
-   * Admin: Get all users
+   * All authenticated users: Get user id+name for display lookups (org-scoped)
+   */
+  listNames: protectedProcedure
+    .query(async ({ ctx }) => {
+      const database = await db.getDb();
+      if (!database) return [];
+      try {
+        const { users } = await import("../../drizzle/schema");
+        // Global admins see all, org users see only their org
+        if (ctx.user.organizationId) {
+          const { eq } = await import("drizzle-orm");
+          const rows = await database.select({ id: users.id, name: users.name }).from(users)
+            .where(eq(users.organizationId, ctx.user.organizationId));
+          return rows;
+        }
+        const rows = await database.select({ id: users.id, name: users.name }).from(users);
+        return rows;
+      } catch (error) {
+        console.error("[Users listNames Error]", error);
+        return [];
+      }
+    }),
+
+  /**
+   * Admin: Get all users (filtered by organization for non-global admins)
    */
   list: adminProcedure
     .input(z.object({
       search: z.string().optional(),
       role: z.string().optional(),
     }).optional())
-    .query(async ({ input }) => {
-      return await dbUsers.getAllUsers(input?.search, input?.role);
+    .query(async ({ input, ctx }) => {
+      // Global super admins (no organizationId) see all users
+      // Org admins see only their org's users
+      const orgId = ctx.user.organizationId || undefined;
+      return await dbUsers.getAllUsers(input?.search, input?.role, orgId);
     }),
 
   /**
@@ -104,8 +143,11 @@ export const usersRouter = router({
    */
   get: adminProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
-      return await dbUsers.getUserById(input.id);
+    .query(async ({ input, ctx }) => {
+      const user = await dbUsers.getUserById(input.id);
+      if (!user) return null;
+      assertOrgScopedAccess(ctx.user.organizationId || undefined, (user as any).organizationId);
+      return user;
     }),
 
   /**
@@ -113,8 +155,11 @@ export const usersRouter = router({
    */
   getById: adminProcedure
     .input(z.string())
-    .query(async ({ input }) => {
-      return await dbUsers.getUserById(input);
+    .query(async ({ input, ctx }) => {
+      const user = await dbUsers.getUserById(input);
+      if (!user) return null;
+      assertOrgScopedAccess(ctx.user.organizationId || undefined, (user as any).organizationId);
+      return user;
     }),
 
   /**
@@ -159,6 +204,8 @@ export const usersRouter = router({
           clientId: input.clientId || undefined,
           isActive: input.isActive ? 1 : 0,
           requiresPasswordChange: 1,
+          // Inherit the creator's organizationId for data isolation
+          organizationId: ctx.user.organizationId || undefined,
         });
 
         if (!user) {
@@ -180,6 +227,29 @@ export const usersRouter = router({
         } catch (logError) {
           console.error('[UserCreate] Failed to log activity:', logError);
           // Continue anyway - activity logging failure is not critical
+        }
+
+        // Auto-create contact from user data
+        try {
+          const database = await getDb();
+          if (database) {
+            const nameParts = input.name.trim().split(/\s+/);
+            const firstName = nameParts[0];
+            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
+            await database.insert(contacts).values({
+              id: uuidv4(),
+              organizationId: ctx.user.organizationId ?? null,
+              firstName,
+              lastName,
+              email: input.email || null,
+              department: input.department || null,
+              isPrimary: 0,
+              notes: `User: ${input.role}`,
+              createdBy: ctx.user.id,
+            });
+          }
+        } catch (contactErr) {
+          console.error('[UserCreate] Auto-create contact failed:', contactErr);
         }
 
         return user;
@@ -235,6 +305,7 @@ export const usersRouter = router({
           message: 'User not found',
         });
       }
+      assertOrgScopedAccess(ctx.user.organizationId || undefined, (existingUser as any).organizationId);
 
       // Check if new email is already taken by another user
       if (input.email && input.email !== existingUser.email) {
@@ -298,6 +369,7 @@ export const usersRouter = router({
           message: 'User not found',
         });
       }
+      assertOrgScopedAccess(ctx.user.organizationId || undefined, (user as any).organizationId);
 
       // Prevent deleting super_admin users
       if (user.role === 'super_admin') {
@@ -331,6 +403,61 @@ export const usersRouter = router({
         entityType: 'user',
         entityId: userId,
         description: `Deactivated user: ${user.name} (${user.email})`,
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Admin: Permanently delete an inactive user (hard delete)
+   */
+  permanentDelete: adminProcedure
+    .input(z.string())
+    .mutation(async ({ input: userId, ctx }) => {
+      const user = await dbUsers.getUserById(userId);
+      if (!user) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        });
+      }
+      assertOrgScopedAccess(ctx.user.organizationId || undefined, (user as any).organizationId);
+
+      if (user.role === 'super_admin') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot permanently delete super admin users',
+        });
+      }
+
+      if (userId === ctx.user.id) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot delete your own account',
+        });
+      }
+
+      if (user.isActive !== 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User must be deactivated before permanent deletion',
+        });
+      }
+
+      const success = await dbUsers.hardDeleteUser(userId);
+      if (!success) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to permanently delete user',
+        });
+      }
+
+      await db.logActivity({
+        userId: ctx.user.id,
+        action: 'user_permanently_deleted',
+        entityType: 'user',
+        entityId: userId,
+        description: `Permanently deleted user: ${user.name} (${user.email})`,
       });
 
       return { success: true };

@@ -33,7 +33,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import mutateAsync from "@/lib/mutationHelpers";
@@ -68,6 +68,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { StatsCard } from "@/components/ui/stats-card";
+import { EnhancedBulkActions, bulkExportAction, bulkCopyIdsAction, bulkDeleteAction } from "@/components/list-page/EnhancedBulkActions";
 
 /**
  * Admin Management Page
@@ -403,6 +405,8 @@ export default function AdminManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPermanentDeleteDialog, setShowPermanentDeleteDialog] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState("users");
   
   // Role Management State
@@ -414,8 +418,8 @@ export default function AdminManagement() {
   const [roleToDelete, setRoleToDelete] = useState<any>(null);
   
   const [systemSettings, setSystemSettings] = useState({
-    appName: "Melitech CRM",
-    supportEmail: "support@melitech.com",
+    appName: "CRM Platform",
+    supportEmail: "support@example.com",
     sessionTimeout: "30",
   });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
@@ -451,6 +455,18 @@ export default function AdminManagement() {
   const { data: expenses = [] } = trpc.expenses.list.useQuery();
 
   // Delete user mutation
+  const permanentDeleteUserMutation = trpc.users.permanentDelete.useMutation({
+    onSuccess: () => {
+      toast.success("User permanently deleted");
+      setShowPermanentDeleteDialog(false);
+      setSelectedUser(null);
+      refetchUsers();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to permanently delete user");
+    },
+  });
+
   const deleteUserMutation = trpc.users.delete.useMutation({
     onSuccess: () => {
       toast.success("User deleted successfully");
@@ -522,8 +538,8 @@ export default function AdminManagement() {
       const timeoutSetting = settingsData.find((s: any) => s.key === "session_timeout");
 
       setSystemSettings({
-        appName: appNameSetting?.value || "Melitech CRM",
-        supportEmail: emailSetting?.value || "support@melitech.com",
+        appName: appNameSetting?.value || "CRM Platform",
+        supportEmail: emailSetting?.value || "support@example.com",
         sessionTimeout: timeoutSetting?.value || "30",
       });
     }
@@ -578,10 +594,15 @@ export default function AdminManagement() {
   if (!isAuthenticated || !isAdmin) return null;
 
   const filteredUsers = usersData.filter(
-    (u: any) =>
-      u.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.role?.toLowerCase().includes(searchQuery.toLowerCase())
+    (u: any) => {
+      // Super admins: exclude org-scoped users (managed via multi-tenancy)
+      if (user?.role === "super_admin" && u.organizationId) return false;
+      return (
+        u.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.role?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
   );
 
   const handleDeleteUser = async () => {
@@ -696,61 +717,38 @@ export default function AdminManagement() {
   }
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Admin Management"
+      description="Manage users, roles, permissions, and system settings"
+      icon={<Shield className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "Admin Management" },
+      ]}
+    >
       <div className="space-y-6 p-4 sm:p-6">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Admin Management</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage users, roles, permissions, and system settings
-          </p>
-        </div>
 
         {/* Quick Stats */}
         <div className="grid gap-4 md:grid-cols-5">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Users</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{usersData?.length || 0}</div>
-              <p className="text-xs text-gray-500 mt-1">{usersData?.filter((u: any) => u.isActive).length || 0} active</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Users"
+            value={usersData?.length || 0}
+            description={<>{usersData?.filter((u: any) => u.isActive).length || 0} active</>}
+            color="border-l-blue-500"
+            onClick={() => setLocation("/admin/management")}
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Invoices</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{financialData.totalInvoices}</div>
-              <p className="text-xs text-gray-500 mt-1">Documents created</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Total Invoices" value={financialData.totalInvoices} description="Documents created" color="border-l-amber-500" onClick={() => setLocation("/invoices")} />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Revenue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                KES {(financialData.totalRevenue || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">All time revenue</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Revenue"
+            value={<>KES {(financialData.totalRevenue || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}</>}
+            description="All time revenue"
+            color="border-l-cyan-500"
+            onClick={() => setLocation("/reports")}
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Active Clients</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {metrics?.activeClients || 0}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Client accounts</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Active Clients" value={metrics?.activeClients || 0} description="Client accounts" color="border-l-pink-500" onClick={() => setLocation("/clients")} />
 
           <Card>
             <CardHeader className="pb-2">
@@ -821,6 +819,30 @@ export default function AdminManagement() {
                   </div>
                 </div>
 
+                {/* Bulk Actions */}
+                {selectedUsers.size > 0 && (
+                  <EnhancedBulkActions
+                    selectedCount={selectedUsers.size}
+                    onClear={() => setSelectedUsers(new Set())}
+                    actions={[
+                      bulkExportAction(selectedUsers, filteredUsers, [
+                        { key: "fullName", label: "Name" },
+                        { key: "email", label: "Email" },
+                        { key: "role", label: "Role" },
+                        { key: "isActive", label: "Status" },
+                      ], "users"),
+                      bulkCopyIdsAction(selectedUsers),
+                      bulkDeleteAction(selectedUsers, async (ids) => {
+                        for (const id of ids) {
+                          try { await deleteUserMutation.mutateAsync(id); } catch {}
+                        }
+                        setSelectedUsers(new Set());
+                        refetchUsers();
+                      }),
+                    ]}
+                  />
+                )}
+
                 {/* Users Table */}
                 {usersLoading ? (
                   <div className="flex items-center justify-center py-8">
@@ -840,6 +862,15 @@ export default function AdminManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-10">
+                            <Checkbox
+                              checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
+                              onCheckedChange={(checked) => {
+                                if (checked) setSelectedUsers(new Set(filteredUsers.map((u: any) => u.id)));
+                                else setSelectedUsers(new Set());
+                              }}
+                            />
+                          </TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>Account Name</TableHead>
                           <TableHead>Email</TableHead>
@@ -851,6 +882,17 @@ export default function AdminManagement() {
                       <TableBody>
                         {filteredUsers.map((u: any) => (
                           <TableRow key={u.id}>
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedUsers.has(u.id)}
+                                onCheckedChange={(checked) => {
+                                  const next = new Set(selectedUsers);
+                                  if (checked) next.add(u.id);
+                                  else next.delete(u.id);
+                                  setSelectedUsers(next);
+                                }}
+                              />
+                            </TableCell>
                             <TableCell className="font-medium">{u.fullName || u.name || "N/A"}</TableCell>
                             <TableCell>{u.accountName || u.username || u.email?.split("@")[0] || "N/A"}</TableCell>
                             <TableCell>{u.email}</TableCell>
@@ -889,6 +931,20 @@ export default function AdminManagement() {
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
+                              {!u.isActive && (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  title="Permanently delete this inactive user"
+                                  onClick={() => {
+                                    setSelectedUser(u);
+                                    setShowPermanentDeleteDialog(true);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="ml-1 text-xs">Perm</span>
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1179,8 +1235,8 @@ export default function AdminManagement() {
                     variant="outline"
                     onClick={() => {
                       setSystemSettings({
-                        appName: settingsData?.find((s: any) => s.key === "app_name")?.value || "Melitech CRM",
-                        supportEmail: settingsData?.find((s: any) => s.key === "support_email")?.value || "support@melitech.com",
+                        appName: settingsData?.find((s: any) => s.key === "app_name")?.value || "CRM Platform",
+                        supportEmail: settingsData?.find((s: any) => s.key === "support_email")?.value || "support@example.com",
                         sessionTimeout: settingsData?.find((s: any) => s.key === "session_timeout")?.value || "30",
                       });
                     }}
@@ -1196,47 +1252,18 @@ export default function AdminManagement() {
           <TabsContent value="analytics" className="space-y-4">
             {/* Top Analytics Cards */}
             <div className="grid gap-4 md:grid-cols-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{financialData.totalInvoices}</div>
-                  <p className="text-xs text-gray-500 mt-1">Documents</p>
-                </CardContent>
-              </Card>
+              <StatsCard label="Total Invoices" value={financialData.totalInvoices} description="Documents" color="border-l-emerald-500" />
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{financialData.totalPayments}</div>
-                  <p className="text-xs text-gray-500 mt-1">Received</p>
-                </CardContent>
-              </Card>
+              <StatsCard label="Total Payments" value={financialData.totalPayments} description="Received" color="border-l-orange-500" />
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{financialData.totalExpenses}</div>
-                  <p className="text-xs text-gray-500 mt-1">Recorded</p>
-                </CardContent>
-              </Card>
+              <StatsCard label="Total Expenses" value={financialData.totalExpenses} description="Recorded" color="border-l-purple-500" />
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
-                    KES {(financialData.totalRevenue || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">All time</p>
-                </CardContent>
-              </Card>
+              <StatsCard
+                label="Total Revenue"
+                value={<>KES {(financialData.totalRevenue || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}</>}
+                description="All time"
+                color="border-l-green-500"
+              />
 
               <Card>
                 <CardHeader className="pb-2">
@@ -1250,17 +1277,12 @@ export default function AdminManagement() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {usersData?.filter((u: any) => u.isActive).length || 0}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Of {usersData?.length || 0}</p>
-                </CardContent>
-              </Card>
+              <StatsCard
+                label="Active Users"
+                value={usersData?.filter((u: any) => u.isActive).length || 0}
+                description={<>Of {usersData?.length || 0}</>}
+                color="border-l-blue-500"
+              />
             </div>
 
             {/* Charts Section */}
@@ -1504,6 +1526,34 @@ export default function AdminManagement() {
           </div>
         </AlertDialogContent>
       </AlertDialog>
-    </DashboardLayout>
+      {/* Permanent Delete User Dialog */}
+      <AlertDialog open={showPermanentDeleteDialog} onOpenChange={setShowPermanentDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogTitle className="text-red-600">Permanently Delete User</AlertDialogTitle>
+          <AlertDialogDescription>
+            <strong>WARNING: This cannot be undone.</strong> User &ldquo;{selectedUser?.fullName}&rdquo; and all their data
+            (activity logs, audit logs, settings, API keys) will be permanently removed from the database.
+            This action is irreversible.
+          </AlertDialogDescription>
+          <div className="flex gap-4 justify-end">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => selectedUser?.id && permanentDeleteUserMutation.mutate(selectedUser.id)}
+              className="bg-red-700 hover:bg-red-800"
+              disabled={permanentDeleteUserMutation.isPending}
+            >
+              {permanentDeleteUserMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting permanently...
+                </>
+              ) : (
+                "Yes, permanently delete"
+              )}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </ModuleLayout>
   );
 }

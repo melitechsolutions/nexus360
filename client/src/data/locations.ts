@@ -164,7 +164,6 @@ export const COUNTRIES: string[] = [
   "Gabon",
   "Gambia",
   "Chad",
-  "Liberia",
   "Sao Tome and Principe",
   "Algeria",
   "Libya",

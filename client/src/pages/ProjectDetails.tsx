@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useState } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import StaffAssignment from "@/components/StaffAssignment";
 import { CreateProjectTask } from "@/components/ProjectTasks/CreateProjectTask";
@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ProjectProgressBar } from "@/components/ProjectProgressBar";
+import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
   Calendar,
@@ -27,12 +28,22 @@ import {
   Edit,
   Trash2,
   Plus,
+  Star,
+  FolderKanban,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { logDelete } from "@/lib/activityLog";
+import { StatsCard } from "@/components/ui/stats-card";
+import { RichTextDisplay } from "@/components/RichTextEditor";
+import { useCurrencySettings } from "@/lib/currency";
+import { useUserLookup } from "@/hooks/useUserLookup";
+import { useFavorite } from "@/hooks/useFavorite";
 
 export default function ProjectDetails() {
+  const { code: currencyCode } = useCurrencySettings();
+  const { getUserName } = useUserLookup();
+
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [taskView, setTaskView] = useState<"list" | "create" | "edit">("list");
@@ -76,6 +87,7 @@ export default function ProjectDetails() {
   const plainClient = client ? JSON.parse(JSON.stringify(client)) : null;
   const plainInvoices = invoices ? JSON.parse(JSON.stringify(invoices)) : [];
   const plainEstimates = estimates ? JSON.parse(JSON.stringify(estimates)) : [];
+  const { isStarred, toggleStar } = useFavorite("project", projectId, plainProject?.name);
   
   const utils = trpc.useUtils();
   const deleteProjectMutation = trpc.projects.delete.useMutation({
@@ -102,22 +114,22 @@ export default function ProjectDetails() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Project Details" icon={<FolderKanban className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Projects", href: "/projects"}, {label: "Details"}]} backLink={{label: "Projects", href: "/projects"}}>
         <div className="flex items-center justify-center h-64">
           <p>Loading project...</p>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
   if (!project) {
     return (
-      <DashboardLayout>
+      <ModuleLayout title="Project Details" icon={<FolderKanban className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Projects", href: "/projects"}, {label: "Details"}]} backLink={{label: "Projects", href: "/projects"}}>
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <p className="text-muted-foreground">Project not found</p>
           <Button onClick={() => navigate("/projects")}>Back to Projects</Button>
         </div>
-      </DashboardLayout>
+      </ModuleLayout>
     );
   }
 
@@ -156,111 +168,117 @@ export default function ProjectDetails() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "KES",
+      currency: currencyCode,
     }).format(amount / 100);
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/projects")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">{plainProject?.name}</h1>
-              <p className="text-muted-foreground">{plainProject?.projectNumber}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge className={getStatusColor(plainProject?.status)}>
-              {plainProject?.status.replace("_", " ").toUpperCase()}
-            </Badge>
-            <Badge variant={getPriorityColor(plainProject?.priority)}>
-              {(plainProject?.priority || 'medium').toUpperCase()}
-            </Badge>
-            <Button onClick={() => navigate(`/projects/${projectId}/edit`)} size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
-            <Button variant="destructive" onClick={() => setIsDeleteOpen(true)} size="sm">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
-          </div>
+    <ModuleLayout title="Project Details" icon={<FolderKanban className="h-5 w-5" />} breadcrumbs={[{label: "Dashboard", href: "/"}, {label: "Projects", href: "/projects"}, {label: "Details"}]} backLink={{label: "Projects", href: "/projects"}}>
+      <div className="space-y-4">
+        {/* Action bar */}
+        <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" onClick={toggleStar}><Star className={`h-4 w-4 ${isStarred ? "fill-amber-400 text-amber-400" : ""}`} /></Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/projects/${projectId}/edit`)}><Edit className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setIsDeleteOpen(true)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
         </div>
 
-        {/* Overview Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Client</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{plainClient?.companyName || "N/A"}</div>
-              <p className="text-xs text-muted-foreground">{plainClient?.contactPerson || "No contact person"}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Budget</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {plainProject?.budget ? formatCurrency(plainProject.budget) : "N/A"}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Spent: {formatCurrency(plainProject?.actualCost || 0)}
-              </p>
-            </CardContent>
-          </Card>
-
-          <div className="md:col-span-2">
-            <ProjectProgressBar
-              projectId={projectId}
-              projectName={plainProject?.name || ""}
-              currentProgress={plainProject?.progress || 0}
-              onProgressUpdate={(newProgress) => {
-                updateProgressMutation.mutate({ id: projectId, progress: newProgress });
-              }}
-            />
+        {/* Split Layout */}
+        <div className="flex gap-6">
+          {/* Left Sidebar */}
+          <div className="w-[320px] min-w-[320px] space-y-4">
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div>
+                  <h2 className="text-xl font-bold">{plainProject?.name}</h2>
+                  <p className="text-sm text-muted-foreground">{plainProject?.projectNumber}</p>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Badge className={getStatusColor(plainProject?.status)}>
+                    {plainProject?.status?.replace("_", " ").toUpperCase()}
+                  </Badge>
+                  <Badge variant={getPriorityColor(plainProject?.priority)}>
+                    {(plainProject?.priority || "medium").toUpperCase()}
+                  </Badge>
+                </div>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Client</p>
+                      <p className="font-medium">{plainClient?.companyName || "N/A"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Manager</p>
+                      <p className="font-medium">{plainProject?.projectManager ? getUserName(plainProject.projectManager) : "Not assigned"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Start</p>
+                      <p className="font-medium">
+                        {plainProject?.startDate
+                          ? format(new Date(plainProject.startDate), "MMM dd, yyyy")
+                          : "Not set"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-muted-foreground">Due</p>
+                      <p className="font-medium">
+                        {plainProject?.endDate
+                          ? format(new Date(plainProject.endDate), "MMM dd, yyyy")
+                          : "No deadline"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <Separator />
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Financial Summary</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="text-muted-foreground">Budget</p>
+                      <p className="font-bold">{plainProject?.budget ? formatCurrency(plainProject.budget) : "N/A"}</p>
+                    </div>
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="text-muted-foreground">Spent</p>
+                      <p className="font-bold">{formatCurrency(plainProject?.actualCost || 0)}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <ProjectProgressBar
+                  projectId={projectId}
+                  projectName={plainProject?.name || ""}
+                  currentProgress={plainProject?.progress || 0}
+                  onProgressUpdate={(newProgress) => {
+                    updateProgressMutation.mutate({ id: projectId, progress: newProgress });
+                  }}
+                />
+              </CardContent>
+            </Card>
           </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Duration</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm font-medium">
-                {plainProject?.startDate
-                  ? format(new Date(plainProject.startDate), "MMM dd, yyyy")
-                  : "Not set"}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {plainProject?.endDate
-                  ? `Due: ${format(new Date(plainProject.endDate), "MMM dd, yyyy")}`
-                  : "No deadline"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="team">Team Members</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks ({tasks.length})</TabsTrigger>
-            <TabsTrigger value="invoices">Invoices ({plainInvoices.length})</TabsTrigger>
-            <TabsTrigger value="estimates">Estimates ({plainEstimates.length})</TabsTrigger>
-            <TabsTrigger value="files">Files</TabsTrigger>
-          </TabsList>
+          {/* Right Content */}
+          <div className="flex-1 min-w-0">
+            <Tabs defaultValue="overview" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="team">Team ({teamMembers.length})</TabsTrigger>
+                <TabsTrigger value="tasks">Tasks ({tasks.length})</TabsTrigger>
+                <TabsTrigger value="invoices">Invoices ({plainInvoices.length})</TabsTrigger>
+                <TabsTrigger value="estimates">Estimates ({plainEstimates.length})</TabsTrigger>
+                <TabsTrigger value="files">Files</TabsTrigger>
+              </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
             <Card>
@@ -270,22 +288,24 @@ export default function ProjectDetails() {
               <CardContent className="space-y-4">
                 <div>
                   <h4 className="font-medium mb-2">Description</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {plainProject?.description || "No description provided"}
-                  </p>
+                  {plainProject?.description ? (
+                    <RichTextDisplay html={plainProject.description} className="text-sm text-muted-foreground" />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No description provided</p>
+                  )}
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <h4 className="font-medium mb-2">Project Manager</h4>
                     <p className="text-sm text-muted-foreground">
-                      {plainProject?.projectManager || "Not assigned"}
+                      {plainProject?.projectManager ? getUserName(plainProject.projectManager) : "Not assigned"}
                     </p>
                   </div>
                   <div>
                     <h4 className="font-medium mb-2">Assigned To</h4>
                     <p className="text-sm text-muted-foreground">
-                      {plainProject?.assignedTo || "Not assigned"}
+                      {plainProject?.assignedTo ? getUserName(plainProject.assignedTo) : "Not assigned"}
                     </p>
                   </div>
                 </div>
@@ -293,7 +313,7 @@ export default function ProjectDetails() {
                 {plainProject?.notes && (
                   <div>
                     <h4 className="font-medium mb-2">Notes</h4>
-                    <p className="text-sm text-muted-foreground">{plainProject.notes}</p>
+                    <RichTextDisplay html={plainProject.notes} className="text-sm text-muted-foreground" />
                   </div>
                 )}
               </CardContent>
@@ -478,13 +498,21 @@ export default function ProjectDetails() {
                 <CardDescription>Documents and attachments</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  File management coming soon
-                </p>
+                <div className="text-center py-8 space-y-3">
+                  <FileText className="h-10 w-10 mx-auto text-muted-foreground/40" />
+                  <p className="text-sm text-muted-foreground">
+                    No files attached to this project yet.
+                  </p>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/documents")}>
+                    <Plus className="h-4 w-4 mr-1" /> Manage Documents
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+          </div>
+        </div>
       </div>
 
       <DeleteConfirmationModal
@@ -497,7 +525,7 @@ export default function ProjectDetails() {
         onCancel={() => setIsDeleteOpen(false)}
         isDangerous={true}
       />
-    </DashboardLayout>
+    </ModuleLayout>
   );
 }
 

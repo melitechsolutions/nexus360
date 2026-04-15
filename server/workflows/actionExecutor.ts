@@ -46,7 +46,7 @@ export async function executeSendEmailAction(
     }
 
     // Determine recipient email
-    const toEmail = recipientEmail || "support@melitech.io";
+    const toEmail = recipientEmail || process.env.COMPANY_EMAIL || "";
 
     console.log("[EMAIL_EXECUTOR] Sending email:", {
       subject: subject || template,

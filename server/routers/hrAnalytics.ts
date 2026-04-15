@@ -1,9 +1,9 @@
-import { router, protectedProcedure } from "../_core/trpc";
+import { router } from "../_core/trpc";
 import { createFeatureRestrictedProcedure } from "../middleware/enhancedRbac";
 import { z } from "zod";
 import { getDb } from "../db";
-import { employees, departments, attendance, leaveRequests, payroll } from "../../drizzle/schema";
-import { eq, gte, lte, desc, and } from "drizzle-orm";
+import { employees, attendance, leaveRequests, payroll } from "../../drizzle/schema";
+import { eq, gte, sql } from "drizzle-orm";
 
 // Feature-based procedures
 const hrReadProcedure = createFeatureRestrictedProcedure("hr:analytics");
@@ -21,29 +21,31 @@ export const hrAnalyticsRouter = router({
       if (!database) return [];
 
       try {
-        // Get all employees grouped by month of hire
-        const result = await database
-          .select({
-            month: database.fn.year(employees.createdAt),
-            count: database.fn.count(employees.id),
-          })
-          .from(employees)
-          .groupBy(database.fn.year(employees.createdAt))
-          .orderBy(database.fn.year(employees.createdAt));
+        const allEmployees = await database.select({
+          hireDate: employees.hireDate,
+          status: employees.status,
+        }).from(employees);
 
-        // Transform to last 12 months
-        const months: any[] = [];
+        const numMonths = input?.months || 12;
         const now = new Date();
-        
-        for (let i = (input?.months || 12) - 1; i >= 0; i--) {
+        const months: any[] = [];
+
+        for (let i = numMonths - 1; i >= 0; i--) {
           const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          
-          months.push({
-            month: monthKey,
-            headcount: Math.floor(Math.random() * 150) + 50, // Placeholder calculation
-            newHires: Math.floor(Math.random() * 10),
-          });
+
+          const headcount = allEmployees.filter((e: any) => {
+            const hd = new Date(e.hireDate);
+            return hd <= monthEnd;
+          }).length;
+
+          const newHires = allEmployees.filter((e: any) => {
+            const hd = new Date(e.hireDate);
+            return hd >= date && hd <= monthEnd;
+          }).length;
+
+          months.push({ month: monthKey, headcount, newHires });
         }
 
         return months;
@@ -62,27 +64,29 @@ export const hrAnalyticsRouter = router({
       if (!database) return [];
 
       try {
-        const result = await database
-          .select({
-            departmentId: employees.departmentId,
-            departmentName: departments.departmentName,
-            avgSalary: database.fn.avg(payroll.basicSalary),
-            minSalary: database.fn.min(payroll.basicSalary),
-            maxSalary: database.fn.max(payroll.basicSalary),
-            employeeCount: database.fn.count(employees.id),
-          })
-          .from(employees)
-          .leftJoin(departments, eq(employees.departmentId, departments.id))
-          .leftJoin(payroll, eq(employees.id, payroll.employeeId))
-          .groupBy(employees.departmentId, departments.departmentName);
+        const allEmployees = await database.select({
+          department: employees.department,
+          salary: employees.salary,
+        }).from(employees);
 
-        return (result as any[]).map((item: any) => ({
-          department: item.departmentName || "Unassigned",
-          avgSalary: item.avgSalary ? Math.round(item.avgSalary) : 0,
-          minSalary: item.minSalary ? Math.round(item.minSalary) : 0,
-          maxSalary: item.maxSalary ? Math.round(item.maxSalary) : 0,
-          employeeCount: item.employeeCount || 0,
-        }));
+        // Group by department string
+        const deptMap: Record<string, number[]> = {};
+        for (const emp of allEmployees) {
+          const dept = (emp.department as string) || "Unassigned";
+          if (!deptMap[dept]) deptMap[dept] = [];
+          if (emp.salary) deptMap[dept].push(emp.salary);
+        }
+
+        return Object.entries(deptMap).map(([dept, salaries]) => {
+          const avg = salaries.length > 0 ? Math.round(salaries.reduce((a, b) => a + b, 0) / salaries.length) : 0;
+          return {
+            department: dept,
+            avgSalary: avg,
+            minSalary: salaries.length > 0 ? Math.min(...salaries) : 0,
+            maxSalary: salaries.length > 0 ? Math.max(...salaries) : 0,
+            employeeCount: salaries.length,
+          };
+        });
       } catch (error: any) {
         console.error("Error fetching salary distribution:", error);
         return [];
@@ -95,44 +99,30 @@ export const hrAnalyticsRouter = router({
   getTurnoverAnalysis: hrReadProcedure
     .query(async () => {
       const database = await getDb();
-      if (!database) return {};
+      if (!database) return { totalEmployees: 0, active: 0, inactive: 0, onLeave: 0, terminated: 0, turnoverRate: 0 };
 
       try {
-        // Get total employees
-        const totalEmployees = await database.select({ count: database.fn.count(employees.id) }).from(employees);
-        
-        // Get employees by status
-        const byStatus = await database
-          .select({
-            status: employees.status,
-            count: database.fn.count(employees.id),
-          })
-          .from(employees)
-          .groupBy(employees.status);
+        const allEmployees = await database.select({
+          status: employees.status,
+        }).from(employees);
 
-        const statusMap = byStatus.reduce((acc: any, item: any) => {
-          acc[item.status] = item.count;
-          return acc;
-        }, {});
+        const total = allEmployees.length;
+        const active = allEmployees.filter((e: any) => e.status === 'active').length;
+        const onLeave = allEmployees.filter((e: any) => e.status === 'on_leave').length;
+        const terminated = allEmployees.filter((e: any) => e.status === 'terminated').length;
+        const suspended = allEmployees.filter((e: any) => e.status === 'suspended').length;
 
         return {
-          totalEmployees: totalEmployees[0]?.count || 0,
-          active: statusMap.active || 0,
-          inactive: statusMap.inactive || 0,
-          onLeave: statusMap.on_leave || 0,
-          terminated: statusMap.terminated || 0,
-          turnoverRate: ((statusMap.terminated || 0) / (totalEmployees[0]?.count || 1)) * 100,
+          totalEmployees: total,
+          active,
+          inactive: suspended,
+          onLeave,
+          terminated,
+          turnoverRate: total > 0 ? (terminated / total) * 100 : 0,
         };
       } catch (error: any) {
         console.error("Error fetching turnover analysis:", error);
-        return {
-          totalEmployees: 0,
-          active: 0,
-          inactive: 0,
-          onLeave: 0,
-          terminated: 0,
-          turnoverRate: 0,
-        };
+        return { totalEmployees: 0, active: 0, inactive: 0, onLeave: 0, terminated: 0, turnoverRate: 0 };
       }
     }),
 
@@ -145,51 +135,35 @@ export const hrAnalyticsRouter = router({
     }).optional())
     .query(async ({ input }) => {
       const database = await getDb();
-      if (!database) return {};
+      if (!database) return { present: 0, absent: 0, late: 0, halfDay: 0, total: 0, presentPercentage: 0, absentPercentage: 0, latePercentage: 0 };
 
       try {
-        // Calculate from last N months
         const monthsAgo = new Date();
         monthsAgo.setMonth(monthsAgo.getMonth() - (input?.months || 3));
 
-        const attendanceData = await database
-          .select({
-            status: attendance.status,
-            count: database.fn.count(attendance.id),
-          })
-          .from(attendance)
-          .where(gte(attendance.attendanceDate, monthsAgo.toISOString()))
-          .groupBy(attendance.status);
+        const attendanceRecords = await database.select({
+          status: attendance.status,
+        }).from(attendance).where(gte(attendance.attendanceDate, monthsAgo.toISOString().replace('T', ' ').substring(0, 19)));
 
-        const statusMap = attendanceData.reduce((acc: any, item: any) => {
-          acc[item.status] = item.count;
-          return acc;
-        }, {});
-
-        const total = Object.values(statusMap).reduce((a: number, b: any) => a + b, 0);
+        const total = attendanceRecords.length;
+        const present = attendanceRecords.filter((a: any) => a.status === 'present').length;
+        const absent = attendanceRecords.filter((a: any) => a.status === 'absent').length;
+        const late = attendanceRecords.filter((a: any) => a.status === 'late').length;
+        const halfDay = attendanceRecords.filter((a: any) => a.status === 'half_day').length;
 
         return {
-          present: statusMap.present || 0,
-          absent: statusMap.absent || 0,
-          late: statusMap.late || 0,
-          halfDay: statusMap.half_day || 0,
+          present,
+          absent,
+          late,
+          halfDay,
           total,
-          presentPercentage: total > 0 ? ((statusMap.present || 0) / total) * 100 : 0,
-          absentPercentage: total > 0 ? ((statusMap.absent || 0) / total) * 100 : 0,
-          latePercentage: total > 0 ? ((statusMap.late || 0) / total) * 100 : 0,
+          presentPercentage: total > 0 ? (present / total) * 100 : 0,
+          absentPercentage: total > 0 ? (absent / total) * 100 : 0,
+          latePercentage: total > 0 ? (late / total) * 100 : 0,
         };
       } catch (error: any) {
         console.error("Error fetching attendance KPIs:", error);
-        return {
-          present: 0,
-          absent: 0,
-          late: 0,
-          halfDay: 0,
-          total: 0,
-          presentPercentage: 0,
-          absentPercentage: 0,
-          latePercentage: 0,
-        };
+        return { present: 0, absent: 0, late: 0, halfDay: 0, total: 0, presentPercentage: 0, absentPercentage: 0, latePercentage: 0 };
       }
     }),
 
@@ -202,21 +176,25 @@ export const hrAnalyticsRouter = router({
       if (!database) return [];
 
       try {
-        const result = await database
-          .select({
-            type: leaveRequests.leaveType,
-            count: database.fn.count(leaveRequests.id),
-            avgDuration: database.fn.avg(leaveRequests.numberOfDays),
-          })
-          .from(leaveRequests)
-          .where(eq(leaveRequests.status, 'approved'))
-          .groupBy(leaveRequests.leaveType);
+        const allLeaves = await database.select({
+          leaveType: leaveRequests.leaveType,
+          numberOfDays: leaveRequests.days,
+          status: leaveRequests.status,
+        }).from(leaveRequests).where(eq(leaveRequests.status, 'approved'));
 
-        return (result as any[]).map((item: any) => ({
-          type: item.type || "Unknown",
-          count: item.count || 0,
-          totalDays: Math.round((item.count || 0) * (item.avgDuration || 1)),
-          avgDuration: Math.round(item.avgDuration || 0),
+        // Group by leave type
+        const typeMap: Record<string, number[]> = {};
+        for (const leave of allLeaves) {
+          const type = (leave.leaveType as string) || "Unknown";
+          if (!typeMap[type]) typeMap[type] = [];
+          typeMap[type].push(leave.numberOfDays || 1);
+        }
+
+        return Object.entries(typeMap).map(([type, days]) => ({
+          type,
+          count: days.length,
+          totalDays: days.reduce((a, b) => a + b, 0),
+          avgDuration: Math.round(days.reduce((a, b) => a + b, 0) / days.length),
         }));
       } catch (error: any) {
         console.error("Error fetching leave utilization:", error);
@@ -233,23 +211,25 @@ export const hrAnalyticsRouter = router({
       if (!database) return [];
 
       try {
-        const result = await database
-          .select({
-            departmentId: departments.id,
-            departmentName: departments.departmentName,
-            totalEmployees: database.fn.count(employees.id),
-            avgSalary: database.fn.avg(payroll.basicSalary),
-          })
-          .from(departments)
-          .leftJoin(employees, eq(departments.id, employees.departmentId))
-          .leftJoin(payroll, eq(employees.id, payroll.employeeId))
-          .groupBy(departments.id, departments.departmentName);
+        const allEmployees = await database.select({
+          department: employees.department,
+          salary: employees.salary,
+        }).from(employees);
 
-        return (result as any[]).map((item: any) => ({
-          id: item.departmentId,
-          name: item.departmentName,
-          employees: item.totalEmployees || 0,
-          avgSalary: item.avgSalary ? Math.round(item.avgSalary) : 0,
+        const deptMap: Record<string, { salaries: number[] }> = {};
+        for (const emp of allEmployees) {
+          const dept = (emp.department as string) || "Unassigned";
+          if (!deptMap[dept]) deptMap[dept] = { salaries: [] };
+          if (emp.salary) deptMap[dept].salaries.push(emp.salary);
+        }
+
+        return Object.entries(deptMap).map(([name, data]) => ({
+          id: name,
+          name,
+          employees: data.salaries.length,
+          avgSalary: data.salaries.length > 0
+            ? Math.round(data.salaries.reduce((a, b) => a + b, 0) / data.salaries.length)
+            : 0,
         }));
       } catch (error: any) {
         console.error("Error fetching department analytics:", error);
@@ -263,44 +243,32 @@ export const hrAnalyticsRouter = router({
   getPerformanceMetrics: hrReadProcedure
     .query(async () => {
       const database = await getDb();
-      if (!database) return {};
+      if (!database) return { totalEmployees: 0, avgPresenceRate: 0, highPerformers: 0, needsImprovement: 0 };
 
       try {
-        // Get employees by status
-        const employeeMetrics = await database
-          .select({
-            totalCount: database.fn.count(employees.id),
-          })
+        const [totalResult] = await database
+          .select({ totalCount: sql<number>`count(${employees.id})` })
           .from(employees);
 
-        const avgAttendance = await database
-          .select({
-            avgPresent: database.fn.avg(
-              database.raw('CASE WHEN status = "present" THEN 1 ELSE 0 END')
-            ),
-          })
-          .from(attendance)
-          .where(
-            gte(
-              attendance.attendanceDate,
-              new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString()
-            )
-          );
+        const lastMonth = new Date();
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        const attendanceRecords = await database.select({
+          status: attendance.status,
+        }).from(attendance).where(gte(attendance.attendanceDate, lastMonth.toISOString().replace('T', ' ').substring(0, 19)));
+
+        const totalRecords = attendanceRecords.length;
+        const presentCount = attendanceRecords.filter((a: any) => a.status === 'present').length;
+        const avgPresenceRate = totalRecords > 0 ? presentCount / totalRecords : 0;
 
         return {
-          totalEmployees: employeeMetrics[0]?.totalCount || 0,
-          avgPresenceRate: 0.92, // Placeholder
+          totalEmployees: totalResult?.totalCount || 0,
+          avgPresenceRate,
           highPerformers: 0,
           needsImprovement: 0,
         };
       } catch (error: any) {
         console.error("Error fetching performance metrics:", error);
-        return {
-          totalEmployees: 0,
-          avgPresenceRate: 0,
-          highPerformers: 0,
-          needsImprovement: 0,
-        };
+        return { totalEmployees: 0, avgPresenceRate: 0, highPerformers: 0, needsImprovement: 0 };
       }
     }),
 
@@ -316,30 +284,32 @@ export const hrAnalyticsRouter = router({
       if (!database) return [];
 
       try {
-        // Get monthly salary expenses
-        const result = await database
-          .select({
-            month: database.fn.year_month(payroll.paymentDate),
-            totalAmount: database.fn.sum(payroll.basicSalary),
-            employeeCount: database.fn.count(database.fn.distinct(payroll.employeeId)),
-          })
-          .from(payroll)
-          .groupBy(database.fn.year_month(payroll.paymentDate))
-          .orderBy(database.fn.year_month(payroll.paymentDate));
+        const allPayroll = await database.select({
+          basicSalary: payroll.basicSalary,
+          netSalary: payroll.netSalary,
+          employeeId: payroll.employeeId,
+          paymentDate: payroll.paymentDate,
+          payPeriodStart: payroll.payPeriodStart,
+        }).from(payroll);
 
-        // Generate last 12 months of data
-        const months: any[] = [];
+        const numMonths = input?.months || 12;
         const now = new Date();
-        
-        for (let i = (input?.months || 12) - 1; i >= 0; i--) {
+        const months: any[] = [];
+
+        for (let i = numMonths - 1; i >= 0; i--) {
           const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          
-          months.push({
-            month: monthKey,
-            totalCost: Math.floor(Math.random() * 5000000) + 2000000,
-            employeeCount: Math.floor(Math.random() * 80) + 40,
+
+          const monthRecords = allPayroll.filter((p: any) => {
+            const pd = new Date(p.paymentDate || p.payPeriodStart);
+            return pd >= date && pd <= monthEnd;
           });
+
+          const totalCost = monthRecords.reduce((sum: number, p: any) => sum + (p.netSalary || p.basicSalary || 0), 0);
+          const uniqueEmployees = new Set(monthRecords.map((p: any) => p.employeeId));
+
+          months.push({ month: monthKey, totalCost, employeeCount: uniqueEmployees.size });
         }
 
         return months;

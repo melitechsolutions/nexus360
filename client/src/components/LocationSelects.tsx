@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Label } from "@/components/ui/label";
 import {
   COUNTRIES,
@@ -48,13 +48,11 @@ export function CountrySelect({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <ScrollArea className="h-[200px] w-full">
             {COUNTRIES.map((country) => (
               <SelectItem key={country} value={country} className="cursor-pointer">
                 {country}
               </SelectItem>
             ))}
-          </ScrollArea>
         </SelectContent>
       </Select>
     </div>
@@ -81,13 +79,11 @@ export function CountySelect({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <ScrollArea className="h-[200px] w-full">
             {KENYAN_COUNTIES_NAMES.map((county) => (
               <SelectItem key={county} value={county} className="cursor-pointer">
                 {county}
               </SelectItem>
             ))}
-          </ScrollArea>
         </SelectContent>
       </Select>
     </div>
@@ -130,13 +126,11 @@ export function CitySelect({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <ScrollArea className="h-[200px] w-full">
             {cities.map((city) => (
               <SelectItem key={city} value={city} className="cursor-pointer">
                 {city}
               </SelectItem>
             ))}
-          </ScrollArea>
         </SelectContent>
       </Select>
     </div>

@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import { StatsCard } from "@/components/ui/stats-card";
 
 interface AttendanceRecord {
   id: string;
@@ -118,7 +119,7 @@ export default function Attendance() {
       description="Track employee attendance and working hours"
       icon={<Clock className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Attendance" },
       ]}
@@ -133,49 +134,37 @@ export default function Attendance() {
 
         {/* Statistics Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Present</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{presentCount}</div>
-              <p className="text-xs text-muted-foreground">Employees present today</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Present"
+            value={presentCount}
+            description="Employees present today"
+            icon={<CheckCircle2 className="h-5 w-5" />}
+            color="border-l-green-500"
+          />
 
-          <Card className="border-l-4 border-l-orange-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Late</CardTitle>
-              <AlertCircle className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{lateCount}</div>
-              <p className="text-xs text-muted-foreground">Late arrivals</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Late"
+            value={lateCount}
+            description="Late arrivals"
+            icon={<AlertCircle className="h-5 w-5" />}
+            color="border-l-orange-500"
+          />
 
-          <Card className="border-l-4 border-l-red-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Absent</CardTitle>
-              <XCircle className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{absentCount}</div>
-              <p className="text-xs text-muted-foreground">Employees absent</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Absent"
+            value={absentCount}
+            description="Employees absent"
+            icon={<XCircle className="h-5 w-5" />}
+            color="border-l-red-500"
+          />
 
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-              <Clock className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalHours.toFixed(1)}</div>
-              <p className="text-xs text-muted-foreground">Hours worked today</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Hours"
+            value={totalHours.toFixed(1)}
+            description="Hours worked today"
+            icon={<Clock className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
         </div>
 
         {/* Attendance Records */}
@@ -278,7 +267,7 @@ export default function Attendance() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => navigate(`/attendance/edit/${record.id}`)}
+                            onClick={() => navigate(`/attendance/${record.id}/edit`)}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>

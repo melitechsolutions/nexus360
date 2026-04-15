@@ -35,7 +35,7 @@ export default function EditDepartment() {
       setFormData({
         name: department.name || "",
         description: department.description || "",
-        budget: department.budget ? (department.budget / 100).toString() : "",
+        budget: department.budget ? department.budget.toString() : "",
         isActive: department.isActive !== false,
       });
       setIsLoading(false);
@@ -78,7 +78,7 @@ export default function EditDepartment() {
         description="Update department details"
         icon={<Building2 className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "HR", href: "/hr" },
           { label: "Departments", href: "/departments" },
           { label: "Edit Department" },
@@ -97,7 +97,7 @@ export default function EditDepartment() {
       description="Update department details"
       icon={<Building2 className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Departments", href: "/departments" },
         { label: "Edit Department" },

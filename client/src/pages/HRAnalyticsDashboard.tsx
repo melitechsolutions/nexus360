@@ -1,4 +1,5 @@
 import { ModuleLayout } from "@/components/ModuleLayout";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,8 +36,12 @@ import {
 import { Users, TrendingUp, DollarSign, Calendar, AlertCircle, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { StatsCard } from "@/components/ui/stats-card";
+import { useCurrencySettings } from "@/lib/currency";
 
 export default function HRAnalyticsDashboard() {
+  const { code: currencyCode } = useCurrencySettings();
+
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
 
@@ -57,7 +62,7 @@ export default function HRAnalyticsDashboard() {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "KES",
+      currency: currencyCode,
       minimumFractionDigits: 0,
     }).format(value);
   };
@@ -141,35 +146,22 @@ export default function HRAnalyticsDashboard() {
               </Select>
             </div>
             <div className="flex items-end">
-              <Button variant="outline">Refresh Data</Button>
+              <Button variant="outline" onClick={() => { utils.hrAnalytics.invalidate(); utils.departments.invalidate(); utils.employees.invalidate(); toast.success("Data refreshed"); }}>Refresh Data</Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Employees</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <Users className="h-6 w-6 text-blue-500" />
-                {stats.activeEmployees}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Active staff</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Total Employees"
+            value={<><Users className="h-6 w-6 text-blue-500" /> {stats.activeEmployees}</>}
+            description="Active staff"
+            icon={<Users className="h-5 w-5" />}
+            color="border-l-blue-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Departments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalDepartments}</div>
-              <p className="text-xs text-muted-foreground mt-1">Organizational units</p>
-            </CardContent>
-          </Card>
+          <StatsCard label="Departments" value={stats.totalDepartments} description="Organizational units" color="border-l-purple-500" />
 
           <Card>
             <CardHeader className="pb-3">
@@ -183,31 +175,21 @@ export default function HRAnalyticsDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Attendance Rate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <Calendar className="h-6 w-6 text-amber-500" />
-                {stats.avgAttendance}%
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Average across staff</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Attendance Rate"
+            value={<><Calendar className="h-6 w-6 text-amber-500" /> {stats.avgAttendance}%</>}
+            description="Average across staff"
+            icon={<Calendar className="h-5 w-5" />}
+            color="border-l-amber-500"
+          />
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Leave Utilization</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center gap-2">
-                <TrendingUp className="h-6 w-6 text-purple-500" />
-                {stats.avgLeaveUtilized}%
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Days used from allocation</p>
-            </CardContent>
-          </Card>
+          <StatsCard
+            label="Leave Utilization"
+            value={<><TrendingUp className="h-6 w-6 text-purple-500" /> {stats.avgLeaveUtilized}%</>}
+            description="Days used from allocation"
+            icon={<TrendingUp className="h-5 w-5" />}
+            color="border-l-purple-500"
+          />
         </div>
 
         {/* Charts */}

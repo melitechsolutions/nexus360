@@ -23,9 +23,12 @@ function formatMonth(month: string) {
   }
 }
 
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
+import { BarChart3 } from "lucide-react";
+import { useCurrencySettings } from "@/lib/currency";
 
 const TaxComplianceReportsPage: React.FC = () => {
+  const { code: currencyCode } = useCurrencySettings();
   const [from, setFrom] = useState<string>(format(new Date(), "yyyy-MM-01"));
   const [to, setTo] = useState<string>(format(new Date(), "yyyy-MM-dd"));
 
@@ -51,7 +54,7 @@ const TaxComplianceReportsPage: React.FC = () => {
     enabled: false,
   });
 
-  const ytdQuery = trpc.taxCompliance.getYearToDateSummary.useQuery(undefined, {
+  const ytdQuery = trpc.taxCompliance.getYearToDateSummary.useQuery({}, {
     enabled: !!from && !!to,
   });
 
@@ -69,9 +72,17 @@ const TaxComplianceReportsPage: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="Tax Reports"
+      description="PAYE, NSSF, SHIF & Housing Levy reports"
+      icon={<BarChart3 className="h-6 w-6" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/" },
+        { label: "Finance", href: "/accounting" },
+        { label: "Tax Reports" },
+      ]}
+    >
       <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Tax Compliance Reports</h1>
 
       <div className="flex flex-wrap gap-4 items-end">
         <div>
@@ -124,31 +135,31 @@ const TaxComplianceReportsPage: React.FC = () => {
                 <p>
                   Gross Salary: {(ytdQuery.data.grossSalary / 100).toLocaleString("en-KE", {
                     style: "currency",
-                    currency: "KES",
+                    currency: currencyCode,
                   })}
                 </p>
                 <p>
                   PAYE: {(ytdQuery.data.payeeTax / 100).toLocaleString("en-KE", {
                     style: "currency",
-                    currency: "KES",
+                    currency: currencyCode,
                   })}
                 </p>
                 <p>
                   NSSF: {(ytdQuery.data.nssfContribution / 100).toLocaleString("en-KE", {
                     style: "currency",
-                    currency: "KES",
+                    currency: currencyCode,
                   })}
                 </p>
                 <p>
                   SHIF: {(ytdQuery.data.shifContribution / 100).toLocaleString("en-KE", {
                     style: "currency",
-                    currency: "KES",
+                    currency: currencyCode,
                   })}
                 </p>
                 <p>
                   Housing Levy: {(ytdQuery.data.housingLevy / 100).toLocaleString("en-KE", {
                     style: "currency",
-                    currency: "KES",
+                    currency: currencyCode,
                   })}
                 </p>
               </div>
@@ -176,7 +187,7 @@ const TaxComplianceReportsPage: React.FC = () => {
                     <TableCell className="text-right">
                       {(row.totalPayee / 100).toLocaleString("en-KE", {
                         style: "currency",
-                        currency: "KES",
+                        currency: currencyCode,
                       })}
                     </TableCell>
                   </TableRow>
@@ -203,7 +214,7 @@ const TaxComplianceReportsPage: React.FC = () => {
                     <TableCell className="text-right">
                       {(row.totalNSSF / 100).toLocaleString("en-KE", {
                         style: "currency",
-                        currency: "KES",
+                        currency: currencyCode,
                       })}
                     </TableCell>
                   </TableRow>
@@ -230,7 +241,7 @@ const TaxComplianceReportsPage: React.FC = () => {
                     <TableCell className="text-right">
                       {(row.totalSHIF / 100).toLocaleString("en-KE", {
                         style: "currency",
-                        currency: "KES",
+                        currency: currencyCode,
                       })}
                     </TableCell>
                   </TableRow>
@@ -257,7 +268,7 @@ const TaxComplianceReportsPage: React.FC = () => {
                     <TableCell className="text-right">
                       {(row.totalHousing / 100).toLocaleString("en-KE", {
                         style: "currency",
-                        currency: "KES",
+                        currency: currencyCode,
                       })}
                     </TableCell>
                   </TableRow>
@@ -268,7 +279,7 @@ const TaxComplianceReportsPage: React.FC = () => {
         </div>
       </div>
       </div> {/* wrapper close */}
-    </DashboardLayout>
+    </ModuleLayout>
   );
 };
 

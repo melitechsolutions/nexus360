@@ -15,8 +15,10 @@ import {
 } from "recharts";
 import { trpc } from "@/lib/trpc";
 import { TrendingUp, Users, AlertTriangle, Award, Calendar, Zap, RefreshCw } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { ModuleLayout } from "@/components/ModuleLayout";
 import { toast } from "sonner";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { StatsCard } from "@/components/ui/stats-card";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
@@ -74,17 +76,19 @@ export function HRAnalyticsPage() {
   }, [attendance]);
 
   return (
-    <DashboardLayout>
+    <ModuleLayout
+      title="HR Analytics Dashboard"
+      description="Comprehensive HR metrics, trends, and analytics"
+      icon={<TrendingUp className="h-5 w-5" />}
+      breadcrumbs={[
+        { label: "Dashboard", href: "/crm-home" },
+        { label: "HR", href: "/crm/hr" },
+        { label: "HR Analytics" },
+      ]}
+    >
       <div className="space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-            <TrendingUp className="h-8 w-8 text-blue-600" />
-            HR Analytics Dashboard
-          </h1>
-          <p className="text-gray-600">Comprehensive HR metrics, trends, and analytics</p>
-        </div>
+      <div className="flex justify-end items-start">
         <div className="flex gap-2">
           <Select value={timeframe} onValueChange={setTimeframe}>
             <SelectTrigger className="w-32">
@@ -104,57 +108,37 @@ export function HRAnalyticsPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total Employees</p>
-                <p className="text-3xl font-bold">{summaryStats.totalEmployees}</p>
-              </div>
-              <Users className="h-8 w-8 text-blue-500 opacity-20" />
-            </div>
-            <p className="text-xs text-gray-500 mt-2">{summaryStats.activeEmployees} active</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Total Employees"
+          value={summaryStats.totalEmployees}
+          description={<>{summaryStats.activeEmployees} active</>}
+          icon={<Users className="h-5 w-5" />}
+          color="border-l-blue-500"
+        />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Turnover Rate</p>
-                <p className="text-3xl font-bold text-amber-600">{summaryStats.turnoverRate}%</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-amber-500 opacity-20" />
-            </div>
-            <p className="text-xs text-gray-500 mt-2">{turnover?.terminated || 0} terminated</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Turnover Rate"
+          value={<>{summaryStats.turnoverRate}%</>}
+          description={<>{turnover?.terminated || 0} terminated</>}
+          icon={<AlertTriangle className="h-5 w-5" />}
+          color="border-l-amber-500"
+        />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Attendance Rate</p>
-                <p className="text-3xl font-bold text-green-600">{summaryStats.avgPresence}%</p>
-              </div>
-              <Calendar className="h-8 w-8 text-green-500 opacity-20" />
-            </div>
-            <p className="text-xs text-gray-500 mt-2">{summaryStats.presentCount} present today</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Attendance Rate"
+          value={<>{summaryStats.avgPresence}%</>}
+          description={<>{summaryStats.presentCount} present today</>}
+          icon={<Calendar className="h-5 w-5" />}
+          color="border-l-green-500"
+        />
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Performance Score</p>
-                <p className="text-3xl font-bold text-purple-600">8.2/10</p>
-              </div>
-              <Award className="h-8 w-8 text-purple-500 opacity-20" />
-            </div>
-            <p className="text-xs text-gray-500 mt-2">↑ 5% vs last month</p>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Performance Score"
+          value={<>{performance?.avgPresenceRate ? (performance.avgPresenceRate * 10).toFixed(1) : "N/A"}/10</>}
+          description={<>{performance?.totalEmployees || 0} employees tracked</>}
+          icon={<Award className="h-5 w-5" />}
+          color="border-l-purple-500"
+        />
       </div>
 
       {/* Charts Grid - Row 1 */}
@@ -336,24 +320,24 @@ export function HRAnalyticsPage() {
               <div className="h-80 flex items-center justify-center text-gray-400">Loading...</div>
             ) : departments && departments.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2 px-2 font-semibold">Department</th>
-                      <th className="text-right py-2 px-2 font-semibold">Employees</th>
-                      <th className="text-right py-2 px-2 font-semibold">Avg Salary</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Department</TableHead>
+                      <TableHead className="text-right">Employees</TableHead>
+                      <TableHead className="text-right">Avg Salary</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {departments.map((dept: any, idx: number) => (
-                      <tr key={dept.name || `dept-${idx}`} className="border-b hover:bg-gray-50">
-                        <td className="py-2 px-2 font-medium">{dept.name || "Unassigned"}</td>
-                        <td className="text-right py-2 px-2">{dept.employees}</td>
-                        <td className="text-right py-2 px-2">Ksh {(dept.avgSalary / 100).toLocaleString('en-KE')}</td>
-                      </tr>
+                      <TableRow key={dept.name || `dept-${idx}`}>
+                        <TableCell className="font-medium">{dept.name || "Unassigned"}</TableCell>
+                        <TableCell className="text-right">{dept.employees}</TableCell>
+                        <TableCell className="text-right">Ksh {(dept.avgSalary / 100).toLocaleString('en-KE')}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             ) : (
               <div className="h-80 flex items-center justify-center text-gray-400">No data available</div>
@@ -362,7 +346,7 @@ export function HRAnalyticsPage() {
         </Card>
       </div>
     </div>
-  </DashboardLayout>
+  </ModuleLayout>
   );
 }
 

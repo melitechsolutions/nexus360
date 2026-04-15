@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { toast } from "sonner";
 import { trpc } from "../lib/trpc";
 import {
   Plus,
@@ -14,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import ModuleLayout from "@/components/ModuleLayout";
 import {
   Dialog,
   DialogContent,
@@ -201,7 +203,7 @@ export default function WorkflowAutomation() {
 
   const handleCreateWorkflow = () => {
     if (!formData.name.trim() || !formData.triggerType) {
-      alert("Workflow name and trigger type are required");
+      toast.error("Workflow name and trigger type are required");
       return;
     }
 
@@ -240,7 +242,7 @@ export default function WorkflowAutomation() {
       description="Create and manage automated business processes"
       icon={<Zap className="h-5 w-5" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Automation" },
       ]}
     >
@@ -642,8 +644,9 @@ export default function WorkflowAutomation() {
               Cancel
             </Button>
             <Button onClick={() => {
-              // TODO: call executeWorkflow
-              setShowExecuteDialog(false);
+              if (selectedWorkflow?.id) {
+                executeWorkflow({ workflowId: selectedWorkflow.id });
+              }
             }} disabled={isExecuting}>
               {isExecuting ? "Testing..." : "Run Test"}
             </Button>

@@ -40,7 +40,7 @@ async function createApprovalNotification(
       actionUrl,
       priority,
       isRead: 0,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
     });
   } catch (error) {
     console.error("Failed to create notification:", error);
@@ -67,7 +67,11 @@ export const approvalsRouter = router({
       // Validate user has permission to approve invoices
       validateApprovalAction(ctx.user.role, "invoice");
 
-      const invoice = await database.select().from(invoices).where(eq(invoices.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const invoiceCond = orgId
+        ? and(eq(invoices.id, input.id), eq(invoices.organizationId, orgId))
+        : eq(invoices.id, input.id);
+      const invoice = await database.select().from(invoices).where(invoiceCond).limit(1);
       if (!invoice.length) throw new Error("Invoice not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -133,7 +137,11 @@ export const approvalsRouter = router({
 
       validateApprovalAction(ctx.user.role, "invoice");
 
-      const invoice = await database.select().from(invoices).where(eq(invoices.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const invoiceCond = orgId
+        ? and(eq(invoices.id, input.id), eq(invoices.organizationId, orgId))
+        : eq(invoices.id, input.id);
+      const invoice = await database.select().from(invoices).where(invoiceCond).limit(1);
       if (!invoice.length) throw new Error("Invoice not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -199,7 +207,11 @@ export const approvalsRouter = router({
       // Validate user has permission to approve estimates
       validateApprovalAction(ctx.user.role, "estimate");
 
-      const estimate = await database.select().from(estimates).where(eq(estimates.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const estimateCond = orgId
+        ? and(eq(estimates.id, input.id), eq(estimates.organizationId, orgId))
+        : eq(estimates.id, input.id);
+      const estimate = await database.select().from(estimates).where(estimateCond).limit(1);
       if (!estimate.length) throw new Error("Estimate not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -233,7 +245,11 @@ export const approvalsRouter = router({
 
       validateApprovalAction(ctx.user.role, "estimate");
 
-      const estimate = await database.select().from(estimates).where(eq(estimates.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const estimateCond = orgId
+        ? and(eq(estimates.id, input.id), eq(estimates.organizationId, orgId))
+        : eq(estimates.id, input.id);
+      const estimate = await database.select().from(estimates).where(estimateCond).limit(1);
       if (!estimate.length) throw new Error("Estimate not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -267,7 +283,11 @@ export const approvalsRouter = router({
       // Validate user has permission to approve payments
       validateApprovalAction(ctx.user.role, "payment");
 
-      const payment = await database.select().from(payments).where(eq(payments.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const paymentCond = orgId
+        ? and(eq(payments.id, input.id), eq(payments.organizationId, orgId))
+        : eq(payments.id, input.id);
+      const payment = await database.select().from(payments).where(paymentCond).limit(1);
       if (!payment.length) throw new Error("Payment not found");
 
       // Update payment status and approval info (use MySQL format timestamp)
@@ -321,7 +341,11 @@ export const approvalsRouter = router({
 
       validateApprovalAction(ctx.user.role, "payment");
 
-      const payment = await database.select().from(payments).where(eq(payments.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const paymentCond = orgId
+        ? and(eq(payments.id, input.id), eq(payments.organizationId, orgId))
+        : eq(payments.id, input.id);
+      const payment = await database.select().from(payments).where(paymentCond).limit(1);
       if (!payment.length) throw new Error("Payment not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -375,7 +399,11 @@ export const approvalsRouter = router({
       // Validate user has permission to approve expenses
       validateApprovalAction(ctx.user.role, "expense");
 
-      const expense = await database.select().from(expenses).where(eq(expenses.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const expenseCond = orgId
+        ? and(eq(expenses.id, input.id), eq(expenses.organizationId, orgId))
+        : eq(expenses.id, input.id);
+      const expense = await database.select().from(expenses).where(expenseCond).limit(1);
       if (!expense.length) throw new Error("Expense not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -410,7 +438,11 @@ export const approvalsRouter = router({
       // Validate user has permission to approve expenses
       validateApprovalAction(ctx.user.role, "expense");
 
-      const expense = await database.select().from(expenses).where(eq(expenses.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const expenseCond = orgId
+        ? and(eq(expenses.id, input.id), eq(expenses.organizationId, orgId))
+        : eq(expenses.id, input.id);
+      const expense = await database.select().from(expenses).where(expenseCond).limit(1);
       if (!expense.length) throw new Error("Expense not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -442,7 +474,11 @@ export const approvalsRouter = router({
       const database = await getDb();
       if (!database) throw new Error("Database not available");
 
-      const budget = await database.select().from(budgets).where(eq(budgets.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const budgetCond = orgId
+        ? and(eq(budgets.id, input.id), eq(budgets.organizationId, orgId))
+        : eq(budgets.id, input.id);
+      const budget = await database.select().from(budgets).where(budgetCond).limit(1);
       if (!budget.length) throw new Error("Budget not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -474,7 +510,11 @@ export const approvalsRouter = router({
       const database = await getDb();
       if (!database) throw new Error("Database not available");
 
-      const budget = await database.select().from(budgets).where(eq(budgets.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const budgetCond = orgId
+        ? and(eq(budgets.id, input.id), eq(budgets.organizationId, orgId))
+        : eq(budgets.id, input.id);
+      const budget = await database.select().from(budgets).where(budgetCond).limit(1);
       if (!budget.length) throw new Error("Budget not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -508,10 +548,14 @@ export const approvalsRouter = router({
 
       try {
         const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        await database.raw?.(
-          `UPDATE lpos SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`,
-          ["approved", ctx.user.id, now, now, input.id]
-        );
+        const orgId = ctx.user.organizationId;
+        const lpoSql = orgId
+          ? `UPDATE lpos SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ? AND organizationId = ?`
+          : `UPDATE lpos SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`;
+        const lpoParams = orgId
+          ? ["approved", ctx.user.id, now, now, input.id, orgId]
+          : ["approved", ctx.user.id, now, now, input.id];
+        await database.raw?.(lpoSql, lpoParams);
 
         // Log activity
         await db.logActivity({
@@ -540,10 +584,14 @@ export const approvalsRouter = router({
 
       try {
         const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        await database.raw?.(
-          `UPDATE lpos SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`,
-          ["rejected", ctx.user.id, now, now, input.id]
-        );
+        const orgId = ctx.user.organizationId;
+        const lpoSql = orgId
+          ? `UPDATE lpos SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ? AND organizationId = ?`
+          : `UPDATE lpos SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`;
+        const lpoParams = orgId
+          ? ["rejected", ctx.user.id, now, now, input.id, orgId]
+          : ["rejected", ctx.user.id, now, now, input.id];
+        await database.raw?.(lpoSql, lpoParams);
 
         // Log activity
         await db.logActivity({
@@ -572,10 +620,14 @@ export const approvalsRouter = router({
 
       try {
         const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        await database.raw?.(
-          `UPDATE purchase_orders SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`,
-          ["confirmed", ctx.user.id, now, now, input.id]
-        );
+        const orgId = ctx.user.organizationId;
+        const poSql = orgId
+          ? `UPDATE purchase_orders SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ? AND organizationId = ?`
+          : `UPDATE purchase_orders SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`;
+        const poParams = orgId
+          ? ["confirmed", ctx.user.id, now, now, input.id, orgId]
+          : ["confirmed", ctx.user.id, now, now, input.id];
+        await database.raw?.(poSql, poParams);
 
         // Log activity
         await db.logActivity({
@@ -604,10 +656,14 @@ export const approvalsRouter = router({
 
       try {
         const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        await database.raw?.(
-          `UPDATE purchase_orders SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`,
-          ["cancelled", ctx.user.id, now, now, input.id]
-        );
+        const orgId = ctx.user.organizationId;
+        const poSql = orgId
+          ? `UPDATE purchase_orders SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ? AND organizationId = ?`
+          : `UPDATE purchase_orders SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`;
+        const poParams = orgId
+          ? ["cancelled", ctx.user.id, now, now, input.id, orgId]
+          : ["cancelled", ctx.user.id, now, now, input.id];
+        await database.raw?.(poSql, poParams);
 
         // Log activity
         await db.logActivity({
@@ -636,10 +692,14 @@ export const approvalsRouter = router({
 
       try {
         const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        await database.raw?.(
-          `UPDATE imprests SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`,
-          ["approved", ctx.user.id, now, now, input.id]
-        );
+        const orgId = ctx.user.organizationId;
+        const impSql = orgId
+          ? `UPDATE imprests SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ? AND organizationId = ?`
+          : `UPDATE imprests SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`;
+        const impParams = orgId
+          ? ["approved", ctx.user.id, now, now, input.id, orgId]
+          : ["approved", ctx.user.id, now, now, input.id];
+        await database.raw?.(impSql, impParams);
 
         // Log activity
         await db.logActivity({
@@ -668,10 +728,14 @@ export const approvalsRouter = router({
 
       try {
         const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        await database.raw?.(
-          `UPDATE imprests SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`,
-          ["rejected", ctx.user.id, now, now, input.id]
-        );
+        const orgId = ctx.user.organizationId;
+        const impSql = orgId
+          ? `UPDATE imprests SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ? AND organizationId = ?`
+          : `UPDATE imprests SET status = ?, approvedBy = ?, approvedAt = ?, updatedAt = ? WHERE id = ?`;
+        const impParams = orgId
+          ? ["rejected", ctx.user.id, now, now, input.id, orgId]
+          : ["rejected", ctx.user.id, now, now, input.id];
+        await database.raw?.(impSql, impParams);
 
         // Log activity
         await db.logActivity({
@@ -701,7 +765,11 @@ export const approvalsRouter = router({
       // Validate user has permission to approve leave requests
       validateApprovalAction(ctx.user.role, "leave_request");
 
-      const leave = await database.select().from(leaveRequests).where(eq(leaveRequests.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const leaveCond = orgId
+        ? and(eq(leaveRequests.id, input.id), eq(leaveRequests.organizationId, orgId))
+        : eq(leaveRequests.id, input.id);
+      const leave = await database.select().from(leaveRequests).where(leaveCond).limit(1);
       if (!leave.length) throw new Error("Leave request not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -755,7 +823,11 @@ export const approvalsRouter = router({
 
       validateApprovalAction(ctx.user.role, "leave_request");
 
-      const leave = await database.select().from(leaveRequests).where(eq(leaveRequests.id, input.id)).limit(1);
+      const orgId = ctx.user.organizationId;
+      const leaveCond = orgId
+        ? and(eq(leaveRequests.id, input.id), eq(leaveRequests.organizationId, orgId))
+        : eq(leaveRequests.id, input.id);
+      const leave = await database.select().from(leaveRequests).where(leaveCond).limit(1);
       if (!leave.length) throw new Error("Leave request not found");
 
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -819,9 +891,21 @@ export const approvalsRouter = router({
         };
       }
 
-      const pendingInvoices = await database.select().from(invoices).where(eq(invoices.status, "draft"));
-      const pendingEstimates = await database.select().from(estimates).where(eq(estimates.status, "draft"));
-      const pendingExpenses = await database.select().from(expenses).where(eq(expenses.status, "pending"));
+      const pendingInvoices = await database.select().from(invoices).where(
+        ctx.user.organizationId
+          ? and(eq(invoices.status, "draft"), eq(invoices.organizationId, ctx.user.organizationId))
+          : eq(invoices.status, "draft")
+      );
+      const pendingEstimates = await database.select().from(estimates).where(
+        ctx.user.organizationId
+          ? and(eq(estimates.status, "draft"), eq(estimates.organizationId, ctx.user.organizationId))
+          : eq(estimates.status, "draft")
+      );
+      const pendingExpenses = await database.select().from(expenses).where(
+        ctx.user.organizationId
+          ? and(eq(expenses.status, "pending"), eq(expenses.organizationId, ctx.user.organizationId))
+          : eq(expenses.status, "pending")
+      );
 
       return {
         invoices: pendingInvoices,
@@ -855,7 +939,9 @@ export const approvalsRouter = router({
       // Fetch invoices
       if (!input?.type || input.type === "all" || input.type === "invoice") {
         try {
-          const invoiceRecords = await database.select().from(invoices);
+          const orgId = ctx.user.organizationId;
+          const invoiceWhere = orgId ? eq(invoices.organizationId, orgId) : undefined;
+          const invoiceRecords = await database.select().from(invoices).where(invoiceWhere);
           for (const invoice of invoiceRecords) {
             const statusFilter = input?.status || "pending";
             if (statusFilter !== "pending" && statusFilter !== "approved" && statusFilter !== "rejected") continue;
@@ -875,7 +961,7 @@ export const approvalsRouter = router({
               referenceNo: invoice.invoiceNumber || `INV-${invoice.id}`,
               amount: centsToCurrency(invoice.total),
               requestedBy: requestedBy?.name || requestedBy?.email || "Unknown",
-              requestedAt: invoice.createdAt || new Date().toISOString(),
+              requestedAt: invoice.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
               approvedBy: approvedByUser?.name || approvedByUser?.email || null,
               approvedAt: invoice.approvedAt || null,
               status: invoiceStatus,
@@ -892,7 +978,9 @@ export const approvalsRouter = router({
       // Fetch expenses
       if (!input?.type || input.type === "all" || input.type === "expense") {
         try {
-          const expenseRecords = await database.select().from(expenses);
+          const orgId = ctx.user.organizationId;
+          const expenseWhere = orgId ? eq(expenses.organizationId, orgId) : undefined;
+          const expenseRecords = await database.select().from(expenses).where(expenseWhere);
           for (const expense of expenseRecords) {
             const status = expense.status as "pending" | "approved" | "rejected" | "paid";
             if (input?.status && status !== input.status) continue;
@@ -934,7 +1022,9 @@ export const approvalsRouter = router({
       // Fetch payments
       if (!input?.type || input.type === "all" || input.type === "payment") {
         try {
-          const paymentRecords = await database.select().from(payments);
+          const orgId = ctx.user.organizationId;
+          const paymentsWhere = orgId ? eq(payments.organizationId, orgId) : undefined;
+          const paymentRecords = await database.select().from(payments).where(paymentsWhere);
           for (const payment of paymentRecords) {
             const paymentStatus = payment.status as "pending" | "completed" | "failed";
             if (input?.status) {
@@ -964,7 +1054,7 @@ export const approvalsRouter = router({
               referenceNo: payment.referenceNumber || `PAY-${payment.id.substring(0, 8)}`,
               amount: centsToCurrency(payment.amount),
               requestedBy: requestedBy?.name || requestedBy?.email || "Unknown",
-              requestedAt: payment.createdAt || new Date().toISOString(),
+              requestedAt: payment.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
               approvedBy: approvedByUser?.name || approvedByUser?.email || null,
               approvedAt: payment.approvedAt || null,
               status: displayStatus,
@@ -981,7 +1071,9 @@ export const approvalsRouter = router({
       // Fetch leave requests
       if (!input?.type || input.type === "all" || input.type === "leave_request") {
         try {
-          const leaveRecords = await database.select().from(leaveRequests);
+          const orgId = ctx.user.organizationId;
+          const leaveWhere = orgId ? eq(leaveRequests.organizationId, orgId) : undefined;
+          const leaveRecords = await database.select().from(leaveRequests).where(leaveWhere);
           for (const leave of leaveRecords) {
             const leaveStatus = leave.status as "pending" | "approved" | "rejected";
             if (input?.status && leaveStatus !== input.status) continue;
@@ -997,7 +1089,7 @@ export const approvalsRouter = router({
               referenceId: leave.id,
               referenceNo: `LEAVE-${leave.id.substring(0, 8)}`,
               requestedBy: requestedBy?.name || requestedBy?.email || "Unknown",
-              requestedAt: leave.startDate || new Date().toISOString(),
+              requestedAt: leave.startDate || new Date().toISOString().replace('T', ' ').substring(0, 19),
               approvedBy: approvedByUser?.name || approvedByUser?.email || null,
               approvedAt: leave.approvalDate || null,
               status: leaveStatus,
@@ -1014,7 +1106,9 @@ export const approvalsRouter = router({
       // Fetch Budgets
       if (!input?.type || input.type === "all" || input.type === "budget") {
         try {
-          const budgetRecords = await database.select().from(budgets);
+          const orgId = ctx.user.organizationId;
+          const budgetWhere = orgId ? eq(budgets.organizationId, orgId) : undefined;
+          const budgetRecords = await database.select().from(budgets).where(budgetWhere);
           for (const budget of budgetRecords) {
             const budgetStatus = budget.budgetStatus as "draft" | "active" | "inactive" | "closed";
             if (input?.status) {
@@ -1044,7 +1138,7 @@ export const approvalsRouter = router({
               referenceNo: `BUD-${budget.id.substring(0, 8)}`,
               amount: centsToCurrency(budget.amount),
               requestedBy: requestedBy?.name || requestedBy?.email || "Unknown",
-              requestedAt: budget.createdAt || new Date().toISOString(),
+              requestedAt: budget.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
               approvedBy: approvedByUser?.name || approvedByUser?.email || null,
               approvedAt: budget.approvedAt || null,
               status: displayStatus,
@@ -1061,7 +1155,10 @@ export const approvalsRouter = router({
       // Fetch LPOs (from raw database query)
       if (!input?.type || input.type === "all" || input.type === "lpo") {
         try {
-          const lpoRecords = await database.raw?.(`SELECT * FROM lpos WHERE 1=1`) || [];
+          const orgId = ctx.user.organizationId;
+          const lpoRecords = orgId
+            ? await database.raw?.(`SELECT * FROM lpos WHERE organizationId = ?`, [orgId]) || []
+            : await database.raw?.(`SELECT * FROM lpos WHERE 1=1`) || [];
           for (const lpo of lpoRecords) {
             const lpoStatus = lpo.status as "draft" | "submitted" | "approved" | "rejected";
             if (input?.status) {
@@ -1088,7 +1185,7 @@ export const approvalsRouter = router({
               referenceNo: lpo.lpoNumber || `LPO-${lpo.id.substring(0, 8)}`,
               amount: centsToCurrency(lpo.totalAmount),
               requestedBy: lpo.createdBy || "Unknown",
-              requestedAt: lpo.createdAt || new Date().toISOString(),
+              requestedAt: lpo.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
               status: displayStatus,
               priority,
               description: `LPO from ${lpo.vendorName} - KES ${lpo.totalAmount}`,
@@ -1103,7 +1200,10 @@ export const approvalsRouter = router({
       // Fetch Purchase Orders (from raw database query) 
       if (!input?.type || input.type === "all" || input.type === "purchase_order") {
         try {
-          const orderRecords = await database.raw?.(`SELECT * FROM purchase_orders WHERE 1=1`) || [];
+          const orgId = ctx.user.organizationId;
+          const orderRecords = orgId
+            ? await database.raw?.(`SELECT * FROM purchase_orders WHERE organizationId = ?`, [orgId]) || []
+            : await database.raw?.(`SELECT * FROM purchase_orders WHERE 1=1`) || [];
           for (const order of orderRecords) {
             const orderStatus = order.status as "draft" | "sent" | "confirmed" | "delivered" | "invoiced";
             if (input?.status) {
@@ -1130,7 +1230,7 @@ export const approvalsRouter = router({
               referenceNo: order.orderNumber || `PO-${order.id.substring(0, 8)}`,
               amount: centsToCurrency(order.totalAmount),
               requestedBy: order.createdBy || "Unknown",
-              requestedAt: order.createdAt || new Date().toISOString(),
+              requestedAt: order.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
               status: displayStatus,
               priority,
               description: `Purchase Order from ${order.supplierName} - KES ${order.totalAmount}`,
@@ -1170,7 +1270,7 @@ export const approvalsRouter = router({
               referenceNo: imprest.imprestNumber || `IMP-${imprest.id.substring(0, 8)}`,
               amount: centsToCurrency(imprest.amount),
               requestedBy: imprest.employeeName || "Unknown",
-              requestedAt: imprest.createdAt || new Date().toISOString(),
+              requestedAt: imprest.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
               status: imprestStatus,
               priority,
               description: `Imprest for ${imprest.purpose} - KES ${imprest.amount}`,

@@ -129,7 +129,7 @@ export default function EditChartOfAccounts() {
         description="Update account details"
         icon={<BookOpen className="w-6 h-6" />}
         breadcrumbs={[
-          { label: "Dashboard", href: "/" },
+          { label: "Dashboard", href: "/crm-home" },
           { label: "Accounting", href: "/accounting" },
           { label: "Chart of Accounts", href: "/chart-of-accounts" },
           { label: "Edit Account" },
@@ -148,7 +148,7 @@ export default function EditChartOfAccounts() {
       description="Update account details"
       icon={<BookOpen className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "Accounting", href: "/accounting" },
         { label: "Chart of Accounts", href: "/chart-of-accounts" },
         { label: "Edit Account" },
@@ -235,14 +235,14 @@ export default function EditChartOfAccounts() {
                 <Select
                   value={formData.parentAccountId || ""}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, parentAccountId: value || null })
+                    setFormData({ ...formData, parentAccountId: value === "__none__" ? null : value || null })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select parent account (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Parent (Top Level)</SelectItem>
+                    <SelectItem value="__none__">No Parent (Top Level)</SelectItem>
                     {allAccounts
                       .filter(acc => acc.id !== id) // Don't show current account
                       .map(acc => (

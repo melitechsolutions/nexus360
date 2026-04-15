@@ -26,6 +26,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { DollarSign, Users, Layers } from "lucide-react";
+import { StatsCard } from "@/components/ui/stats-card";
 
 const SalesReportsPage: React.FC = () => {
   const [from, setFrom] = useState<string>(format(new Date(), "yyyy-MM-01"));
@@ -76,60 +77,30 @@ const SalesReportsPage: React.FC = () => {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total Invoiced</p>
-                <p className="text-3xl font-bold">
-                  Ksh {(paymentCol.data?.totalInvoiced || 0).toLocaleString()}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-500 opacity-20" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total Paid</p>
-                <p className="text-3xl font-bold">
-                  Ksh {(paymentCol.data?.totalPaid || 0).toLocaleString()}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-blue-500 opacity-20" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Collection Rate</p>
-                <p className="text-3xl font-bold text-purple-600">
-                  {(paymentCol.data?.collectionRate || 0).toFixed(1)}%
-                </p>
-              </div>
-              <Users className="h-8 w-8 text-purple-500 opacity-20" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Top Client</p>
-                <p className="text-3xl font-bold text-amber-600">
-                  {revenueByClient.data && revenueByClient.data[0]?.clientName
-                    ? revenueByClient.data[0].clientName
-                    : "-"}
-                </p>
-              </div>
-              <Layers className="h-8 w-8 text-amber-500 opacity-20" />
-            </div>
-          </CardContent>
-        </Card>
+        <StatsCard
+          label="Total Invoiced"
+          value={<>Ksh {(paymentCol.data?.totalInvoiced || 0).toLocaleString()}</>}
+          icon={<DollarSign className="h-5 w-5" />}
+          color="border-l-green-500"
+        />
+        <StatsCard
+          label="Total Paid"
+          value={<>Ksh {(paymentCol.data?.totalPaid || 0).toLocaleString()}</>}
+          icon={<DollarSign className="h-5 w-5" />}
+          color="border-l-blue-500"
+        />
+        <StatsCard
+          label="Collection Rate"
+          value={<>{(paymentCol.data?.collectionRate || 0).toFixed(1)}%</>}
+          icon={<Users className="h-5 w-5" />}
+          color="border-l-purple-500"
+        />
+        <StatsCard
+          label="Top Client"
+          value={revenueByClient.data && revenueByClient.data[0]?.clientName ? revenueByClient.data[0].clientName : "-"}
+          icon={<Layers className="h-5 w-5" />}
+          color="border-l-amber-500"
+        />
       </div>
 
       {/* Sales Trend chart */}

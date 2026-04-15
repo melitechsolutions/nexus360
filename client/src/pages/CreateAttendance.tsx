@@ -66,7 +66,7 @@ export default function CreateAttendance() {
       description="Record employee attendance"
       icon={<Clock className="w-6 h-6" />}
       breadcrumbs={[
-        { label: "Dashboard", href: "/" },
+        { label: "Dashboard", href: "/crm-home" },
         { label: "HR", href: "/hr" },
         { label: "Attendance", href: "/attendance" },
         { label: "Record Attendance" },

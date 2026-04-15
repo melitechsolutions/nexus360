@@ -173,6 +173,9 @@ export const handleDuplicate = async (
 // Generate document content for download
 const generateDocumentContent = (type: string, id: string | number, data?: any): string => {
   const timestamp = new Date().toLocaleString();
+  const company = data?.companyName || import.meta.env.VITE_APP_TITLE || 'Your Company';
+  const email = data?.companyEmail || '';
+  const phone = data?.companyPhone || '';
 
   switch (type.toLowerCase()) {
     case "invoice":
@@ -180,10 +183,9 @@ const generateDocumentContent = (type: string, id: string | number, data?: any):
 INVOICE #${id}
 Generated: ${timestamp}
 
-Melitech Solutions
-P.O. Box 12345, Nairobi
-Email: info@melitechsolutions.co.ke
-Phone: +254 700 000 000
+${company}
+${email ? 'Email: ' + email : ''}
+${phone ? 'Phone: ' + phone : ''}
 
 Bill To: ${data?.clientName || "Client Name"}
 Invoice Date: ${data?.date || new Date().toLocaleDateString()}
@@ -200,9 +202,8 @@ Thank you for your business!
 PAYMENT RECEIPT #${id}
 Generated: ${timestamp}
 
-Melitech Solutions
-P.O. Box 12345, Nairobi
-Email: info@melitechsolutions.co.ke
+${company}
+${email ? 'Email: ' + email : ''}
 
 Received From: ${data?.clientName || "Client Name"}
 Amount: Ksh ${data?.amount?.toLocaleString() || "0"}
@@ -218,9 +219,8 @@ Thank you for your payment!
 QUOTATION #${id}
 Generated: ${timestamp}
 
-Melitech Solutions
-P.O. Box 12345, Nairobi
-Email: info@melitechsolutions.co.ke
+${company}
+${email ? 'Email: ' + email : ''}
 
 Prepared For: ${data?.clientName || "Client Name"}
 Date: ${data?.date || new Date().toLocaleDateString()}
@@ -237,8 +237,7 @@ This quotation is valid for 30 days from the date of issue.
 BUSINESS PROPOSAL #${id}
 Generated: ${timestamp}
 
-Melitech Solutions
-P.O. Box 12345, Nairobi
+${company}
 
 Proposal For: ${data?.clientName || "Client Name"}
 Title: ${data?.title || "Project Proposal"}
@@ -254,7 +253,7 @@ Total Value: Ksh ${data?.amount?.toLocaleString() || "0"}
 ${type.toUpperCase()} #${id}
 Generated: ${timestamp}
 
-Melitech Solutions
+${company}
 Document generated from CRM system.
       `.trim();
   }
@@ -262,6 +261,7 @@ Document generated from CRM system.
 
 // Email template generator
 export const generateEmailTemplate = (type: string, data: any) => {
+  const companyName = data.companyName || import.meta.env.VITE_APP_TITLE || 'Your Company';
   const templates: Record<string, string> = {
     invoice: `
       <h2>Invoice #${data.number}</h2>
@@ -271,7 +271,7 @@ export const generateEmailTemplate = (type: string, data: any) => {
       <p>Due Date: ${data.dueDate}</p>
       <p>Thank you for your business!</p>
       <br/>
-      <p>Best regards,<br/>Melitech Solutions</p>
+      <p>Best regards,<br/>${companyName}</p>
     `,
     receipt: `
       <h2>Payment Receipt #${data.number}</h2>
@@ -280,7 +280,7 @@ export const generateEmailTemplate = (type: string, data: any) => {
       <p>Payment Date: ${data.date}</p>
       <p>Payment Method: ${data.method}</p>
       <br/>
-      <p>Best regards,<br/>Melitech Solutions</p>
+      <p>Best regards,<br/>${companyName}</p>
     `,
     estimate: `
       <h2>Quotation #${data.number}</h2>
@@ -289,7 +289,7 @@ export const generateEmailTemplate = (type: string, data: any) => {
       <p>Total Amount: Ksh ${data.amount?.toLocaleString()}</p>
       <p>Valid Until: ${data.validUntil}</p>
       <br/>
-      <p>Best regards,<br/>Melitech Solutions</p>
+      <p>Best regards,<br/>${companyName}</p>
     `,
     proposal: `
       <h2>Business Proposal #${data.number}</h2>
@@ -297,7 +297,7 @@ export const generateEmailTemplate = (type: string, data: any) => {
       <p>We are pleased to submit our proposal for ${data.title}.</p>
       <p>Please review the attached document and let us know if you have any questions.</p>
       <br/>
-      <p>Best regards,<br/>Melitech Solutions</p>
+      <p>Best regards,<br/>${companyName}</p>
     `,
   };
 
