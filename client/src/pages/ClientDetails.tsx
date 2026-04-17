@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { CountrySelect, CountySelect, CitySelect, IndustrySelect } from "@/components/LocationSelects";
 import { toast } from "sonner";
 import { handleDelete as actionsHandleDelete } from "@/lib/actions";
 import {
@@ -466,11 +467,7 @@ export default function ClientDetails() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="incorporationCountry">Country of Incorporation</Label>
-                      <Input
-                        id="incorporationCountry"
-                        value={corporateInfo.incorporationCountry}
-                        onChange={(e) => setCorporateInfo({ ...corporateInfo, incorporationCountry: e.target.value })}
-                      />
+                      <CountrySelect value={corporateInfo.incorporationCountry} onChange={(v) => setCorporateInfo({...corporateInfo, incorporationCountry: v})} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="businessType">Business Type</Label>
@@ -489,11 +486,7 @@ export default function ClientDetails() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="industry">Industry/Sector</Label>
-                      <Input
-                        id="industry"
-                        value={corporateInfo.industry}
-                        onChange={(e) => setCorporateInfo({ ...corporateInfo, industry: e.target.value })}
-                      />
+                      <IndustrySelect value={corporateInfo.industry || ""} onChange={(v) => setCorporateInfo({...corporateInfo, industry: v})} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="numberOfEmployees">Number of Employees</Label>
@@ -723,19 +716,11 @@ export default function ClientDetails() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      value={contactInfo.city}
-                      onChange={(e) => setContactInfo({ ...contactInfo, city: e.target.value })}
-                    />
+                    <CitySelect value={contactInfo.city} onChange={(v) => setContactInfo({...contactInfo, city: v})} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="county">County</Label>
-                    <Input
-                      id="county"
-                      value={contactInfo.county}
-                      onChange={(e) => setContactInfo({ ...contactInfo, county: e.target.value })}
-                    />
+                    <CountySelect value={contactInfo.county} onChange={(v) => setContactInfo({...contactInfo, county: v})} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="postalCode">Postal Code</Label>

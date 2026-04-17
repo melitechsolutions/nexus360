@@ -17,6 +17,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
+import { CountrySelect, CitySelect, IndustrySelect } from "@/components/LocationSelects";
+import { PhoneInput } from "@/components/PhoneInput";
 import { toast } from "sonner";
 import { computeHealthScore } from "@/lib/healthScore";
 import {
@@ -440,27 +442,24 @@ export default function OrgClientDetail() {
                 </div>
                 <div>
                   <Label className="text-white/70 text-xs">Phone</Label>
-                  <Input className="mt-1 bg-white/5 border-white/10 text-white" value={editForm.phone}
-                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
+                  <PhoneInput className="mt-1 bg-white/5 border-white/10 text-white" value={editForm.phone}
+                    onChange={(v) => setEditForm({ ...editForm, phone: v })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-white/70 text-xs">City</Label>
-                  <Input className="mt-1 bg-white/5 border-white/10 text-white" value={editForm.city}
-                    onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} />
+                  <CitySelect value={editForm.city} onChange={(v) => setEditForm({ ...editForm, city: v })} />
                 </div>
                 <div>
                   <Label className="text-white/70 text-xs">Country</Label>
-                  <Input className="mt-1 bg-white/5 border-white/10 text-white" value={editForm.country}
-                    onChange={(e) => setEditForm({ ...editForm, country: e.target.value })} />
+                  <CountrySelect value={editForm.country} onChange={(v) => setEditForm({ ...editForm, country: v })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-white/70 text-xs">Industry</Label>
-                  <Input className="mt-1 bg-white/5 border-white/10 text-white" value={editForm.industry}
-                    onChange={(e) => setEditForm({ ...editForm, industry: e.target.value })} />
+                  <IndustrySelect value={editForm.industry} onChange={(v) => setEditForm({ ...editForm, industry: v })} />
                 </div>
                 <div>
                   <Label className="text-white/70 text-xs">Status</Label>

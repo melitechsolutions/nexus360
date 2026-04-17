@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CountrySelect, CitySelect } from "@/components/LocationSelects";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
@@ -427,13 +428,13 @@ export default function Contacts() {
                 </div>
                 <div className="space-y-1">
                   <Label>City</Label>
-                  <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Nairobi" />
+                  <CitySelect value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Country</Label>
-                  <Input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} placeholder="Kenya" />
+                  <CountrySelect value={form.country} onChange={(v) => setForm({ ...form, country: v })} />
                 </div>
                 <div className="space-y-1">
                   <Label>Physical Address</Label>

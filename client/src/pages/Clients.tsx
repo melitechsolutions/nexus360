@@ -24,6 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { CountrySelect, CitySelect, IndustrySelect } from "@/components/LocationSelects";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { type ClientFilters } from "@/components/SearchAndFilter";
@@ -395,12 +396,7 @@ export default function Clients() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="industry">Industry</Label>
-                  <Input
-                    id="industry"
-                    value={newClient.industry}
-                    onChange={(e) => setNewClient({ ...newClient, industry: e.target.value })}
-                    placeholder="Technology, Finance, etc."
-                  />
+                  <IndustrySelect value={newClient.industry} onChange={(v) => setNewClient({...newClient, industry: v})} />
                 </div>
               </div>
 
@@ -417,12 +413,7 @@ export default function Clients() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={newClient.city}
-                    onChange={(e) => setNewClient({ ...newClient, city: e.target.value })}
-                    placeholder="Nairobi"
-                  />
+                  <CitySelect value={newClient.city} onChange={(v) => setNewClient({...newClient, city: v})} />
                 </div>
               </div>
 
@@ -430,12 +421,7 @@ export default function Clients() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="country">Country</Label>
-                  <Input
-                    id="country"
-                    value={newClient.country}
-                    onChange={(e) => setNewClient({ ...newClient, country: e.target.value })}
-                    placeholder="Kenya"
-                  />
+                  <CountrySelect value={newClient.country} onChange={(v) => setNewClient({...newClient, country: v})} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="postalCode">Postal Code</Label>
@@ -566,6 +552,7 @@ export default function Clients() {
                 ]}
               />
             )}
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -778,6 +765,7 @@ export default function Clients() {
                 )}
               </TableBody>
             </Table>
+            </div>
             <PaginationControls
               total={filteredClients.length}
               page={page}

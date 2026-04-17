@@ -1,5 +1,5 @@
 /**
- * Kenya Locations Data - Counties, Towns/Cities, and Countries
+ * Kenya Locations Data - Counties, Towns/Cities, Countries, Industries & Phone Codes
  */
 
 export interface Location {
@@ -257,3 +257,71 @@ export function getCitiesByCounty(county: string): string[] {
   const location = KENYAN_COUNTIES.find(l => l.county === county);
   return location ? location.cities : [];
 }
+
+/**
+ * Industries
+ */
+export const INDUSTRIES: string[] = [
+  "Agriculture", "Automotive", "Banking & Finance", "Construction", "Consulting",
+  "Education", "Energy & Utilities", "Food & Beverage", "Government", "Healthcare",
+  "Hospitality & Tourism", "ICT / Technology", "Insurance", "Legal", "Logistics & Transport",
+  "Manufacturing", "Media & Entertainment", "NGO / Non-Profit", "Real Estate", "Retail",
+  "Telecommunications", "Other",
+];
+
+/**
+ * Phone country codes (sorted by most common for African CRM)
+ */
+export interface PhoneCode {
+  code: string;
+  country: string;
+  flag: string;
+}
+
+export const PHONE_COUNTRY_CODES: PhoneCode[] = [
+  { code: "+254", country: "Kenya", flag: "🇰🇪" },
+  { code: "+255", country: "Tanzania", flag: "🇹🇿" },
+  { code: "+256", country: "Uganda", flag: "🇺🇬" },
+  { code: "+250", country: "Rwanda", flag: "🇷🇼" },
+  { code: "+257", country: "Burundi", flag: "🇧🇮" },
+  { code: "+251", country: "Ethiopia", flag: "🇪🇹" },
+  { code: "+252", country: "Somalia", flag: "🇸🇴" },
+  { code: "+27", country: "South Africa", flag: "🇿🇦" },
+  { code: "+234", country: "Nigeria", flag: "🇳🇬" },
+  { code: "+233", country: "Ghana", flag: "🇬🇭" },
+  { code: "+20", country: "Egypt", flag: "🇪🇬" },
+  { code: "+249", country: "Sudan", flag: "🇸🇩" },
+  { code: "+237", country: "Cameroon", flag: "🇨🇲" },
+  { code: "+225", country: "Ivory Coast", flag: "🇨🇮" },
+  { code: "+221", country: "Senegal", flag: "🇸🇳" },
+  { code: "+267", country: "Botswana", flag: "🇧🇼" },
+  { code: "+264", country: "Namibia", flag: "🇳🇦" },
+  { code: "+263", country: "Zimbabwe", flag: "🇿🇼" },
+  { code: "+260", country: "Zambia", flag: "🇿🇲" },
+  { code: "+265", country: "Malawi", flag: "🇲🇼" },
+  { code: "+258", country: "Mozambique", flag: "🇲🇿" },
+  { code: "+230", country: "Mauritius", flag: "🇲🇺" },
+  { code: "+1", country: "United States", flag: "🇺🇸" },
+  { code: "+44", country: "United Kingdom", flag: "🇬🇧" },
+  { code: "+1", country: "Canada", flag: "🇨🇦" },
+  { code: "+61", country: "Australia", flag: "🇦🇺" },
+  { code: "+91", country: "India", flag: "🇮🇳" },
+  { code: "+86", country: "China", flag: "🇨🇳" },
+  { code: "+81", country: "Japan", flag: "🇯🇵" },
+  { code: "+49", country: "Germany", flag: "🇩🇪" },
+  { code: "+33", country: "France", flag: "🇫🇷" },
+  { code: "+34", country: "Spain", flag: "🇪🇸" },
+  { code: "+39", country: "Italy", flag: "🇮🇹" },
+  { code: "+31", country: "Netherlands", flag: "🇳🇱" },
+  { code: "+41", country: "Switzerland", flag: "🇨🇭" },
+  { code: "+46", country: "Sweden", flag: "🇸🇪" },
+  { code: "+971", country: "UAE", flag: "🇦🇪" },
+  { code: "+966", country: "Saudi Arabia", flag: "🇸🇦" },
+  { code: "+974", country: "Qatar", flag: "🇶🇦" },
+  { code: "+55", country: "Brazil", flag: "🇧🇷" },
+  { code: "+52", country: "Mexico", flag: "🇲🇽" },
+  { code: "+65", country: "Singapore", flag: "🇸🇬" },
+  { code: "+60", country: "Malaysia", flag: "🇲🇾" },
+  { code: "+63", country: "Philippines", flag: "🇵🇭" },
+  { code: "+82", country: "South Korea", flag: "🇰🇷" },
+];

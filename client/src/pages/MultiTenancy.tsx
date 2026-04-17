@@ -28,6 +28,8 @@ import {
   Search, RefreshCw, Loader2, CheckCircle2, XCircle, ToggleRight, ToggleLeft,
   CreditCard, LayoutGrid, MessageSquare, Send, Eye, Mail, AlertCircle, Archive, RotateCcw,
 } from "lucide-react";
+import { CountrySelect } from "@/components/LocationSelects";
+import { PhoneInput } from "@/components/PhoneInput";
 import { format, parseISO } from "date-fns";
 import { Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
@@ -1643,7 +1645,7 @@ function OrgFormWithAdmin({ form, setForm, allUsers, planOptions, tierMaxUsers }
           </div>
           <div className="space-y-1.5">
             <Label>Contact Phone</Label>
-            <Input value={form.contactPhone} onChange={f("contactPhone")} placeholder="+254 700 000 000" />
+            <PhoneInput value={form.contactPhone} onChange={(v) => setForm({...form, contactPhone: v})} placeholder="700 000 000" />
           </div>
           <div className="space-y-1.5">
             <Label>Website</Label>
@@ -1655,7 +1657,7 @@ function OrgFormWithAdmin({ form, setForm, allUsers, planOptions, tierMaxUsers }
           </div>
           <div className="space-y-1.5">
             <Label>Country</Label>
-            <Input value={form.country} onChange={f("country")} placeholder="Kenya" />
+            <CountrySelect value={form.country} onChange={(v) => setForm({...form, country: v})} />
           </div>
           <div className="space-y-1.5">
             <Label>Tax ID / KRA PIN</Label>
@@ -1816,7 +1818,7 @@ function OrgFormBasic({ form, setForm, mode, planOptions, tierMaxUsers }: { form
         </div>
         <div className="space-y-1.5">
           <Label>Contact Phone</Label>
-          <Input value={form.contactPhone} onChange={f("contactPhone")} placeholder="+254 700 000 000" />
+          <PhoneInput value={form.contactPhone} onChange={(v) => setForm({...form, contactPhone: v})} placeholder="700 000 000" />
         </div>
         <div className="space-y-1.5">
           <Label>Website</Label>
@@ -1828,7 +1830,7 @@ function OrgFormBasic({ form, setForm, mode, planOptions, tierMaxUsers }: { form
         </div>
         <div className="space-y-1.5">
           <Label>Country</Label>
-          <Input value={form.country} onChange={f("country")} placeholder="Kenya" />
+          <CountrySelect value={form.country} onChange={(v) => setForm({...form, country: v})} />
         </div>
         <div className="space-y-1.5">
           <Label>Tax ID / KRA PIN</Label>

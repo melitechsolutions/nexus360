@@ -18,6 +18,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Save, UserPlus, Building2, MapPin, CreditCard, Users, Lock } from "lucide-react";
+import { CountrySelect, CitySelect } from "@/components/LocationSelects";
+import { PhoneInput } from "@/components/PhoneInput";
 import { trpc } from "@/lib/trpc";
 import mutateAsync from "@/lib/mutationHelpers";
 
@@ -151,11 +153,11 @@ export default function CreateClient() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+254 700 000 000" />
+                  <PhoneInput id="phone" value={formData.phone} onChange={(v) => setFormData({ ...formData, phone: v })} placeholder="700 000 000" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="secondaryPhone">Secondary Phone</Label>
-                  <Input id="secondaryPhone" value={formData.secondaryPhone} onChange={(e) => setFormData({ ...formData, secondaryPhone: e.target.value })} placeholder="+254 711 000 000" />
+                  <PhoneInput id="secondaryPhone" value={formData.secondaryPhone} onChange={(v) => setFormData({ ...formData, secondaryPhone: v })} placeholder="711 000 000" />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -186,11 +188,11 @@ export default function CreateClient() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="city">City / Town</Label>
-                  <Input id="city" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Nairobi" />
+                  <CitySelect value={formData.city} onChange={(v) => setFormData({ ...formData, city: v })} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="country">Country</Label>
-                  <Input id="country" value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} placeholder="Kenya" />
+                  <CountrySelect value={formData.country} onChange={(v) => setFormData({ ...formData, country: v })} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="postalCode">Postal / ZIP Code</Label>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
-import { CountrySelect, CitySelect } from "@/components/LocationSelects";
+import { CountrySelect, CitySelect, IndustrySelect } from "@/components/LocationSelects";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -313,12 +313,7 @@ export default function EditClient() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="industry">Industry</Label>
-                  <Input
-                    id="industry"
-                    value={formData.industry}
-                    onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                    placeholder="Technology"
-                  />
+                  <IndustrySelect value={formData.industry} onChange={(v) => setFormData({...formData, industry: v})} />
                 </div>
               </div>
 

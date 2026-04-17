@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CountrySelect, CitySelect } from "@/components/LocationSelects";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
@@ -212,11 +213,11 @@ export default function EditContact() {
             </div>
             <div>
               <Label htmlFor="city">City</Label>
-              <Input id="city" value={formData.city} onChange={(e) => update("city", e.target.value)} />
+              <CitySelect value={formData.city} onChange={(v) => update("city", v)} />
             </div>
             <div>
               <Label htmlFor="country">Country</Label>
-              <Input id="country" value={formData.country} onChange={(e) => update("country", e.target.value)} />
+              <CountrySelect value={formData.country} onChange={(v) => update("country", v)} />
             </div>
             <div>
               <Label htmlFor="postalCode">Postal Code</Label>

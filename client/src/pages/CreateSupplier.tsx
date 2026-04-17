@@ -8,6 +8,7 @@ import { ModuleLayout } from "@/components/ModuleLayout";
 import { FormField, FormTextInput, FormTextarea, FormSelect } from "@/components/FormField";
 import { Plus, Loader2, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CountrySelect, CitySelect } from "@/components/LocationSelects";
 
 export default function CreateSupplierPage() {
   const [, navigate] = useLocation();
@@ -186,19 +187,11 @@ export default function CreateSupplierPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField label="City" error={errors.city}>
-                  <FormTextInput
-                    placeholder="City"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
-                  />
+                  <CitySelect value={formData.city} onChange={(v) => handleInputChange("city", v)} />
                 </FormField>
 
                 <FormField label="Country" error={errors.country}>
-                  <FormTextInput
-                    placeholder="Country"
-                    value={formData.country}
-                    onChange={(e) => handleInputChange("country", e.target.value)}
-                  />
+                  <CountrySelect value={formData.country} onChange={(v) => handleInputChange("country", v)} />
                 </FormField>
 
                 <FormField label="Postal Code" error={errors.postalCode}>

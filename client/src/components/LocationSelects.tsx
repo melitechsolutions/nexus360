@@ -17,6 +17,7 @@ import {
   KENYAN_COUNTIES_NAMES,
   KENYAN_CITIES,
   getCitiesByCounty,
+  INDUSTRIES,
 } from "@/data/locations";
 import { useEffect, useState } from "react";
 
@@ -131,6 +132,45 @@ export function CitySelect({
                 {city}
               </SelectItem>
             ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+interface IndustrySelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  label?: string;
+  required?: boolean;
+}
+
+export function IndustrySelect({
+  value,
+  onChange,
+  placeholder = "Select industry",
+  label,
+  required,
+}: IndustrySelectProps) {
+  return (
+    <div className="space-y-2">
+      {label && (
+        <Label>
+          {label}
+          {required && <span className="text-red-500">*</span>}
+        </Label>
+      )}
+      <Select value={value || ""} onValueChange={onChange}>
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {INDUSTRIES.map((industry) => (
+            <SelectItem key={industry} value={industry} className="cursor-pointer">
+              {industry}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

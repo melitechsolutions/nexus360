@@ -1,14 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRequireRole } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
+import { trpc } from "@/lib/trpc";
 import {
   AlertCircle,
   Download,
   Filter,
   Search,
   Clock,
-  Eye,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Monitor,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,144 +25,60 @@ import {
 } from "@/components/ui/select";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Badge } from "@/components/ui/badge";
-
-interface AuditLog {
-  id: string;
-  timestamp: Date;
-  level: "info" | "warning" | "error" | "debug";
-  category: string;
-  user: string;
-  action: string;
-  message: string;
-  details: string;
-  ipAddress: string;
-}
-
-type FilterLevel = "all" | "info" | "warning" | "error" | "debug";
+import { StatsCard } from "@/components/ui/stats-card";
+import { exportToCsv } from "@/utils/exportCsv";
 
 export default function SystemLogsViewer() {
-  const { allowed, isLoading } = useRequireRole(["ict_manager", "super_admin", "admin"]);
+  const { allowed, isLoading: roleLoading } = useRequireRole(["ict_manager", "super_admin", "admin"]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterLevel, setFilterLevel] = useState<FilterLevel>("all");
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterAction, setFilterAction] = useState("all");
+  const [filterEntityType, setFilterEntityType] = useState("all");
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const limit = 30;
 
-  // Mock data - in production this would come from tRPC
-  const mockLogs: AuditLog[] = [
-    {
-      id: "1",
-      timestamp: new Date(Date.now() - 5 * 60000),
-      level: "info",
-      category: "Authentication",
-      user: "admin@example.com",
-      action: "Login",
-      message: "User successfully logged in",
-      details: "Session created with token: abc123...",
-      ipAddress: "192.168.1.100",
-    },
-    {
-      id: "2",
-      timestamp: new Date(Date.now() - 15 * 60000),
-      level: "warning",
-      category: "Security",
-      user: "system",
-      action: "Failed Login Attempt",
-      message: "Multiple failed login attempts detected",
-      details: "3 failed attempts from IP 192.168.1.50 in last 10 minutes",
-      ipAddress: "192.168.1.50",
-    },
-    {
-      id: "3",
-      timestamp: new Date(Date.now() - 30 * 60000),
-      level: "info",
-      category: "Database",
-      user: "backup-service",
-      action: "Backup Started",
-      message: "Automatic database backup initiated",
-      details: "Full backup of production database started",
-      ipAddress: "10.0.0.1",
-    },
-    {
-      id: "4",
-      timestamp: new Date(Date.now() - 1 * 60 * 60000),
-      level: "error",
-      category: "API",
-      user: "system",
-      action: "API Error",
-      message: "High error rate detected on /api/invoices",
-      details: "Error rate: 5.2% (threshold: 2%)",
-      ipAddress: "10.0.0.2",
-    },
-    {
-      id: "5",
-      timestamp: new Date(Date.now() - 2 * 60 * 60000),
-      level: "info",
-      category: "System",
-      user: "admin@example.com",
-      action: "System Configuration",
-      message: "System settings updated",
-      details: "Email retention period changed from 30 to 60 days",
-      ipAddress: "192.168.1.100",
-    },
-  ];
+  const logsQ = trpc.activityTrail.list.useQuery({
+    page,
+    limit,
+    search: searchTerm || undefined,
+    action: filterAction !== "all" ? filterAction : undefined,
+    entityType: filterEntityType !== "all" ? filterEntityType : undefined,
+  });
 
-  // Filter logs
-  const filteredLogs = useMemo(() => {
-    return mockLogs.filter((log) => {
-      const matchesSearch =
-        searchTerm === "" ||
-        log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.details.toLowerCase().includes(searchTerm.toLowerCase());
+  const statsQ = trpc.activityTrail.getStats.useQuery();
+  const entityTypesQ = trpc.activityTrail.getEntityTypes.useQuery();
+  const actionsQ = trpc.activityTrail.getActions.useQuery();
 
-      const matchesLevel = filterLevel === "all" || log.level === filterLevel;
-      const matchesCategory =
-        filterCategory === "all" || log.category === filterCategory;
+  const logs = logsQ.data?.activities ?? [];
+  const total = logsQ.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const entityTypes = entityTypesQ.data ?? [];
+  const actions = actionsQ.data ?? [];
+  const stats = statsQ.data;
 
-      return matchesSearch && matchesLevel && matchesCategory;
-    });
-  }, [searchTerm, filterLevel, filterCategory]);
-
-  const categories = ["all", ...new Set(mockLogs.map((log) => log.category))];
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "error":
-        return "bg-red-100 text-red-800";
-      case "warning":
-        return "bg-yellow-100 text-yellow-800";
-      case "info":
-        return "bg-blue-100 text-blue-800";
-      case "debug":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const getLevelColor = (action: string) => {
+    const a = action?.toLowerCase() || "";
+    if (a.includes("delete") || a.includes("fail") || a.includes("error")) return "bg-red-100 text-red-800";
+    if (a.includes("warn") || a.includes("reject")) return "bg-yellow-100 text-yellow-800";
+    if (a.includes("creat") || a.includes("approv") || a.includes("login")) return "bg-green-100 text-green-800";
+    return "bg-blue-100 text-blue-800";
   };
 
-  const getLevelIcon = (level: string) => {
-    switch (level) {
-      case "error":
-        return <AlertCircle className="w-4 h-4" />;
-      case "warning":
-        return <AlertCircle className="w-4 h-4" />;
-      default:
-        return <Clock className="w-4 h-4" />;
-    }
+  const handleExport = () => {
+    if (!logs.length) return;
+    exportToCsv(logs.map((l: any) => ({
+      Date: l.createdAt ? new Date(l.createdAt).toLocaleString() : "",
+      Action: l.action,
+      Entity: l.entityType,
+      Description: l.description,
+      User: l.userId,
+    })), "system-logs");
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Spinner className="size-8" />
-      </div>
-    );
+  if (roleLoading) {
+    return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
   }
-
-  if (!allowed) {
-    return null;
-  }
+  if (!allowed) return null;
 
   return (
     <ModuleLayout
@@ -174,142 +92,100 @@ export default function SystemLogsViewer() {
       ]}
     >
       <div className="space-y-6">
-        {/* Filters and Search */}
+        {/* Stats */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <StatsCard label="Total Activities" value={stats?.totalActivities ?? 0} description="All logged events" icon={<Clock className="h-5 w-5" />} color="border-l-blue-500" />
+          <StatsCard label="Unique Users" value={stats?.uniqueUsers ?? 0} description="Active users" icon={<Monitor className="h-5 w-5" />} color="border-l-green-500" />
+          <StatsCard label="Entity Types" value={entityTypes.length} description="Categories tracked" icon={<Filter className="h-5 w-5" />} color="border-l-purple-500" />
+          <StatsCard label="Action Types" value={actions.length} description="Distinct actions" icon={<AlertCircle className="h-5 w-5" />} color="border-l-cyan-500" />
+        </div>
+
+        {/* Filters */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="w-5 h-5" />
-              Filters & Search
-            </CardTitle>
+            <CardTitle className="flex items-center gap-2"><Filter className="w-5 h-5" /> Filters & Search</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-4">
-              <div className="flex gap-2">
-                <Search className="w-5 h-5 text-gray-400 absolute ml-2 mt-3" />
-                <Input
-                  placeholder="Search logs..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+              <div className="relative">
+                <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" />
+                <Input placeholder="Search logs..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }} className="pl-9" />
               </div>
-
-              <Select value={filterLevel} onValueChange={(value) => setFilterLevel(value as FilterLevel)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by level" />
-                </SelectTrigger>
+              <Select value={filterAction} onValueChange={(v) => { setFilterAction(v); setPage(1); }}>
+                <SelectTrigger><SelectValue placeholder="All actions" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="debug">Debug</SelectItem>
-                  <SelectItem value="info">Info</SelectItem>
-                  <SelectItem value="warning">Warning</SelectItem>
-                  <SelectItem value="error">Error</SelectItem>
+                  <SelectItem value="all">All Actions</SelectItem>
+                  {actions.map((a: string) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
                 </SelectContent>
               </Select>
-
-              <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
+              <Select value={filterEntityType} onValueChange={(v) => { setFilterEntityType(v); setPage(1); }}>
+                <SelectTrigger><SelectValue placeholder="All entities" /></SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category === "all" ? "All Categories" : category}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">All Entity Types</SelectItem>
+                  {entityTypes.map((t: string) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
-
-              <Button variant="outline" className="gap-2">
-                <Download className="w-4 h-4" />
-                Export
-              </Button>
+              <Button variant="outline" className="gap-2" onClick={handleExport}><Download className="w-4 h-4" /> Export</Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Logs Table */}
+        {/* Logs */}
         <Card>
           <CardHeader>
             <CardTitle>Activity Logs</CardTitle>
-            <CardDescription>
-              Showing {filteredLogs.length} of {mockLogs.length} logs
-            </CardDescription>
+            <CardDescription>Showing {logs.length} of {total} logs (page {page}/{totalPages})</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {filteredLogs.length > 0 ? (
-                filteredLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                  >
-                    <div
-                      className="flex items-start justify-between cursor-pointer"
-                      onClick={() =>
-                        setExpandedLogId(expandedLogId === log.id ? null : log.id)
-                      }
-                    >
+            {logsQ.isLoading ? (
+              <div className="flex justify-center py-8"><Spinner className="size-6" /></div>
+            ) : logs.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No logs matching your criteria</p>
+            ) : (
+              <div className="space-y-3">
+                {logs.map((log: any) => (
+                  <div key={log.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-start justify-between cursor-pointer" onClick={() => setExpandedLogId(expandedLogId === String(log.id) ? null : String(log.id))}>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <Badge
-                            variant="outline"
-                            className={`flex items-center gap-1 ${getLevelColor(
-                              log.level
-                            )}`}
-                          >
-                            {getLevelIcon(log.level)}
-                            {log.level.charAt(0).toUpperCase() + log.level.slice(1)}
-                          </Badge>
-                          <span className="text-sm text-gray-600">{log.category}</span>
-                          <span className="text-xs text-gray-400">
-                            {log.timestamp.toLocaleTimeString()}
-                          </span>
+                          <Badge variant="outline" className={getLevelColor(log.action)}>{log.action}</Badge>
+                          <span className="text-sm text-muted-foreground">{log.entityType}</span>
+                          <span className="text-xs text-muted-foreground">{log.createdAt ? new Date(log.createdAt).toLocaleString() : ""}</span>
                         </div>
-                        <p className="font-medium text-sm mb-1">{log.action}</p>
-                        <p className="text-sm text-gray-600">{log.message}</p>
-                        <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                          <span>User: {log.user}</span>
-                          <span>IP: {log.ipAddress}</span>
+                        <p className="text-sm">{log.description}</p>
+                        <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                          <span>User ID: {log.userId}</span>
+                          {log.entityId && <span>Entity: {log.entityId}</span>}
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="ml-2"
-                        onClick={() =>
-                          setExpandedLogId(
-                            expandedLogId === log.id ? null : log.id
-                          )
-                        }
-                      >
-                        <ChevronDown
-                          className={`w-4 h-4 transition-transform ${
-                            expandedLogId === log.id ? "rotate-180" : ""
-                          }`}
-                        />
-                      </Button>
+                      <Button variant="ghost" size="sm"><ChevronDown className={`w-4 h-4 transition-transform ${expandedLogId === String(log.id) ? "rotate-180" : ""}`} /></Button>
                     </div>
-
-                    {/* Expanded Details */}
-                    {expandedLogId === log.id && (
+                    {expandedLogId === String(log.id) && (
                       <div className="mt-4 pt-4 border-t">
-                        <div className="bg-gray-50 rounded p-3">
-                          <p className="text-sm font-medium mb-2">Details:</p>
-                          <p className="text-sm text-gray-700 font-mono break-words">
-                            {log.details}
-                          </p>
+                        <div className="bg-muted rounded p-3 text-sm font-mono break-words">
+                          <p><strong>ID:</strong> {log.id}</p>
+                          <p><strong>Action:</strong> {log.action}</p>
+                          <p><strong>Entity Type:</strong> {log.entityType}</p>
+                          <p><strong>Entity ID:</strong> {log.entityId}</p>
+                          <p><strong>Description:</strong> {log.description}</p>
+                          <p><strong>Created:</strong> {log.createdAt ? new Date(log.createdAt).toISOString() : ""}</p>
+                          {log.metadata && <p><strong>Metadata:</strong> {typeof log.metadata === "string" ? log.metadata : JSON.stringify(log.metadata)}</p>}
                         </div>
                       </div>
                     )}
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No logs matching your criteria</p>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}><ChevronLeft className="w-4 h-4 mr-1" /> Previous</Button>
+                <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next <ChevronRight className="w-4 h-4 ml-1" /></Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

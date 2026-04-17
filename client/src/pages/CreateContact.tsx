@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserPlus } from "lucide-react";
+import { CountrySelect, CitySelect } from "@/components/LocationSelects";
 
 export default function CreateContact() {
   const [, setLocation] = useLocation();
@@ -168,11 +169,11 @@ export default function CreateContact() {
             </div>
             <div>
               <Label htmlFor="city">City</Label>
-              <Input id="city" value={formData.city} onChange={(e) => update("city", e.target.value)} />
+              <CitySelect value={formData.city} onChange={(v) => update("city", v)} />
             </div>
             <div>
               <Label htmlFor="country">Country</Label>
-              <Input id="country" value={formData.country} onChange={(e) => update("country", e.target.value)} />
+              <CountrySelect value={formData.country} onChange={(v) => update("country", v)} />
             </div>
             <div>
               <Label htmlFor="postalCode">Postal Code</Label>
