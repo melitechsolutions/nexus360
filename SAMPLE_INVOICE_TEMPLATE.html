@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Template</title>
+    <style>
+        @media print {
+            * { 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                color-adjust: exact;
+            }
+            body { 
+                margin: 0;
+                padding: 0;
+            }
+            .document-container { 
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+                box-shadow: none;
+            }
+            .no-print { 
+                display: none !important;
+            }
+            .page-break { 
+                page-break-after: always;
+            }
+            table { 
+                page-break-inside: avoid;
+            }
+            p, li, h1, h2, h3, h4, h5, h6 { 
+                orphans: 3;
+                widows: 3;
+            }
+        }
+        @page {
+            margin: 40px;
+            size: A4;
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background: #fff;">
+    <div class="document-container" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #2d3436; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 32px; background: white;">
+        
+        <!-- ===== HEADER WITH BRANDING ===== -->
+        <div data-section="header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 2px solid #dfe6e9;">
+            <div style="flex: 1;">
+                <h1 style="font-size: 24px; font-weight: 700; color: #2d3436; margin: 0 0 8px 0; letter-spacing: -0.5px;">${companyInfo.companyName}</h1>
+                <p style="font-size: 14px; color: #ff9f43; font-style: italic; margin: 0; font-weight: 500;">${companyInfo.companyTagline}</p>
+                <div style="font-size: 12px; color: #636e72; margin-top: 8px; line-height: 1.5;">
+                    <div style="margin: 4px 0;">${companyInfo.companyPhone}</div>
+                    <div style="margin: 4px 0;">${companyInfo.companyEmail}</div>
+                    <div style="margin: 4px 0;">${companyInfo.companyAddress}</div>
+                </div>
+            </div>
+            
+            <div style="width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
+                <img src="${companyInfo.companyLogo}" alt="Company Logo" style="max-width: 100%; max-height: 80px; filter: brightness(0.95);" />
+            </div>
+        </div>
+
+        <!-- ===== DOCUMENT TITLE ===== -->
+        <h1 data-section="title" style="font-size: 32px; font-weight: 700; color: #2d3436; margin: 16px 0; letter-spacing: -1px;">INVOICE</h1>
+
+        <!-- ===== DOCUMENT DETAILS & BILL TO (2-Column Layout) ===== -->
+        <div data-section="document-info" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0;">
+            <!-- Left: Invoice Details -->
+            <div style="background: #f8f9fa; border-left: 4px solid #ff9f43; padding: 16px; border-radius: 4px;">
+                <div style="font-weight: 700; font-size: 15px; color: #2d3436; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #dfe6e9;">Invoice Details</div>
+                <div style="font-size: 14px; color: #636e72;">
+                    <div style="margin: 6px 0;"><strong style="font-weight: 600; color: #2d3436;">Invoice #:</strong> ${documentNumber}</div>
+                    <div style="margin: 6px 0;"><strong style="font-weight: 600; color: #2d3436;">Date Issued:</strong> ${issueDate}</div>
+                    <div style="margin: 6px 0;"><strong style="font-weight: 600; color: #2d3436;">Due Date:</strong> ${dueDate}</div>
+                    <div style="margin: 6px 0;"><strong style="font-weight: 600; color: #2d3436;">Tax Rate:</strong> ${taxRate}</div>
+                </div>
+            </div>
+            <!-- Right: Bill To / Customer -->
+            <div style="background: #f8f9fa; border-left: 4px solid #ff9f43; padding: 16px; border-radius: 4px;">
+                <div style="font-weight: 700; font-size: 15px; color: #2d3436; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #dfe6e9;">Bill To / Customer</div>
+                <div style="font-size: 14px; color: #636e72;">
+                    <div style="margin: 6px 0;"><strong style="font-weight: 600; color: #2d3436;">Customer Name:</strong> ${clientInfo.clientName}</div>
+                    <div style="margin: 6px 0;"><strong style="font-weight: 600; color: #2d3436;">Company:</strong> ${clientInfo.clientCompany}</div>
+                    <div style="margin: 6px 0;"><strong style="font-weight: 600; color: #2d3436;">Email:</strong> ${clientInfo.clientEmail}</div>
+                    <div style="margin: 6px 0;"><strong style="font-weight: 600; color: #2d3436;">Phone:</strong> ${clientInfo.clientPhone}</div>
+                    <div style="margin: 6px 0;"><strong style="font-weight: 600; color: #2d3436;">Address:</strong> ${clientInfo.clientAddress}</div>
+                    <div style="margin: 6px 0;"><strong style="font-weight: 600; color: #2d3436;">KRA PIN:</strong> ${clientInfo.clientKraPin}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TABLE SECTION ===== -->
+        <div data-section="line-items" style="margin: 24px 0;">
+            <h2 style="font-size: 16px; font-weight: 700; color: #2d3436; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #ff9f43; text-transform: uppercase; letter-spacing: 0.5px;">Line Items</h2>
+            <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+                <thead>
+                    <tr>
+                        <th style="background: #f8f9fa; color: #2d3436; padding: 12px; text-align: left; font-weight: 700; border-bottom: 2px solid #ff9f43; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;">Description</th>
+                        <th style="background: #f8f9fa; color: #2d3436; padding: 12px; text-align: center; font-weight: 700; border-bottom: 2px solid #ff9f43; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; width: 80px;">Qty</th>
+                        <th style="background: #f8f9fa; color: #2d3436; padding: 12px; text-align: right; font-weight: 700; border-bottom: 2px solid #ff9f43; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; width: 120px;">Unit Price</th>
+                        <th style="background: #f8f9fa; color: #2d3436; padding: 12px; text-align: right; font-weight: 700; border-bottom: 2px solid #ff9f43; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; width: 120px;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #dfe6e9;">Professional Services - Software Development</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #dfe6e9; text-align: center;">1</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #dfe6e9; text-align: right;">KES 50,000.00</td>
+                        <td style="padding: 12px; border-bottom: 1px solid #dfe6e9; text-align: right;">KES 50,000.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ===== TOTALS SECTION ===== -->
+        <div data-section="totals" style="margin: 24px 0;">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+                <div style="width: 300px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px; text-align: left;"><strong style="font-weight: 600; color: #2d3436;">Subtotal:</strong></td>
+                            <td style="padding: 8px; text-align: right;">${subtotal}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px; text-align: left;"><strong style="font-weight: 600; color: #2d3436;">VAT (16%):</strong></td>
+                            <td style="padding: 8px; text-align: right;">${tax}</td>
+                        </tr>
+                        <tr style="border-bottom: 2px solid #ff9f43; background-color: #f5f5f5;">
+                            <td style="padding: 8px; text-align: left;"><strong style="font-weight: 600; color: #2d3436;">Total Amount Due:</strong></td>
+                            <td style="padding: 8px; text-align: right; font-weight: bold;">${total}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PAYMENT TERMS & CONDITIONS SECTION ===== -->
+        <div data-section="terms" style="margin: 24px 0;">
+            <h2 style="font-size: 16px; font-weight: 700; color: #2d3436; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid #ff9f43; text-transform: uppercase; letter-spacing: 0.5px;">Payment Terms &amp; Conditions</h2>
+            <div style="font-size: 13px; line-height: 1.6; color: #636e72; margin: 16px 0;">
+                <ol style="margin-left: 20px; padding-left: 32px;">
+                    <li style="margin: 4px 0;"><strong style="font-weight: 600; color: #2d3436;">Payment Terms:</strong> Payment due within 30 days from invoice date unless otherwise agreed.</li>
+                    <li style="margin: 4px 0;"><strong style="font-weight: 600; color: #2d3436;">Late Payment Penalty:</strong> 1.5% interest per month charged on overdue amounts after 30 days.</li>
+                    <li style="margin: 4px 0;"><strong style="font-weight: 600; color: #2d3436;">Payment Methods:</strong> Bank transfer, cheque, cash, or mobile payment (M-Pesa/Airtel Money).</li>
+                    <li style="margin: 4px 0;"><strong style="font-weight: 600; color: #2d3436;">Currency:</strong> All amounts in Kenyan Shillings (KES).</li>
+                    <li style="margin: 4px 0;"><strong style="font-weight: 600; color: #2d3436;">Tax Invoice:</strong> Valid tax invoice for VAT purposes where applicable.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <div data-section="footer" style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #dfe6e9; font-size: 12px; color: #636e72;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 16px;">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 600; color: #2d3436; margin-bottom: 4px;">${companyInfo.companyName}</span>
+                    <span style="font-size: 12px; color: #636e72; margin: 2px 0;">${companyInfo.companyAddress}</span>
+                    <span style="font-size: 12px; color: #636e72; margin: 2px 0;">${companyInfo.companyPhone}</span>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 600; color: #2d3436; margin-bottom: 4px;">Contact Us</span>
+                    <span style="font-size: 12px; color: #636e72; margin: 2px 0;">${companyInfo.companyEmail}</span>
+                    <span style="font-size: 12px; color: #636e72; margin: 2px 0;">${companyInfo.companyWebsite}</span>
+                </div>
+            </div>
+            <div style="text-align: center; padding-top: 16px; border-top: 1px solid #dfe6e9; font-size: 11px; color: #636e72; font-style: italic;">
+                For more information or queries, feel free to talk to us or send us an email on ${companyInfo.companyEmail}
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

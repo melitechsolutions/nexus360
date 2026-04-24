@@ -1,0 +1,49 @@
+
+> nexus360@1.0.0 build E:\melitech_crm
+> vite build && node esbuild.config.mjs
+
+NODE_ENV=production is not supported in the .env file. Only NODE_ENV=development is supported to create a development build of your project. If you need to set process.env.NODE_ENV, you can set it in the Vite config instead.
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+Error processing file E:/melitech_crm/client/src/pages/admin/ApiRateLimiting.tsx: SyntaxError: Unexpected token (692:0)
+    at constructor (E:\melitech_crm\node_modules\.pnpm\@babel+parser@7.29.0\node_modules\@babel\parser\lib\index.js:365:19)
+    at TypeScriptParserMixin.raise (E:\melitech_crm\node_modules\.pnpm\@babel+parser@7.29.0\node_modules\@babel\parser\lib\index.js:6599:19)
+    at TypeScriptParserMixin.unexpected (E:\melitech_crm\node_modules\.pnpm\@babel+parser@7.29.0\node_modules\@babel\parser\lib\index.js:6619:16)
+    at TypeScriptParserMixin.parseExprAtom (E:\melitech_crm\node_modules\.pnpm\@babel+parser@7.29.0\node_modules\@babel\parser\lib\index.js:11442:22)
+    at TypeScriptParserMixin.parseExprAtom (E:\melitech_crm\node_modules\.pnpm\@babel+parser@7.29.0\node_modules\@babel\parser\lib\index.js:4764:20)
+    at TypeScriptParserMixin.parseExprSubscripts (E:\melitech_crm\node_modules\.pnpm\@babel+parser@7.29.0\node_modules\@babel\parser\lib\index.js:11081:23)
+    at TypeScriptParserMixin.parseUpdate (E:\melitech_crm\node_modules\.pnpm\@babel+parser@7.29.0\node_modules\@babel\parser\lib\index.js:11066:21)
+    at TypeScriptParserMixin.parseMaybeUnary (E:\melitech_crm\node_modules\.pnpm\@babel+parser@7.29.0\node_modules\@babel\parser\lib\index.js:11046:23)
+    at TypeScriptParserMixin.parseMaybeUnary (E:\melitech_crm\node_modules\.pnpm\@babel+parser@7.29.0\node_modules\@babel\parser\lib\index.js:9837:18)
+    at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (E:\melitech_crm\node_modules\.pnpm\@babel+parser@7.29.0\node_modules\@babel\parser\lib\index.js:10899:61) {
+  code: 'BABEL_PARSER_SYNTAX_ERROR',
+  reasonCode: 'UnexpectedToken',
+  loc: Position { line: 692, column: 0, index: 26618 },
+  pos: 26618,
+  syntaxPlugin: undefined
+}
+[32mÔ£ô[39m 2187 modules transformed.
+Ô£ù Build failed in 18.48s
+error during build:
+[vite:esbuild] Transform failed with 1 error:
+E:/melitech_crm/client/src/pages/admin/ApiRateLimiting.tsx:692:0: ERROR: Unexpected "}"
+file: E:/melitech_crm/client/src/pages/admin/ApiRateLimiting.tsx:692:0
+
+Unexpected "}"
+690 |      </ModuleLayout>
+691 |    );
+692 |  }
+    |  ^
+693 |  
+
+    at failureErrorWithLog (E:\melitech_crm\node_modules\.pnpm\esbuild@0.27.3\node_modules\esbuild\lib\main.js:1467:15)
+    at E:\melitech_crm\node_modules\.pnpm\esbuild@0.27.3\node_modules\esbuild\lib\main.js:736:50
+    at responseCallbacks.<computed> (E:\melitech_crm\node_modules\.pnpm\esbuild@0.27.3\node_modules\esbuild\lib\main.js:603:9)
+    at handleIncomingPacket (E:\melitech_crm\node_modules\.pnpm\esbuild@0.27.3\node_modules\esbuild\lib\main.js:658:12)
+    at Socket.readFromStdout (E:\melitech_crm\node_modules\.pnpm\esbuild@0.27.3\node_modules\esbuild\lib\main.js:581:7)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

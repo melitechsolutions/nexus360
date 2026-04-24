@@ -1,0 +1,1 @@
+Never create deployment guides or markdown documentation files unless I specifically ask for them. If I ask for documentation, ensure it is concise, focused on key actions, and includes clear timelines and responsibilities. Avoid unnecessary details or lengthy explanations. Use tables and checklists for clarity. Always include a section on immediate next steps and key contacts.

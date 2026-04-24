@@ -1,0 +1,1 @@
+{"cpanelresult":{"apiversion":2,"postevent":{"result":1},"module":"Cron","event":{"result":1},"preevent":{"result":1},"data":[{"status":0,"statusmsg":"Cron job not found in the crontab."}],"func":"remove_line"}}

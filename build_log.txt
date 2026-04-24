@@ -1,0 +1,7 @@
+
+> nexus360@1.0.0 build E:\melitech_crm
+> vite build && node esbuild.config.mjs
+
+NODE_ENV=production is not supported in the .env file. Only NODE_ENV=development is supported to create a development build of your project. If you need to set process.env.NODE_ENV, you can set it in the Vite config instead.
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...

@@ -1,0 +1,1 @@
+{"cpanelresult":{"data":[{"status":1,"statusmsg":"crontab installed"}],"preevent":{"result":1},"module":"Cron","postevent":{"result":1},"func":"remove_line","event":{"result":1},"apiversion":2}}

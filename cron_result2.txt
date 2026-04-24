@@ -1,0 +1,1 @@
+{"cpanelresult":{"apiversion":2,"event":{"result":1},"func":"add_line","postevent":{"result":1},"module":"Cron","preevent":{"result":1},"data":[{"statusmsg":"crontab installed","status":1,"linekey":683335961}]}}

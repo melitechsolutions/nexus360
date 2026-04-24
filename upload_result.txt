@@ -1,0 +1,1 @@
+{"warnings":null,"data":{"warned":0,"failed":0,"succeeded":1,"uploads":[{"status":1,"file":"deploy.zip","size":9008551,"warnings":[],"reason":"Upload of ÔÇ£deploy.zipÔÇØ succeeded."}]},"errors":null,"metadata":{},"status":1,"messages":null}
