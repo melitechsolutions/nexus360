@@ -2,6 +2,7 @@ import { router, protectedProcedure, createFeatureRestrictedProcedure } from "..
 import { z } from "zod";
 import { getDb } from "../db";
 import { payroll, employees } from "../../drizzle/schema";
+import ExcelJS from "exceljs";
 import {
   salaryStructures,
   salaryAllowances,
@@ -16,6 +17,104 @@ import { eq, and, inArray } from "drizzle-orm";
 import { getCompanyInfo } from "../utils/company-info";
 import { v4 as uuidv4 } from "uuid";
 import { generateP9Form, generateP9DataFromPayroll } from "../utils/p9-form-generator";
+import { calculateKenyanPayroll } from "../utils/kenyan-payroll-calculator";
+import { processMonthlyPayroll, dispatchPayslips } from "../jobs/payrollJobs";
+import { TRPCError } from "@trpc/server";
+
+function toDbDate(d: Date): string {
+  return d.toISOString().replace("T", " ").substring(0, 19);
+}
+
+function parseMonthRange(month: string): { start: string; end: string } {
+  const [y, m] = month.split("-").map((v) => parseInt(v, 10));
+  if (!y || !m || m < 1 || m > 12) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid month format. Use YYYY-MM" });
+  }
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 0);
+  return { start: toDbDate(start), end: toDbDate(end) };
+}
+
+function resolvePayrollIds(input: any): string[] {
+  const ids = input?.ids || input?.payrollIds || [];
+  return Array.isArray(ids) ? ids : [];
+}
+
+async function buildP9ForEmployee(
+  db: any,
+  employeeId: string,
+  certifiedBy: string,
+  taxYear?: number
+) {
+  const employee = await db.select().from(employees).where(eq(employees.id, employeeId)).limit(1);
+  if (!employee || employee.length === 0) {
+    throw new Error("Employee not found");
+  }
+
+  const emp = employee[0];
+  const year = taxYear || new Date().getFullYear();
+  const payrollRecords = await db.select().from(payroll).where(eq(payroll.employeeId, employeeId));
+  if (!payrollRecords || payrollRecords.length === 0) {
+    throw new Error("No payroll records found for employee");
+  }
+
+  let totalBasicSalary = 0;
+  let totalAllowances = 0;
+  let totalTax = 0;
+  let totalNssf = 0;
+  let totalShif = 0;
+  let totalHousingLevy = 0;
+  let totalNetSalary = 0;
+
+  for (const record of payrollRecords as any[]) {
+    totalBasicSalary += Number(record.basicSalary || 0);
+    totalAllowances += Number(record.allowances || 0);
+    totalTax += Number(record.tax || 0);
+    totalNetSalary += Number(record.netSalary || 0);
+
+    let parsedNotes: any = {};
+    if (record.notes) {
+      try {
+        parsedNotes = JSON.parse(record.notes);
+      } catch {
+        parsedNotes = {};
+      }
+    }
+    totalNssf += Number(parsedNotes.nssf || 0);
+    totalShif += Number(parsedNotes.shif || 0);
+    totalHousingLevy += Number(parsedNotes.housingLevy || 0);
+  }
+
+  const companyInfo = await getCompanyInfo();
+  const p9Data = {
+    employeeId: emp.employeeNumber || emp.id,
+    employeeName: `${emp.firstName} ${emp.lastName}`,
+    nationalId: emp.nationalId || "N/A",
+    knRegNo: emp.taxId || "",
+    grossSalary: totalBasicSalary + totalAllowances,
+    paye: totalTax,
+    nssf: totalNssf,
+    shif: totalShif,
+    housingLevy: totalHousingLevy,
+    totalDeductions: totalTax + totalNssf + totalShif + totalHousingLevy,
+    netIncome: totalNetSalary,
+    taxYear: year,
+    monthFrom: 1,
+    monthTo: 12,
+    companyName: companyInfo.name,
+    companyKRAPin: companyInfo.kraPin || "N/A",
+    companyAddress: companyInfo.address || "N/A",
+    certificationDate: new Date(),
+    certifiedBy,
+    certifiedByTitle: "Human Resources Manager",
+  };
+
+  return {
+    htmlContent: generateP9Form(p9Data),
+    fileName: `P9-${emp.employeeNumber || emp.id}-${year}.html`,
+    employeeName: emp.firstName ? `${emp.firstName} ${emp.lastName}` : "Unknown",
+  };
+}
 
 export const payrollRouter = router({
   // ===================== Main Payroll Management =====================
@@ -88,6 +187,266 @@ export const payrollRouter = router({
         console.warn("Error fetching payroll by employee:", error);
         return [];
       }
+    }),
+
+  previewBatch: createFeatureRestrictedProcedure("payroll:read")
+    .input(
+      z.object({
+        month: z.string(),
+        employeeIds: z.array(z.string()).optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const { start, end } = parseMonthRange(input.month);
+      const employeeWhere = input.employeeIds?.length
+        ? and(eq(employees.status, "active"), inArray(employees.id, input.employeeIds))
+        : eq(employees.status, "active");
+
+      const empRows = await db.select().from(employees).where(employeeWhere);
+      if (empRows.length === 0) {
+        return {
+          records: [],
+          summary: {
+            totalEmployees: 0,
+            totalGrossSalary: 0,
+            totalDeductions: 0,
+            totalNetSalary: 0,
+            averageSalary: 0,
+          },
+        };
+      }
+
+      const empIds = empRows.map((e: any) => e.id);
+      const [structureRows, allowanceRows, deductionRows] = await Promise.all([
+        db.select().from(salaryStructures).where(inArray(salaryStructures.employeeId, empIds)),
+        db.select().from(salaryAllowances).where(inArray(salaryAllowances.employeeId, empIds)),
+        db.select().from(salaryDeductions).where(inArray(salaryDeductions.employeeId, empIds)),
+      ]);
+
+      const structureByEmp = new Map<string, any>();
+      for (const s of structureRows as any[]) {
+        if (!structureByEmp.has(s.employeeId)) structureByEmp.set(s.employeeId, s);
+      }
+
+      const allowanceByEmp = new Map<string, number>();
+      for (const a of allowanceRows as any[]) {
+        const amount = Number(a.amount || 0);
+        allowanceByEmp.set(a.employeeId, (allowanceByEmp.get(a.employeeId) || 0) + amount);
+      }
+
+      const deductionByEmp = new Map<string, number>();
+      for (const d of deductionRows as any[]) {
+        const amount = Number(d.amount || 0);
+        deductionByEmp.set(d.employeeId, (deductionByEmp.get(d.employeeId) || 0) + amount);
+      }
+
+      const records = empRows.map((emp: any) => {
+        const structure = structureByEmp.get(emp.id);
+        const basicSalary = Number(structure?.basicSalary ?? emp.salary ?? 0);
+        const structureAllowances = Number(structure?.allowances ?? 0);
+        const structureDeductions = Number(structure?.deductions ?? 0);
+        const dynamicAllowances = Number(allowanceByEmp.get(emp.id) || 0);
+        const dynamicDeductions = Number(deductionByEmp.get(emp.id) || 0);
+        const allowances = structureAllowances + dynamicAllowances;
+        const deductions = structureDeductions + dynamicDeductions;
+        const taxRateRaw = Number(structure?.taxRate ?? 0);
+        const taxRate = taxRateRaw > 1 ? taxRateRaw / 100 : taxRateRaw;
+        const grossSalary = basicSalary + allowances;
+        const tax = Math.max(0, Math.round(grossSalary * taxRate));
+        const netSalary = Math.max(0, grossSalary - deductions - tax);
+
+        return {
+          employeeId: emp.id,
+          firstName: emp.firstName,
+          lastName: emp.lastName,
+          department: emp.department,
+          month: input.month,
+          payPeriodStart: start,
+          payPeriodEnd: end,
+          basicSalary,
+          allowances,
+          deductions: deductions + tax,
+          netSalary,
+          tax,
+        };
+      });
+
+      const totalGrossSalary = records.reduce((sum, r) => sum + r.basicSalary + r.allowances, 0);
+      const totalDeductions = records.reduce((sum, r) => sum + r.deductions, 0);
+      const totalNetSalary = records.reduce((sum, r) => sum + r.netSalary, 0);
+
+      return {
+        records,
+        summary: {
+          totalEmployees: records.length,
+          totalGrossSalary,
+          totalDeductions,
+          totalNetSalary,
+          averageSalary: records.length ? Math.floor(totalNetSalary / records.length) : 0,
+        },
+      };
+    }),
+
+  processBatch: createFeatureRestrictedProcedure("payroll:create")
+    .input(
+      z.object({
+        month: z.string(),
+        employeeIds: z.array(z.string()).optional(),
+        approverRole: z.string().optional().default("hr"),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const preview = await (async () => {
+        const employeeWhere = input.employeeIds?.length
+          ? and(eq(employees.status, "active"), inArray(employees.id, input.employeeIds))
+          : eq(employees.status, "active");
+        const empRows = await db.select().from(employees).where(employeeWhere);
+        if (empRows.length === 0) return [] as any[];
+        const empIds = empRows.map((e: any) => e.id);
+        const [structureRows, allowanceRows, deductionRows] = await Promise.all([
+          db.select().from(salaryStructures).where(inArray(salaryStructures.employeeId, empIds)),
+          db.select().from(salaryAllowances).where(inArray(salaryAllowances.employeeId, empIds)),
+          db.select().from(salaryDeductions).where(inArray(salaryDeductions.employeeId, empIds)),
+        ]);
+        const structureByEmp = new Map<string, any>();
+        for (const s of structureRows as any[]) {
+          if (!structureByEmp.has(s.employeeId)) structureByEmp.set(s.employeeId, s);
+        }
+        const allowanceByEmp = new Map<string, number>();
+        for (const a of allowanceRows as any[]) {
+          allowanceByEmp.set(a.employeeId, (allowanceByEmp.get(a.employeeId) || 0) + Number(a.amount || 0));
+        }
+        const deductionByEmp = new Map<string, number>();
+        for (const d of deductionRows as any[]) {
+          deductionByEmp.set(d.employeeId, (deductionByEmp.get(d.employeeId) || 0) + Number(d.amount || 0));
+        }
+        const { start, end } = parseMonthRange(input.month);
+        return empRows.map((emp: any) => {
+          const structure = structureByEmp.get(emp.id);
+          const basicSalary = Number(structure?.basicSalary ?? emp.salary ?? 0);
+          const structureAllowances = Number(structure?.allowances ?? 0);
+          const structureDeductions = Number(structure?.deductions ?? 0);
+          const dynamicAllowances = Number(allowanceByEmp.get(emp.id) || 0);
+          const dynamicDeductions = Number(deductionByEmp.get(emp.id) || 0);
+          const allowances = structureAllowances + dynamicAllowances;
+          const deductionsBase = structureDeductions + dynamicDeductions;
+          const taxRateRaw = Number(structure?.taxRate ?? 0);
+          const taxRate = taxRateRaw > 1 ? taxRateRaw / 100 : taxRateRaw;
+          const grossSalary = basicSalary + allowances;
+          const tax = Math.max(0, Math.round(grossSalary * taxRate));
+          const deductions = deductionsBase + tax;
+          const netSalary = Math.max(0, grossSalary - deductions);
+          return {
+            employeeId: emp.id,
+            basicSalary,
+            allowances,
+            deductions,
+            tax,
+            netSalary,
+            payPeriodStart: start,
+            payPeriodEnd: end,
+          };
+        });
+      })();
+
+      if (preview.length === 0) {
+        return {
+          processed: 0,
+          skipped: 0,
+          errors: [],
+          records: [],
+          summary: {
+            totalEmployees: 0,
+            totalGrossSalary: 0,
+            totalDeductions: 0,
+            totalNetSalary: 0,
+            averageSalary: 0,
+          },
+        };
+      }
+
+      let processed = 0;
+      let skipped = 0;
+      const errors: string[] = [];
+      const records: any[] = [];
+      const now = toDbDate(new Date());
+
+      for (const item of preview) {
+        try {
+          const existing = await db
+            .select({ id: payroll.id })
+            .from(payroll)
+            .where(and(eq(payroll.employeeId, item.employeeId), eq(payroll.payPeriodStart, item.payPeriodStart)))
+            .limit(1);
+
+          if (existing.length > 0) {
+            skipped++;
+            continue;
+          }
+
+          const payrollId = uuidv4();
+          await db.insert(payroll).values({
+            id: payrollId,
+            employeeId: item.employeeId,
+            payPeriodStart: item.payPeriodStart,
+            payPeriodEnd: item.payPeriodEnd,
+            basicSalary: item.basicSalary,
+            allowances: item.allowances,
+            deductions: item.deductions,
+            tax: item.tax,
+            netSalary: item.netSalary,
+            status: "processed",
+            createdBy: ctx.user.id,
+            createdAt: now,
+            updatedAt: now,
+          } as any);
+
+          await db.insert(payrollApprovals).values({
+            id: uuidv4(),
+            payrollId,
+            approverRole: input.approverRole || "hr",
+            approverId: ctx.user.id,
+            status: "pending",
+            createdAt: now,
+          } as any);
+
+          records.push({
+            id: payrollId,
+            employeeId: item.employeeId,
+            basicSalary: item.basicSalary,
+            allowances: item.allowances,
+            deductions: item.deductions,
+            netSalary: item.netSalary,
+          });
+          processed++;
+        } catch (err: any) {
+          errors.push(err?.message || "Failed to process payroll record");
+        }
+      }
+
+      const totalGrossSalary = records.reduce((sum, r) => sum + r.basicSalary + r.allowances, 0);
+      const totalDeductions = records.reduce((sum, r) => sum + r.deductions, 0);
+      const totalNetSalary = records.reduce((sum, r) => sum + r.netSalary, 0);
+
+      return {
+        processed,
+        skipped,
+        errors,
+        records,
+        summary: {
+          totalEmployees: records.length,
+          totalGrossSalary,
+          totalDeductions,
+          totalNetSalary,
+          averageSalary: records.length ? Math.floor(totalNetSalary / records.length) : 0,
+        },
+      };
     }),
 
   create: createFeatureRestrictedProcedure("payroll:create")
@@ -205,47 +564,57 @@ export const payrollRouter = router({
   // bulk operations for payroll records (Tier 3)
   bulkUpdateStatus: createFeatureRestrictedProcedure("payroll:edit")
     .input(z.object({
-      ids: z.array(z.string()),
+      ids: z.array(z.string()).optional(),
+      payrollIds: z.array(z.string()).optional(),
       status: z.enum(["draft", "processed", "paid"]),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      if (input.ids.length === 0) {
+      const ids = resolvePayrollIds(input);
+
+      if (ids.length === 0) {
         return { success: true };
       }
 
       await db
         .update(payroll)
         .set({ status: input.status })
-        .where(inArray(payroll.id, input.ids));
+        .where(inArray(payroll.id, ids));
       return { success: true };
     }),
 
   bulkDelete: createFeatureRestrictedProcedure("payroll:delete")
-    .input(z.object({ ids: z.array(z.string()) }))
+    .input(z.object({ ids: z.array(z.string()).optional(), payrollIds: z.array(z.string()).optional() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      if (input.ids.length === 0) return { success: true };
-      await db.delete(payroll).where(inArray(payroll.id, input.ids));
+      const ids = resolvePayrollIds(input);
+      if (ids.length === 0) return { success: true };
+      await db.delete(payroll).where(inArray(payroll.id, ids));
       return { success: true };
     }),
 
   bulkExport: createFeatureRestrictedProcedure("payroll:read")
     .input(z.object({
-      ids: z.array(z.string()),
+      ids: z.array(z.string()).optional(),
+      payrollIds: z.array(z.string()).optional(),
       format: z.enum(["xlsx", "csv"]).default("xlsx"),
     }))
-    .query(async ({ input }) => {
+    .mutation(async ({ input }) => {
       const database = await getDb();
       if (!database) throw new Error("Database not available");
+
+      const ids = resolvePayrollIds(input);
+      if (ids.length === 0) {
+        return { success: false, message: "No records selected" };
+      }
 
       let query = database
         .select()
         .from(payroll)
-        .where(inArray(payroll.id, input.ids));
+        .where(inArray(payroll.id, ids));
 
       const records: any[] = await (query as any);
       if (records.length === 0) {
@@ -266,7 +635,7 @@ export const payrollRouter = router({
         ];
         records.forEach((r) => worksheet.addRow(r));
         const buffer = await workbook.xlsx.writeBuffer();
-        return { data: buffer.toString("base64"), format: "xlsx" };
+        return { data: Buffer.from(buffer as ArrayBuffer).toString("base64"), format: "xlsx" };
       } else {
         const headers = [
           "Employee ID",
@@ -331,14 +700,15 @@ export const payrollRouter = router({
         if (!db) throw new Error("Database not available");
 
         const id = uuidv4();
-        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        const now = new Date();
+        const dateStr = now.toISOString().replace('T', ' ').substring(0, 19);
         await db.insert(salaryStructures).values({
           id,
           ...input,
           effectiveDate: now,
           createdBy: ctx.user.id,
-          createdAt: now,
-          updatedAt: now,
+          createdAt: dateStr,
+          updatedAt: dateStr,
         } as any);
 
         return { id };
@@ -416,15 +786,16 @@ export const payrollRouter = router({
         if (!db) throw new Error("Database not available");
 
         const id = uuidv4();
-        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        const now = new Date();
+        const dateStr = now.toISOString().replace('T', ' ').substring(0, 19);
         await db.insert(salaryAllowances).values({
           id,
           ...input,
           effectiveDate: now,
           isActive: true,
           createdBy: ctx.user.id,
-          createdAt: now,
-          updatedAt: now,
+          createdAt: dateStr,
+          updatedAt: dateStr,
         } as any);
 
         return { id };
@@ -502,15 +873,16 @@ export const payrollRouter = router({
         if (!db) throw new Error("Database not available");
 
         const id = uuidv4();
-        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        const now = new Date();
+        const dateStr = now.toISOString().replace('T', ' ').substring(0, 19);
         await db.insert(salaryDeductions).values({
           id,
           ...input,
           effectiveDate: now,
           isActive: true,
           createdBy: ctx.user.id,
-          createdAt: now,
-          updatedAt: now,
+          createdAt: dateStr,
+          updatedAt: dateStr,
         } as any);
 
         return { id };
@@ -590,15 +962,16 @@ export const payrollRouter = router({
         if (!db) throw new Error("Database not available");
 
         const id = uuidv4();
-        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        const now = new Date();
+        const dateStr = now.toISOString().replace('T', ' ').substring(0, 19);
         await db.insert(employeeBenefits).values({
           id,
           ...input,
           enrollDate: now,
           isActive: true,
           createdBy: ctx.user.id,
-          createdAt: now,
-          updatedAt: now,
+          createdAt: dateStr,
+          updatedAt: dateStr,
         } as any);
 
         return { id };
@@ -662,14 +1035,15 @@ export const payrollRouter = router({
         if (!db) throw new Error("Database not available");
 
         const id = uuidv4();
-        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        const now = new Date();
+        const dateStr = now.toISOString().replace('T', ' ').substring(0, 19);
         await db.insert(employeeTaxInfo).values({
           id,
           ...input,
           effectiveDate: now,
           createdBy: ctx.user.id,
-          createdAt: now,
-          updatedAt: now,
+          createdAt: dateStr,
+          updatedAt: dateStr,
         } as any);
 
         return { id };
@@ -733,13 +1107,15 @@ export const payrollRouter = router({
         const newSalary = input.newSalary;
         const incrementPercent = previousSalary > 0 ? ((newSalary - previousSalary) / previousSalary) * 10000 : 0;
 
+        const now = new Date();
+        const dateStr = now.toISOString().replace('T', ' ').substring(0, 19);
         await db.insert(salaryIncrements).values({
           id,
           ...input,
           incrementPercent: Math.round(incrementPercent),
-          effectiveDate: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          effectiveDate: now,
           createdBy: ctx.user.id,
-          createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          createdAt: dateStr,
         } as any);
 
         return { id };
@@ -811,10 +1187,10 @@ export const payrollRouter = router({
         if (params.status) conditions.push(eq(payrollApprovals.status, params.status as any));
         const rows = await db.select().from(payrollApprovals).where(conditions.length ? and(...conditions) : undefined);
         // Join with payroll + employees for display names & salary info
-        const payrollIds = [...new Set(rows.map(r => (r as any).payrollId))];
+        const payrollIds = Array.from(new Set(rows.map(r => (r as any).payrollId)));
         if (payrollIds.length === 0) return [];
         const payrollRows = await db.select().from(payroll).where(inArray(payroll.id, payrollIds));
-        const empIds = [...new Set(payrollRows.map(p => p.employeeId))];
+        const empIds = Array.from(new Set(payrollRows.map(p => p.employeeId)));
         const empRows = empIds.length ? await db.select().from(employees).where(inArray(employees.id, empIds)) : [];
         const payrollMap = Object.fromEntries(payrollRows.map(p => [p.id, p]));
         const empMap = Object.fromEntries(empRows.map(e => [e.id, e]));
@@ -904,9 +1280,6 @@ export const payrollRouter = router({
       housingAllowance: z.number().optional().default(0),
     }))
     .query(async ({ input }) => {
-      // Import the Kenyan calculator
-      const { calculateKenyanPayroll } = await import("../utils/kenyan-payroll-calculator");
-      
       try {
         const result = calculateKenyanPayroll({
           basicSalary: input.basicSalary,
@@ -940,7 +1313,6 @@ export const payrollRouter = router({
 
       try {
         // Calculate payroll using Kenyan system
-        const { calculateKenyanPayroll } = await import("../utils/kenyan-payroll-calculator");
         const calculation = calculateKenyanPayroll({
           basicSalary: input.basicSalary,
           allowances: input.allowances,
@@ -1020,80 +1392,15 @@ export const payrollRouter = router({
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
-
-        // Get employee
-        const employee = await db.select().from(employees).where(eq(employees.id, input.employeeId)).limit(1);
-        if (!employee || employee.length === 0) {
-          throw new Error("Employee not found");
-        }
-
-        const emp = employee[0];
-        const taxYear = input.taxYear || new Date().getFullYear();
-
-        // Get annual payroll summary for the employee
-        const payrollRecords = await db.select().from(payroll)
-          .where(and(
-            eq(payroll.employeeId, input.employeeId),
-          ));
-
-        if (!payrollRecords || payrollRecords.length === 0) {
-          throw new Error("No payroll records found for employee");
-        }
-
-        // Calculate annual totals
-        let totalBasicSalary = 0;
-        let totalAllowances = 0;
-        let totalTax = 0;
-        let totalNssf = 0;
-        let totalShif = 0;
-        let totalHousingLevy = 0;
-        let totalNetSalary = 0;
-
-        for (const record of payrollRecords) {
-          totalBasicSalary += record.basicSalary || 0;
-          totalAllowances += record.allowances || 0;
-          totalTax += record.tax || 0;
-          totalNssf += record.nssf || 0;
-          totalShif += record.shif || 0;
-          totalHousingLevy += record.housingLevy || 0;
-          totalNetSalary += record.netSalary || 0;
-        }
-
-        const companyInfo = await getCompanyInfo();
-
-        // Generate P9 data
-        const p9Data = {
-          employeeId: emp.employeeNumber || emp.id,
-          employeeName: `${emp.firstName} ${emp.lastName}`,
-          nationalId: emp.nationalId || 'N/A',
-          knRegNo: emp.taxId || '',
-          grossSalary: totalBasicSalary + totalAllowances,
-          paye: totalTax,
-          nssf: totalNssf,
-          shif: totalShif,
-          housingLevy: totalHousingLevy,
-          totalDeductions: totalTax + totalNssf + totalShif + totalHousingLevy,
-          netIncome: totalNetSalary,
-          taxYear,
-          monthFrom: 1,
-          monthTo: 12,
-          companyName: companyInfo.name,
-          companyKRAPin: companyInfo.kraPin || 'N/A',
-          companyAddress: companyInfo.address || 'N/A',
-          certificationDate: new Date(),
-          certifiedBy: ctx.user.firstName ? `${ctx.user.firstName} ${ctx.user.lastName}` : 'HR Manager',
-          certifiedByTitle: 'Human Resources Manager',
-        };
-
-        // Generate HTML form
-        const htmlForm = generateP9Form(p9Data);
+        const certifiedBy = ctx.user.firstName ? `${ctx.user.firstName} ${ctx.user.lastName}` : "HR Manager";
+        const generated = await buildP9ForEmployee(db, input.employeeId, certifiedBy, input.taxYear);
 
         return {
           success: true,
           data: {
-            htmlContent: htmlForm,
-            fileName: `P9-${emp.employeeNumber || emp.id}-${taxYear}.html`,
-            employeeName: emp.firstName ? `${emp.firstName} ${emp.lastName}` : 'Unknown',
+            htmlContent: generated.htmlContent,
+            fileName: generated.fileName,
+            employeeName: generated.employeeName,
           },
         };
       } catch (error: any) {
@@ -1113,17 +1420,15 @@ export const payrollRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       try {
-        // For now, we generate HTML. PDF generation would require additional library
-        const result = await ctx.caller.payroll.generateP9({ employeeId: input.employeeId });
-        
-        if (!result.success) {
-          throw new Error('Failed to generate P9');
-        }
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        const certifiedBy = ctx.user.firstName ? `${ctx.user.firstName} ${ctx.user.lastName}` : "HR Manager";
+        const generated = await buildP9ForEmployee(db, input.employeeId, certifiedBy);
 
         return {
           success: true,
-          data: result.data.htmlContent,
-          fileName: result.data.fileName,
+          data: generated.htmlContent,
+          fileName: generated.fileName,
           mimeType: 'text/html',
         };
       } catch (error: any) {
@@ -1143,16 +1448,19 @@ export const payrollRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
         const results = [];
         const errors = [];
+        const certifiedBy = ctx.user.firstName ? `${ctx.user.firstName} ${ctx.user.lastName}` : "HR Manager";
 
         for (const employeeId of input.employeeIds) {
           try {
-            const p9Result = await ctx.caller.payroll.generateP9({ employeeId });
+            const p9Result = await buildP9ForEmployee(db, employeeId, certifiedBy);
             results.push({
               employeeId,
               success: true,
-              fileName: p9Result.data?.fileName,
+              fileName: p9Result.fileName,
             });
           } catch (err: any) {
             errors.push({
@@ -1177,6 +1485,30 @@ export const payrollRouter = router({
           message: `Failed to generate P9 forms: ${error?.message || 'Unknown error'}`,
         });
       }
+    }),
+
+  // ===================== Automated Payroll Admin Triggers =====================
+
+  /** Manually trigger monthly payroll processing (admin/HR only) */
+  processMonthly: createFeatureRestrictedProcedure("payroll:create")
+    .input(z.object({
+      year: z.number().optional(),
+      month: z.number().min(1).max(12).optional(),
+    }).optional())
+    .mutation(async ({ input, ctx }) => {
+      const result = await processMonthlyPayroll(input?.year, input?.month, ctx.user.id);
+      return result;
+    }),
+
+  /** Manually trigger payslip dispatch (admin/HR only) */
+  dispatchPayslips: createFeatureRestrictedProcedure("payroll:create")
+    .input(z.object({
+      year: z.number().optional(),
+      month: z.number().min(1).max(12).optional(),
+    }).optional())
+    .mutation(async ({ input }) => {
+      const result = await dispatchPayslips(input?.year, input?.month);
+      return result;
     }),
 });
 
