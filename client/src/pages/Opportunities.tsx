@@ -89,7 +89,7 @@ export default function Opportunities() {
   const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(oppColumns, "opportunities");
 
   // Fetch real data from backend
-  const { data: data = [], isLoading } = trpc.opportunities.list.useQuery();
+  const { data: data = [], isLoading } = trpc.opportunities.list.useQuery({});
   const utils = trpc.useUtils();
 
   // Update mutation
@@ -370,4 +370,5 @@ export default function Opportunities() {
     </ModuleLayout>
   );
 }
+
 

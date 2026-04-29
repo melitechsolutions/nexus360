@@ -335,7 +335,7 @@ export function CreateQuote() {
                   <div>
                     <Label className="text-xs font-semibold text-gray-600">Total</Label>
                     <div className="text-sm font-semibold text-gray-900">
-                      ${(item.quantity * item.unitPrice).toFixed(2)}
+                      Ksh {(item.quantity * item.unitPrice).toFixed(2)}
                     </div>
                   </div>
                   <Button
@@ -358,17 +358,17 @@ export function CreateQuote() {
           <div className="space-y-2">
             <div className="flex justify-between items-center text-gray-700">
               <span>Subtotal:</span>
-              <span className="text-lg">${totals.subtotal.toFixed(2)}</span>
+              <span className="text-lg">Ksh {totals.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center text-gray-700">
               <span>Tax:</span>
-              <span className="text-lg">${totals.taxAmount.toFixed(2)}</span>
+              <span className="text-lg">Ksh {totals.taxAmount.toFixed(2)}</span>
             </div>
             <Separator className="my-2" />
             <div className="flex justify-between items-center">
               <span className="font-semibold text-gray-900">Total:</span>
               <span className="text-2xl font-bold text-blue-600">
-                ${totals.total.toFixed(2)}
+                Ksh {totals.total.toFixed(2)}
               </span>
             </div>
           </div>

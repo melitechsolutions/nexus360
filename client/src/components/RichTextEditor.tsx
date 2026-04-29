@@ -685,7 +685,7 @@ export function RichTextEditor({
             {showColorPicker && (
               <div className="absolute top-full left-0 mt-1 z-50 bg-popover border rounded-md shadow-md p-2 w-[200px]">
                 <div className="text-xs font-medium mb-1.5 text-muted-foreground">Text Color</div>
-                <div className="grid grid-cols-5 gap-1">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
                   {TEXT_COLORS.map(c => <button key={c} type="button" className={cn("w-7 h-7 rounded border hover:scale-110 transition-transform", editor.getAttributes("textStyle")?.color === c && "ring-2 ring-primary ring-offset-1")} style={{ backgroundColor: c }} onClick={() => { editor.chain().focus().setColor(c).run(); setShowColorPicker(false); }} />)}
                 </div>
                 <div className="flex items-center gap-1.5 mt-2 pt-2 border-t">
@@ -707,7 +707,7 @@ export function RichTextEditor({
             {showHighlightPicker && (
               <div className="absolute top-full left-0 mt-1 z-50 bg-popover border rounded-md shadow-md p-2 w-[200px]">
                 <div className="text-xs font-medium mb-1.5 text-muted-foreground">Highlight</div>
-                <div className="grid grid-cols-5 gap-1">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
                   {HIGHLIGHT_COLORS.map(c => <button key={c} type="button" className="w-7 h-7 rounded border hover:scale-110 transition-transform" style={{ backgroundColor: c }} onClick={() => { (editor.chain().focus() as any).toggleHighlight({ color: c }).run(); setShowHighlightPicker(false); }} />)}
                 </div>
                 <div className="flex items-center gap-1.5 mt-2 pt-2 border-t">
@@ -729,7 +729,7 @@ export function RichTextEditor({
               {showBgColorPicker && (
                 <div className="absolute top-full left-0 mt-1 z-50 bg-popover border rounded-md shadow-md p-2 w-[200px]">
                   <div className="text-xs font-medium mb-1.5 text-muted-foreground">Background / Shading</div>
-                  <div className="grid grid-cols-5 gap-1">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
                     {HIGHLIGHT_COLORS.map(c => <button key={c} type="button" className="w-7 h-7 rounded border hover:scale-110 transition-transform" style={{ backgroundColor: c }} onClick={() => { (editor.chain().focus() as any).setBackgroundColor(c).run(); setShowBgColorPicker(false); }} />)}
                   </div>
                   <div className="flex items-center gap-1.5 mt-2 pt-2 border-t">

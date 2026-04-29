@@ -51,8 +51,8 @@ export default function ReceiptDetails() {
   // Fetch receipt from backend
   const { data: receiptData, isLoading } = trpc.receipts.getById.useQuery(receiptId);
   const { data: lineItemsData = [] } = trpc.lineItems.getByDocumentId.useQuery({ documentId: receiptId, documentType: 'receipt' });
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
-  const { data: companyInfo } = trpc.settings.getCompanyInfo.useQuery();
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
+  const { data: companyInfo } = trpc.settings.getCompanyInfo.useQuery({});
   const { data: bankPayData } = trpc.settings.getByCategory.useQuery({ category: "payment_bank" });
   const { data: mpesaPayData } = trpc.settings.getByCategory.useQuery({ category: "payment_mpesa" });
   const { data: docTemplatesData } = trpc.settings.getByCategory.useQuery({ category: "document_templates" });
@@ -78,9 +78,9 @@ export default function ReceiptDetails() {
       ? lineItemsData 
       : (receiptData as any).items || [],
     subtotal: ((receiptData as any).subtotal || 0) / 100,
-    tax: ((receiptData as any).tax || 0) / 100,
-    discount: 0,
-    total: ((receiptData as any).total || 0) / 100,
+    tax: ((receiptData as any).taxAmount || 0) / 100,
+    discount: ((receiptData as any).discountAmount || 0) / 100,
+    total: ((receiptData as any).amount || 0) / 100,
     notes: (receiptData as any).notes || "",
   } : null;
 
@@ -467,4 +467,5 @@ export default function ReceiptDetails() {
     </>
   );
 }
+
 

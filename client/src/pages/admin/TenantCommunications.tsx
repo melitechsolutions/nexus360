@@ -78,7 +78,7 @@ const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "o
 
 export default function TenantCommunications() {
   const utils = trpc.useUtils();
-  const { data: communications = [], isLoading } = trpc.tenantCommunications.list.useQuery();
+  const { data: communications = [], isLoading } = trpc.tenantCommunications.list.useQuery({});
   const createMutation = trpc.tenantCommunications.create.useMutation({
     onSuccess: () => { utils.tenantCommunications.list.invalidate(); toast.success("Communication created"); setIsOpen(false); },
     onError: (e: any) => toast.error(e.message),
@@ -313,7 +313,7 @@ export default function TenantCommunications() {
               <Input value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))} placeholder="Communication subject" />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Type</Label>
                 <Select value={form.type} onValueChange={val => setForm(p => ({ ...p, type: val }))}>

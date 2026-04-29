@@ -74,8 +74,8 @@ export default function AllowancesManagement() {
     notes: "",
   });
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
-  const { data: allowances = [] } = trpc.payroll.allowances.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
+  const { data: allowances = [] } = trpc.payroll.allowances.list.useQuery({});
   const createMutation = trpc.payroll.allowances.create.useMutation({
     onSuccess: () => {
       toast.success("Allowance created successfully!");
@@ -292,7 +292,7 @@ export default function AllowancesManagement() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="amount">Amount (Ksh) *</Label>
                         <Input
@@ -431,7 +431,7 @@ export default function AllowancesManagement() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="editAmount">Amount (Ksh)</Label>
                   <Input

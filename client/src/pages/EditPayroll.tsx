@@ -41,7 +41,7 @@ export default function EditPayroll() {
     { enabled: !!id }
   );
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
 
   useEffect(() => {
     if (payroll) {
@@ -452,3 +452,4 @@ export default function EditPayroll() {
     </ModuleLayout>
   );
 }
+

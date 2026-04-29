@@ -28,12 +28,12 @@ export function HRAnalyticsPage() {
 
   // Fetch all analytics data
   const { data: headcount, isLoading: loadingHeadcount } = trpc.hrAnalytics.getHeadcountTrends.useQuery({ months: parseInt(timeframe) });
-  const { data: salary, isLoading: loadingSalary } = trpc.hrAnalytics.getSalaryDistribution.useQuery();
-  const { data: turnover, isLoading: loadingTurnover } = trpc.hrAnalytics.getTurnoverAnalysis.useQuery();
+  const { data: salary, isLoading: loadingSalary } = trpc.hrAnalytics.getSalaryDistribution.useQuery({});
+  const { data: turnover, isLoading: loadingTurnover } = trpc.hrAnalytics.getTurnoverAnalysis.useQuery({});
   const { data: attendance, isLoading: loadingAttendance } = trpc.hrAnalytics.getAttendanceKPIs.useQuery({ months: 3 });
-  const { data: leave, isLoading: loadingLeave } = trpc.hrAnalytics.getLeaveUtilization.useQuery();
-  const { data: departments, isLoading: loadingDepts } = trpc.hrAnalytics.getDepartmentAnalytics.useQuery();
-  const { data: performance, isLoading: loadingPerf } = trpc.hrAnalytics.getPerformanceMetrics.useQuery();
+  const { data: leave, isLoading: loadingLeave } = trpc.hrAnalytics.getLeaveUtilization.useQuery({});
+  const { data: departments, isLoading: loadingDepts } = trpc.hrAnalytics.getDepartmentAnalytics.useQuery({});
+  const { data: performance, isLoading: loadingPerf } = trpc.hrAnalytics.getPerformanceMetrics.useQuery({});
   const { data: expenses, isLoading: loadingExpenses } = trpc.hrAnalytics.getSalaryExpenseTrends.useQuery({ months: parseInt(timeframe) });
 
   const isLoading = loadingHeadcount || loadingSalary || loadingTurnover || loadingAttendance || loadingLeave || loadingDepts || loadingPerf || loadingExpenses;
@@ -297,7 +297,7 @@ export function HRAnalyticsPage() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `Ksh ${(value / 1000000).toFixed(1)}M`} />
+                  <Tooltip formatter={(value) => `Ksh ${(value / 1000).toFixed(0)}k`} />
                   <Legend />
                   <Line type="monotone" dataKey="totalCost" stroke="#ef4444" name="Total Cost" strokeWidth={2} />
                   <Line type="monotone" dataKey="employeeCount" stroke="#3b82f6" name="Employees" yAxisId="right" strokeWidth={2} />
@@ -351,3 +351,4 @@ export function HRAnalyticsPage() {
 }
 
 export default HRAnalyticsPage;
+

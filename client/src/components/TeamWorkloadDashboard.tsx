@@ -37,7 +37,7 @@ export default function TeamWorkloadDashboard() {
   const [utilization, setUtilization] = useState<any[]>([]);
 
   // Fetch team workload summary
-  const { data: workloadData, isLoading } = trpc.projects.teamWorkloadSummary.useQuery();
+  const { data: workloadData, isLoading } = trpc.projects.teamWorkloadSummary.useQuery({});
 
   useEffect(() => {
     if (workloadData) {

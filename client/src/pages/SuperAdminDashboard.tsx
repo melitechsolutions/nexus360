@@ -35,7 +35,7 @@ export default function SuperAdminDashboard() {
   });
 
   // Fetch dashboard metrics
-  const { data: dashboardMetrics } = trpc.dashboard.metrics.useQuery();
+  const { data: dashboardMetrics } = trpc.dashboard.metrics.useQuery({});
 
   useEffect(() => {
     if (dashboardMetrics) {

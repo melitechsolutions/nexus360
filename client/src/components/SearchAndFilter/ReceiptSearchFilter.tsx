@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Search, X, Filter } from "lucide-react";
+import { getPaymentMethodOptions } from "@/const/paymentMethods";
 
 interface ReceiptSearchFilterProps {
   onSearch: (query: string) => void;
@@ -114,10 +115,11 @@ export function ReceiptSearchFilter({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Methods</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="bank">Bank Transfer</SelectItem>
-                  <SelectItem value="mpesa">M-Pesa</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
+                  {getPaymentMethodOptions().map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

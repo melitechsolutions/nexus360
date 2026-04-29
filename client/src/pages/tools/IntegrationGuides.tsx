@@ -83,7 +83,7 @@ const INTEGRATION_GUIDES: IntegrationGuide[] = [
       {
         title: "Fetch Brand Config",
         description: "Query the brand customization API to get current branding",
-        code: `const { data: brandConfig } = trpc.brandCustomization.getConfig.useQuery();`,
+        code: `const { data: brandConfig } = trpc.brandCustomization.getConfig.useQuery({});`,
       },
       {
         title: "Create CSS Variables",
@@ -132,7 +132,7 @@ const INTEGRATION_GUIDES: IntegrationGuide[] = [
         title: "Implement Widget Logic",
         description: "Implement the widget's data fetching and rendering logic",
         code: `export function CustomWidget() {
-  const { data } = trpc.module.getData.useQuery();
+  const { data } = trpc.module.getData.useQuery({});
   return <div>{/* Your widget content */}</div>;
 }`,
       },
@@ -402,3 +402,4 @@ export default function IntegrationGuides() {
     </ModuleLayout>
   );
 }
+

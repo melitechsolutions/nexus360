@@ -45,9 +45,9 @@ export default function SystemLogsViewer() {
     entityType: filterEntityType !== "all" ? filterEntityType : undefined,
   });
 
-  const statsQ = trpc.activityTrail.getStats.useQuery();
-  const entityTypesQ = trpc.activityTrail.getEntityTypes.useQuery();
-  const actionsQ = trpc.activityTrail.getActions.useQuery();
+  const statsQ = trpc.activityTrail.getStats.useQuery({});
+  const entityTypesQ = trpc.activityTrail.getEntityTypes.useQuery({});
+  const actionsQ = trpc.activityTrail.getActions.useQuery({});
 
   const logs = logsQ.data?.activities ?? [];
   const total = logsQ.data?.total ?? 0;

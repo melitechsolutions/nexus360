@@ -32,7 +32,7 @@ export default function BankReconciliation() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch real data from backend
-  const { data: accountsList = [] } = trpc.bankReconciliation.list.useQuery();
+  const { data: accountsList = [] } = trpc.bankReconciliation.list.useQuery({});
   const { data: reconciliationData } = trpc.bankReconciliation.getById.useQuery(selectedAccount);
 
   if (permissionLoading) {

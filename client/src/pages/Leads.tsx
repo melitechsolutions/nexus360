@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSearch } from "wouter";
+import { useSearch, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,8 @@ const PRIORITY_STYLES: Record<string, string> = {
 };
 
 function fmt(v: number) {
-  if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
+  if (v >= 1000000) return `$${(v / 1000).toFixed(0)}k`;
+  if (v >= 1000) return `$${(v / 1000).toFixed(1)}k`;
   if (v >= 1000) return `$${(v / 1000).toFixed(0)}K`;
   return `$${v.toLocaleString()}`;
 }
@@ -86,6 +87,7 @@ export default function Leads() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [showAdd, setShowAdd] = useState(false);
   const _search = useSearch();
+  const [, navigate] = useLocation();
   useEffect(() => { if (new URLSearchParams(_search).get("action") === "create") setShowAdd(true); }, []);
   const [form, setForm] = useState({ title: "", value: "", stage: "lead" as Stage, priority: "medium", source: "" });
 
@@ -216,7 +218,7 @@ export default function Leads() {
                     <p className="text-xs text-muted-foreground text-center py-6">No leads here</p>
                   )}
                   {cards.map(lead => (
-                    <div key={lead.id} className="bg-background border rounded-lg p-3 shadow-sm space-y-2 hover:shadow-md transition-shadow">
+                    <div key={lead.id} className="bg-background border rounded-lg p-3 shadow-sm space-y-2 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/leads/${lead.id}`)}>
                       <div className="flex items-start justify-between gap-1">
                         <p className="font-medium text-sm leading-tight">{lead.title}</p>
                         {lead.priority && (

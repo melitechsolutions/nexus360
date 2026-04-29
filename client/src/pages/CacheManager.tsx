@@ -4,9 +4,9 @@ import { ModuleLayout } from "@/components/ModuleLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function CacheManager() {
-  const statusQuery = trpc.systemHealth.getStatus.useQuery();
+  const statusQuery = trpc.systemHealth.getStatus.useQuery({});
   const metricsQuery = trpc.systemHealth.getMetrics.useQuery({});
-  const componentsQuery = trpc.systemHealth.getComponents.useQuery();
+  const componentsQuery = trpc.systemHealth.getComponents.useQuery({});
 
   const status = statusQuery.data ? JSON.parse(JSON.stringify(statusQuery.data)) : null;
   const metrics = metricsQuery.data ? JSON.parse(JSON.stringify(metricsQuery.data)) : null;
@@ -140,3 +140,4 @@ export default function CacheManager() {
     </ModuleLayout>
   );
 }
+

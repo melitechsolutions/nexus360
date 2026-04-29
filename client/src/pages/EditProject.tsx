@@ -40,7 +40,7 @@ export default function EditProject() {
   const { data: project, isLoading: isLoadingProject } = trpc.projects.getById.useQuery(projectId, {
     enabled: !!projectId,
   });
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
 
   const updateProjectMutation = trpc.projects.update.useMutation({
     onSuccess: () => {
@@ -354,3 +354,4 @@ export default function EditProject() {
     </ModuleLayout>
   );
 }
+

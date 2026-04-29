@@ -241,7 +241,7 @@ export function EditProjectTask({
       {isAdmin && task.approvalStatus && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h3 className="font-semibold text-blue-900 mb-2">Approval Information</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm text-blue-800">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-blue-800">
             <div>
               <p className="font-medium">Status:</p>
               <p>{task.approvalStatus}</p>
@@ -296,7 +296,7 @@ export function EditProjectTask({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Priority
@@ -341,7 +341,7 @@ export function EditProjectTask({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Assign To
@@ -379,7 +379,7 @@ export function EditProjectTask({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Estimated Hours

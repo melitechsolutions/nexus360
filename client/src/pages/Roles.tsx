@@ -91,10 +91,10 @@ export default function Roles() {
   });
 
   // Fetch roles from backend
-  const { data: rolesData = [], isLoading, refetch } = trpc.roles.list.useQuery();
-  const { data: permissionsData = [] } = trpc.roles.getPermissions.useQuery();
-  const { data: availableFeatures = [] } = trpc.roles.getAvailableFeatures.useQuery();
-  const { data: userCounts = {} } = trpc.roles.getUserCounts.useQuery();
+  const { data: rolesData = [], isLoading, refetch } = trpc.roles.list.useQuery({});
+  const { data: permissionsData = [] } = trpc.roles.getPermissions.useQuery({});
+  const { data: availableFeatures = [] } = trpc.roles.getAvailableFeatures.useQuery({});
+  const { data: userCounts = {} } = trpc.roles.getUserCounts.useQuery({});
   const utils = trpc.useUtils();
 
   // Use the feature-based permissions for custom roles
@@ -705,3 +705,4 @@ export default function Roles() {
     </ModuleLayout>
   );
 }
+

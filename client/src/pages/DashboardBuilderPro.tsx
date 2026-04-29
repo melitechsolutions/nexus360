@@ -12,7 +12,7 @@ export default function DashboardBuilderPro() {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
 
-  const dashboardsQuery = trpc.dashboardBuilder.listDashboards.useQuery();
+  const dashboardsQuery = trpc.dashboardBuilder.listDashboards.useQuery({});
   const createMutation = trpc.dashboardBuilder.createDashboard.useMutation({
     onSuccess: () => {
       toast.success("Dashboard created");
@@ -110,3 +110,4 @@ export default function DashboardBuilderPro() {
     </ModuleLayout>
   );
 }
+

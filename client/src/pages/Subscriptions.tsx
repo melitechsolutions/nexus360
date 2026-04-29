@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSearch } from "wouter";
+import { useSearch, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,7 @@ function StatusBadge({ status }: { status: string }) {
 
 
 export default function Subscriptions() {
+  const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [cycleFilter, setCycleFilter] = useState("all");
@@ -93,8 +94,8 @@ export default function Subscriptions() {
 
   // Load from recurringInvoices router (available in appRouter)
   const { data: riData = [], isLoading, refetch } = trpc.recurringInvoices.list.useQuery({ activeOnly: false });
-  const { data: clients = [] } = trpc.clients.list.useQuery();
-  const { data: invoicesList = [] } = trpc.invoices.list.useQuery();
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
+  const { data: invoicesList = [] } = trpc.invoices.list.useQuery({});
 
   const createMutation = trpc.recurringInvoices.create.useMutation({
     onSuccess: () => { toast.success("Subscription created"); setCreateOpen(false); refetch(); resetForm(); },
@@ -265,8 +266,8 @@ export default function Subscriptions() {
                 </TableRow>
               ) : (
                 filtered.map((sub: any) => (
-                  <TableRow key={sub.id} className="hover:bg-muted/30 transition-colors">
-                    <TableCell className="font-medium">{sub.clientName}</TableCell>
+                  <TableRow key={sub.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/subscriptions/${sub.id}`)}>
+                    <TableCell className="font-medium text-blue-600 hover:underline">{sub.clientName}</TableCell>
                     <TableCell>{sub.planName || sub.planId}</TableCell>
                     <TableCell><StatusBadge status={sub.status} /></TableCell>
                     <TableCell>
@@ -511,3 +512,4 @@ export default function Subscriptions() {
     </ModuleLayout>
   );
 }
+

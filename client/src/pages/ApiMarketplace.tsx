@@ -20,7 +20,7 @@ export default function ApiMarketplace() {
       icon={<ShoppingCart className="h-5 w-5" />}
       breadcrumbs={[{ label: "Dashboard", href: "/crm-home" }, { label: "Developer" }, { label: "API Marketplace" }]}
     >
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-4">
             <p className="text-sm text-muted-foreground">Total APIs</p>
@@ -53,12 +53,12 @@ export default function ApiMarketplace() {
         </CardHeader>
         <CardContent>
           {apis.length > 0 ? (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {apis.map((api: any) => (
                 <div key={api.id} className="border rounded-lg p-4 hover:shadow-lg transition">
                   <h3 className="font-bold">{api.name}</h3>
                   <Badge variant="outline" className="mt-1">{api.pricingModel}</Badge>
-                  <p className="text-lg font-bold text-green-600 my-3">${api.basePrice || "Free"}</p>
+                  <p className="text-lg font-bold text-green-600 my-3">Ksh {api.basePrice || "Free"}</p>
                   <Badge variant={api.status === "ACTIVE" ? "default" : "secondary"}>{api.status}</Badge>
                 </div>
               ))}

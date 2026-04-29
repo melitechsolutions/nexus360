@@ -145,7 +145,7 @@ export default function BusinessRulesEngine() {
   };
 
   const utils = trpc.useUtils();
-  const { data: rulesRaw, isLoading } = trpc.automationRules.listRules.useQuery();
+  const { data: rulesRaw, isLoading } = trpc.automationRules.listRules.useQuery({});
   const rules = (rulesRaw as any[]) || [];
 
   const createMutation = trpc.automationRules.createRule.useMutation({
@@ -533,7 +533,7 @@ export default function BusinessRulesEngine() {
               </div>
               <div>
                 <Label>Condition (optional)</Label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   <Input placeholder="Field" value={form.conditionField} onChange={(e) => setForm({ ...form, conditionField: e.target.value })} />
                   <Select value={form.conditionOperator} onValueChange={(v) => setForm({ ...form, conditionOperator: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -606,7 +606,7 @@ export default function BusinessRulesEngine() {
                 {selectedRule.description && (
                   <p className="text-muted-foreground">{selectedRule.description}</p>
                 )}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="p-3 bg-blue-50 rounded">
                     <div className="text-xs text-muted-foreground">Priority</div>
                     <div className="text-lg font-bold text-blue-600 capitalize">{selectedRule.priority || "normal"}</div>

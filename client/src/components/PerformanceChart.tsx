@@ -96,7 +96,7 @@ export function PerformanceChart({
 
         {/* Summary Stats */}
         <div className="border-t pt-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {summary.map((stat) => (
               <div key={stat.label} className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-2xl mb-2">{stat.icon}</p>

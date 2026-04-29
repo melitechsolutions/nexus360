@@ -67,7 +67,7 @@ export default function Expenses() {
   const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(expenseColumns, "expenses");
 
   // Fetch real data from backend
-  const { data: expensesData = [], isLoading: isLoadingExpenses } = trpc.expenses.list.useQuery();
+  const { data: expensesData = [], isLoading: isLoadingExpenses } = trpc.expenses.list.useQuery({});
   const utils = trpc.useUtils();
   
   // Delete mutation
@@ -413,3 +413,4 @@ export default function Expenses() {
     </ModuleLayout>
   );
 }
+

@@ -129,9 +129,9 @@ export default function LandingPage() {
   const { fmt, currency, setCurrency } = useCurrency();
 
   // Pull content from admin DB with hardcoded fallbacks
-  const { data: dbTestimonials } = trpc.websiteAdmin.publicTestimonials.useQuery();
-  const { data: dbFAQs } = trpc.websiteAdmin.publicFAQs.useQuery();
-  const { data: dbHero } = trpc.websiteAdmin.publicHeroContent.useQuery();
+  const { data: dbTestimonials } = trpc.websiteAdmin.publicTestimonials.useQuery({});
+  const { data: dbFAQs } = trpc.websiteAdmin.publicFAQs.useQuery({});
+  const { data: dbHero } = trpc.websiteAdmin.publicHeroContent.useQuery({});
 
   const testimonials = dbTestimonials && dbTestimonials.length > 0
     ? dbTestimonials.map((t: any) => ({ name: t.name, title: `${t.role || ""}${t.company ? `, ${t.company}` : ""}`, stars: t.rating || 5, body: t.content }))
@@ -566,3 +566,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

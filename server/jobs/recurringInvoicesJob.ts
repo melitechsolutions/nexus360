@@ -11,6 +11,7 @@ import { getDb } from "../db";
 import { invoices, recurringInvoices, invoiceItems, activityLog } from "../../drizzle/schema";
 import { eq, lte, isNull, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
+import { applyRecurringLabel } from "../utils/recurringLabels";
 
 export interface GenerateRecurringResult {
   success: boolean;
@@ -114,12 +115,22 @@ export async function generateDueRecurringInvoices(): Promise<GenerateRecurringR
         const dueDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
         const dueDateStr = dueDate.toISOString().replace('T', ' ').substring(0, 19);
 
+        // Apply auto-labeling with month/year
+        const baseTitle = templateData?.title || `Invoice for ${pattern.clientId}`;
+        const baseNotes = pattern.noteToInvoice || templateData?.notes || "";
+        const { title: labeledTitle, notes: labeledNotes } = applyRecurringLabel(
+          baseTitle,
+          baseNotes,
+          pattern.noteToInvoice,
+          now
+        );
+
         const newInvoiceValues: any = {
           id: newInvoiceId,
           invoiceNumber: newInvoiceNumber,
           invoiceSequence: parseInt(newInvoiceNumber.replace('INV-', '')) || 0,
           clientId: pattern.clientId,
-          title: templateData?.title || `Invoice for ${pattern.clientId}`,
+          title: labeledTitle,
           status: "draft",
           issueDate,
           dueDate: dueDateStr,
@@ -128,7 +139,7 @@ export async function generateDueRecurringInvoices(): Promise<GenerateRecurringR
           discountAmount: templateData?.discountAmount || 0,
           total: templateData?.total || 0,
           paidAmount: 0,
-          notes: pattern.noteToInvoice || templateData?.notes || null,
+          notes: labeledNotes,
           terms: templateData?.terms || null,
           createdBy: systemUserId,
           createdAt: nowStr,

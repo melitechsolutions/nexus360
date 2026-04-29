@@ -89,7 +89,7 @@ export default function BillingDashboard() {
   const { data: invoicesData = [], isLoading: invoicesLoading } = trpc.invoices.list.useQuery({ limit: 1000 });
   const { data: paymentsData = [], isLoading: paymentsLoading } = trpc.payments.list.useQuery({ limit: 1000 });
   const { data: expensesData = [], isLoading: expensesLoading } = trpc.expenses.list.useQuery({ limit: 1000 });
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
 
   // Calculate invoice metrics
   const invoiceMetrics: InvoiceMetrics = useMemo(() => {

@@ -82,7 +82,7 @@ export default function StaffAssignment({ projectId, readonly = false }: StaffAs
     { projectId }
   );
 
-  const { data: employees = [], isLoading: isLoadingEmployees } = trpc.employees.list.useQuery();
+  const { data: employees = [], isLoading: isLoadingEmployees } = trpc.employees.list.useQuery({});
 
   const createMutation = trpc.projects.teamMembers.create.useMutation({
     onSuccess: () => {
@@ -251,7 +251,7 @@ export default function StaffAssignment({ projectId, readonly = false }: StaffAs
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium mb-2 block">Hours Allocated</label>
                       <Input
@@ -384,7 +384,7 @@ export default function StaffAssignment({ projectId, readonly = false }: StaffAs
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Hours Allocated</label>
                 <Input

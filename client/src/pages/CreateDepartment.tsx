@@ -29,7 +29,7 @@ export default function CreateDepartment() {
   });
 
   // Fetch employees for department head selector
-  const { data: employees = [] } = trpc.employees.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
 
   const createDepartmentMutation = trpc.departments.create.useMutation({
     onSuccess: () => {

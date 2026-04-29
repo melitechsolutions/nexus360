@@ -44,7 +44,7 @@ export default function Services() {
   });
 
   // Fetch services from backend
-  const { data: services = [], isLoading: isLoadingServices } = trpc.services.list.useQuery();
+  const { data: services = [], isLoading: isLoadingServices } = trpc.services.list.useQuery({});
   const utils = trpc.useUtils();
   
   // Delete mutation
@@ -218,3 +218,4 @@ export default function Services() {
     </ModuleLayout>
   );
 }
+

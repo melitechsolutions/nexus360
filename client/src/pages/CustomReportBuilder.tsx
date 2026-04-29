@@ -86,7 +86,7 @@ export default function CustomReportBuilder() {
   const [schemaData, setSchemaData] = useState<any>(null);
 
   // Fetch schema introspection from backend
-  const { data: schemaIntrospection, isLoading: schemaLoading } = trpc.reports.schemaIntrospection.useQuery();
+  const { data: schemaIntrospection, isLoading: schemaLoading } = trpc.reports.schemaIntrospection.useQuery({});
 
   // Fetch report data
   const { data: reportDataResult, isLoading: reportLoading } = trpc.reports.getReportData.useQuery(

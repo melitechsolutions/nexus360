@@ -114,7 +114,7 @@ export default function KenyanPayrollCalculator() {
   const [calculation, setCalculation] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
 
   const selectedEmployee = employees.find((e) => e.id === formData.employeeId);
 
@@ -335,3 +335,4 @@ export default function KenyanPayrollCalculator() {
     </ModuleLayout>
   );
 }
+

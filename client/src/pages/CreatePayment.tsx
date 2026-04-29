@@ -24,6 +24,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { DollarSign, Printer, Loader2, ChevronDown, ChevronUp, Building2 } from "lucide-react";
 import { APP_TITLE } from "@/const";
+import { getPaymentMethodOptions } from "@/const/paymentMethods";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -75,8 +76,8 @@ export default function CreatePayment() {
     return () => { isMounted = false; };
   }, []);
 
-  const { data: invoices = [] } = trpc.invoices.list.useQuery();
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: invoices = [] } = trpc.invoices.list.useQuery({});
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
 
   const createPaymentMutation = trpc.payments.create.useMutation({
     onSuccess: () => {
@@ -225,12 +226,11 @@ export default function CreatePayment() {
                 <Select value={formData.paymentMethod} onValueChange={(v) => setFormData({ ...formData, paymentMethod: v })}>
                   <SelectTrigger className="max-w-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="mpesa">M-Pesa</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="cheque">Cheque</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    {getPaymentMethodOptions().map((method) => (
+                      <SelectItem key={method.value} value={method.value}>
+                        {method.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

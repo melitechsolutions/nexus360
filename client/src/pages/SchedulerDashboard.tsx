@@ -42,8 +42,8 @@ export default function SchedulerDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const utils = trpc.useUtils();
 
-  const { data: rawJobs = [], isLoading: schedulerLoading } = trpc.jobScheduler.listJobs.useQuery();
-  const { data: rawHealth } = trpc.jobScheduler.getHealthStatus.useQuery();
+  const { data: rawJobs = [], isLoading: schedulerLoading } = trpc.jobScheduler.listJobs.useQuery({});
+  const { data: rawHealth } = trpc.jobScheduler.getHealthStatus.useQuery({});
   const jobs = JSON.parse(JSON.stringify(rawJobs));
   const health = rawHealth ? JSON.parse(JSON.stringify(rawHealth)) : null;
 
@@ -329,3 +329,4 @@ export default function SchedulerDashboard() {
     </ModuleLayout>
   );
 }
+

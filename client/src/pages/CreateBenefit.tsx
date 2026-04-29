@@ -48,7 +48,7 @@ export default function CreateBenefit() {
     notes: "",
   });
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
 
   const createMutation = trpc.payroll.benefits.create.useMutation({
     onSuccess: () => {
@@ -203,11 +203,11 @@ export default function CreateBenefit() {
                   <div className="grid grid-cols-3 gap-4 text-sm">
                     <div>
                       <p className="text-gray-600">Employee Cost</p>
-                      <p className="font-semibold">KES {totalCost.employee.toFixed(2)}</p>
+                      <p className="font-semibold">Ksh {totalCost.employee.toFixed(2)}</p>
                     </div>
                     <div>
                       <p className="text-gray-600">Employer Cost</p>
-                      <p className="font-semibold">KES {totalCost.employer.toFixed(2)}</p>
+                      <p className="font-semibold">Ksh {totalCost.employer.toFixed(2)}</p>
                     </div>
                     <div>
                       <p className="text-gray-600">Total Monthly Cost</p>

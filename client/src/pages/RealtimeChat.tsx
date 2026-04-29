@@ -9,7 +9,7 @@ export default function RealtimeChat() {
   const [newMessage, setNewMessage] = useState("");
 
   const { data: msgData, isLoading, error } = trpc.staffChat.getMessages.useQuery({ channelId });
-  const { data: memberData } = trpc.staffChat.getMembers.useQuery();
+  const { data: memberData } = trpc.staffChat.getMembers.useQuery({});
   const utils = trpc.useUtils();
 
   const sendMessage = trpc.staffChat.sendMessage.useMutation({
@@ -121,3 +121,4 @@ export default function RealtimeChat() {
     </ModuleLayout>
   );
 }
+

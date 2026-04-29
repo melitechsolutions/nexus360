@@ -19,7 +19,7 @@ import {
 
 export default function Dashboard() {
   const [, navigate] = useLocation();
-  const statsQuery = trpc.dashboard.stats.useQuery();
+  const statsQuery = trpc.dashboard.stats.useQuery({});
   const activityQuery = trpc.dashboard.recentActivity.useQuery({ limit: 10 });
 
   if (statsQuery.isLoading) {
@@ -189,4 +189,5 @@ export default function Dashboard() {
     </ModuleLayout>
   );
 }
+
 

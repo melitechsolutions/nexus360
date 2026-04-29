@@ -36,9 +36,9 @@ export default function Onboarding() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteType, setDeleteType] = useState<"template" | "checklist">("template");
 
-  const templates = trpc.onboarding.listTemplates.useQuery();
-  const checklists = trpc.onboarding.listChecklists.useQuery();
-  const employees = trpc.employees.list.useQuery();
+  const templates = trpc.onboarding.listTemplates.useQuery({});
+  const checklists = trpc.onboarding.listChecklists.useQuery({});
+  const employees = trpc.employees.list.useQuery({});
   const checklistDetail = trpc.onboarding.getChecklist.useQuery(
     { id: selectedChecklist! },
     { enabled: !!selectedChecklist }
@@ -332,3 +332,4 @@ export default function Onboarding() {
     </ModuleLayout>
   );
 }
+

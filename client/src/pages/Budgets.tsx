@@ -20,7 +20,7 @@ export default function BudgetsPage() {
   const [showYTDOnly, setShowYTDOnly] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  const { data: budgets, isLoading, refetch } = trpc.budgets.list.useQuery();
+  const { data: budgets, isLoading, refetch } = trpc.budgets.list.useQuery({});
   const deleteBudgetMutation = trpc.budgets.delete.useMutation({
     onSuccess: () => {
       toast.success("Budget deleted successfully");
@@ -123,7 +123,7 @@ export default function BudgetsPage() {
       <div className="space-y-6">
 
       {/* YTD Metrics Summary */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <StatsCard
           label="Total Budget"
           value={new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0, }).format(ytdMetrics.totalBudget)}

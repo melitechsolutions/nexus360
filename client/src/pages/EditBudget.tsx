@@ -24,7 +24,7 @@ export default function EditBudget() {
     enabled: !!budgetId,
   });
   
-  const { data: departments } = trpc.departments.list.useQuery();
+  const { data: departments } = trpc.departments.list.useQuery({});
   const { code: currencyCode } = useCurrencySettings();
   const updateBudgetMutation = trpc.budgets.update.useMutation({
     onSuccess: () => {

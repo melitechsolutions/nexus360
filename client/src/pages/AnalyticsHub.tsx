@@ -34,7 +34,7 @@ function KPICard({ title, value, subtitle, status, change }: any) {
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">${typeof value === 'number' ? value.toLocaleString() : value}</div>
+        <div className="text-2xl font-bold">Ksh {typeof value === 'number' ? value.toLocaleString() : value}</div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
           {isPositive && <TrendingUp className="w-4 h-4 text-green-600" />}
           {isDanger && <TrendingDown className="w-4 h-4 text-red-600" />}
@@ -175,7 +175,7 @@ export default function AnalyticsHub() {
             <CardHeader>
               <CardTitle>Financial Health Indicators</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-4 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {financialOverview.data && (
                 <>
                   <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
@@ -275,7 +275,7 @@ export default function AnalyticsHub() {
 
         {/* REVENUE TAB */}
         <TabsContent value="revenue" className="space-y-6">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {revenueAnalytics.data && (
               <>
                 <KPICard
@@ -326,7 +326,7 @@ export default function AnalyticsHub() {
 
         {/* EXPENSES TAB */}
         <TabsContent value="expenses" className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {expenseAnalytics.data && (
               <>
                 <KPICard
@@ -357,7 +357,7 @@ export default function AnalyticsHub() {
                       <div className="flex-1">
                         <div className="flex justify-between mb-1">
                           <span className="text-sm font-medium">{cat.category}</span>
-                          <span className="text-sm text-gray-600">${cat.amount.toLocaleString()}</span>
+                          <span className="text-sm text-gray-600">Ksh {cat.amount.toLocaleString()}</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
@@ -379,7 +379,7 @@ export default function AnalyticsHub() {
         <TabsContent value="cash" className="space-y-6">
           {cashFlowAnalytics.data && (
             <>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <KPICard
                   title="Opening Balance"
                   value={cashFlowAnalytics.data.current.openingBalance}
@@ -412,7 +412,7 @@ export default function AnalyticsHub() {
                   <CardDescription>30/60/90-day projection</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <p className="text-sm font-medium text-gray-600">30 Days</p>
                       <p className="text-2xl font-bold text-blue-600 mt-2">
@@ -471,7 +471,7 @@ export default function AnalyticsHub() {
                           ${dept.expense.toLocaleString()}
                         </span>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-sm">
                         <div>
                           <p className="text-gray-600">Margin</p>
                           <p className="font-semibold">{dept.profitMargin.toFixed(2)}%</p>
@@ -482,7 +482,7 @@ export default function AnalyticsHub() {
                         </div>
                         <div>
                           <p className="text-gray-600">Cost/Employee</p>
-                          <p className="font-semibold">${dept.costPerEmployee.toLocaleString()}</p>
+                          <p className="font-semibold">Ksh {dept.costPerEmployee.toLocaleString()}</p>
                         </div>
                       </div>
                     </div>

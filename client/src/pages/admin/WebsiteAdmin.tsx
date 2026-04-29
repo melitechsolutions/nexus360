@@ -194,10 +194,10 @@ export default function WebsiteAdmin() {
 
 // ── Overview Tab ────────────────────────────────────────────────────────
 function OverviewTab() {
-  const { data: pages } = trpc.websiteAdmin.getPages.useQuery();
-  const { data: analytics } = trpc.websiteAdmin.getAnalytics.useQuery();
-  const { data: contacts } = trpc.websiteAdmin.getContactSubmissions.useQuery();
-  const { data: settings } = trpc.websiteAdmin.getSettings.useQuery();
+  const { data: pages } = trpc.websiteAdmin.getPages.useQuery({});
+  const { data: analytics } = trpc.websiteAdmin.getAnalytics.useQuery({});
+  const { data: contacts } = trpc.websiteAdmin.getContactSubmissions.useQuery({});
+  const { data: settings } = trpc.websiteAdmin.getSettings.useQuery({});
 
   const publishedCount = pages?.filter(p => p.isPublished).length ?? 0;
   const totalPages = pages?.length ?? 0;
@@ -387,7 +387,7 @@ function OverviewTab() {
 // ── Pages Tab ───────────────────────────────────────────────────────────
 function PagesTab() {
   const utils = trpc.useUtils();
-  const { data: pages, isLoading } = trpc.websiteAdmin.getPages.useQuery();
+  const { data: pages, isLoading } = trpc.websiteAdmin.getPages.useQuery({});
   const updatePage = trpc.websiteAdmin.updatePage.useMutation({
     onSuccess: () => {
       utils.websiteAdmin.getPages.invalidate();
@@ -545,7 +545,7 @@ function PagesTab() {
 // ── Navigation Tab ──────────────────────────────────────────────────────
 function NavigationTab() {
   const utils = trpc.useUtils();
-  const { data: navConfig, isLoading } = trpc.websiteAdmin.getNavigation.useQuery();
+  const { data: navConfig, isLoading } = trpc.websiteAdmin.getNavigation.useQuery({});
   const updateNav = trpc.websiteAdmin.updateNavigation.useMutation({
     onSuccess: () => {
       utils.websiteAdmin.getNavigation.invalidate();
@@ -751,7 +751,7 @@ function NavigationTab() {
 // ── Settings Tab ────────────────────────────────────────────────────────
 function SettingsTab() {
   const utils = trpc.useUtils();
-  const { data: settings, isLoading } = trpc.websiteAdmin.getSettings.useQuery();
+  const { data: settings, isLoading } = trpc.websiteAdmin.getSettings.useQuery({});
   const updateSettings = trpc.websiteAdmin.updateSettings.useMutation({
     onSuccess: () => {
       utils.websiteAdmin.getSettings.invalidate();
@@ -981,7 +981,7 @@ function SettingsTab() {
 // ── Inquiries Tab ───────────────────────────────────────────────────────
 function InquiriesTab() {
   const utils = trpc.useUtils();
-  const { data: contacts, isLoading } = trpc.websiteAdmin.getContactSubmissions.useQuery();
+  const { data: contacts, isLoading } = trpc.websiteAdmin.getContactSubmissions.useQuery({});
   const updateStatus = trpc.websiteAdmin.updateContactStatus.useMutation({
     onSuccess: () => {
       utils.websiteAdmin.getContactSubmissions.invalidate();
@@ -1291,8 +1291,8 @@ function InquiriesTab() {
 // ── Pricing Tab ─────────────────────────────────────────────────────────
 function PricingTab() {
   const utils = trpc.useUtils();
-  const { data: tiers, isLoading: tiersLoading } = trpc.multiTenancy.getPlanPrices.useQuery();
-  const { data: publicData, isLoading: pubLoading } = trpc.websiteAdmin.publicPricing.useQuery();
+  const { data: tiers, isLoading: tiersLoading } = trpc.multiTenancy.getPlanPrices.useQuery({});
+  const { data: publicData, isLoading: pubLoading } = trpc.websiteAdmin.publicPricing.useQuery({});
   const saveMut = trpc.websiteAdmin.updatePricingConfig.useMutation({
     onSuccess: () => {
       utils.websiteAdmin.publicPricing.invalidate();
@@ -1413,8 +1413,8 @@ function PricingTab() {
                   {plan.highlight && <Badge variant="default">Highlighted</Badge>}
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>KES {plan.monthlyKes.toLocaleString()}/mo</span>
-                  <span>KES {plan.annualKes.toLocaleString()}/yr</span>
+                  <span>Ksh {plan.monthlyKes.toLocaleString()}/mo</span>
+                  <span>Ksh {plan.annualKes.toLocaleString()}/yr</span>
                 </div>
               </div>
             </CardHeader>
@@ -1523,7 +1523,7 @@ function PricingTab() {
 // ── Footer Tab ──────────────────────────────────────────────────────────
 function FooterTab() {
   const utils = trpc.useUtils();
-  const { data: footerConfig, isLoading } = trpc.websiteAdmin.getFooterConfig.useQuery();
+  const { data: footerConfig, isLoading } = trpc.websiteAdmin.getFooterConfig.useQuery({});
   const updateFooter = trpc.websiteAdmin.updateFooterConfig.useMutation({
     onSuccess: () => {
       utils.websiteAdmin.getFooterConfig.invalidate();
@@ -1676,7 +1676,7 @@ function FooterTab() {
 // ── About Content Tab ───────────────────────────────────────────────────
 function AboutContentTab() {
   const utils = trpc.useUtils();
-  const { data: content, isLoading } = trpc.websiteAdmin.getAboutContent.useQuery();
+  const { data: content, isLoading } = trpc.websiteAdmin.getAboutContent.useQuery({});
   const updateContent = trpc.websiteAdmin.updateAboutContent.useMutation({
     onSuccess: () => {
       utils.websiteAdmin.getAboutContent.invalidate();
@@ -1839,7 +1839,7 @@ function AboutContentTab() {
 // ── Features Content Tab ────────────────────────────────────────────────
 function FeaturesContentTab() {
   const utils = trpc.useUtils();
-  const { data: content, isLoading } = trpc.websiteAdmin.getFeaturesContent.useQuery();
+  const { data: content, isLoading } = trpc.websiteAdmin.getFeaturesContent.useQuery({});
   const updateContent = trpc.websiteAdmin.updateFeaturesContent.useMutation({
     onSuccess: () => {
       utils.websiteAdmin.getFeaturesContent.invalidate();
@@ -1963,7 +1963,7 @@ function FeaturesContentTab() {
 
 // ── Testimonials Tab ─────────────────────────────────────────────────
 function TestimonialsTab() {
-  const { data, refetch } = trpc.websiteAdmin.getTestimonials.useQuery();
+  const { data, refetch } = trpc.websiteAdmin.getTestimonials.useQuery({});
   const updateMut = trpc.websiteAdmin.updateTestimonials.useMutation({ onSuccess: () => { refetch(); toast.success("Testimonials saved"); } });
   const [items, setItems] = useState<any[]>([]);
 
@@ -2010,7 +2010,7 @@ function TestimonialsTab() {
 
 // ── FAQ Tab ──────────────────────────────────────────────────────────
 function FAQTab() {
-  const { data, refetch } = trpc.websiteAdmin.getFAQs.useQuery();
+  const { data, refetch } = trpc.websiteAdmin.getFAQs.useQuery({});
   const updateMut = trpc.websiteAdmin.updateFAQs.useMutation({ onSuccess: () => { refetch(); toast.success("FAQs saved"); } });
   const [items, setItems] = useState<any[]>([]);
 
@@ -2056,7 +2056,7 @@ function FAQTab() {
 
 // ── Blog Tab ─────────────────────────────────────────────────────────
 function BlogTab() {
-  const { data, refetch } = trpc.websiteAdmin.getBlogPosts.useQuery();
+  const { data, refetch } = trpc.websiteAdmin.getBlogPosts.useQuery({});
   const updateMut = trpc.websiteAdmin.updateBlogPosts.useMutation({ onSuccess: () => { refetch(); toast.success("Blog posts saved"); } });
   const [posts, setPosts] = useState<any[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
@@ -2130,7 +2130,7 @@ function BlogTab() {
 
 // ── Hero Tab ─────────────────────────────────────────────────────────
 function HeroTab() {
-  const { data, refetch } = trpc.websiteAdmin.getHeroContent.useQuery();
+  const { data, refetch } = trpc.websiteAdmin.getHeroContent.useQuery({});
   const updateMut = trpc.websiteAdmin.updateHeroContent.useMutation({ onSuccess: () => { refetch(); toast.success("Hero content saved"); } });
   const [form, setForm] = useState({
     badge: "", title: "", subtitle: "",

@@ -35,7 +35,7 @@ export default function Departments() {
   const [editingDepartment, setEditingDepartment] = useState(null);
 
   // Fetch real data from backend (must be before any early returns to satisfy React hooks rules)
-  const { data: departmentsData = [], isLoading: departmentsLoading } = trpc.departments.list.useQuery();
+  const { data: departmentsData = [], isLoading: departmentsLoading } = trpc.departments.list.useQuery({});
   const utils = trpc.useUtils();
   const deleteMutation = trpc.departments.delete.useMutation({
     onSuccess: () => { utils.departments.list.invalidate(); toast.success("Department deleted"); },

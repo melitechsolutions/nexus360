@@ -21,7 +21,7 @@ interface CreateProjectFormProps {
 
 export function CreateProjectForm({ onSuccess, onCancel }: CreateProjectFormProps) {
   const utils = trpc.useUtils();
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
   
   const createProjectMutation = trpc.projects.create.useMutation({
     onSuccess: () => {
@@ -69,7 +69,7 @@ export function CreateProjectForm({ onSuccess, onCancel }: CreateProjectFormProp
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Project Name *</Label>
           <Input
@@ -123,7 +123,7 @@ export function CreateProjectForm({ onSuccess, onCancel }: CreateProjectFormProp
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Start Date *</Label>
           <DatePicker
@@ -141,7 +141,7 @@ export function CreateProjectForm({ onSuccess, onCancel }: CreateProjectFormProp
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="budget">Budget (Ksh)</Label>
           <Input
@@ -198,4 +198,5 @@ export function CreateProjectForm({ onSuccess, onCancel }: CreateProjectFormProp
     </form>
   );
 }
+
 

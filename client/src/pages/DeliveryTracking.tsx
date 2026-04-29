@@ -104,7 +104,7 @@ function DeliveryTimeline({ delivery }: { delivery: any }) {
 
 // Key metrics for deliveries
 function DeliveryMetrics() {
-  const { data: deliveries = [] } = trpc.deliveryNotes.list.useQuery();
+  const { data: deliveries = [] } = trpc.deliveryNotes.list.useQuery({});
 
   const metrics = [
     {
@@ -164,7 +164,7 @@ function CreateDeliveryDialog() {
     notes: "",
   });
 
-  const { refetch } = trpc.deliveryNotes.list.useQuery();
+  const { refetch } = trpc.deliveryNotes.list.useQuery({});
   const createMutation = trpc.deliveryNotes.create.useMutation({
     onSuccess: () => {
       toast.success("Delivery note created successfully");
@@ -267,7 +267,7 @@ function CreateDeliveryDialog() {
 export default function DeliveryTracking() {
   const { getUserName } = useUserLookup();
   const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
-  const { data: deliveries = [] } = trpc.deliveryNotes.list.useQuery();
+  const { data: deliveries = [] } = trpc.deliveryNotes.list.useQuery({});
 
   const statusColors = {
     draft: "bg-gray-100 text-gray-800",
@@ -468,3 +468,4 @@ export default function DeliveryTracking() {
     </ModuleLayout>
   );
 }
+

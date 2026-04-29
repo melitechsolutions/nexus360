@@ -9,8 +9,8 @@ export default function HRModule() {
   const [, navigate] = useLocation();
 
   // Fetch HR metrics from backend
-  const { data: employeesData } = trpc.employees.list.useQuery();
-  const { data: departmentsData } = trpc.departments.list.useQuery();
+  const { data: employeesData } = trpc.employees.list.useQuery({});
+  const { data: departmentsData } = trpc.departments.list.useQuery({});
   
   const totalEmployees = employeesData?.length || 0;
   const totalDepartments = departmentsData?.length || 0;
@@ -152,4 +152,5 @@ export default function HRModule() {
     </ModuleLayout>
   );
 }
+
 

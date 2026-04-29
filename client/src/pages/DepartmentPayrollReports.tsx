@@ -47,9 +47,9 @@ export default function DepartmentPayrollReports() {
   const [selectedMonth, setSelectedMonth] = useState("all");
 
   // Fetch data
-  const { data: departments = [] } = trpc.departments.list.useQuery();
-  const { data: payrollData = [], isLoading: payrollLoading } = trpc.payroll.list.useQuery();
-  const { data: employeeData = [] } = trpc.employees.list.useQuery();
+  const { data: departments = [] } = trpc.departments.list.useQuery({});
+  const { data: payrollData = [], isLoading: payrollLoading } = trpc.payroll.list.useQuery({});
+  const { data: employeeData = [] } = trpc.employees.list.useQuery({});
 
   // Export mutation
   const exportPayrollMutation = trpc.payrollExport.exportPayroll.useMutation({

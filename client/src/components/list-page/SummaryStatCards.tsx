@@ -25,7 +25,7 @@ export interface SummaryStatCardsProps {
 
 export function SummaryStatCards({ cards, className }: SummaryStatCardsProps) {
   return (
-    <div className={cn("grid grid-cols-2 lg:grid-cols-4 gap-0 rounded-xl border bg-white dark:bg-slate-900 overflow-hidden", className)}>
+    <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 rounded-xl border bg-white dark:bg-slate-900 overflow-hidden", className)}>
       {cards.map((card, i) => {
         const c = colorMap[card.color || "blue"];
         return (

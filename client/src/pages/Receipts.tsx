@@ -45,6 +45,7 @@ import {
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { format } from "date-fns";
+import { getPaymentMethodOptions, PAYMENT_METHOD_LABELS } from "@/const/paymentMethods";
 
 const iconMap = {
   DollarSign,
@@ -97,8 +98,8 @@ export default function Receipts() {
   const [selectedReceipts, setSelectedReceipts] = useState<Set<string>>(new Set());
 
   // Fetch real data from backend
-  const { data: receiptsData = [], isLoading: isLoadingReceipts } = trpc.receipts.list.useQuery();
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
+  const { data: receiptsData = [], isLoading: isLoadingReceipts } = trpc.receipts.list.useQuery({});
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
   const utils = trpc.useUtils();
   
   // Delete mutation
@@ -176,7 +177,7 @@ export default function Receipts() {
   const stats = useMemo(() => [
     {
       title: "Total Received",
-      value: `Ksh ${receipts.reduce((sum, rec) => sum + rec.amount, 0).toLocaleString()}`,
+      value: `Ksh ${(receipts.reduce((sum, rec) => sum + (rec.amount || 0), 0) / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
       description: "All time",
       iconName: "DollarSign" as keyof typeof iconMap,
     },
@@ -194,8 +195,8 @@ export default function Receipts() {
           const now = new Date();
           return recDate.getMonth() === now.getMonth() && recDate.getFullYear() === now.getFullYear();
         })
-        .reduce((sum, rec) => sum + rec.amount, 0)
-        .toLocaleString()}`,
+        .reduce((sum, rec) => sum + (rec.amount || 0), 0) / 100
+        .toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
       description: "Current month",
       iconName: "Calendar" as keyof typeof iconMap,
     },
@@ -332,11 +333,11 @@ export default function Receipts() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Methods</SelectItem>
-              <SelectItem value="cash">Cash</SelectItem>
-              <SelectItem value="bank-transfer">Bank Transfer</SelectItem>
-              <SelectItem value="mpesa">M-Pesa</SelectItem>
-              <SelectItem value="cheque">Cheque</SelectItem>
-              <SelectItem value="card">Card</SelectItem>
+              {getPaymentMethodOptions().map((method) => (
+                <SelectItem key={method.value} value={method.value}>
+                  {method.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -515,7 +516,7 @@ export default function Receipts() {
                           </TableCell>
                           <TableCell className="font-medium">{receipt.receiptNumber}</TableCell>
                           <TableCell>{receipt.client}</TableCell>
-                          <TableCell>Ksh {(receipt.amount || 0).toLocaleString()}</TableCell>
+                          <TableCell>Ksh {((receipt.amount || 0) / 100).toLocaleString()}</TableCell>
                           <TableCell>{receipt.date ? new Date(receipt.date).toLocaleDateString() : "-"}</TableCell>
                           <TableCell>
                             <Badge className={PAYMENT_METHOD_COLORS[receipt.paymentMethod]}>

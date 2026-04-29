@@ -49,15 +49,15 @@ export default function HRAnalyticsDashboard() {
 
   // Fetch analytics data
   const { data: headcountTrends = [] } = trpc.hrAnalytics.getHeadcountTrends.useQuery({ months: 12 });
-  const { data: salaryDistribution = [] } = trpc.hrAnalytics.getSalaryDistribution.useQuery();
-  const { data: turnoverAnalysis = [] } = trpc.hrAnalytics.getTurnoverAnalysis.useQuery();
-  const { data: attendancePatterns = [] } = trpc.hrAnalytics.getAttendancePatterns.useQuery();
-  const { data: leaveUtilization = [] } = trpc.hrAnalytics.getLeaveUtilization.useQuery();
-  const { data: performanceMetrics = [] } = trpc.hrAnalytics.getPerformanceMetrics.useQuery();
+  const { data: salaryDistribution = [] } = trpc.hrAnalytics.getSalaryDistribution.useQuery({});
+  const { data: turnoverAnalysis = [] } = trpc.hrAnalytics.getTurnoverAnalysis.useQuery({});
+  const { data: attendancePatterns = [] } = trpc.hrAnalytics.getAttendancePatterns.useQuery({});
+  const { data: leaveUtilization = [] } = trpc.hrAnalytics.getLeaveUtilization.useQuery({});
+  const { data: performanceMetrics = [] } = trpc.hrAnalytics.getPerformanceMetrics.useQuery({});
 
   // Fetch department list for filter
-  const { data: departments = [] } = trpc.departments.list.useQuery();
-  const { data: employees = [], isLoading: employeesLoading } = trpc.employees.list.useQuery();
+  const { data: departments = [] } = trpc.departments.list.useQuery({});
+  const { data: employees = [], isLoading: employeesLoading } = trpc.employees.list.useQuery({});
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-KE", {
@@ -440,3 +440,4 @@ export default function HRAnalyticsDashboard() {
     </ModuleLayout>
   );
 }
+

@@ -345,6 +345,43 @@ export const salaryIncrements = mysqlTable("salaryIncrements", {
   effectiveDateIdx: index("effective_date_idx").on(table.effectiveDate),
 }));
 
+/**
+ * Payslips - Generated and dispatched to employees
+ */
+export const payslips = mysqlTable("payslips", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  payrollId: varchar("payrollId", { length: 64 }).notNull(),
+  employeeId: varchar("employeeId", { length: 64 }).notNull(),
+  organizationId: varchar("organizationId", { length: 64 }),
+  payPeriod: varchar("payPeriod", { length: 20 }).notNull(), // YYYY-MM format
+  payPeriodStart: datetime("payPeriodStart").notNull(),
+  payPeriodEnd: datetime("payPeriodEnd").notNull(),
+  basicSalary: int("basicSalary").notNull(), // in cents
+  allowances: int("allowances").default(0), // in cents
+  grossSalary: int("grossSalary").notNull(), // basic + allowances
+  paye: int("paye").default(0), // in cents
+  nssf: int("nssf").default(0), // in cents
+  shif: int("shif").default(0), // in cents
+  housingLevy: int("housingLevy").default(0), // in cents
+  totalDeductions: int("totalDeductions").default(0), // in cents
+  netSalary: int("netSalary").notNull(), // in cents
+  htmlContent: text("htmlContent"), // Rendered payslip HTML
+  pdfUrl: varchar("pdfUrl", { length: 500 }), // URL to stored PDF
+  sentTo: varchar("sentTo", { length: 320 }), // Employee email
+  sentAt: datetime("sentAt"),
+  status: mysqlEnum("status", ["draft", "generated", "sent", "viewed"]).default("draft").notNull(),
+  employeeNotes: text("employeeNotes"), // Employee can add notes
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+}, (table) => ({
+  payrollIdx: index("payroll_idx").on(table.payrollId),
+  employeeIdx: index("employee_idx").on(table.employeeId),
+  payPeriodIdx: index("pay_period_idx").on(table.payPeriod),
+  statusIdx: index("status_idx").on(table.status),
+  sentAtIdx: index("sent_at_idx").on(table.sentAt),
+  organizationIdx: index("org_idx").on(table.organizationId),
+}));
+
 export type GuestClient = typeof guestClients.$inferSelect;
 export type InsertGuestClient = typeof guestClients.$inferInsert;
 export type Reminder = typeof reminders.$inferSelect;
@@ -379,6 +416,8 @@ export type EmployeeTaxInfo = typeof employeeTaxInfo.$inferSelect;
 export type InsertEmployeeTaxInfo = typeof employeeTaxInfo.$inferInsert;
 export type SalaryIncrement = typeof salaryIncrements.$inferSelect;
 export type InsertSalaryIncrement = typeof salaryIncrements.$inferInsert;
+export type Payslip = typeof payslips.$inferSelect;
+export type InsertPayslip = typeof payslips.$inferInsert;
 
 /**
  * Local Purchase Orders (LPO) for large purchases

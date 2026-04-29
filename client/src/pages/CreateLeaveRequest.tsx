@@ -29,7 +29,7 @@ export default function CreateLeaveRequest() {
     reason: "",
   });
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
 
   const createLeaveRequestMutation = trpc.leave.create.useMutation({
     onSuccess: () => {

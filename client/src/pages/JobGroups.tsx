@@ -67,7 +67,7 @@ export default function JobGroups() {
   });
 
   // Queries
-  const { data: jobGroupsData = [], isLoading: jobGroupsLoading, refetch } = trpc.jobGroups.list.useQuery();
+  const { data: jobGroupsData = [], isLoading: jobGroupsLoading, refetch } = trpc.jobGroups.list.useQuery({});
   const utils = trpc.useUtils();
 
   // Mutations
@@ -431,3 +431,4 @@ export default function JobGroups() {
     </ModuleLayout>
   );
 }
+

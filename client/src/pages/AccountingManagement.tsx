@@ -34,11 +34,11 @@ export default function AccountingManagement() {
   const { hasPermission } = usePermissions(user?.id);
 
   // Fetch accounting data
-  const { data: invoices = [] } = trpc.invoices.list.useQuery();
-  const { data: payments = [] } = trpc.payments.list.useQuery();
-  const { data: expenses = [] } = trpc.expenses.list.useQuery();
-  const { data: budgets = [] } = trpc.budgets.list.useQuery();
-  const { data: receipts = [] } = trpc.receipts.list.useQuery();
+  const { data: invoices = [] } = trpc.invoices.list.useQuery({});
+  const { data: payments = [] } = trpc.payments.list.useQuery({});
+  const { data: expenses = [] } = trpc.expenses.list.useQuery({});
+  const { data: budgets = [] } = trpc.budgets.list.useQuery({});
+  const { data: receipts = [] } = trpc.receipts.list.useQuery({});
 
   // Calculate financial metrics
   const financialMetrics = useMemo(() => {
@@ -221,8 +221,8 @@ export default function AccountingManagement() {
               <CardContent>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold">
-                    ${financialMetrics.invoiceRevenue.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
+                    Ksh {financialMetrics.invoiceRevenue.toLocaleString("en-KE", {
+                      minimumFractionDigits: 0,
                     })}
                   </span>
                   <TrendingUp className="w-4 h-4 text-green-600" />
@@ -238,8 +238,8 @@ export default function AccountingManagement() {
               <CardContent>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold">
-                    ${financialMetrics.expenseAmount.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
+                    Ksh {financialMetrics.expenseAmount.toLocaleString("en-KE", {
+                      minimumFractionDigits: 0,
                     })}
                   </span>
                   <TrendingDown className="w-4 h-4 text-red-600" />
@@ -255,8 +255,8 @@ export default function AccountingManagement() {
               <CardContent>
                 <div className="flex items-baseline gap-2">
                   <span className={`text-2xl font-bold ${financialMetrics.netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
-                    ${financialMetrics.netProfit.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
+                    Ksh {financialMetrics.netProfit.toLocaleString("en-KE", {
+                      minimumFractionDigits: 0,
                     })}
                   </span>
                   {financialMetrics.netProfit >= 0 ? (
@@ -276,8 +276,8 @@ export default function AccountingManagement() {
               <CardContent>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold">
-                    ${financialMetrics.paymentsProcessed.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
+                    Ksh {financialMetrics.paymentsProcessed.toLocaleString("en-KE", {
+                      minimumFractionDigits: 0,
                     })}
                   </span>
                 </div>

@@ -195,7 +195,7 @@ export default function MultiTenancy() {
   useEffect(() => { setMainTab(tabFromPath(location)); }, [location]);
 
   // ── List ─────────────────────────────────────────────────────────────────
-  const { data: listData, isLoading: listLoading, refetch: refetchList } = trpc.multiTenancy.listOrganizations.useQuery();
+  const { data: listData, isLoading: listLoading, refetch: refetchList } = trpc.multiTenancy.listOrganizations.useQuery({});
   const orgs = listData?.organizations ?? [];
   const archivedQuery = trpc.multiTenancy.listOrganizations.useQuery({ includeArchived: true });
   const archivedOrgs = (archivedQuery.data?.organizations ?? []).filter((o: any) => o.isArchived);
@@ -212,13 +212,13 @@ export default function MultiTenancy() {
   const orgUsers: any[] = (trpc.multiTenancy.getOrgUsers.useQuery(
     { organizationId: selectedOrgId! }, { enabled: !!selectedOrgId },
   ).data as any)?.users ?? [];
-  const allUsers: any[] = trpc.users.list.useQuery().data ?? [];
+  const allUsers: any[] = trpc.users.list.useQuery({}).data ?? [];
 
   // ── Pricing tier data ───────────────────────────────────────────────────
-  const { data: allTierData, isLoading: tiersLoading } = trpc.multiTenancy.getAllPricingTierFeatures.useQuery();
+  const { data: allTierData, isLoading: tiersLoading } = trpc.multiTenancy.getAllPricingTierFeatures.useQuery({});
   const tierMap: Record<string, Record<string, boolean>> = (allTierData as any)?.tiers ?? {};
-  const { data: planPricesData } = trpc.multiTenancy.getPlanPrices.useQuery();
-  const { data: tierDefaultsData } = trpc.multiTenancy.getTierDefaults.useQuery();
+  const { data: planPricesData } = trpc.multiTenancy.getPlanPrices.useQuery({});
+  const { data: tierDefaultsData } = trpc.multiTenancy.getTierDefaults.useQuery({});
   const apiPrices = ((planPricesData as any)?.prices || {}) as Record<string, any>;
   const tierMaxUsers = useMemo(() => {
     const defaults = (tierDefaultsData as any)?.tierMaxUsers ?? { trial: 5, starter: 10, professional: 50, enterprise: 500, custom: 0 };
@@ -243,7 +243,7 @@ export default function MultiTenancy() {
   }, [tierDefaultsData, apiPrices]);
 
   // ── Tenant admins ───────────────────────────────────────────────────────
-  const { data: tenantAdminsData, isLoading: adminsLoading } = trpc.multiTenancy.listTenantAdmins.useQuery();
+  const { data: tenantAdminsData, isLoading: adminsLoading } = trpc.multiTenancy.listTenantAdmins.useQuery({});
   const tenantAdmins: any[] = (tenantAdminsData as any)?.admins ?? [];
 
   // ── Tenant users (all org users across organizations) ────────────────────
@@ -270,7 +270,7 @@ export default function MultiTenancy() {
   const messages: any[] = (messagesData as any)?.messages ?? [];
 
   // ── Tenant Communications (full CRUD) ──────────────────────────────────
-  const { data: commsData, isLoading: commsLoading, refetch: refetchComms } = trpc.tenantCommunications.list.useQuery();
+  const { data: commsData, isLoading: commsLoading, refetch: refetchComms } = trpc.tenantCommunications.list.useQuery({});
   const comms: any[] = commsData ?? [];
 
   // ── Mutations ───────────────────────────────────────────────────────────
@@ -405,7 +405,7 @@ export default function MultiTenancy() {
   );
   const totalUsers = orgs.reduce((s: number, o: any) => s + (o.userCount ?? 0), 0);
   const activeCount = orgs.filter((o: any) => o.isActive).length;
-  const moduleListData = trpc.multiTenancy.getModuleList.useQuery().data;
+  const moduleListData = trpc.multiTenancy.getModuleList.useQuery({}).data;
   const modules: any[] = (moduleListData as any)?.modules ?? [];
   const planOptions = useMemo(() => {
     const keys = Object.keys(apiPrices);
@@ -1880,3 +1880,4 @@ function OrgFormBasic({ form, setForm, mode, planOptions, tierMaxUsers }: { form
     </div>
   );
 }
+

@@ -17,6 +17,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { DollarSign, ArrowLeft, Loader2, Trash2, Download, Save } from "lucide-react";
 import { APP_TITLE } from "@/const";
+import { getPaymentMethodOptions } from "@/const/paymentMethods";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
 import { useCompanyInfo } from "@/hooks/useCompanyInfo";
@@ -48,8 +49,8 @@ export default function EditPayment() {
   });
 
   // Fetch related data
-  const { data: invoices = [] } = trpc.invoices.list.useQuery();
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: invoices = [] } = trpc.invoices.list.useQuery({});
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
 
   // Update form when payment data loads
   useEffect(() => {
@@ -354,12 +355,11 @@ export default function EditPayment() {
                       <SelectValue placeholder="Select payment method" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="mpesa">M-Pesa</SelectItem>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                      <SelectItem value="cheque">Cheque</SelectItem>
-                      <SelectItem value="card">Card</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {getPaymentMethodOptions().map((method) => (
+                        <SelectItem key={method.value} value={method.value}>
+                          {method.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -452,3 +452,4 @@ export default function EditPayment() {
     </ModuleLayout>
   );
 }
+

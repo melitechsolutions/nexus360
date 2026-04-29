@@ -45,6 +45,7 @@ import { trpc } from "@/lib/trpc";
 import { buildCommunicationComposePath } from "@/lib/communications";
 import mutateAsync from '@/lib/mutationHelpers';
 import { format } from "date-fns";
+import { getPaymentMethodOptions, PAYMENT_METHOD_LABELS } from "@/const/paymentMethods";
 import { toast } from "sonner";
 import { downloadCSV } from "@/lib/export-utils";
 import { ListPageToolbar } from "@/components/list-page/ListPageToolbar";
@@ -97,8 +98,8 @@ export default function Payments() {
   const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(paymentColumns, "payments");
 
   // Fetch real data from backend
-  const { data: paymentsData = [], isLoading: isLoadingPayments } = trpc.payments.list.useQuery();
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
+  const { data: paymentsData = [], isLoading: isLoadingPayments } = trpc.payments.list.useQuery({});
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
   const utils = trpc.useUtils();
   
   // Delete mutation
@@ -227,11 +228,11 @@ export default function Payments() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Methods</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="mpesa">M-Pesa</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="cheque">Cheque</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
+                  {getPaymentMethodOptions().map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Button onClick={() => navigate("/payments/reconciliation")} variant="outline" size="sm" className="gap-1">
@@ -372,4 +373,5 @@ export default function Payments() {
     </ModuleLayout>
   );
 }
+
 

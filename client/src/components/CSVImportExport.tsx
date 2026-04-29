@@ -322,7 +322,7 @@ export default function CSVImportExport() {
                   <AlertDescription>
                     <div className="space-y-2">
                       <p className="font-semibold">Import Completed</p>
-                      <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-sm">
                         <div>
                           <span className="text-gray-500">Imported:</span>
                           <p className="font-semibold text-green-600">{importResult.imported}</p>
@@ -415,7 +415,7 @@ export default function CSVImportExport() {
                       <Badge variant="destructive">Has Errors</Badge>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                     {Object.entries(row.data).map(([key, value]) => (
                       <div key={key} className="space-y-1">
                         <span className="text-gray-500 text-xs">{key}</span>

@@ -122,7 +122,7 @@ export function ProjectProgressBar({
                   </div>
                   <div className="grid gap-2">
                     <Label>Quick Actions</Label>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                       {[0, 25, 50, 75, 100].map((val) => (
                         <Button
                           key={val}
@@ -165,7 +165,7 @@ export function ProjectProgressBar({
         </div>
 
         {/* Progress Details */}
-        <div className="grid grid-cols-4 gap-2 pt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pt-4">
           <div className="text-center p-2 bg-gray-50 rounded">
             <div className="text-xs text-gray-600">Start</div>
             <div className="text-sm font-semibold">0%</div>
@@ -188,7 +188,7 @@ export function ProjectProgressBar({
         {isEditable && (
           <div className="pt-4 border-t">
             <div className="text-sm font-medium mb-2">Quick Update</div>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
               {[0, 25, 50, 75, 100].map((val) => (
                 <Button
                   key={val}

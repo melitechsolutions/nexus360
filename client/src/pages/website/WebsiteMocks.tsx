@@ -190,11 +190,11 @@ export function MockDashboardScreenshot({ className }: { className?: string }) {
 
 export function MockFinanceScreenshot({ className }: { className?: string }) {
   const invoices = [
-    { id: "INV-2024",  client: "Acme Corp",     amount: "KSh 184,000", status: "Paid",    statusColor: "text-emerald-400 bg-emerald-500/15" },
-    { id: "INV-2025",  client: "Zenith Ltd",    amount: "KSh 92,500",  status: "Pending", statusColor: "text-amber-400 bg-amber-500/15" },
-    { id: "INV-2026",  client: "BlueStar Inc",  amount: "KSh 340,000", status: "Paid",    statusColor: "text-emerald-400 bg-emerald-500/15" },
-    { id: "INV-2027",  client: "Nova Group",    amount: "KSh 56,800",  status: "Overdue", statusColor: "text-red-400 bg-red-500/15" },
-    { id: "INV-2028",  client: "Meridian Co",   amount: "KSh 210,000", status: "Draft",   statusColor: "text-white/50 bg-white/8" },
+    { id: "INV-2024",  client: "Acme Corp",     amount: "Ksh 184,000", status: "Paid",    statusColor: "text-emerald-400 bg-emerald-500/15" },
+    { id: "INV-2025",  client: "Zenith Ltd",    amount: "Ksh 92,500",  status: "Pending", statusColor: "text-amber-400 bg-amber-500/15" },
+    { id: "INV-2026",  client: "BlueStar Inc",  amount: "Ksh 340,000", status: "Paid",    statusColor: "text-emerald-400 bg-emerald-500/15" },
+    { id: "INV-2027",  client: "Nova Group",    amount: "Ksh 56,800",  status: "Overdue", statusColor: "text-red-400 bg-red-500/15" },
+    { id: "INV-2028",  client: "Meridian Co",   amount: "Ksh 210,000", status: "Draft",   statusColor: "text-white/50 bg-white/8" },
   ];
 
   return (

@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Loader2 } from "lucide-react";
 
 const SalesManagerDashboard: React.FC = () => {
-  const pipelineQuery = trpc.salesPipeline.getPipelineBoard.useQuery();
-  const winLossQuery = trpc.salesPipeline.getWinLossStats.useQuery();
+  const pipelineQuery = trpc.salesPipeline.getPipelineBoard.useQuery({});
+  const winLossQuery = trpc.salesPipeline.getWinLossStats.useQuery({});
 
   if (pipelineQuery.isLoading || winLossQuery.isLoading) {
     return (
@@ -114,3 +114,4 @@ const SalesManagerDashboard: React.FC = () => {
 };
 
 export default SalesManagerDashboard;
+

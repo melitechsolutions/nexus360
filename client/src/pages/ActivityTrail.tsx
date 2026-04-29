@@ -49,9 +49,9 @@ const ActivityTrail: React.FC = () => {
     action: selectedAction || undefined,
   });
 
-  const statsQuery = trpc.activityTrail.getStats.useQuery();
-  const entityTypesQuery = trpc.activityTrail.getEntityTypes.useQuery();
-  const actionsQuery = trpc.activityTrail.getActions.useQuery();
+  const statsQuery = trpc.activityTrail.getStats.useQuery({});
+  const entityTypesQuery = trpc.activityTrail.getEntityTypes.useQuery({});
+  const actionsQuery = trpc.activityTrail.getActions.useQuery({});
 
   const activities = activitiesQuery.data?.activities || [];
   const total = activitiesQuery.data?.total || 0;

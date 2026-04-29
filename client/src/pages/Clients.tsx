@@ -127,9 +127,9 @@ export default function Clients() {
   });
 
   // Fetch clients from backend
-  const { data: clientsData = [], isLoading: clientsLoading } = trpc.clients.list.useQuery();
-  const { data: projectsData = [] } = trpc.projects.list.useQuery();
-  const { data: invoicesData = [] } = trpc.invoices.list.useQuery();
+  const { data: clientsData = [], isLoading: clientsLoading } = trpc.clients.list.useQuery({});
+  const { data: projectsData = [] } = trpc.projects.list.useQuery({});
+  const { data: invoicesData = [] } = trpc.invoices.list.useQuery({});
   const utils = trpc.useUtils();
   
   // Delete mutation

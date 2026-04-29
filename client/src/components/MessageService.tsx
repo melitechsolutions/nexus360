@@ -331,7 +331,7 @@ export function MessageService({
             <form onSubmit={handleSendMessage} className="space-y-4">
               {/* Message Type Selection */}
               {type === "both" && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                       messageType === "email"

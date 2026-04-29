@@ -263,7 +263,7 @@ export function PaymentGateway({
           {/* Payment Method Selection */}
           <div className="space-y-3">
             <Label>Payment Method</Label>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label
                 className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                   paymentMethod === "stripe"
@@ -352,7 +352,7 @@ export function PaymentGateway({
               </div>
 
               {/* Expiry and CVV */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="expiryDate">Expiry Date *</Label>
                   <Input

@@ -36,8 +36,8 @@ interface EditBalanceFormData {
 }
 
 export const ChartOfAccountsHierarchy: React.FC = () => {
-  const { data: hierarchy, isLoading, refetch } = trpc.chartOfAccounts.getHierarchy.useQuery();
-  const { data: summary } = trpc.chartOfAccounts.getSummary.useQuery();
+  const { data: hierarchy, isLoading, refetch } = trpc.chartOfAccounts.getHierarchy.useQuery({});
+  const { data: summary } = trpc.chartOfAccounts.getSummary.useQuery({});
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set());
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<EditBalanceFormData | null>(null);
@@ -185,7 +185,7 @@ export const ChartOfAccountsHierarchy: React.FC = () => {
     <div className="space-y-6">
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="bg-white p-4 rounded-lg shadow">
             <div className="text-sm text-gray-600">Total Assets</div>
             <div className="text-2xl font-bold text-green-600">

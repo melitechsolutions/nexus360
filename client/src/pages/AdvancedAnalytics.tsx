@@ -40,7 +40,7 @@ export default function AdvancedAnalytics() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="pt-4">
           <p className="text-sm text-muted-foreground">KPI Score</p>
           <p className="text-2xl font-bold">{metrics?.kpiScore ?? 0}%</p>
@@ -80,7 +80,7 @@ export default function AdvancedAnalytics() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <CardHeader><CardTitle>Anomaly Detection</CardTitle></CardHeader>
           <CardContent className="space-y-2">

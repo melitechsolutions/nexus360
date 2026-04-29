@@ -13,7 +13,7 @@ export default function CreditNotes() {
   const { allowed, isLoading: permLoading } = useRequireFeature("accounting:credit-notes:view");
   const [, setLocation] = useLocation();
 
-  const listQuery = trpc.creditNotes.list.useQuery();
+  const listQuery = trpc.creditNotes.list.useQuery({});
   const creditNotes = listQuery.data || [];
 
   const deleteMutation = trpc.creditNotes.delete.useMutation({

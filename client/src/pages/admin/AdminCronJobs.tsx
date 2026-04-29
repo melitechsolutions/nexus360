@@ -66,7 +66,7 @@ const AVAILABLE_FUNCTIONS = [
 
 export default function AdminCronJobs() {
   const utils = trpc.useUtils();
-  const { data: cronJobs = [], isLoading } = trpc.cronJobs.list.useQuery();
+  const { data: cronJobs = [], isLoading } = trpc.cronJobs.list.useQuery({});
   const createMutation = trpc.cronJobs.create.useMutation({
     onSuccess: () => { utils.cronJobs.list.invalidate(); toast.success("Cron job created"); setIsOpen(false); },
     onError: (e) => toast.error(e.message),

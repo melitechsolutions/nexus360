@@ -23,6 +23,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { getPaymentMethodOptions } from '@/const/paymentMethods';
 
 interface PaymentDialogProps {
   invoiceId: string;
@@ -57,7 +58,7 @@ export default function PaymentWithCOADialog({
   const [coaBalance, setCoaBalance] = useState<number | null>(null);
 
   // Fetch available COA accounts
-  const { data: coaAccounts } = trpc.chartOfAccounts.list.useQuery();
+  const { data: coaAccounts } = trpc.chartOfAccounts.list.useQuery({});
 
   // Fetch COA balance when account is selected
   const getBalanceMutation = trpc.enhancedPayments.getAccountBalance.useMutation();
@@ -202,12 +203,11 @@ export default function PaymentWithCOADialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                <SelectItem value="cheque">Cheque</SelectItem>
-                <SelectItem value="mpesa">MPesa</SelectItem>
-                <SelectItem value="card">Card</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                {getPaymentMethodOptions().map((method) => (
+                  <SelectItem key={method.value} value={method.value}>
+                    {method.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

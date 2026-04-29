@@ -72,7 +72,7 @@ export default function Projects() {
   const { visibleColumns, toggleColumn, isVisible, pageSize: colPageSize, updatePageSize, reset } = useColumnVisibility(COLUMNS, "projects");
   
   // always initialize queries to maintain hook order
-  const { data: projects = [], isLoading: isLoadingProjects } = trpc.projects.list.useQuery(undefined, { enabled: allowed });
+  const { data: projects = [], isLoading: isLoadingProjects } = trpc.projects.list.useQuery({}, { enabled: allowed });
   const utils = trpc.useUtils();
   
   const deleteProjectMutation = trpc.projects.delete.useMutation({

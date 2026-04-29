@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatsCard } from "@/components/ui/stats-card";
+import { EmployeeSelector } from "@/components/EmployeeSelector";
 import { toast } from "sonner";
 import { Star, Plus, Pencil, Trash2, ClipboardCheck, Clock, CheckCircle, TrendingUp } from "lucide-react";
 
@@ -38,9 +39,9 @@ export default function PerformanceReviewsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any>(null);
 
-  const employeesQ = trpc.employees.list.useQuery();
+  const employeesQ = trpc.employees.list.useQuery({});
   const listQ = trpc.performanceReviews.list.useQuery({ status: filterStatus === "all" ? undefined : filterStatus });
-  const statsQ = trpc.performanceReviews.stats.useQuery();
+  const statsQ = trpc.performanceReviews.stats.useQuery({});
   const createMut = trpc.performanceReviews.create.useMutation({ onSuccess() { toast.success("Review created"); listQ.refetch(); statsQ.refetch(); closeForm(); } });
   const updateMut = trpc.performanceReviews.update.useMutation({ onSuccess() { toast.success("Review updated"); listQ.refetch(); statsQ.refetch(); closeForm(); } });
   const deleteMut = trpc.performanceReviews.delete.useMutation({ onSuccess() { toast.success("Review deleted"); listQ.refetch(); statsQ.refetch(); } });
@@ -153,23 +154,24 @@ export default function PerformanceReviewsPage() {
           <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editing ? "Edit Performance Review" : "New Performance Review"}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Employee *</label>
-                  <select className="w-full mt-1 border rounded-md px-3 py-2 text-sm" value={form.employeeId} onChange={(e) => setForm({ ...form, employeeId: e.target.value })} disabled={!!editing}>
-                    <option value="">Select employee...</option>
-                    {(employeesQ.data || []).map((e: any) => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Reviewer *</label>
-                  <select className="w-full mt-1 border rounded-md px-3 py-2 text-sm" value={form.reviewerId} onChange={(e) => setForm({ ...form, reviewerId: e.target.value })}>
-                    <option value="">Select reviewer...</option>
-                    {(employeesQ.data || []).map((e: any) => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
-                  </select>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <EmployeeSelector
+                  value={form.employeeId}
+                  onChange={(v) => setForm({ ...form, employeeId: v })}
+                  placeholder="Select employee..."
+                  disabled={!!editing}
+                  label="Employee"
+                  required
+                />
+                <EmployeeSelector
+                  value={form.reviewerId}
+                  onChange={(v) => setForm({ ...form, reviewerId: v })}
+                  placeholder="Select reviewer..."
+                  label="Reviewer"
+                  required
+                />
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="text-sm font-medium">Rating</label>
                   <div className="mt-2"><StarRating rating={Number(form.rating)} onChange={(r) => setForm({ ...form, rating: r })} /></div>
@@ -217,4 +219,5 @@ export default function PerformanceReviewsPage() {
     </ModuleLayout>
   );
 }
+
 

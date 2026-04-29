@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -21,7 +22,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { RichTextEditor } from "@/components/RichTextEditor";
-import { Mail, Plus, Edit2, Trash2, Copy, Eye, EyeOff, ArrowLeft, Search, Variable, Paperclip, X } from "lucide-react";
+import EmailBlockEditor from "@/components/EmailBlockEditor";
+import HTMLEditor from "@/components/HTMLEditor";
+import { Mail, Plus, Edit2, Trash2, Copy, Eye, EyeOff, ArrowLeft, Search, Variable, Paperclip, X, Code } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -162,7 +165,7 @@ const DEFAULT_TEMPLATES: EmailTemplate[] = [
 
 export default function AdminEmailTemplates() {
   const utils = trpc.useUtils();
-  const { data: templates = [], isLoading } = trpc.emailTemplates.list.useQuery();
+  const { data: templates = [], isLoading } = trpc.emailTemplates.list.useQuery({});
   const createMutation = trpc.emailTemplates.create.useMutation({
     onSuccess: () => { utils.emailTemplates.list.invalidate(); toast.success("Template created"); setView("list"); },
     onError: (e) => toast.error(e.message),
@@ -188,6 +191,7 @@ export default function AdminEmailTemplates() {
   const [form, setForm] = useState<EmailTemplate>({
     id: "", name: "", subject: "", body: "", htmlBody: "", category: "general", variables: [], attachments: [],
   });
+  const [editorMode, setEditorMode] = useState<"email" | "block" | "html">("email");
 
   const filteredTemplates = templates.filter(t => {
     const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -305,7 +309,7 @@ export default function AdminEmailTemplates() {
             <div className="space-y-4">
               <Card>
                 <CardContent className="pt-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Template Name *</Label>
                       <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g., Invoice - Standard" />
@@ -327,20 +331,66 @@ export default function AdminEmailTemplates() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">Email Body</CardTitle>
-                  <CardDescription>Use the toolbar to format your email. Insert variables from the sidebar.</CardDescription>
+                  <CardDescription>Choose your preferred editor: Email blocks for visual design, HTML for raw code, or Rich Text for formatting.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RichTextEditor
-                    value={form.htmlBody || form.body}
-                    onChange={val => {
-                      const vars = detectVariables(val);
-                      setForm(p => ({ ...p, body: val, htmlBody: val, variables: vars }));
-                    }}
-                    placeholder="Design your email template here..."
-                    minHeight="400px"
-                    enhanced
-                    variables={[...TEMPLATE_VARIABLES, ...GENERAL_VARIABLES]}
-                  />
+                  <Tabs value={editorMode} onValueChange={(val) => setEditorMode(val as "email" | "block" | "html")} className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="email" className="flex gap-2">
+                        <Mail className="h-4 w-4" />
+                        Email
+                      </TabsTrigger>
+                      <TabsTrigger value="block" className="flex gap-2">
+                        <Code className="h-4 w-4" />
+                        Blocks
+                      </TabsTrigger>
+                      <TabsTrigger value="html" className="flex gap-2">
+                        <Code className="h-4 w-4" />
+                        HTML
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="email" className="mt-4">
+                      <RichTextEditor
+                        value={form.htmlBody || form.body}
+                        onChange={val => {
+                          const vars = detectVariables(val);
+                          setForm(p => ({ ...p, body: val, htmlBody: val, variables: vars }));
+                        }}
+                        placeholder="Design your email template here..."
+                        minHeight="400px"
+                        enhanced
+                        variables={[...TEMPLATE_VARIABLES, ...GENERAL_VARIABLES]}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="block" className="mt-4">
+                      <EmailBlockEditor
+                        value={form.htmlBody || form.body}
+                        onChange={val => {
+                          const vars = detectVariables(val);
+                          setForm(p => ({ ...p, body: val, htmlBody: val, variables: vars }));
+                        }}
+                        placeholder="Design your email template using blocks..."
+                        minHeight="400px"
+                        variables={[...TEMPLATE_VARIABLES, ...GENERAL_VARIABLES]}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="html" className="mt-4">
+                      <HTMLEditor
+                        value={form.htmlBody || form.body}
+                        onChange={val => {
+                          const vars = detectVariables(val);
+                          setForm(p => ({ ...p, body: val, htmlBody: val, variables: vars }));
+                        }}
+                        placeholder="Enter HTML email template..."
+                        minHeight="400px"
+                        height="500px"
+                        variables={[...TEMPLATE_VARIABLES, ...GENERAL_VARIABLES]}
+                      />
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
 

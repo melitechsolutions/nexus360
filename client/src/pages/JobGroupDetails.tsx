@@ -1,4 +1,5 @@
 import { useParams, useLocation } from "wouter";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,6 +9,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Building2,
   Loader2,
@@ -18,10 +21,13 @@ import {
   Mail,
   Phone,
   ArrowLeft,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { trpc } from "@/lib/trpc";
 import { useCurrency } from "@/lib/currency";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -30,14 +36,44 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 
 export default function JobGroupDetails() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { formatMoney } = useCurrency();
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({ name: "", description: "", minimumGrossSalary: 0, maximumGrossSalary: 0 });
 
   const { data: jobGroup, isLoading } = trpc.jobGroups.getById.useQuery(id || "");
-  const { data: employeesData = [] } = trpc.employees.list.useQuery();
+  const { data: employeesData = [] } = trpc.employees.list.useQuery({});
+  const utils = trpc.useUtils();
+
+  // Mutations for CRUD
+  const updateJobGroupMutation = trpc.jobGroups.update.useMutation({
+    onSuccess: () => {
+      utils.jobGroups.getById.invalidate(id);
+      utils.jobGroups.list.invalidate();
+      toast.success("Job group updated successfully");
+      setShowEditModal(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update job group");
+    },
+  });
+
+  const deleteJobGroupMutation = trpc.jobGroups.delete.useMutation({
+    onSuccess: () => {
+      utils.jobGroups.list.invalidate();
+      toast.success("Job group deleted successfully");
+      navigate("/job-groups");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete job group");
+    },
+  });
 
   const allEmployees = employeesData as any[];
   const groupEmployees = allEmployees.filter(
@@ -50,6 +86,39 @@ export default function JobGroupDetails() {
     { label: "Job Groups", href: "/job-groups" },
     { label: (jobGroup as any)?.name || "Details" },
   ];
+
+  const handleEdit = () => {
+    const jg = jobGroup as any;
+    setFormData({
+      name: jg.name || "",
+      description: jg.description || "",
+      minimumGrossSalary: Number(jg.minimumGrossSalary || 0),
+      maximumGrossSalary: Number(jg.maximumGrossSalary || 0),
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    setIsSubmitting(true);
+    try {
+      await updateJobGroupMutation.mutateAsync({
+        id: id || "",
+        data: formData,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsSubmitting(true);
+    try {
+      await deleteJobGroupMutation.mutateAsync(id || "");
+    } finally {
+      setIsSubmitting(false);
+      setShowDeleteModal(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -97,6 +166,16 @@ export default function JobGroupDetails() {
       backLink={{ label: "Job Groups", href: "/job-groups" }}
     >
       <div className="space-y-6">
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={handleEdit}>
+            <Edit className="h-4 w-4 mr-2" /> Edit
+          </Button>
+          <Button variant="destructive" onClick={() => setShowDeleteModal(true)}>
+            <Trash2 className="h-4 w-4 mr-2" /> Delete
+          </Button>
+        </div>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <Card>
@@ -240,7 +319,78 @@ export default function JobGroupDetails() {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle>Edit Job Group</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Name</label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Job group name"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Description</label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Job group description"
+                    className="mt-1"
+                    rows={3}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Min Salary</label>
+                    <Input
+                      type="number"
+                      value={formData.minimumGrossSalary}
+                      onChange={(e) => setFormData({ ...formData, minimumGrossSalary: Number(e.target.value) })}
+                      placeholder="0"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Max Salary</label>
+                    <Input
+                      type="number"
+                      value={formData.maximumGrossSalary}
+                      onChange={(e) => setFormData({ ...formData, maximumGrossSalary: Number(e.target.value) })}
+                      placeholder="0"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setShowEditModal(false)}>Cancel</Button>
+                  <Button onClick={handleSaveEdit} disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Delete Modal */}
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          title="Delete Job Group"
+          description={`Are you sure you want to delete "${jg.name}"? This action cannot be undone.`}
+          isLoading={isSubmitting}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteModal(false)}
+        />
       </div>
     </ModuleLayout>
   );
 }
+

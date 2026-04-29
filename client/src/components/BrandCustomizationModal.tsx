@@ -165,7 +165,7 @@ export const BrandCustomizationModal: React.FC<BrandCustomizationModalProps> = (
             {/* Preset Themes */}
             <div className="space-y-2">
               <Label>Preset Themes</Label>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                 {presetThemes.map((theme) => (
                   <button
                     key={theme.name}

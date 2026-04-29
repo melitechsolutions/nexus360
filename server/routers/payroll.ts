@@ -705,7 +705,7 @@ export const payrollRouter = router({
         await db.insert(salaryStructures).values({
           id,
           ...input,
-          effectiveDate: now,
+          effectiveDate: dateStr,
           createdBy: ctx.user.id,
           createdAt: dateStr,
           updatedAt: dateStr,
@@ -791,7 +791,7 @@ export const payrollRouter = router({
         await db.insert(salaryAllowances).values({
           id,
           ...input,
-          effectiveDate: now,
+          effectiveDate: dateStr,
           isActive: true,
           createdBy: ctx.user.id,
           createdAt: dateStr,
@@ -878,7 +878,7 @@ export const payrollRouter = router({
         await db.insert(salaryDeductions).values({
           id,
           ...input,
-          effectiveDate: now,
+          effectiveDate: dateStr,
           isActive: true,
           createdBy: ctx.user.id,
           createdAt: dateStr,
@@ -967,7 +967,7 @@ export const payrollRouter = router({
         await db.insert(employeeBenefits).values({
           id,
           ...input,
-          enrollDate: now,
+          enrollDate: dateStr,
           isActive: true,
           createdBy: ctx.user.id,
           createdAt: dateStr,
@@ -1040,7 +1040,7 @@ export const payrollRouter = router({
         await db.insert(employeeTaxInfo).values({
           id,
           ...input,
-          effectiveDate: now,
+          effectiveDate: dateStr,
           createdBy: ctx.user.id,
           createdAt: dateStr,
           updatedAt: dateStr,
@@ -1113,7 +1113,7 @@ export const payrollRouter = router({
           id,
           ...input,
           incrementPercent: Math.round(incrementPercent),
-          effectiveDate: now,
+          effectiveDate: dateStr,
           createdBy: ctx.user.id,
           createdAt: dateStr,
         } as any);

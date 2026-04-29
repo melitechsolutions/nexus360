@@ -18,8 +18,8 @@ export default function CreateService() {
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
   const [formData, setFormData] = useState({ serviceName: "", description: "", serviceType: "", rate: "", unit: "hour", status: "active", hourlyRate: "", fixedPrice: "", taxRate: "" });
-  const { data: categories = [] } = trpc.services.getCategories.useQuery();
-  const { data: units = [] } = trpc.services.getUnits.useQuery();
+  const { data: categories = [] } = trpc.services.getCategories.useQuery({});
+  const { data: units = [] } = trpc.services.getUnits.useQuery({});
   const createServiceMutation = trpc.services.create.useMutation({ onSuccess: () => { toast.success("Service created successfully!"); utils.services.list.invalidate(); setFormData({ serviceName: "", description: "", serviceType: "", rate: "", unit: "hour", status: "active", hourlyRate: "", fixedPrice: "", taxRate: "" }); navigate("/services"); }, onError: (error: any) => { toast.error(`Failed to create service: ${error.message}`); } });
   if (isLoading) return (<div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>);
   if (!allowed) return null;

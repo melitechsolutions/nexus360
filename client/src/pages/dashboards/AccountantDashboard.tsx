@@ -36,15 +36,15 @@ export default function AccountantDashboard() {
   const utils = trpc.useUtils();
 
   // Fetch dashboard metrics and data
-  const { data: metrics, isLoading: metricsLoading } = trpc.dashboard.metrics.useQuery();
+  const { data: metrics, isLoading: metricsLoading } = trpc.dashboard.metrics.useQuery({});
   const { data: recentInvoices } = trpc.invoices.list.useQuery({ limit: 5 });
   const { data: recentExpenses } = trpc.expenses.list.useQuery({ limit: 5 });
   const { data: recentPayments } = trpc.payments.list.useQuery({ limit: 5 });
-  const { data: reconciliationData } = trpc.settings.getBankReconciliation.useQuery();
-  const { data: pendingApprovals } = trpc.approvals.getPendingApprovals.useQuery();
+  const { data: reconciliationData } = trpc.settings.getBankReconciliation.useQuery({});
+  const { data: pendingApprovals } = trpc.approvals.getPendingApprovals.useQuery({});
   
-  const { data: allInvoices = [] } = trpc.invoices.list.useQuery();
-  const { data: allExpenses = [] } = trpc.expenses.list.useQuery();
+  const { data: allInvoices = [] } = trpc.invoices.list.useQuery({});
+  const { data: allExpenses = [] } = trpc.expenses.list.useQuery({});
 
   // Convert frozen Drizzle objects to plain objects to avoid React error #306
   const metricsPlain = metrics ? JSON.parse(JSON.stringify(metrics)) : null;
@@ -340,3 +340,4 @@ export default function AccountantDashboard() {
     </ModuleLayout>
   );
 }
+

@@ -109,7 +109,7 @@ export function UnifiedModuleCard({
 
         {/* Stats */}
         {stats && stats.length > 0 && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {stats.map((stat, idx) => (
               <div key={idx} className="bg-white/40 dark:bg-slate-700/40 rounded-lg p-2 sm:p-2.5">
                 <p className="text-xs text-slate-600 dark:text-slate-400">{stat.label}</p>

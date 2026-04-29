@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { trpc } from "@/lib/trpc";
-import { useCurrency } from "@/lib/currency";
+import { useCurrencySettings, formatAmount } from "@/lib/currency";
 
 const statusColors: Record<string, string> = {
   draft: "bg-gray-100 text-gray-700",
@@ -41,7 +41,7 @@ function formatDuration(minutes: number): string {
 export default function TimesheetDetails() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const { format } = useCurrency();
+  const { symbol, position } = useCurrencySettings();
 
   const { data: entry, isLoading } = trpc.timeEntries.getById.useQuery(id || "");
 
@@ -183,13 +183,13 @@ export default function TimesheetDetails() {
               {e.hourlyRate != null && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Hourly Rate</span>
-                  <span>{format(e.hourlyRate)}</span>
+                  <span>{formatAmount(e.hourlyRate / 100, symbol, position)}</span>
                 </div>
               )}
               {e.amount != null && e.amount > 0 && (
                 <div className="flex justify-between font-semibold">
                   <span>Amount</span>
-                  <span>{format(e.amount)}</span>
+                  <span>{formatAmount(e.amount / 100, symbol, position)}</span>
                 </div>
               )}
             </CardContent>

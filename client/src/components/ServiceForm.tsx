@@ -31,8 +31,8 @@ export function ServiceForm({ onSuccess, onCancel, initialData }: ServiceFormPro
     status: initialData?.status || "active",
   });
 
-  const { data: categories = [] } = trpc.services.getCategories.useQuery();
-  const { data: units = [] } = trpc.services.getUnits.useQuery();
+  const { data: categories = [] } = trpc.services.getCategories.useQuery({});
+  const { data: units = [] } = trpc.services.getUnits.useQuery({});
 
   const createServiceMutation = trpc.services.create.useMutation({
     onSuccess: () => {

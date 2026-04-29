@@ -10,7 +10,7 @@ export const FinanceSettingsPage: React.FC = () => {
   const [expenseAccount, setExpenseAccount] = useState('');
   const [payableAccount, setPayableAccount] = useState('');
   const setAccounts = trpc.finance.setVendorAccounts.useMutation();
-  const { data: defaults } = trpc.finance.getDefaults.useQuery();
+  const { data: defaults } = trpc.finance.getDefaults.useQuery({});
   const vendorQuery = trpc.finance.getVendorAccounts.useQuery(vendorId, { enabled: !!vendorId });
   const listVendors = trpc.finance.listVendorAccounts.useQuery(undefined);
   const [vendorSearch, setVendorSearch] = useState('');

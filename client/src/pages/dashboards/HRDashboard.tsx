@@ -51,16 +51,16 @@ export default function HRDashboard() {
   const [mobileQuickAccessOpen, setMobileQuickAccessOpen] = useState(false);
 
   // Fetch employees data from backend
-  const { data: employeesData, isLoading: employeesLoading } = trpc.employees.list.useQuery();
+  const { data: employeesData, isLoading: employeesLoading } = trpc.employees.list.useQuery({});
   
   // Fetch attendance data from backend
-  const { data: attendanceData, isLoading: attendanceLoading } = trpc.attendance.list.useQuery();
+  const { data: attendanceData, isLoading: attendanceLoading } = trpc.attendance.list.useQuery({});
   
   // Fetch leave requests from backend
-  const { data: leaveData, isLoading: leaveLoading } = trpc.leave.list.useQuery();
+  const { data: leaveData, isLoading: leaveLoading } = trpc.leave.list.useQuery({});
   
   // Fetch payroll data from backend
-  const { data: payrollData, isLoading: payrollLoading } = trpc.payroll.list.useQuery();
+  const { data: payrollData, isLoading: payrollLoading } = trpc.payroll.list.useQuery({});
 
   // Convert frozen Drizzle objects to plain objects to avoid React error #306
   const employeesDataPlain = employeesData ? JSON.parse(JSON.stringify(employeesData)) : [];
@@ -561,3 +561,4 @@ export default function HRDashboard() {
     </div>
   );
 }
+

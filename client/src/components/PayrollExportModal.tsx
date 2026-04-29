@@ -68,7 +68,7 @@ export default function PayrollExportModal({ open, onOpenChange }: Props) {
           <DialogTitle>Export Payroll</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-sm text-muted-foreground">Start Date</label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -79,14 +79,14 @@ export default function PayrollExportModal({ open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3\">
             <div>
-              <label className="text-sm text-muted-foreground">Employee (optional)</label>
-              <Input placeholder="Employee ID" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} />
+              <label className=\"text-sm text-muted-foreground\">Employee (optional)</label>
+              <Input placeholder=\"Employee ID\" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} />
             </div>
             <div>
-              <label className="text-sm text-muted-foreground">Department (optional)</label>
-              <Input placeholder="Department ID" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} />
+              <label className=\"text-sm text-muted-foreground\">Department (optional)</label>
+              <Input placeholder=\"Department ID\" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} />
             </div>
           </div>
 

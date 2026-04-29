@@ -35,9 +35,9 @@ export default function ProjectManagerDashboard() {
     }
   }, [loading, isAuthenticated, user]);
 
-  const { data: projects = [], isLoading: projectsLoading } = trpc.projects.list.useQuery();
+  const { data: projects = [], isLoading: projectsLoading } = trpc.projects.list.useQuery({});
   const { data: pendingExpenses = [] } = trpc.expenses.list.useQuery({ status: 'pending' });
-  const { data: allEstimates = [] } = trpc.estimates.list.useQuery();
+  const { data: allEstimates = [] } = trpc.estimates.list.useQuery({});
 
   // Convert frozen objects to plain objects
   const projectsPlain = projects ? JSON.parse(JSON.stringify(projects)) : [];
@@ -258,3 +258,4 @@ export default function ProjectManagerDashboard() {
     </ModuleLayout>
   );
 }
+

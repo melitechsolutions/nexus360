@@ -19,7 +19,7 @@ export default function PayrollDetails() {
 
   // Fetch payroll from backend
   const { data: payrollData, isLoading } = trpc.payroll.getById.useQuery(id || "");
-  const { data: employeesData = [] } = trpc.employees.list.useQuery();
+  const { data: employeesData = [] } = trpc.employees.list.useQuery({});
   const utils = trpc.useUtils();
 
   const deletePayrollMutation = trpc.payroll.delete.useMutation({
@@ -295,3 +295,4 @@ export default function PayrollDetails() {
     </ModuleLayout>
   );
 }
+

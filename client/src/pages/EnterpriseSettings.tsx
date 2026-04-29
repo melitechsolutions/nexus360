@@ -13,8 +13,8 @@ export default function EnterpriseSettings() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState<Record<string, string>>({});
 
-  const { data: companyInfo, isLoading: infoLoading, refetch: refetchInfo } = trpc.settings.getCompanyInfo.useQuery();
-  const { data: userCounts, isLoading: countsLoading } = trpc.settings.getUserCounts.useQuery();
+  const { data: companyInfo, isLoading: infoLoading, refetch: refetchInfo } = trpc.settings.getCompanyInfo.useQuery({});
+  const { data: userCounts, isLoading: countsLoading } = trpc.settings.getUserCounts.useQuery({});
 
   const updateCompanyInfo = trpc.settings.updateCompanyInfo.useMutation({
     onSuccess: () => { toast.success("Company info saved"); refetchInfo(); setEditingProfile(false); },
@@ -184,3 +184,4 @@ export default function EnterpriseSettings() {
     </ModuleLayout>
   );
 }
+

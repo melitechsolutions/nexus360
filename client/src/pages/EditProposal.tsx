@@ -32,7 +32,7 @@ export default function EditProposal() {
   const [isLoading, setIsLoading] = useState(true);
 
   const { data: proposal } = trpc.opportunities.getById.useQuery(id || "", { enabled: !!id });
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
 
   useEffect(() => {
     if (proposal) {
@@ -229,4 +229,5 @@ export default function EditProposal() {
     </ModuleLayout>
   );
 }
+
 

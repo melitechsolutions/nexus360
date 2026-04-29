@@ -975,9 +975,9 @@ export default function Settings() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // ── Queries ────────────────────────────────────────────────────────────────
-  const { data: companyData, refetch: refetchCompany } = trpc.settings.getCompanyInfo.useQuery();
-  const { data: docData, refetch: refetchDocs }        = trpc.settings.getDocumentNumberingSettings.useQuery();
-  const { data: notifyData }                           = trpc.settings.getNotificationPreferences.useQuery();
+  const { data: companyData, refetch: refetchCompany } = trpc.settings.getCompanyInfo.useQuery({});
+  const { data: docData, refetch: refetchDocs }        = trpc.settings.getDocumentNumberingSettings.useQuery({});
+  const { data: notifyData }                           = trpc.settings.getNotificationPreferences.useQuery({});
   const { data: generalData }                          = trpc.settings.getByCategory.useQuery({ category: "general" });
   const { data: appearanceData }                       = trpc.settings.getByCategory.useQuery({ category: "appearance" });
   const { data: emailData }                            = trpc.settings.getByCategory.useQuery({ category: "email" });
@@ -1087,18 +1087,18 @@ export default function Settings() {
   const { data: planPriceData }        = trpc.multiTenancy.getPlanPrices.useQuery(undefined, { staleTime: 60_000 });
 
   // ── Inline page queries ──────────────────────────────────────────────────
-  const { data: currentUser } = trpc.auth.me.useQuery();
+  const { data: currentUser } = trpc.auth.me.useQuery({});
   const { data: pricingTiers = [], isLoading: tiersLoading } = trpc.enterpriseTenants.getPricingTiers.useQuery(undefined, {
     enabled: currentUser?.role === 'super_admin',
     staleTime: 60_000,
   });
-  const { data: integrationsData, refetch: refetchIntegrations } = trpc.thirdPartyIntegrations.listIntegrations.useQuery();
+  const { data: integrationsData, refetch: refetchIntegrations } = trpc.thirdPartyIntegrations.listIntegrations.useQuery({});
   const configureIntegration = trpc.thirdPartyIntegrations.configureIntegration.useMutation({ onSuccess: () => { toast.success("Integration configured"); refetchIntegrations(); setIntAddOpen(false); }, onError: (e: any) => toast.error(e.message) });
   const deleteIntegration = trpc.thirdPartyIntegrations.deleteIntegration.useMutation({ onSuccess: () => { toast.success("Integration removed"); refetchIntegrations(); }, onError: (e: any) => toast.error(e.message) });
   const testIntegration = trpc.thirdPartyIntegrations.testIntegration.useMutation({ onSuccess: () => toast.success("Integration test passed"), onError: (e: any) => toast.error(e.message) });
 
-  const { data: workflowsData, refetch: refetchWorkflows } = trpc.workflows.list.useQuery();
-  const { data: wfTemplatesData } = trpc.workflows.getTemplates.useQuery();
+  const { data: workflowsData, refetch: refetchWorkflows } = trpc.workflows.list.useQuery({});
+  const { data: wfTemplatesData } = trpc.workflows.getTemplates.useQuery({});
   const createWorkflow = trpc.workflows.create.useMutation({ onSuccess: () => { toast.success("Workflow created"); refetchWorkflows(); setWfCreateOpen(false); }, onError: (e: any) => toast.error(e.message) });
 
   const { data: healthStatus } = trpc.systemHealth.getStatus.useQuery(undefined, { refetchInterval: 30000, enabled: activeSection === "system-health" });
@@ -1630,7 +1630,7 @@ export default function Settings() {
       case "company":
         return (
           <Section title="Company Details" description="Information shown on invoices and documents">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Company Name">
                 <input className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                   value={companyInfo.companyName}
@@ -1674,7 +1674,7 @@ export default function Settings() {
                 onChange={(e) => setCompanyInfo((p) => ({ ...p, companyAddress: e.target.value }))}
                 placeholder="Street address" />
             </Field>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <Field label="City">
                 <CitySelect value={companyInfo.companyCity} onChange={(v) => setCompanyInfo((p) => ({ ...p, companyCity: v }))} label="" />
               </Field>
@@ -1742,7 +1742,7 @@ export default function Settings() {
                 </Field>
 
                 {/* Visual Preview Cards */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {Object.entries(themePresets).map(([name, preset]) => (
                     <button key={name} type="button" onClick={() => applyPreset(name)}
                       className={`rounded-lg border-2 p-3 text-left transition-all ${themeSettings.mainTheme === name ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"}`}>
@@ -1773,7 +1773,7 @@ export default function Settings() {
               {/* Colors */}
               <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Colors</h4>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Field label="Primary Color">
                     <div className="flex items-center gap-2">
                       <input type="color" value={themeSettings.primaryColor} onChange={(e) => setThemeSettings((p) => ({ ...p, primaryColor: e.target.value }))} className="w-10 h-10 rounded border cursor-pointer" />
@@ -1798,7 +1798,7 @@ export default function Settings() {
               {/* Typography & Layout */}
               <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Typography & Layout</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Field label="Font Family">
                     <Select value={themeSettings.fontFamily} onValueChange={(v) => setThemeSettings((p) => ({ ...p, fontFamily: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1942,7 +1942,7 @@ export default function Settings() {
               </Select>
             </Field>
             {emailSettings.mailDriver === "smtp" && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="SMTP Host">
                   <Input value={emailSettings.smtpHost} onChange={(e) => setEmailSettings((p) => ({ ...p, smtpHost: e.target.value }))} placeholder="smtp.gmail.com" />
                 </Field>
@@ -1958,7 +1958,7 @@ export default function Settings() {
               </div>
             )}
             <Separator />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="From Name">
                 <Input value={emailSettings.fromName} onChange={(e) => setEmailSettings((p) => ({ ...p, fromName: e.target.value }))} placeholder="Melitech Solutions" />
               </Field>
@@ -1980,7 +1980,7 @@ export default function Settings() {
       case "invoices":
         return (
           <Section title="Invoice Settings" description="Defaults applied to new invoices">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Invoice Prefix">
                 <Input value={invoiceSettings.invoicePrefix} onChange={(e) => setInvoiceSettings((p) => ({ ...p, invoicePrefix: e.target.value }))} placeholder="INV" />
               </Field>
@@ -2000,7 +2000,7 @@ export default function Settings() {
             </div>
             <Separator />
             <p className="text-sm font-medium">Overdue Reminders</p>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Field label="1st reminder (days overdue)">
                 <Input type="number" min="0" value={invoiceSettings.overdueDays1} onChange={(e) => setInvoiceSettings((p) => ({ ...p, overdueDays1: e.target.value }))} />
               </Field>
@@ -2049,7 +2049,7 @@ export default function Settings() {
       case "numbering":
         return (
           <Section title="Document Number Prefixes" description="Prefix used when generating document IDs">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(["invoice", "estimate", "receipt", "proposal", "expense"] as const).map((type) => {
                 const key = (type + "Prefix") as keyof typeof documentNumbers;
                 return (
@@ -2147,7 +2147,7 @@ export default function Settings() {
               <p className="text-sm font-medium">Enable M-Pesa</p>
               <Switch checked={mpesaSettings.enabled} onCheckedChange={(c) => setMpesaSettings((p) => ({ ...p, enabled: c }))} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Consumer Key">
                 <Input value={mpesaSettings.consumerKey} onChange={(e) => setMpesaSettings((p) => ({ ...p, consumerKey: e.target.value }))} placeholder="Consumer Key" />
               </Field>
@@ -2197,7 +2197,7 @@ export default function Settings() {
             </div>
             <Separator />
             <p className="text-sm font-semibold">Add Tax Rate</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="Name">
                 <Input value={newTax.name} onChange={(e) => setNewTax((p) => ({ ...p, name: e.target.value }))} placeholder="VAT" />
               </Field>
@@ -2324,7 +2324,7 @@ export default function Settings() {
       case "currency":
         return (
           <Section title="Currency Settings" description="Configure default currency and number formatting">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Default Currency">
                 <Select value={currency.defaultCurrency} onValueChange={(v) => setCurrency((p) => ({ ...p, defaultCurrency: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -2389,7 +2389,7 @@ export default function Settings() {
       case "billing-account":
         return (
           <Section title="Billing Account" description="Your current plan and account information">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Current Plan"><Input value={billing.planName} readOnly className="bg-muted" /></Field>
               <Field label="Plan Expiry"><Input value={billing.planExpiry} readOnly className="bg-muted" /></Field>
               <Field label="Email Quota"><Input value={billing.emailQuota} readOnly className="bg-muted" /></Field>
@@ -3304,7 +3304,7 @@ export default function Settings() {
       case "files-general":
         return (
           <Section title="File Settings" description="Configure file upload limits and types">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Max File Size (MB)"><Input type="number" min="1" value={filesGeneral.maxSizeMb} onChange={(e) => setFilesGeneral((p) => ({ ...p, maxSizeMb: e.target.value }))} /></Field>
               <Field label="Max Files Per Upload"><Input type="number" min="1" value={filesGeneral.maxFilesPerUpload} onChange={(e) => setFilesGeneral((p) => ({ ...p, maxFilesPerUpload: e.target.value }))} /></Field>
             </div>
@@ -3475,7 +3475,7 @@ export default function Settings() {
           <Section title="Manage Announcements" description="Create and manage system announcements">
             <div className="space-y-2">{announcementsList.map((a) => (<div key={a.id} className="flex items-center justify-between p-3 border rounded"><div><p className="text-sm font-medium">{a.title}</p><p className="text-xs text-muted-foreground">{a.audience} &middot; {a.date || "No date"}</p></div><button onClick={() => { const u = announcementsList.filter((x) => x.id !== a.id); setAnnouncementsList(u); updateByCategory.mutate({ category: "announcements_list", values: { list: JSON.stringify(u) } }); }} className="text-destructive hover:text-destructive/80"><Trash2 className="h-4 w-4" /></button></div>))}</div>
             <Separator />
-            <div className="grid grid-cols-2 gap-3"><Field label="Title"><Input value={newAnnouncement.title} onChange={(e) => setNewAnnouncement((p) => ({ ...p, title: e.target.value }))} placeholder="Announcement title" /></Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><Field label="Title"><Input value={newAnnouncement.title} onChange={(e) => setNewAnnouncement((p) => ({ ...p, title: e.target.value }))} placeholder="Announcement title" /></Field>
               <Field label="Audience"><Select value={newAnnouncement.audience} onValueChange={(v) => setNewAnnouncement((p) => ({ ...p, audience: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All Users</SelectItem><SelectItem value="staff">Staff Only</SelectItem><SelectItem value="clients">Clients Only</SelectItem></SelectContent></Select></Field></div>
             <Field label="Message"><RichTextEditor value={newAnnouncement.message} onChange={(html) => setNewAnnouncement((p) => ({ ...p, message: html }))} placeholder="Announcement message" minHeight="80px" /></Field>
             <Button size="sm" onClick={() => { if (!newAnnouncement.title) { toast.error("Title required"); return; } const u = [...announcementsList, { id: crypto.randomUUID(), ...newAnnouncement, date: new Date().toISOString().slice(0, 10) }]; setAnnouncementsList(u); setNewAnnouncement({ title: "", message: "", audience: "all", date: "" }); updateByCategory.mutate({ category: "announcements_list", values: { list: JSON.stringify(u) } }); }}><Plus className="h-4 w-4 mr-1" />Add Announcement</Button>
@@ -3523,7 +3523,7 @@ export default function Settings() {
       case "security-password":
         return (
           <Section title="Password Policy" description="Configure password requirements for all users">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Minimum Length"><Input type="number" min="6" value={securityPassword.minLength} onChange={(e) => setSecurityPassword((p) => ({ ...p, minLength: e.target.value }))} /></Field>
               <Field label="Password Expiry (days)"><Input type="number" min="0" value={securityPassword.expiryDays} onChange={(e) => setSecurityPassword((p) => ({ ...p, expiryDays: e.target.value }))} placeholder="0 = never" /></Field>
             </div>
@@ -3696,7 +3696,7 @@ export default function Settings() {
           <Section title="Manage Webhooks" description="Create and manage webhook endpoints">
             <div className="space-y-2">{webhooksList.map((w) => (<div key={w.id} className="flex items-center justify-between p-3 border rounded"><div><p className="text-sm font-medium">{w.url}</p><p className="text-xs text-muted-foreground">{w.event} &middot; {w.enabled ? "Active" : "Disabled"}</p></div><button onClick={() => { const u = webhooksList.filter((x) => x.id !== w.id); setWebhooksList(u); updateByCategory.mutate({ category: "webhooks_list", values: { list: JSON.stringify(u) } }); }} className="text-destructive hover:text-destructive/80"><Trash2 className="h-4 w-4" /></button></div>))}</div>
             <Separator />
-            <div className="grid grid-cols-2 gap-3"><Field label="Endpoint URL"><Input value={newWebhook.url} onChange={(e) => setNewWebhook((p) => ({ ...p, url: e.target.value }))} placeholder="https://example.com/webhook" /></Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><Field label="Endpoint URL"><Input value={newWebhook.url} onChange={(e) => setNewWebhook((p) => ({ ...p, url: e.target.value }))} placeholder="https://example.com/webhook" /></Field>
               <Field label="Event"><Select value={newWebhook.event} onValueChange={(v) => setNewWebhook((p) => ({ ...p, event: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="invoice.created">Invoice Created</SelectItem><SelectItem value="invoice.paid">Invoice Paid</SelectItem><SelectItem value="client.created">Client Created</SelectItem><SelectItem value="project.created">Project Created</SelectItem><SelectItem value="task.completed">Task Completed</SelectItem><SelectItem value="lead.created">Lead Created</SelectItem></SelectContent></Select></Field></div>
             <Button size="sm" onClick={() => { if (!newWebhook.url) { toast.error("URL required"); return; } const u = [...webhooksList, { id: crypto.randomUUID(), ...newWebhook, enabled: true }]; setWebhooksList(u); setNewWebhook({ url: "", event: "invoice.created" }); updateByCategory.mutate({ category: "webhooks_list", values: { list: JSON.stringify(u) } }); }}><Plus className="h-4 w-4 mr-1" />Add Webhook</Button>
           </Section>
@@ -3716,7 +3716,7 @@ export default function Settings() {
             <div className="space-y-4">
               <div className="flex items-center justify-between"><div><p className="text-sm font-medium">Enable API</p><p className="text-xs text-muted-foreground">Allow external applications to access your CRM data</p></div>
                 <Switch checked={apiGeneral.enabled} onCheckedChange={(v) => setApiGeneral((p) => ({ ...p, enabled: v }))} /></div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Rate Limit"><Input type="number" min="1" value={apiGeneral.rateLimit} onChange={(e) => setApiGeneral((p) => ({ ...p, rateLimit: e.target.value }))} /></Field>
                 <Field label="Per"><Select value={apiGeneral.rateLimitPer} onValueChange={(v) => setApiGeneral((p) => ({ ...p, rateLimitPer: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="minute">Minute</SelectItem><SelectItem value="hour">Hour</SelectItem></SelectContent></Select></Field>
               </div>
@@ -3901,7 +3901,7 @@ export default function Settings() {
         ];
         return (
           <Section title="All Integrations" description="Connect third-party services to your CRM">
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{integrations.length}</p><p className="text-xs text-muted-foreground">Total</p></CardContent></Card>
               <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold text-green-600">{activeInts.length}</p><p className="text-xs text-muted-foreground">Active</p></CardContent></Card>
               <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold text-gray-400">{integrations.length - activeInts.length}</p><p className="text-xs text-muted-foreground">Inactive</p></CardContent></Card>
@@ -3961,7 +3961,7 @@ export default function Settings() {
         const templates = (wfTemplatesData?.templates as any[]) || [];
         return (
           <Section title="Workflow Automation" description="Automate repetitive tasks and processes">
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{workflows.filter((w: any) => w.status === "active").length}</p><p className="text-xs text-muted-foreground">Active Workflows</p></CardContent></Card>
               <Card><CardContent className="pt-4 text-center"><p className="text-2xl font-bold">{templates.length}</p><p className="text-xs text-muted-foreground">Templates</p></CardContent></Card>
               <Card><CardContent className="pt-4 text-center"><div className="flex items-center justify-center gap-1"><CheckCircle className="h-4 w-4 text-green-500" /><p className="text-sm font-medium text-green-600">Online</p></div><p className="text-xs text-muted-foreground">System Status</p></CardContent></Card>
@@ -3969,7 +3969,7 @@ export default function Settings() {
             {templates.length > 0 && (
               <div className="mb-4">
                 <h4 className="text-sm font-medium mb-2">Templates</h4>
-                <div className="grid grid-cols-2 gap-2">{templates.map((t: any) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{templates.map((t: any) => (
                   <Card key={t.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => { setWfForm({ name: t.name, description: t.description || "", triggerType: t.triggerType || "invoice_created", isRecurring: false }); setWfCreateOpen(true); }}>
                     <CardContent className="pt-3"><p className="text-sm font-medium">{t.name}</p><p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p></CardContent>
                   </Card>
@@ -4927,3 +4927,4 @@ export default function Settings() {
     </ModuleLayout>
   );
 }
+

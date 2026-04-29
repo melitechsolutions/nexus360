@@ -48,7 +48,7 @@ export default function EditBenefit() {
     notes: "",
   });
 
-  const { data: benefits = [], isLoading: isLoadingData } = trpc.payroll.benefits.list.useQuery();
+  const { data: benefits = [], isLoading: isLoadingData } = trpc.payroll.benefits.list.useQuery({});
   const benefit = benefits.find((b: any) => b.id === id);
 
   useEffect(() => {
@@ -181,3 +181,4 @@ export default function EditBenefit() {
     </ModuleLayout>
   );
 }
+

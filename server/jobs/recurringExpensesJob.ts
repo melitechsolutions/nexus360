@@ -11,6 +11,7 @@ import { getDb } from "../db";
 import { expenses, recurringExpenses, activityLog } from "../../drizzle/schema";
 import { eq, lte, and, desc } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
+import { generateRecurringLabel } from "../utils/recurringLabels";
 
 export interface GenerateRecurringExpensesResult {
   success: boolean;
@@ -139,6 +140,11 @@ export async function generateDueRecurringExpenses(): Promise<GenerateRecurringE
         // Generate a new expense
         const newExpenseId = uuidv4();
         const expenseNumber = await generateNextExpenseNumber(db);
+        
+        // Apply auto-labeling with month/year
+        const baseDescription = pattern.description || `Recurring ${pattern.category} expense`;
+        const labeledDescription = generateRecurringLabel(baseDescription, now);
+        const auditSuffix = " (Auto-generated from recurring)";
 
         await db.insert(expenses).values({
           id: newExpenseId,
@@ -149,9 +155,7 @@ export async function generateDueRecurringExpenses(): Promise<GenerateRecurringE
           amount: pattern.amount,
           expenseDate: nowStr,
           paymentMethod: pattern.paymentMethod,
-          description: pattern.description
-            ? `${pattern.description} (Auto-generated)`
-            : `Recurring ${pattern.category} expense (Auto-generated)`,
+          description: labeledDescription + auditSuffix,
           chartOfAccountId: pattern.chartOfAccountId,
           status: 'pending',
           createdBy: systemUserId,

@@ -61,8 +61,8 @@ export default function Proposals() {
   const { visibleColumns, toggleColumn, isVisible } = useColumnVisibility(proposalColumns);
   
   const utils = trpc.useUtils();
-  const { data: proposals = [], isLoading } = trpc.opportunities.list.useQuery();
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: proposals = [], isLoading } = trpc.opportunities.list.useQuery({});
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
   
   const createProposalMutation = trpc.opportunities.create.useMutation({
     onSuccess: () => {
@@ -383,3 +383,4 @@ export default function Proposals() {
     </ModuleLayout>
   );
 }
+

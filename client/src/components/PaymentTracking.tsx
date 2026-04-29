@@ -41,6 +41,7 @@ import {
 import { toast } from "sonner";
 import mutateAsync from "@/lib/mutationHelpers";
 import { format } from "date-fns";
+import { getPaymentMethodOptions, PAYMENT_METHOD_LABELS } from "@/const/paymentMethods";
 import { Textarea } from "@/components/ui/textarea";
 
 interface PaymentTrackingProps {
@@ -349,7 +350,7 @@ export default function PaymentTracking({
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium mb-2 block">Invoice Total</label>
                       <Input disabled value={formatCurrency(invoiceTotal)} />
@@ -371,7 +372,7 @@ export default function PaymentTracking({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium mb-2 block">Payment Date</label>
                       <Input
@@ -395,12 +396,11 @@ export default function PaymentTracking({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="cash">Cash</SelectItem>
-                          <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                          <SelectItem value="check">Check</SelectItem>
-                          <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                          <SelectItem value="credit_card">Credit Card</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          {getPaymentMethodOptions().map((method) => (
+                            <SelectItem key={method.value} value={method.value}>
+                              {method.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -637,7 +637,7 @@ export default function PaymentTracking({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Payment Date</label>
                 <Input
@@ -658,12 +658,11 @@ export default function PaymentTracking({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="check">Check</SelectItem>
-                    <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                    <SelectItem value="credit_card">Credit Card</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    {getPaymentMethodOptions().map((method) => (
+                      <SelectItem key={method.value} value={method.value}>
+                        {method.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

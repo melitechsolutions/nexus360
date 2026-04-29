@@ -2,24 +2,39 @@ import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Edit, Trash2, Building2 } from "lucide-react";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import { useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
-import mutateAsync from "@/lib/mutationHelpers";
 
 export default function DepartmentDetails() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({ name: "", description: "", budget: 0 });
 
   // Fetch department from backend
   const { data: departmentData, isLoading } = trpc.departments.getById.useQuery(id || "");
-  const { data: employeesData = [] } = trpc.employees.list.useQuery();
+  const { data: employeesData = [] } = trpc.employees.list.useQuery({});
   const utils = trpc.useUtils();
+
+  const updateDepartmentMutation = trpc.departments.update.useMutation({
+    onSuccess: () => {
+      toast.success("Department updated successfully");
+      utils.departments.getById.invalidate(id);
+      utils.departments.list.invalidate();
+      setShowEditModal(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update department");
+    },
+  });
 
   const deleteDepartmentMutation = trpc.departments.delete.useMutation({
     onSuccess: () => {
@@ -47,17 +62,34 @@ export default function DepartmentDetails() {
   } : null;
 
   const handleEdit = () => {
-    navigate(`/departments/${id}/edit`);
+    if (department) {
+      setFormData({
+        name: department.name,
+        description: department.description,
+        budget: department.budget,
+      });
+      setShowEditModal(true);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    setIsSubmitting(true);
+    try {
+      await updateDepartmentMutation.mutateAsync({
+        id: id || "",
+        data: formData,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDelete = async () => {
-    setIsDeleting(true);
+    setIsSubmitting(true);
     try {
-      await mutateAsync(deleteDepartmentMutation, id || "");
-    } catch (error) {
-      // Error handled by mutation
+      await deleteDepartmentMutation.mutateAsync(id || "");
     } finally {
-      setIsDeleting(false);
+      setIsSubmitting(false);
       setShowDeleteModal(false);
     }
   };
@@ -158,13 +190,61 @@ export default function DepartmentDetails() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Edit Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle>Edit Department</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Name</label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Department name"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Description</label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Department description"
+                    className="mt-1"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Budget</label>
+                  <Input
+                    type="number"
+                    value={formData.budget}
+                    onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
+                    placeholder="0"
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setShowEditModal(false)}>Cancel</Button>
+                  <Button onClick={handleSaveEdit} disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       <DeleteConfirmationModal
         isOpen={showDeleteModal}
         onCancel={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
-        isLoading={isDeleting}
+        isLoading={isSubmitting}
         title="Delete Department"
         description="Are you sure you want to delete this department? This action cannot be undone."
       />

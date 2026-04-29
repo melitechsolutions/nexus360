@@ -21,7 +21,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function GlobalSettings() {
-  const { data: profileData } = trpc.auth.me.useQuery();
+  const { data: profileData } = trpc.auth.me.useQuery({});
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
@@ -462,3 +462,4 @@ function SettingToggle({
     </div>
   );
 }
+

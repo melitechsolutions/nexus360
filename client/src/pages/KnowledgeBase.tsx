@@ -57,7 +57,7 @@ export default function KnowledgeBase() {
 
   // tRPC queries
   const utils = trpc.useUtils();
-  const { data: rawCategories = [], isLoading: catsLoading } = trpc.knowledgeBase.listCategories.useQuery();
+  const { data: rawCategories = [], isLoading: catsLoading } = trpc.knowledgeBase.listCategories.useQuery({});
   const { data: rawArticles = [], isLoading: artsLoading } = trpc.knowledgeBase.listArticles.useQuery(
     activeCategory ? { categoryId: activeCategory } : {}
   );
@@ -435,3 +435,4 @@ export default function KnowledgeBase() {
     </ModuleLayout>
   );
 }
+

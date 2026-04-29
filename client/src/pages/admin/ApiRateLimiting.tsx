@@ -270,7 +270,7 @@ export default function ApiRateLimiting() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-3 rounded-lg bg-muted/50 text-center">
                   <div className="text-2xl font-bold">{stats?.totalRequestsLastMinute ?? 0}</div>
                   <div className="text-xs text-muted-foreground">Req / window</div>

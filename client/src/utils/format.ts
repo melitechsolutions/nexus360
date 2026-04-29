@@ -99,16 +99,20 @@ export function formatTime(date: Date | string | number): string {
 }
 
 /**
- * Format currency (e.g., "$1,234.50")
+ * Format currency (e.g., "Ksh 1,234.50")
  */
-export function formatCurrency(amount: number, currency: string = "USD"): string {
+export function formatCurrency(amount: number, currency: string = "KES"): string {
   try {
+    // Special handling for KES to match app's preferred format
+    if (currency === "KES") {
+      return `Ksh ${amount.toLocaleString("en-KE", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    }
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,
     }).format(amount);
   } catch {
-    return `$${amount.toFixed(2)}`;
+    return `Ksh ${amount.toFixed(2)}`;
   }
 }
 

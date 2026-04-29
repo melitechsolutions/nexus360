@@ -19,7 +19,7 @@ export default function EditReceipt() {
   const { data: receiptData, isLoading: isLoadingReceiptData } = trpc.receipts.getWithItems.useQuery(receiptId, {
     enabled: !!receiptId,
   });
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
   const utils = trpc.useUtils();
 
   const updateReceiptMutation = trpc.receipts.update.useMutation({
@@ -214,3 +214,4 @@ export default function EditReceipt() {
     </ModuleLayout>
   );
 }
+

@@ -70,10 +70,10 @@ export default function ProfessionalBudgeting() {
   });
 
   // Fetch departments
-  const { data: departments } = trpc.departments.list.useQuery();
+  const { data: departments } = trpc.departments.list.useQuery({});
 
   // Fetch COA accounts
-  const { data: coaAccounts } = trpc.chartOfAccounts.list.useQuery();
+  const { data: coaAccounts } = trpc.chartOfAccounts.list.useQuery({});
 
   // Fetch budgets
   const { data: budgets, isLoading: budgetsLoading, refetch: refetchBudgets } = trpc.professionalBudgeting.listBudgets.useQuery({
@@ -326,7 +326,7 @@ export default function ProfessionalBudgeting() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
                         <p className="text-xs text-gray-500">Total Budget</p>
                         <p className="font-semibold">KES {(budget.totalBudgeted || 0).toLocaleString()}</p>
@@ -409,7 +409,7 @@ export default function ProfessionalBudgeting() {
               <CardDescription>Create a professional budget with detailed line items</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Budget Name *</Label>
                   <Input
@@ -447,7 +447,7 @@ export default function ProfessionalBudgeting() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="year">Fiscal Year</Label>
                   <Select value={createFormData.fiscalYear.toString()} onValueChange={(val) => setCreateFormData(prev => ({ ...prev, fiscalYear: parseInt(val) }))}>
@@ -636,3 +636,4 @@ export default function ProfessionalBudgeting() {
     </ModuleLayout>
   );
 }
+

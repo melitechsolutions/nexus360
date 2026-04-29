@@ -79,7 +79,7 @@ const CONTRACT_VARIABLES = [
 
 export default function ContractTemplates() {
   const utils = trpc.useUtils();
-  const { data: templates = [], isLoading } = trpc.contractTemplates.list.useQuery();
+  const { data: templates = [], isLoading } = trpc.contractTemplates.list.useQuery({});
   const createMutation = trpc.contractTemplates.create.useMutation({
     onSuccess: () => { utils.contractTemplates.list.invalidate(); toast.success("Template created"); setView("list"); },
     onError: (e) => toast.error(e.message),

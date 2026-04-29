@@ -88,7 +88,7 @@ export function DocumentPreview({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
             <div>
               <p className="text-gray-600">Amount</p>
               <p className="font-bold">${parseFloat(document.total || 0).toFixed(2)}</p>

@@ -104,8 +104,8 @@ export default function Employees() {
 
   // ALL HOOKS MUST BE CALLED UNCONDITIONALLY AT TOP LEVEL - BEFORE ANY EARLY RETURNS
   // Data fetching queries
-  const { data: employees = [], isLoading: employeesLoading } = trpc.employees.list.useQuery();
-  const { data: jobGroups = [] } = trpc.jobGroups.list.useQuery();
+  const { data: employees = [], isLoading: employeesLoading } = trpc.employees.list.useQuery({});
+  const { data: jobGroups = [] } = trpc.jobGroups.list.useQuery({});
   const utils = trpc.useUtils();
 
   // Convert frozen Drizzle objects to plain JS for React dependencies
@@ -828,3 +828,4 @@ export default function Employees() {
     </ModuleLayout>
   );
 }
+

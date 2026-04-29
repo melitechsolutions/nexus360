@@ -25,7 +25,7 @@ export default function AttendanceDetails() {
 
   // Fetch attendance record from backend
   const { data: attendanceData, isLoading } = trpc.attendance.getById.useQuery(id || "");
-  const { data: employeesData = [] } = trpc.employees.list.useQuery();
+  const { data: employeesData = [] } = trpc.employees.list.useQuery({});
   const utils = trpc.useUtils();
 
   const deleteAttendanceMutation = trpc.attendance.delete.useMutation({

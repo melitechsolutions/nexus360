@@ -68,7 +68,7 @@ export default function InventoryManagement() {
 
   // Fetch inventories with products
   const { data: inventories, isLoading: inventoriesLoading, refetch: refetchInventories } =
-    trpc.inventory.list.useQuery();
+    trpc.inventory.list.useQuery({});
 
   // Create/Update mutations
   const createInventoryMutation = trpc.inventory.create.useMutation({
@@ -462,3 +462,4 @@ export default function InventoryManagement() {
     </ModuleLayout>
   );
 }
+

@@ -37,7 +37,7 @@ export default function EditLeave() {
     { enabled: !!id }
   );
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
 
   useEffect(() => {
     if (leave) {
@@ -308,3 +308,4 @@ export default function EditLeave() {
     </ModuleLayout>
   );
 }
+

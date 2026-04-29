@@ -27,7 +27,7 @@ export default function EditSalaryStructure() {
     notes: "",
   });
 
-  const { data: structures = [], isLoading: isLoadingData } = trpc.payroll.salaryStructures.list.useQuery();
+  const { data: structures = [], isLoading: isLoadingData } = trpc.payroll.salaryStructures.list.useQuery({});
   const structure = structures.find((s: any) => s.id === id);
 
   useEffect(() => {
@@ -146,3 +146,4 @@ export default function EditSalaryStructure() {
     </ModuleLayout>
   );
 }
+

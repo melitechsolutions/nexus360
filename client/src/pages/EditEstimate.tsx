@@ -15,7 +15,7 @@ export default function EditEstimate() {
   const { data: estimateData, isLoading } = trpc.estimates.getWithItems.useQuery(estimateId, {
     enabled: !!estimateId,
   });
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
   const utils = trpc.useUtils();
 
   const updateEstimateMutation = trpc.estimates.update.useMutation({
@@ -220,3 +220,4 @@ export default function EditEstimate() {
     </ModuleLayout>
   );
 }
+

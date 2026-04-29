@@ -21,11 +21,11 @@ import {
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
 export default function AppAnalytics() {
-  const { data: rawFinancial } = trpc.analytics.financialSummary.useQuery();
+  const { data: rawFinancial } = trpc.analytics.financialSummary.useQuery({});
   const { data: rawRevenue = [] } = trpc.analytics.revenueTrends.useQuery({ months: 6 });
-  const { data: rawProjects = [] } = trpc.analytics.projectStatusDistribution.useQuery();
-  const { data: rawInvoiceMetrics } = trpc.analytics.invoiceMetrics.useQuery();
-  const { data: rawKpi } = trpc.analytics.kpiSummary.useQuery();
+  const { data: rawProjects = [] } = trpc.analytics.projectStatusDistribution.useQuery({});
+  const { data: rawInvoiceMetrics } = trpc.analytics.invoiceMetrics.useQuery({});
+  const { data: rawKpi } = trpc.analytics.kpiSummary.useQuery({});
   const { data: rawTopClients = [] } = trpc.analytics.topClients.useQuery({ limit: 5 });
 
   const financial = rawFinancial ? JSON.parse(JSON.stringify(rawFinancial)) : null;
@@ -162,3 +162,4 @@ export default function AppAnalytics() {
     </ModuleLayout>
   );
 }
+

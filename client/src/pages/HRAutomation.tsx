@@ -26,8 +26,8 @@ import {
 
 export default function HRAutomation() {
   const [tab, setTab] = useState("dashboard");
-  const { data: stats, refetch: refetchStats } = trpc.hrAutomation.getStats.useQuery();
-  const { data: rules, refetch: refetchRules } = trpc.hrAutomation.getRules.useQuery();
+  const { data: stats, refetch: refetchStats } = trpc.hrAutomation.getStats.useQuery({});
+  const { data: rules, refetch: refetchRules } = trpc.hrAutomation.getRules.useQuery({});
   const { data: logs, refetch: refetchLogs } = trpc.hrAutomation.getLogs.useQuery({ limit: 50 });
   const { data: expiringContracts } = trpc.hrAutomation.getExpiringContracts.useQuery({ days: 30 });
 
@@ -385,3 +385,4 @@ export default function HRAutomation() {
     </ModuleLayout>
   );
 }
+

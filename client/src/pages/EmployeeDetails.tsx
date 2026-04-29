@@ -41,11 +41,30 @@ export default function EmployeeDetails() {
   const employeeId = params?.id || "";
 
   // Fetch employee from backend
-  const { data: employeeData, isLoading } = trpc.employees.getById.useQuery(employeeId);
+  const { data: employeeData, isLoading: employeeLoading } = trpc.employees.getById.useQuery(employeeId);
   const { isStarred, toggleStar } = useFavorite("employee", employeeId, (employeeData as any)?.name);
-  const { data: jobGroupsData = [] } = trpc.jobGroups.list.useQuery();
+  const { data: jobGroupsData = [] } = trpc.jobGroups.list.useQuery({});
+  
+  // Fetch payroll data from backend
+  const { data: payrollData, isLoading: payrollLoading } = trpc.payslips.list.useQuery(
+    { employeeId },
+    { enabled: !!employeeId, staleTime: 60000 }
+  );
+  
+  // Fetch leave data from backend
+  const { data: leaveData, isLoading: leaveLoading } = trpc.leaves.getByEmployee.useQuery(
+    { employeeId },
+    { enabled: !!employeeId, staleTime: 60000 }
+  );
+  
+  // Fetch attendance data
+  const { data: attendanceData, isLoading: attendanceLoading } = trpc.attendance.getByEmployee.useQuery(
+    { employeeId, limit: 30 },
+    { enabled: !!employeeId, staleTime: 60000 }
+  );
 
   const jobGroup = jobGroupsData.find((jg: any) => jg.id === (employeeData as any)?.jobGroupId);
+  const isLoading = employeeLoading || payrollLoading || leaveLoading || attendanceLoading;
 
   const employee = employeeData ? {
     id: employeeId,
@@ -66,22 +85,33 @@ export default function EmployeeDetails() {
     avatar: null,
   } : null;
 
-  const attendanceRecords = [
-    { date: "2024-10-21", clockIn: "08:30 AM", clockOut: "05:45 PM", hours: 9.25, status: "present" },
-    { date: "2024-10-20", clockIn: "08:45 AM", clockOut: "06:00 PM", hours: 9.25, status: "present" },
-    { date: "2024-10-19", clockIn: "09:15 AM", clockOut: "05:30 PM", hours: 8.25, status: "late" },
-  ];
+  // Transform backend payroll data
+  const payrollHistory = (payrollData as any[])?.map((payslip: any) => ({
+    month: payslip.month ? new Date(payslip.month).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "N/A",
+    basic: (payslip.basicSalary || 0) / 100,
+    allowances: (payslip.totalAllowances || 0) / 100,
+    deductions: (payslip.totalDeductions || 0) / 100,
+    net: (payslip.netAmount || 0) / 100,
+    status: payslip.status || "processed",
+  })) || [];
 
-  const leaveHistory = [
-    { type: "Annual Leave", startDate: "2024-09-01", endDate: "2024-09-05", days: 5, status: "approved" },
-    { type: "Sick Leave", startDate: "2024-07-15", endDate: "2024-07-16", days: 2, status: "approved" },
-  ];
+  // Transform backend leave data
+  const leaveHistory = (leaveData as any[])?.map((leave: any) => ({
+    type: leave.leaveType || "Annual Leave",
+    startDate: leave.startDate || "",
+    endDate: leave.endDate || "",
+    days: leave.numberOfDays || 1,
+    status: leave.status || "pending",
+  })) || [];
 
-  const payrollHistory = [
-    { month: "October 2024", basic: 150000, allowances: 20000, deductions: 15000, net: 155000 },
-    { month: "September 2024", basic: 150000, allowances: 20000, deductions: 15000, net: 155000 },
-    { month: "August 2024", basic: 150000, allowances: 20000, deductions: 15000, net: 155000 },
-  ];
+  // Transform backend attendance data
+  const attendanceRecords = (attendanceData as any[])?.map((record: any) => ({
+    date: record.checkInTime ? new Date(record.checkInTime).toISOString().split('T')[0] : "",
+    clockIn: record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "—",
+    clockOut: record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "—",
+    hours: record.hoursWorked || 0,
+    status: record.status || "present",
+  })) || [];
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -348,4 +378,5 @@ export default function EmployeeDetails() {
     </ModuleLayout>
   );
 }
+
 

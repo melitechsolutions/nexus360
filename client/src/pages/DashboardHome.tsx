@@ -71,12 +71,12 @@ export default function DashboardHome() {
   });
 
   // Fetch dashboard metrics
-  const { data: dashboardMetrics } = trpc.dashboard.metrics.useQuery();
-  const { data: financialSummary } = trpc.dashboard.financialSummary.useQuery();
+  const { data: dashboardMetrics } = trpc.dashboard.metrics.useQuery({});
+  const { data: financialSummary } = trpc.dashboard.financialSummary.useQuery({});
   const { data: monthlyChart } = trpc.dashboard.monthlyChart.useQuery({});
-  const { data: accountingMetrics } = trpc.dashboard.accountingMetrics.useQuery();
+  const { data: accountingMetrics } = trpc.dashboard.accountingMetrics.useQuery({});
   const { data: recentActivities = [] } = trpc.dashboard.recentActivity.useQuery({ limit: 8 });
-  const { data: dashboardStats } = trpc.dashboard.stats.useQuery();
+  const { data: dashboardStats } = trpc.dashboard.stats.useQuery({});
 
   // Update metrics when data loads
   useEffect(() => {

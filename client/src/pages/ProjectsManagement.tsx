@@ -42,7 +42,7 @@ export default function ProjectsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch projects from backend
-  const { data: projects = [], isLoading } = trpc.projects.list.useQuery();
+  const { data: projects = [], isLoading } = trpc.projects.list.useQuery({});
   const utils = trpc.useUtils();
 
   // Delete mutation
@@ -325,3 +325,4 @@ export default function ProjectsManagement() {
     </ModuleLayout>
   );
 }
+

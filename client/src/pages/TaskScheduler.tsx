@@ -5,8 +5,8 @@ import { toast } from "sonner";
 import { ModuleLayout } from "@/components/ModuleLayout";
 
 export default function TaskScheduler() {
-  const { data: jobsData, isLoading, error } = trpc.jobScheduler.listJobs.useQuery();
-  const { data: healthData } = trpc.jobScheduler.getHealthStatus.useQuery();
+  const { data: jobsData, isLoading, error } = trpc.jobScheduler.listJobs.useQuery({});
+  const { data: healthData } = trpc.jobScheduler.getHealthStatus.useQuery({});
   const utils = trpc.useUtils();
 
   const triggerJob = trpc.jobScheduler.triggerJobNow.useMutation({
@@ -112,3 +112,4 @@ export default function TaskScheduler() {
     </ModuleLayout>
   );
 }
+

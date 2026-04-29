@@ -57,8 +57,8 @@ export default function InvoiceDetails() {
   const { data: invoiceData, isLoading } = trpc.invoices.getWithItems.useQuery(invoiceId, {
     enabled: !!invoiceId,
   });
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
-  const { data: rawCompanyInfo } = trpc.settings.getCompanyInfo.useQuery();
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
+  const { data: rawCompanyInfo } = trpc.settings.getCompanyInfo.useQuery({});
   const { data: bankPayData } = trpc.settings.getByCategory.useQuery({ category: "payment_bank" });
   const { data: mpesaPayData } = trpc.settings.getByCategory.useQuery({ category: "payment_mpesa" });
   const { data: invoiceSettingsData } = trpc.settings.getByCategory.useQuery({ category: "invoice_settings" });
@@ -314,3 +314,4 @@ export default function InvoiceDetails() {
     </>
   );
 }
+

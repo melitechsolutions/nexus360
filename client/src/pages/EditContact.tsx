@@ -45,7 +45,7 @@ export default function EditContact() {
   });
 
   const { data: contact, isLoading: isLoadingContact } = trpc.contacts.getById.useQuery(id || "", { enabled: !!id });
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
   const utils = trpc.useUtils();
 
   useEffect(() => {

@@ -39,7 +39,7 @@ export default function EditOrder() {
   const [lineItems, setLineItems] = useState<OrderLineItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: rawSuppliers = [] } = trpc.suppliers.list.useQuery();
+  const { data: rawSuppliers = [] } = trpc.suppliers.list.useQuery({});
   const suppliers = JSON.parse(JSON.stringify(rawSuppliers));
 
   const { data: rawOrder, isLoading: isFetching } = trpc.lpo.getById.useQuery(orderId, { enabled: !!orderId });
@@ -369,3 +369,4 @@ export default function EditOrder() {
     </ModuleLayout>
   );
 }
+

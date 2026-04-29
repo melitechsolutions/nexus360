@@ -44,8 +44,8 @@ export default function EstimateDetails() {
 
   const { data: estimateData, isLoading } = trpc.estimates.getWithItems.useQuery(estimateId);
   const { isStarred, toggleStar } = useFavorite("estimate", estimateId, estimateData?.estimateNumber);
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
-  const { data: rawCompanyInfo } = trpc.settings.getCompanyInfo.useQuery();
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
+  const { data: rawCompanyInfo } = trpc.settings.getCompanyInfo.useQuery({});
   const { data: bankPayData } = trpc.settings.getByCategory.useQuery({ category: "payment_bank" });
   const { data: mpesaPayData } = trpc.settings.getByCategory.useQuery({ category: "payment_mpesa" });
   const { data: invoiceSettingsData } = trpc.settings.getByCategory.useQuery({ category: "invoice_settings" });
@@ -281,3 +281,4 @@ export default function EstimateDetails() {
     </ModuleLayout>
   );
 }
+

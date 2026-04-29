@@ -23,11 +23,15 @@ import { desc, sql } from "drizzle-orm";
 type DocumentType = 
   | "lpo" | "purchase_order" | "imprest" | "imprest_surrender"
   | "receipt" | "invoice" | "estimate" | "payment"
-  | "expense" | "supplier";
+  | "expense" | "supplier" | "debit_note" | "credit_note"
+  | "quotation" | "proposal" | "order" | "service_invoice"
+  | "work_order" | "grn" | "delivery_note" | "payslip"
+  | "contract" | "warranty" | "ticket" | "product"
+  | "service" | "subscription" | "department";
 
 interface NumberingConfig {
   prefix: string;
-  table: any;
+  table: any | null;
   field: string;
   padding: number;
 }
@@ -43,6 +47,25 @@ const NUMBERING_CONFIG: Record<DocumentType, NumberingConfig> = {
   payment: { prefix: "PAY", table: payments, field: "paymentNumber", padding: 6 },
   expense: { prefix: "EXP", table: expenses, field: "expenseNumber", padding: 6 },
   supplier: { prefix: "SUP", table: suppliers, field: "supplierNumber", padding: 4 },
+  
+  // Additional document types (table references to be added as needed)
+  debit_note: { prefix: "DN", table: null, field: "debitNoteNumber", padding: 6 },
+  credit_note: { prefix: "CN", table: null, field: "creditNoteNumber", padding: 6 },
+  quotation: { prefix: "QT", table: null, field: "quotationNumber", padding: 6 },
+  proposal: { prefix: "PROP", table: null, field: "proposalNumber", padding: 6 },
+  order: { prefix: "ORD", table: null, field: "orderNumber", padding: 6 },
+  service_invoice: { prefix: "SI", table: null, field: "serviceInvoiceNumber", padding: 6 },
+  work_order: { prefix: "WO", table: null, field: "workOrderNumber", padding: 6 },
+  grn: { prefix: "GRN", table: null, field: "grnNumber", padding: 6 },
+  delivery_note: { prefix: "DN", table: null, field: "deliveryNoteNumber", padding: 6 },
+  payslip: { prefix: "PS", table: null, field: "payslipNumber", padding: 6 },
+  contract: { prefix: "CNT", table: null, field: "contractNumber", padding: 6 },
+  warranty: { prefix: "WRT", table: null, field: "warrantyNumber", padding: 6 },
+  ticket: { prefix: "TKT", table: null, field: "ticketNumber", padding: 6 },
+  product: { prefix: "PROD", table: null, field: "productNumber", padding: 5 },
+  service: { prefix: "SRV", table: null, field: "serviceNumber", padding: 5 },
+  subscription: { prefix: "SUB", table: null, field: "subscriptionNumber", padding: 6 },
+  department: { prefix: "DEPT", table: null, field: "departmentNumber", padding: 4 },
 };
 
 /**

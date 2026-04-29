@@ -26,9 +26,9 @@ export default function TaskDetails() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
 
-  const { data: tasks = [], isLoading } = trpc.projects.tasks.listAll.useQuery();
-  const { data: projectsList = [] } = trpc.projects.list.useQuery();
-  const { data: employeesList = [] } = trpc.employees.list.useQuery();
+  const { data: tasks = [], isLoading } = trpc.projects.tasks.listAll.useQuery({});
+  const { data: projectsList = [] } = trpc.projects.list.useQuery({});
+  const { data: employeesList = [] } = trpc.employees.list.useQuery({});
 
   const task = (tasks as any[]).find((t: any) => t.id === id);
   const project = task ? (projectsList as any[]).find((p: any) => p.id === task.projectId) : null;
@@ -199,3 +199,4 @@ export default function TaskDetails() {
     </ModuleLayout>
   );
 }
+

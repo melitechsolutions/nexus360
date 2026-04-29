@@ -52,7 +52,7 @@ export default function Warehouses() {
   const [form, setForm] = useState({ name: "", code: "", address: "", contactPerson: "", phone: "", status: "active" });
 
   const utils = trpc.useUtils();
-  const { data: rawData = [], isLoading } = trpc.warehouses.list.useQuery();
+  const { data: rawData = [], isLoading } = trpc.warehouses.list.useQuery({});
   const warehouses = JSON.parse(JSON.stringify(rawData)) as any[];
 
   const createMut = trpc.warehouses.create.useMutation({ onSuccess: () => { utils.warehouses.list.invalidate(); toast.success("Warehouse created"); setShowDialog(false); } });
@@ -243,3 +243,4 @@ export default function Warehouses() {
     </ModuleLayout>
   );
 }
+

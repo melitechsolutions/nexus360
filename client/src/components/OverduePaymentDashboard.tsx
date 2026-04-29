@@ -40,11 +40,11 @@ export default function OverduePaymentDashboard() {
 
   // Fetch overdue invoices
   const { data: overdueInvoices = [], isLoading: isLoadingOverdue } =
-    trpc.invoices.payments.getOverdue.useQuery();
+    trpc.invoices.payments.getOverdue.useQuery({});
 
   // Fetch reminders needed
   const { data: remindersNeeded = [], isLoading: isLoadingReminders } =
-    trpc.invoices.payments.getRemindersNeeded.useQuery();
+    trpc.invoices.payments.getRemindersNeeded.useQuery({});
 
   // Send reminder mutation
   const sendReminderMutation = trpc.invoices.payments.sendReminder.useMutation({
@@ -382,3 +382,4 @@ export default function OverduePaymentDashboard() {
     </div>
   );
 }
+

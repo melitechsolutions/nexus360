@@ -1,7 +1,0 @@
-open melitechsolutions.co.ke
-melitec1
-G=P%C7Xem~LP
-binary
-cd /Nexus360
-put E:\Nexus360\deploy.zip deploy.zip
-quit

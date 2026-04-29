@@ -121,7 +121,7 @@ function CreateTierDialog({ open, onOpenChange, onCreated }: CreateTierDialogPro
         </DialogHeader>
 
         <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Tier Key <span className="text-red-400">*</span></Label>
               <Input
@@ -142,7 +142,7 @@ function CreateTierDialog({ open, onOpenChange, onCreated }: CreateTierDialogPro
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of this plan" rows={2} />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>Monthly Price (KES)</Label>
               <Input type="number" min={0} value={monthlyKes} onChange={(e) => {
@@ -170,7 +170,7 @@ function CreateTierDialog({ open, onOpenChange, onCreated }: CreateTierDialogPro
                 <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => toggleAll(false)}>None</Button>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {ORG_MODULES.map((mod) => (
                 <div key={mod.key} className="flex items-center justify-between rounded-md border border-border bg-muted/50 px-3 py-2">
                   <span className="text-sm text-foreground/80">{mod.label}</span>
@@ -265,7 +265,7 @@ function EditTierDialog({ open, onOpenChange, tierKey, tierLabel, priceData, cur
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label>Monthly Price (KES)</Label>
               <Input type="number" min={0} value={monthlyKes} onChange={(e) => {
@@ -292,7 +292,7 @@ function EditTierDialog({ open, onOpenChange, tierKey, tierLabel, priceData, cur
                 <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => toggleAll(false)}>None</Button>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {ORG_MODULES.map((mod) => (
                 <div key={mod.key} className="flex items-center justify-between rounded-md border border-border bg-muted/50 px-3 py-2">
                   <span className="text-sm text-foreground/80">{mod.label}</span>
@@ -518,7 +518,7 @@ function PlanCard({ planKey, priceData, features, onEdit, onDelete }: PlanCardPr
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <DollarSign className="h-3 w-3" />Monthly (KES)
@@ -606,10 +606,10 @@ export default function SuperAdminPricingTiers() {
   }
 
   const { data: priceData, isLoading: pricesLoading, refetch: refetchPrices } =
-    trpc.multiTenancy.getPlanPrices.useQuery();
+    trpc.multiTenancy.getPlanPrices.useQuery({});
 
   const { data: featuresData, isLoading: featuresLoading, refetch: refetchFeatures } =
-    trpc.multiTenancy.getAllPricingTierFeatures.useQuery();
+    trpc.multiTenancy.getAllPricingTierFeatures.useQuery({});
 
   const prices: Record<string, PriceEntry> = (priceData?.prices as any) ?? {};
   const tierFeatures: Record<string, Record<string, boolean>> = (featuresData?.tiers as any) ?? {};
@@ -679,7 +679,7 @@ export default function SuperAdminPricingTiers() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="flex items-center gap-3 pt-4 pb-4">
               <div className="rounded-lg bg-blue-600/10 border border-blue-500/20 p-2">

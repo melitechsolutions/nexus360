@@ -19,7 +19,7 @@ export default function LeaveManagementDetails() {
 
   // Fetch leave request from backend
   const { data: leaveData, isLoading } = trpc.leave.getById.useQuery(id || "");
-  const { data: employeesData = [] } = trpc.employees.list.useQuery();
+  const { data: employeesData = [] } = trpc.employees.list.useQuery({});
   const utils = trpc.useUtils();
 
   const deleteLeaveMutation = trpc.leave.delete.useMutation({
@@ -229,3 +229,4 @@ export default function LeaveManagementDetails() {
     </ModuleLayout>
   );
 }
+

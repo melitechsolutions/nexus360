@@ -642,7 +642,7 @@ export default function CustomHomepageBuilder() {
 
   // Load config from API
   const { data: configData, isLoading: isLoadingConfig } =
-    trpc.customHomepage.getConfig.useQuery();
+    trpc.customHomepage.getConfig.useQuery({});
 
   const saveMutation = trpc.customHomepage.saveConfig.useMutation({
     onSuccess: () => {
@@ -1014,3 +1014,4 @@ export default function CustomHomepageBuilder() {
     </ModuleLayout>
   );
 }
+

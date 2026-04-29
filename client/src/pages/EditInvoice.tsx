@@ -17,7 +17,7 @@ export default function EditInvoice() {
 
   // Fetch invoice data from backend with line items
   const { data: invoiceData, isLoading: isLoadingInvoiceData } = trpc.invoices.getWithItems.useQuery(invoiceId);
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
   const utils = trpc.useUtils();
 
   const updateInvoiceMutation = trpc.invoices.update.useMutation({
@@ -235,3 +235,4 @@ export default function EditInvoice() {
     </ModuleLayout>
   );
 }
+

@@ -64,7 +64,7 @@ export default function ExpensesDetails() {
   // Fetch expense from backend
   const { data: expenseData, isLoading } = trpc.expenses.getById.useQuery(id || "");
   // Fetch available budget allocations
-  const { data: budgetAllocations = [] } = trpc.expenses.getAvailableBudgetAllocations.useQuery();
+  const { data: budgetAllocations = [] } = trpc.expenses.getAvailableBudgetAllocations.useQuery({});
 
   const utils = trpc.useUtils();
 
@@ -505,3 +505,4 @@ export default function ExpensesDetails() {
     </ModuleLayout>
   );
 }
+

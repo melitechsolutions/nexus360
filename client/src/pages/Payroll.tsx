@@ -40,7 +40,7 @@ interface PayrollRecord {
   allowances: number;
   deductions: number;
   netSalary: number;
-  status: "paid" | "pending" | "processing";
+  status: "draft" | "processed" | "paid";
   paymentDate: string;
   month: string;
 }
@@ -53,12 +53,12 @@ export default function Payroll() {
   const [selectedPayrollIds, setSelectedPayrollIds] = useState<Set<string>>(new Set());
   const [exportFormat, setExportFormat] = useState<"xlsx" | "csv">("xlsx");
   const [isExporting, setIsExporting] = useState(false);
-  const [bulkStatusUpdate, setBulkStatusUpdate] = useState<"" | "paid" | "pending" | "processing">("");
+  const [bulkStatusUpdate, setBulkStatusUpdate] = useState<"" | "draft" | "processed" | "paid">("");
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Fetch real data from backend
-  const { data: data = [], isLoading } = trpc.payroll.list.useQuery();
+  const { data: data = [], isLoading } = trpc.payroll.list.useQuery({});
   const deleteMut = trpc.payroll.delete.useMutation();
   const updateMut = trpc.payroll.update.useMutation();
   const downloadP9 = trpc.payroll.downloadP9.useMutation();
@@ -106,9 +106,9 @@ export default function Payroll() {
     switch (status) {
       case "paid":
         return "default";
-      case "pending":
+      case "processed":
         return "secondary";
-      case "processing":
+      case "draft":
         return "outline";
       default:
         return "default";
@@ -119,10 +119,10 @@ export default function Payroll() {
     switch (status) {
       case "paid":
         return <CheckCircle2 className="h-3 w-3" />;
-      case "pending":
-        return <AlertCircle className="h-3 w-3" />;
-      case "processing":
+      case "processed":
         return <Clock className="h-3 w-3" />;
+      case "draft":
+        return <AlertCircle className="h-3 w-3" />;
       default:
         return null;
     }
@@ -358,16 +358,16 @@ export default function Payroll() {
                     <Select
                       value={bulkStatusUpdate}
                       onValueChange={(value) =>
-                        setBulkStatusUpdate(value as "" | "paid" | "pending" | "processing")
+                        setBulkStatusUpdate(value as "" | "draft" | "processed" | "paid")
                       }
                     >
                       <SelectTrigger className="w-40 bg-white dark:bg-slate-950">
                         <SelectValue placeholder="Change status" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="draft">Mark as Draft</SelectItem>
+                        <SelectItem value="processed">Mark as Processed</SelectItem>
                         <SelectItem value="paid">Mark as Paid</SelectItem>
-                        <SelectItem value="pending">Mark as Pending</SelectItem>
-                        <SelectItem value="processing">Mark as Processing</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button
@@ -471,9 +471,9 @@ export default function Payroll() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="processed">Processed</SelectItem>
                   <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="processing">Processing</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -526,7 +526,7 @@ export default function Payroll() {
                         {record.employeeName}
                         <span className="text-sm text-muted-foreground ml-2">({record.employeeId})</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-3">
                         <div>
                           <span className="text-muted-foreground">Department:</span>
                           <div className="font-medium">{record.department}</div>
@@ -585,4 +585,5 @@ export default function Payroll() {
     </ModuleLayout>
   );
 }
+
 

@@ -5,6 +5,7 @@ import { getDb } from "../db";
 import { eq, and, lte, gte, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { TRPCError } from "@trpc/server";
+import { applyRecurringLabel } from "../utils/recurringLabels";
 
 // Define typed procedures
 const readProcedure = createFeatureRestrictedProcedure("invoices:read");
@@ -368,13 +369,21 @@ export const recurringInvoicesRouter = router({
           recurringInvoice[0].frequency
         ).toISOString().replace('T', ' ').substring(0, 19);
 
+        // Apply auto-labeling with month/year
+        const { title: labeledTitle, notes: labeledNotes } = applyRecurringLabel(
+          template[0].title || "Recurring Invoice",
+          template[0].notes || "",
+          recurringInvoice[0].noteToInvoice,
+          now
+        );
+
         // Create new invoice from template
         await db.insert(invoices).values({
           id: newInvoiceId,
           invoiceNumber: newInvoiceNumber,
           clientId: recurringInvoice[0].clientId,
           recurringInvoiceId: input,
-          title: template[0].title,
+          title: labeledTitle,
           status: "draft",
           issueDate,
           dueDate,
@@ -384,12 +393,7 @@ export const recurringInvoicesRouter = router({
           total: template[0].total,
           paidAmount: 0,
           createdFromRecurring: 1,
-          notes:
-            (template[0].notes || "") +
-            "\n\n--- Auto-generated from recurring invoice ---" +
-            (recurringInvoice[0].noteToInvoice
-              ? "\n" + recurringInvoice[0].noteToInvoice
-              : ""),
+          notes: labeledNotes,
           terms: template[0].terms,
           createdBy: ctx.user.id,
         });

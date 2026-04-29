@@ -103,7 +103,7 @@ export default function SalesPipeline() {
   });
 
   // Queries
-  const boardQuery = trpc.salesPipeline.getPipelineBoard.useQuery();
+  const boardQuery = trpc.salesPipeline.getPipelineBoard.useQuery({});
   const forecastQuery = trpc.salesPipeline.getSalesForecast.useQuery({});
   const statsQuery = trpc.salesPipeline.getWinLossStats.useQuery({ months: 3 });
   const clientsQuery = trpc.clients.list.useQuery(undefined);
@@ -653,3 +653,4 @@ export default function SalesPipeline() {
     </ModuleLayout>
   );
 }
+

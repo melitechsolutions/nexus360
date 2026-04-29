@@ -28,8 +28,8 @@ export default function EmployeeContractsPage() {
   const [showEdit, setShowEdit] = useState(false);
   const [editing, setEditing] = useState<any>(null);
 
-  const employeesQ = trpc.employees.list.useQuery();
-  const statsQ = trpc.employeeContracts.stats.useQuery();
+  const employeesQ = trpc.employees.list.useQuery({});
+  const statsQ = trpc.employeeContracts.stats.useQuery({});
   const listQ = trpc.employeeContracts.list.useQuery({
     status: filterStatus === "all" ? undefined : filterStatus,
     contractType: filterType === "all" ? undefined : filterType,
@@ -205,3 +205,4 @@ export default function EmployeeContractsPage() {
     </ModuleLayout>
   );
 }
+

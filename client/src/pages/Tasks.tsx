@@ -153,10 +153,10 @@ export default function Tasks() {
   const [showOptions, setShowOptions] = useState(false);
 
   // Fetch all tasks
-  const { data: rawTasks = [], isLoading, refetch } = trpc.projects.tasks.listAll.useQuery();
-  const { data: projectsList = [] } = trpc.projects.list.useQuery();
-  const { data: employeesList = [] } = trpc.employees.list.useQuery();
-  const { data: clientsList = [] } = trpc.clients.list.useQuery();
+  const { data: rawTasks = [], isLoading, refetch } = trpc.projects.tasks.listAll.useQuery({});
+  const { data: projectsList = [] } = trpc.projects.list.useQuery({});
+  const { data: employeesList = [] } = trpc.employees.list.useQuery({});
+  const { data: clientsList = [] } = trpc.clients.list.useQuery({});
   const updateTask = trpc.projects.tasks.update.useMutation({
     onSuccess: () => { toast.success("Task updated"); refetch(); },
     onError: (e) => toast.error(e.message || "Failed to update task"),
@@ -528,3 +528,4 @@ export default function Tasks() {
     </ModuleLayout>
   );
 }
+

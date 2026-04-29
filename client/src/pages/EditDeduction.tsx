@@ -46,7 +46,7 @@ export default function EditDeduction() {
     notes: "",
   });
 
-  const { data: deductions = [], isLoading: isLoadingData } = trpc.payroll.deductions.list.useQuery();
+  const { data: deductions = [], isLoading: isLoadingData } = trpc.payroll.deductions.list.useQuery({});
   const deduction = deductions.find((d: any) => d.id === id);
 
   useEffect(() => {

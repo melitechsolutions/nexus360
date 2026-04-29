@@ -9,10 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Save, Code, Eye } from "lucide-react";
 import { toast } from "sonner";
 import UnifiedModuleLayout, { ContentSection } from "@/components/UnifiedModuleLayout";
 import { Checkbox } from "@/components/ui/checkbox";
+import EmailBlockEditor from "@/components/EmailBlockEditor";
+import DocumentBlockEditor from "@/components/DocumentBlockEditor";
+import HTMLEditor from "@/components/HTMLEditor";
 
 interface ServiceTemplateForm {
   name: string;
@@ -26,6 +30,7 @@ interface ServiceTemplateForm {
   deliverables?: string[];
   terms?: string;
   isActive?: boolean;
+  templateContent?: string; // Rich content from block/html editors
 }
 
 export default function CreateServiceTemplate() {
@@ -50,9 +55,11 @@ export default function CreateServiceTemplate() {
     deliverables: [],
     terms: "",
     isActive: true,
+    templateContent: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [deliverableInput, setDeliverableInput] = useState("");
+  const [editorMode, setEditorMode] = useState<"block" | "html">("block");
 
   // Fetch existing template if editing
   const getQuery = trpc.serviceTemplates.getById.useQuery(
@@ -73,6 +80,7 @@ export default function CreateServiceTemplate() {
             deliverables: data.deliverables ? JSON.parse(data.deliverables) : [],
             terms: data.terms || "",
             isActive: data.isActive,
+            templateContent: (data as any).templateContent || "",
           });
         }
       },
@@ -124,6 +132,7 @@ export default function CreateServiceTemplate() {
         deliverables: form.deliverables,
         terms: form.terms,
         isActive: form.isActive,
+        templateContent: form.templateContent,
       };
 
       if (isEditing) {
@@ -348,6 +357,68 @@ export default function CreateServiceTemplate() {
               placeholder="Enter terms and conditions..."
               rows={4}
             />
+          </div>
+
+          {/* Template Content Editor */}
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="font-semibold">Template Content</h3>
+            <p className="text-sm text-gray-600">
+              Create rich content using blocks or write raw HTML. This content can be used as a template for service delivery documents.
+            </p>
+
+            <Tabs defaultValue={editorMode} onValueChange={(val) => setEditorMode(val as "block" | "html")} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="block" className="flex gap-2">
+                  <Code className="h-4 w-4" />
+                  Block Editor
+                </TabsTrigger>
+                <TabsTrigger value="html" className="flex gap-2">
+                  <Eye className="h-4 w-4" />
+                  HTML Editor
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="block" className="mt-4 space-y-4">
+                <div className="text-sm text-gray-600 mb-4">
+                  Drag and drop blocks to build your template content. Changes are saved automatically.
+                </div>
+                <DocumentBlockEditor
+                  value={form.templateContent || ""}
+                  onChange={(html) => setForm(prev => ({ ...prev, templateContent: html }))}
+                  minHeight="500px"
+                  variables={[
+                    { label: "Service Name", value: "{{service_name}}" },
+                    { label: "Service Description", value: "{{service_description}}" },
+                    { label: "Service Date", value: "{{service_date}}" },
+                    { label: "Service Amount", value: "{{service_amount}}" },
+                    { label: "Client Name", value: "{{client_name}}" },
+                    { label: "Client Email", value: "{{client_email}}" },
+                    { label: "Company Name", value: "{{company_name}}" },
+                  ]}
+                />
+              </TabsContent>
+
+              <TabsContent value="html" className="mt-4 space-y-4">
+                <div className="text-sm text-gray-600 mb-4">
+                  Write raw HTML code with syntax validation and preview. Use the quick buttons to insert template variables.
+                </div>
+                <HTMLEditor
+                  value={form.templateContent || ""}
+                  onChange={(html) => setForm(prev => ({ ...prev, templateContent: html }))}
+                  minHeight="500px"
+                  height="600px"
+                  variables={[
+                    { label: "Service Name", value: "{{service_name}}" },
+                    { label: "Service Description", value: "{{service_description}}" },
+                    { label: "Service Date", value: "{{service_date}}" },
+                    { label: "Service Amount", value: "{{service_amount}}" },
+                    { label: "Client Name", value: "{{client_name}}" },
+                    { label: "Client Email", value: "{{client_email}}" },
+                    { label: "Company Name", value: "{{company_name}}" },
+                  ]}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Status */}

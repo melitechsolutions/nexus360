@@ -26,6 +26,7 @@ import {
 } from "recharts";
 import { Calendar, Download, Filter, RotateCcw, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { getPaymentMethodOptions } from "@/const/paymentMethods";
 
 /**
  * PaymentReports component
@@ -56,7 +57,7 @@ export default function PaymentReports() {
     clientId: clientId || undefined,
   });
 
-  const { data: clientsData } = trpc.clients.list.useQuery();
+  const { data: clientsData } = trpc.clients.list.useQuery({});
 
   const handleResetFilters = () => {
     const date = new Date();
@@ -191,12 +192,11 @@ export default function PaymentReports() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Methods</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="check">Check</SelectItem>
-                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                  <SelectItem value="credit_card">Credit Card</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  {getPaymentMethodOptions().map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

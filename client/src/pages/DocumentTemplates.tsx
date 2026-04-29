@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -11,7 +12,9 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { RichTextEditor } from "@/components/RichTextEditor";
-import { FileText, Plus, Edit2, Trash2, Search, Eye, ArrowLeft, Copy } from "lucide-react";
+import DocumentBlockEditor from "@/components/DocumentBlockEditor";
+import HTMLEditor from "@/components/HTMLEditor";
+import { FileText, Plus, Edit2, Trash2, Search, Eye, ArrowLeft, Copy, Code } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { trpc } from "@/lib/trpc";
@@ -241,6 +244,7 @@ export default function DocumentTemplates({ type }: DocumentTemplatesProps) {
   const [editingTemplate, setEditingTemplate] = useState<DocumentTemplate | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<DocumentTemplate | null>(null);
   const [form, setForm] = useState<{ title: string; content: string }>({ title: "", content: "" });
+  const [editorMode, setEditorMode] = useState<"block" | "html">("block");
 
   const filtered = (templates as DocumentTemplate[]).filter(t =>
     t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -307,14 +311,43 @@ export default function DocumentTemplates({ type }: DocumentTemplatesProps) {
               </div>
               <div className="space-y-2">
                 <Label>Template Content</Label>
-                <RichTextEditor
-                  value={form.content}
-                  onChange={val => setForm(p => ({ ...p, content: val }))}
-                  placeholder={`Design your ${config.singular.toLowerCase()} template...`}
-                  minHeight="500px"
-                  enhanced
-                  variables={config.variables}
-                />
+                <p className="text-sm text-gray-600">
+                  Create rich content using blocks, HTML, or rich text editor. Choose the editor that best suits your workflow.
+                </p>
+
+                <Tabs value={editorMode} onValueChange={(val) => setEditorMode(val as "block" | "html")} className="w-full mt-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="block" className="flex gap-2">
+                      <Code className="h-4 w-4" />
+                      Block Editor
+                    </TabsTrigger>
+                    <TabsTrigger value="html" className="flex gap-2">
+                      <Code className="h-4 w-4" />
+                      HTML Editor
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="block" className="mt-4">
+                    <DocumentBlockEditor
+                      value={form.content}
+                      onChange={val => setForm(p => ({ ...p, content: val }))}
+                      placeholder={`Design your ${config.singular.toLowerCase()} template...`}
+                      minHeight="500px"
+                      variables={config.variables}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="html" className="mt-4">
+                    <HTMLEditor
+                      value={form.content}
+                      onChange={val => setForm(p => ({ ...p, content: val }))}
+                      placeholder={`Design your ${config.singular.toLowerCase()} template...`}
+                      minHeight="500px"
+                      height="600px"
+                      variables={config.variables}
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
             </CardContent>
           </Card>

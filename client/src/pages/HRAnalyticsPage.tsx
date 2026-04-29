@@ -29,14 +29,14 @@ export default function HRAnalyticsPage() {
   const [selectedDept, setSelectedDept] = useState<string>("");
 
   // Fetch all analytics data
-  const { data: headcountTrends } = trpc.hrAnalytics.getHeadcountTrends.useQuery();
-  const { data: salaryDistribution } = trpc.hrAnalytics.getSalaryDistribution.useQuery();
-  const { data: turnoverAnalysis } = trpc.hrAnalytics.getTurnoverAnalysis.useQuery();
-  const { data: attendanceKPIs } = trpc.hrAnalytics.getAttendanceKPIs.useQuery();
-  const { data: leaveUtilization } = trpc.hrAnalytics.getLeaveUtilization.useQuery();
-  const { data: departmentAnalytics } = trpc.hrAnalytics.getDepartmentAnalytics.useQuery();
-  const { data: performanceMetrics } = trpc.hrAnalytics.getPerformanceMetrics.useQuery();
-  const { data: salaryExpenseTrends } = trpc.hrAnalytics.getSalaryExpenseTrends.useQuery();
+  const { data: headcountTrends } = trpc.hrAnalytics.getHeadcountTrends.useQuery({});
+  const { data: salaryDistribution } = trpc.hrAnalytics.getSalaryDistribution.useQuery({});
+  const { data: turnoverAnalysis } = trpc.hrAnalytics.getTurnoverAnalysis.useQuery({});
+  const { data: attendanceKPIs } = trpc.hrAnalytics.getAttendanceKPIs.useQuery({});
+  const { data: leaveUtilization } = trpc.hrAnalytics.getLeaveUtilization.useQuery({});
+  const { data: departmentAnalytics } = trpc.hrAnalytics.getDepartmentAnalytics.useQuery({});
+  const { data: performanceMetrics } = trpc.hrAnalytics.getPerformanceMetrics.useQuery({});
+  const { data: salaryExpenseTrends } = trpc.hrAnalytics.getSalaryExpenseTrends.useQuery({});
 
   return (
     <ModuleLayout
@@ -143,7 +143,7 @@ export default function HRAnalyticsPage() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip formatter={(value) => `Ksh ${(value / 1000000).toFixed(1)}M`} />
+                  <Tooltip formatter={(value) => `Ksh ${(value / 1000).toFixed(0)}k`} />
                   <Legend />
                   <Line type="monotone" dataKey="totalCost" stroke="#ef4444" name="Total Monthly Cost" />
                 </LineChart>
@@ -305,3 +305,4 @@ export default function HRAnalyticsPage() {
     </ModuleLayout>
   );
 }
+

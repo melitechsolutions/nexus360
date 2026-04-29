@@ -120,7 +120,7 @@ export default function PerformanceMetrics() {
                     </div>
                     <Progress value={data.memory.percent} className={progressColor(data.memory.percent)} />
                   </div>
-                  <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-center">
                     <div>
                       <p className="text-2xl font-bold">{data.memory.totalGB}</p>
                       <p className="text-xs text-muted-foreground">Total GB</p>

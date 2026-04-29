@@ -130,7 +130,7 @@ export function PayslipSummary({
               </div>
               <span className="font-semibold">{formatCurrency(payroll.nssfContribution)}</span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-sm bg-slate-50 p-2 rounded">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm bg-slate-50 p-2 rounded">
               <div>
                 <p className="text-xs text-muted-foreground">Tier 1 (6% base)</p>
                 <p className="font-semibold">{formatCurrency(payroll.details.nssfTier1)}</p>
@@ -151,7 +151,7 @@ export function PayslipSummary({
               </div>
               <span className="font-semibold">{formatCurrency(payroll.payeeTax)}</span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-sm bg-slate-50 p-2 rounded mb-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm bg-slate-50 p-2 rounded mb-2">
               <div>
                 <p className="text-xs text-muted-foreground">Tax Bracket</p>
                 <p className="font-semibold">{payroll.details.taxBracketApplied}</p>

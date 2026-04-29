@@ -80,7 +80,7 @@ export default function FloatingChatNotifications() {
 
   const isOnChatPage = location === "/staff-chat" || location === "/communications/staff-chat";
 
-  const { data: profileData } = trpc.auth.me.useQuery();
+  const { data: profileData } = trpc.auth.me.useQuery({});
   const currentUserId = profileData?.id || "";
 
   // Poll unread chat messages (only show notifications for unread messages)

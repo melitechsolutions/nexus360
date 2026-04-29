@@ -74,7 +74,7 @@ const PROPOSAL_VARIABLES = [
 
 export default function ProposalTemplates() {
   const utils = trpc.useUtils();
-  const { data: templates = [], isLoading } = trpc.proposalTemplates.list.useQuery();
+  const { data: templates = [], isLoading } = trpc.proposalTemplates.list.useQuery({});
   const createMutation = trpc.proposalTemplates.create.useMutation({
     onSuccess: () => { utils.proposalTemplates.list.invalidate(); toast.success("Template created"); setView("list"); },
     onError: (e) => toast.error(e.message),
@@ -293,3 +293,4 @@ export default function ProposalTemplates() {
     </ModuleLayout>
   );
 }
+

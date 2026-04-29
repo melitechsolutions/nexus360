@@ -199,7 +199,7 @@ export default function AdvancedReports() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Conversion Stats */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="bg-blue-50 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">Total Quotes</p>
                     <p className="text-2xl font-bold text-blue-600">
@@ -254,7 +254,7 @@ export default function AdvancedReports() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Revenue Stats */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-blue-50 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">Historical Revenue</p>
                     <p className="text-2xl font-bold text-blue-600">

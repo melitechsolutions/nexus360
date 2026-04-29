@@ -71,8 +71,8 @@ export default function CreateOpportunity() {
     internalNotes: "",
   });
 
-  const { data: clients = [] } = trpc.clients.list.useQuery();
-  const { data: usersData = [] } = trpc.users.list.useQuery();
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
+  const { data: usersData = [] } = trpc.users.list.useQuery({});
   const teamMembers = Array.isArray(usersData) ? usersData : (usersData as any)?.users ?? [];
   const clientsArr = Array.isArray(clients) ? clients : (clients as any)?.items ?? [];
 

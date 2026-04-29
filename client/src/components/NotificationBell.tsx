@@ -182,25 +182,25 @@ export function NotificationBell() {
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-96 rounded-md border bg-popover text-popover-foreground shadow-lg z-[100] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2">
+        <div className="absolute right-0 top-full mt-2 w-[90vw] sm:w-80 md:w-96 rounded-md border bg-popover text-popover-foreground shadow-lg z-[100] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 max-h-[80vh] flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b">
-            <div>
-              <h3 className="font-semibold text-base">Notifications</h3>
-              <p className="text-xs text-muted-foreground">
-                {unreadCount > 0
-                  ? `${unreadCount} unread`
-                  : "All caught up!"}
-              </p>
+          <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b flex-shrink-0">
+            <div className="min-w-0 flex items-center gap-2">
+              <h3 className="font-semibold text-sm sm:text-base">Notifications</h3>
+              {unreadCount > 0 && (
+                <Badge className="bg-red-500 text-white text-xs h-5 px-1.5">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </Badge>
+              )}
             </div>
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => markAllAsReadMutation.mutate()}
-                className="text-xs h-7"
+                className="text-xs h-7 whitespace-nowrap flex-shrink-0 ml-2"
               >
-                Mark all read
+                Mark read
               </Button>
             )}
           </div>
@@ -209,35 +209,35 @@ export function NotificationBell() {
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
-            className="w-full"
+            className="w-full flex-1 flex flex-col overflow-hidden"
           >
-            <TabsList className="grid w-full grid-cols-4 rounded-none border-b px-4 py-0 h-10 bg-transparent">
+            <TabsList className="grid w-full grid-cols-4 rounded-none border-b px-2 sm:px-4 py-0 h-9 bg-transparent flex-shrink-0">
               <TabsTrigger
                 value="all"
-                className="text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                className="text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-1"
               >
                 All
               </TabsTrigger>
               <TabsTrigger
                 value="unread"
-                className="text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                className="text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-1"
               >
                 Unread
                 {unreadCount > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1 text-xs">
-                    {unreadCount}
+                  <Badge variant="secondary" className="ml-0.5 h-4 px-1 text-xs">
+                    {unreadCount > 9 ? "9+" : unreadCount}
                   </Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
                 value="alerts"
-                className="text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                className="text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-1"
               >
                 Alerts
               </TabsTrigger>
               <TabsTrigger
                 value="success"
-                className="text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                className="text-xs data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-1"
               >
                 Success
               </TabsTrigger>
@@ -245,8 +245,8 @@ export function NotificationBell() {
 
             {/* Notifications Content */}
             {["all", "unread", "alerts", "success"].map((tab) => (
-              <TabsContent key={tab} value={tab} className="mt-0">
-                <ScrollArea className="h-96">
+              <TabsContent key={tab} value={tab} className="mt-0 flex-1 overflow-hidden">
+                <ScrollArea className="h-full">
                   {!filteredNotifications || filteredNotifications.length === 0 ? (
                     <div className="px-4 py-12 text-center text-sm text-muted-foreground">
                       <Bell className="h-12 w-12 mx-auto opacity-20 mb-2" />
@@ -266,7 +266,7 @@ export function NotificationBell() {
                         <div
                           key={notification.id}
                           className={cn(
-                            "group relative flex gap-3 p-3 rounded-lg border transition-all hover:shadow-sm cursor-pointer",
+                            "group relative flex gap-2 p-2 sm:p-3 rounded-lg border transition-all hover:shadow-sm cursor-pointer",
                             getPriorityColor(notification.priority),
                             !notification.isRead && "border-current opacity-100",
                             notification.isRead && "opacity-75 hover:opacity-100"
@@ -280,22 +280,22 @@ export function NotificationBell() {
 
                           {/* Content */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="font-medium text-sm">
+                            <div className="flex items-start justify-between gap-1 sm:gap-2">
+                              <p className="font-medium text-xs sm:text-sm truncate">
                                 {typeof notification.title === "string"
                                   ? notification.title
                                   : "Notification"}
                               </p>
-                              <div className="flex items-center gap-1 flex-shrink-0">
+                              <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                                 {notification.priority && notification.priority !== "low" && (
                                   <Badge
                                     variant="outline"
                                     className={cn(
-                                      "text-xs capitalize",
+                                      "text-xs capitalize whitespace-nowrap",
                                       getPriorityBadgeColor(notification.priority)
                                     )}
                                   >
-                                    {String(notification.priority)}
+                                    {String(notification.priority).substring(0, 3)}
                                   </Badge>
                                 )}
                                 {!notification.isRead && (
@@ -312,13 +312,13 @@ export function NotificationBell() {
                             </p>
 
                             {/* Category & Time */}
-                            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                            <div className="flex items-center justify-between mt-1 text-xs text-muted-foreground gap-1 flex-wrap">
                               {notification.category && (
-                                <span className="px-1.5 py-0.5 bg-muted rounded inline-block">
+                                <span className="px-1.5 py-0.5 bg-muted rounded text-xs truncate">
                                   {String(notification.category)}
                                 </span>
                               )}
-                              <span className="ml-auto flex-shrink-0">
+                              <span className="ml-auto flex-shrink-0 whitespace-nowrap">
                                 {notification.createdAt
                                   ? formatDistanceToNow(new Date(notification.createdAt), {
                                       addSuffix: true,

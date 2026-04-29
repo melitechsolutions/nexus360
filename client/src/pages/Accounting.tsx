@@ -22,9 +22,9 @@ export default function Accounting() {
   });
 
   // Fetch accounting data from backend
-  const { data: invoices = [] } = trpc.invoices.list.useQuery();
-  const { data: payments = [] } = trpc.payments.list.useQuery();
-  const { data: expenses = [] } = trpc.expenses.list.useQuery();
+  const { data: invoices = [] } = trpc.invoices.list.useQuery({});
+  const { data: payments = [] } = trpc.payments.list.useQuery({});
+  const { data: expenses = [] } = trpc.expenses.list.useQuery({});
 
   // Calculate financial metrics
   useEffect(() => {
@@ -188,11 +188,11 @@ export default function Accounting() {
             <div className="grid gap-4 md:grid-cols-4">
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-bold">KES {financialData.totalRevenue.toLocaleString('en-KE', { maximumFractionDigits: 0 })}</p>
+                <p className="text-2xl font-bold">Ksh {financialData.totalRevenue.toLocaleString('en-KE', { maximumFractionDigits: 0 })}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">Total Expenses</p>
-                <p className="text-2xl font-bold">KES {(financialData.totalRevenue - financialData.netProfit).toLocaleString('en-KE', { maximumFractionDigits: 0 })}</p>
+                <p className="text-2xl font-bold">Ksh {(financialData.totalRevenue - financialData.netProfit).toLocaleString('en-KE', { maximumFractionDigits: 0 })}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">Outstanding Invoices</p>
@@ -201,7 +201,7 @@ export default function Accounting() {
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">Net Profit</p>
                 <p className={`text-2xl font-bold ${financialData.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  KES {financialData.netProfit.toLocaleString('en-KE', { maximumFractionDigits: 0 })}
+                  Ksh {financialData.netProfit.toLocaleString('en-KE', { maximumFractionDigits: 0 })}
                 </p>
               </div>
             </div>

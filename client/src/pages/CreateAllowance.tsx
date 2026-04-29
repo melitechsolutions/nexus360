@@ -41,7 +41,7 @@ export default function CreateAllowance() {
     notes: "",
   });
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
 
   const createMutation = trpc.payroll.allowances.create.useMutation({
     onSuccess: () => {

@@ -9,7 +9,7 @@ import { trpc } from "@/lib/trpc";
 import { Loader2, TrendingUp, TrendingDown } from "lucide-react";
 
 export function KPICards() {
-  const { data: kpiData, isLoading } = trpc.analytics.kpiSummary.useQuery();
+  const { data: kpiData, isLoading } = trpc.analytics.kpiSummary.useQuery({});
 
   if (isLoading) {
     return (
@@ -119,7 +119,7 @@ export function FinancialSummaryCard() {
         <CardDescription>Current month overview</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-600">Total Invoiced</p>
             <p className="text-2xl font-bold text-gray-900">
@@ -160,7 +160,7 @@ export function FinancialSummaryCard() {
  * Invoice Metrics Card
  */
 export function InvoiceMetricsCard() {
-  const { data: metrics, isLoading } = trpc.analytics.invoiceMetrics.useQuery();
+  const { data: metrics, isLoading } = trpc.analytics.invoiceMetrics.useQuery({});
 
   if (isLoading) {
     return (
@@ -213,7 +213,7 @@ export function InvoiceMetricsCard() {
  * Project Status Distribution
  */
 export function ProjectStatusCard() {
-  const { data: distribution, isLoading } = trpc.analytics.projectStatusDistribution.useQuery();
+  const { data: distribution, isLoading } = trpc.analytics.projectStatusDistribution.useQuery({});
 
   if (isLoading) {
     return (
@@ -278,7 +278,7 @@ export function ProjectStatusCard() {
  * Client Distribution Card
  */
 export function ClientDistributionCard() {
-  const { data: distribution, isLoading } = trpc.analytics.clientDistribution.useQuery();
+  const { data: distribution, isLoading } = trpc.analytics.clientDistribution.useQuery({});
 
   if (isLoading) {
     return (

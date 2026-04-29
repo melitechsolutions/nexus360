@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar, Clock, ArrowLeft, Search, Tag, User } from "lucide-react";
 
 export default function Blog() {
-  const { data: posts } = trpc.websiteAdmin.publicBlogPosts.useQuery();
+  const { data: posts } = trpc.websiteAdmin.publicBlogPosts.useQuery({});
   const [selectedPost, setSelectedPost] = useState<any | null>(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");

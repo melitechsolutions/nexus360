@@ -46,7 +46,7 @@ export function ProjectTeamSelector({ projectId, onMemberAdded, onMemberRemoved 
     endDate: "",
   });
 
-  const { data: employees = [], isLoading: employeesLoading } = trpc.employees.list.useQuery();
+  const { data: employees = [], isLoading: employeesLoading } = trpc.employees.list.useQuery({});
   const { data: teamMembers = [], isLoading: teamLoading, refetch: refetchTeam } = trpc.projects.teamMembers.list.useQuery({ projectId });
 
   const addMemberMutation = trpc.projects.teamMembers.create.useMutation({

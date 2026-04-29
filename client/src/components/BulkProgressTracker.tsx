@@ -72,7 +72,7 @@ export default function BulkProgressTracker({
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg p-3 border">
             <p className="text-xs text-muted-foreground">Processed</p>
             <p className="text-lg font-bold">{currentItem}</p>

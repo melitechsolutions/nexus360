@@ -52,7 +52,7 @@ export function NotificationCenter() {
     limit: 10,
   });
 
-  const { data: unreadCount = 0 } = trpc.notifications.unreadCount.useQuery();
+  const { data: unreadCount = 0 } = trpc.notifications.unreadCount.useQuery({});
 
   // Subscribe to real-time notifications
   const { isConnected, reconnect } = useNotificationSubscription({

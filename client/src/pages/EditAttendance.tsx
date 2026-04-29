@@ -36,7 +36,7 @@ export default function EditAttendance() {
     { enabled: !!id }
   );
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
 
   useEffect(() => {
     if (attendance) {
@@ -251,3 +251,4 @@ export default function EditAttendance() {
     </ModuleLayout>
   );
 }
+

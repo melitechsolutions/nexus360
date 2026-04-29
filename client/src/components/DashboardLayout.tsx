@@ -123,7 +123,6 @@ const NAV_SUPER_ADMIN: NavItem[] = [
     { title: "User Management", href: "/admin/management", icon: UserCog },    
     { title: "Backups", href: "/admin/backups", icon: Settings },
     { title: "Cron Jobs", href: "/admin/cron-jobs", icon: Timer },
-    { title: "Email Templates", href: "/admin/email-templates", icon: Mail },
     { title: "Approvals", href: "/approvals", icon: CheckSquare },
     { title: "Audit Logs", href: "/audit-logs", icon: BookOpen },
     { title: "System Health", href: "/system-health", icon: Activity },
@@ -140,77 +139,60 @@ const NAV_SUPER_ADMIN: NavItem[] = [
   { title: "Customers", icon: Users, children: [
     { title: "Clients", href: "/clients", icon: Users },
     { title: "Contacts", href: "/contacts", icon: BookOpen },
-    { title: "Client Users", href: "/admin/management", icon: UserCog },
   ]},
   { title: "Projects", icon: FolderKanban, children: [
     { title: "Projects", href: "/projects", icon: FolderKanban },
     { title: "Milestones", href: "/project-milestones", icon: CheckSquare },
   ]},
-  { title: "Utilities", icon: Wrench, children: [
-    { title: "Tasks", href: "/tasks", icon: CheckSquare },
-    { title: "Document Management", href: "/documents", icon: FileText },
-  ]},
-  { title: "Leads", href: "/leads", icon: Phone },
+  { title: "Tasks", href: "/tasks", icon: CheckSquare },  
   { title: "Sales", icon: TrendingUp, children: [
     { title: "Invoices", href: "/invoices", icon: FileText },
-    { title: "Payments", href: "/payments", icon: DollarSign },
+    { title: "Recurring Invoices", href: "/recurring-invoices", icon: FileText },
     { title: "Estimates", href: "/estimates", icon: FileText },
     { title: "Receipts", href: "/receipts", icon: Receipt },
-    { title: "Subscriptions", href: "/subscriptions", icon: Layers },
     { title: "Credit Notes", href: "/credit-notes", icon: FileText },
     { title: "Debit Notes", href: "/debit-notes", icon: FileText },
-    { title: "Products", href: "/products", icon: Package },
+    { title: "Leads", href: "/leads", icon: Phone },
+    { title: "Subscriptions", href: "/subscriptions", icon: Layers },
+    { title: "Proposals", href: "/proposals", icon: Pencil },
+    { title: "Contracts", href: "/contracts", icon: FileText },
+    { title: "Quotations", href: "/quotations", icon: FileText },
+  ]},
+  { title: "Accounting", icon: CreditCard, children: [
+    { title: "Payments", href: "/payments", icon: DollarSign },
     { title: "Expenses", href: "/expenses", icon: Receipt },
     { title: "Recurring Expenses", href: "/recurring-expenses", icon: Receipt },
-    { title: "Recurring Invoices", href: "/recurring-invoices", icon: FileText },
-    { title: "Invoice Templates", href: "/invoices/templates", icon: StickyNote },
-    { title: "Estimate Templates", href: "/estimates/templates", icon: StickyNote },
-    { title: "Receipt Templates", href: "/receipts/templates", icon: StickyNote },
+    { title: "Chart of Accounts", href: "/chart-of-accounts", icon: BarChart3 },
+    { title: "Bank Reconciliation", href: "/bank-reconciliation", icon: Wallet },
+    { title: "Budgets", href: "/budgets", icon: PiggyBank },
+    { title: "Financial Dashboard", href: "/financial-dashboard", icon: CreditCard },
+    { title: "Forecasting", href: "/forecasting", icon: TrendingUp },
   ]},
   { title: "Purchasing", icon: ShoppingCart, children: [
     { title: "Suppliers", href: "/suppliers", icon: ShoppingCart },
     { title: "Purchase Orders", href: "/lpos", icon: ShoppingCart },
     { title: "Orders", href: "/orders", icon: Inbox },
     { title: "Imprests", href: "/imprests", icon: Wallet },
-    { title: "LPO Templates", href: "/lpos/templates", icon: StickyNote },
   ]},
-  { title: "Inventory", icon: Package, children: [
+  { title: "Inventory & Assets", icon: Package, children: [
+    { title: "Services", href: "/services", icon: Briefcase },
+    { title: "Service Invoices", href: "/service-invoices", icon: FileText },
     { title: "Products", href: "/products", icon: Package },
     { title: "Stock", href: "/inventory", icon: Package },
     { title: "Delivery Notes", href: "/delivery-notes", icon: FileText },
     { title: "GRNs", href: "/grn", icon: Package },
-  ]},
-  { title: "Services", icon: Briefcase, children: [
-    { title: "Services", href: "/services", icon: Briefcase },
-    { title: "Service Templates", href: "/service-templates", icon: Briefcase },
-    { title: "Service Invoices", href: "/service-invoices", icon: FileText },
-  ]},
-  { title: "Proposals", icon: Pencil, children: [
-    { title: "Proposals", href: "/proposals", icon: Pencil },
-    { title: "Templates", href: "/proposals/templates", icon: FileText },
-    { title: "Quotations", href: "/quotations", icon: FileText },
-  ]},
-  { title: "Contracts", icon: FileText, children: [
-    { title: "Contracts", href: "/contracts", icon: FileText },
-    { title: "Templates", href: "/contracts/templates", icon: FileText },
     { title: "Assets", href: "/assets", icon: Package },
     { title: "Warranty", href: "/warranty", icon: Briefcase },
     { title: "Work Orders", href: "/work-orders", icon: Clock },
-  ]},
-  { title: "Accounting", icon: CreditCard, children: [
-    { title: "Chart of Accounts", href: "/chart-of-accounts", icon: BarChart3 },
-    { title: "Bank Reconciliation", href: "/bank-reconciliation", icon: Wallet },
-    { title: "Budgets", href: "/budgets", icon: PiggyBank },
-    { title: "Financial Dashboard", href: "/financial-dashboard", icon: CreditCard },
-    { title: "Forecasting", href: "/forecasting", icon: TrendingUp },
-    { title: "Tax Compliance", href: "/payroll/tax-compliance", icon: Shield },
   ]},
   { title: "HR", icon: UserCog, children: [
     { title: "Employees", href: "/employees", icon: Users },
     { title: "Departments", href: "/departments", icon: Building2 },
     { title: "Attendance", href: "/attendance", icon: Clock },
+    { title: "Time Sheets", href: "/timesheets", icon: Clock },
     { title: "Payroll", href: "/payroll", icon: DollarSign },
     { title: "Payslips", href: "/payslips", icon: DollarSign },
+    { title: "Tax Compliance", href: "/payroll/tax-compliance", icon: Shield },
     { title: "Leave Management", href: "/leave-management", icon: Users },
     { title: "Job Groups", href: "/job-groups", icon: Briefcase },
     { title: "Performance Reviews", href: "/performance-reviews", icon: BarChart3 },
@@ -218,22 +200,35 @@ const NAV_SUPER_ADMIN: NavItem[] = [
     { title: "Holidays", href: "/holidays", icon: CalendarDays },
     { title: "Training", href: "/training", icon: GraduationCap },
   ]},
+  { title: "Communications & Mailing Hub", icon: Mail, children: [
+    { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
+    { title: "Communications", href: "/communications", icon: Pencil },
+    { title: "Email Queue", href: "/admin/email-queue", icon: MailOpen },
+    { title: "SMS Queue", href: "/admin/sms-queue", icon: Phone },
+  ]},
   { title: "Support", icon: Ticket, children: [
     { title: "Tickets", href: "/tickets", icon: Ticket },
     { title: "Canned Responses", href: "/canned-responses", icon: MailOpen },
     { title: "Knowledgebase", href: "/knowledge-base", icon: BookOpen },
   ]},
-  { title: "Communications", icon: Mail, children: [
-    { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
-    { title: "Create Communication", href: "/communications/new", icon: Pencil },
-    { title: "Email Queue", href: "/admin/email-queue", icon: MailOpen },
-    { title: "SMS Queue", href: "/admin/sms-queue", icon: Phone },
+  { title: "Documents & Email Templates", icon: FileText, children: [
+    { title: "Document Management", href: "/documents", icon: FileText },
+    { title: "Invoice Templates", href: "/invoices/templates", icon: StickyNote },
+    { title: "Estimate Templates", href: "/estimates/templates", icon: StickyNote },
+    { title: "Receipt Templates", href: "/receipts/templates", icon: StickyNote },
+    { title: "Proposal Templates", href: "/proposals/templates", icon: FileText },
+    { title: "Service Templates", href: "/service-templates", icon: Briefcase },
+    { title: "LPO Templates", href: "/lpos/templates", icon: StickyNote },
+    { title: "Contract Templates", href: "/contracts/templates", icon: FileText },
+    { title: "Email Templates", href: "/admin/email-templates", icon: Mail },
   ]},
-  { title: "Team", icon: Users, children: [
-    { title: "Team Members", href: "/employees", icon: Users },
-    { title: "Time Sheets", href: "/timesheets", icon: Clock },
+  { title: "Reports", icon: BarChart3, children: [
+    { title: "Sales Reports", href: "/reports/sales", icon: TrendingUp },
+    { title: "Project Reports", href: "/reports/projects", icon: BarChart3 },
+    { title: "Financial Reports", href: "/reports/financial", icon: CreditCard },
+    { title: "Customer Reports", href: "/reports/customers", icon: Users },
+    { title: "Tax Compliance Reports", href: "/reports/tax-compliance", icon: Shield },
   ]},
-  { title: "Reports", href: "/reports", icon: BarChart3 },
   { title: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -324,9 +319,9 @@ const NAV_ADMIN: NavItem[] = [
     { title: "Canned Responses", href: "/canned-responses", icon: MailOpen },
     { title: "Knowledgebase", href: "/knowledge-base", icon: BookOpen },
   ]},
-  { title: "Communications", icon: Mail, children: [
+  { title: "Communications & Mailing Hub", icon: Mail, children: [
     { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
-    { title: "Create Communication", href: "/communications/new", icon: Pencil },
+    { title: "Communications", href: "/communications", icon: Pencil },
   ]},
   { title: "Team", icon: Users, children: [
     { title: "Team Members", href: "/employees", icon: Users },
@@ -365,7 +360,10 @@ const NAV_ACCOUNTANT: NavItem[] = [
     { title: "Tax Compliance", href: "/payroll/tax-compliance", icon: Shield },
     { title: "Forecasting", href: "/forecasting", icon: TrendingUp },
   ]},
-  { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
+  { title: "Communications & Mailing Hub", icon: Mail, children: [
+    { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
+    { title: "Communications", href: "/communications", icon: Pencil },
+  ]},
   { title: "Reports", href: "/reports", icon: BarChart3 },
   { title: "Support", icon: Ticket, children: [
     { title: "Tickets", href: "/tickets", icon: Ticket },
@@ -394,7 +392,10 @@ const NAV_HR: NavItem[] = [
   { title: "Support", icon: Ticket, children: [
     { title: "Tickets", href: "/tickets", icon: Ticket },
   ]},
-  { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
+  { title: "Communications & Mailing Hub", icon: Mail, children: [
+    { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
+    { title: "Communications", href: "/communications", icon: Pencil },
+  ]},
   { title: "Team", icon: Users, children: [
     { title: "Team Members", href: "/employees", icon: Users },
     { title: "Time Sheets", href: "/timesheets", icon: Clock },
@@ -418,11 +419,11 @@ const NAV_PROJECT_MANAGER: NavItem[] = [
     { title: "Invoices", href: "/invoices", icon: FileText },
     { title: "Estimates", href: "/estimates", icon: FileText },
   ]},
-  { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
-  { title: "Team", icon: Users, children: [
-    { title: "Team Members", href: "/employees", icon: Users },
-    { title: "Time Sheets", href: "/timesheets", icon: Clock },
+  { title: "Communications & Mailing Hub", icon: Mail, children: [
+    { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
+    { title: "Communications", href: "/communications", icon: Pencil },
   ]},
+  { title: "Time Sheets", href: "/timesheets", icon: Clock },
   { title: "Reports", href: "/reports", icon: BarChart3 },
   { title: "Support", icon: Ticket, children: [
     { title: "Tickets", href: "/tickets", icon: Ticket },
@@ -455,7 +456,10 @@ const NAV_SALES_MANAGER: NavItem[] = [
     { title: "Products", href: "/products", icon: Package },
     { title: "Services", href: "/services", icon: Briefcase },
   ]},
-  { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
+  { title: "Communications & Mailing Hub", icon: Mail, children: [
+    { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
+    { title: "Communications", href: "/communications", icon: Pencil },
+  ]},
   { title: "Reports", href: "/reports", icon: BarChart3 },
   { title: "Support", icon: Ticket, children: [
     { title: "Tickets", href: "/tickets", icon: Ticket },
@@ -487,7 +491,10 @@ const NAV_PROCUREMENT_MANAGER: NavItem[] = [
     { title: "Expenses", href: "/expenses", icon: Receipt },
     { title: "Budgets", href: "/budgets", icon: PiggyBank },
   ]},
-  { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
+  { title: "Communications & Mailing Hub", icon: Mail, children: [
+    { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
+    { title: "Communications", href: "/communications", icon: Pencil },
+  ]},
   { title: "Reports", href: "/reports", icon: BarChart3 },
   { title: "Settings", href: "/settings", icon: Settings },
 ];
@@ -503,22 +510,22 @@ const NAV_ICT_MANAGER: NavItem[] = [
   ]},
   { title: "ICT Dashboard", href: "/crm/ict", icon: Monitor },
   { title: "Customers", icon: Users, children: [
-    { title: "Client Users", href: "/admin/management", icon: UserCog },
+    { title: "Clients", href: "/clients", icon: Users },
     { title: "Contacts", href: "/contacts", icon: BookOpen },
   ]},
   { title: "Support", icon: Ticket, children: [
     { title: "Tickets", href: "/tickets", icon: Ticket },
+    { title: "Canned Responses", href: "/canned-responses", icon: MailOpen },
     { title: "Knowledgebase", href: "/knowledge-base", icon: BookOpen },
   ]},
-  { title: "Communications", icon: Mail, children: [
+  { title: "Communications & Mailing Hub", icon: Mail, children: [
     { title: "Staff Chat", href: "/staff-chat", icon: MessageSquare },
-    { title: "Create Communication", href: "/communications/new", icon: Pencil },
+    { title: "Communications", href: "/communications", icon: Pencil },
     { title: "Email Queue", href: "/admin/email-queue", icon: MailOpen },
     { title: "SMS Queue", href: "/admin/sms-queue", icon: Phone },
   ]},
   { title: "Contracts", icon: FileText, children: [
     { title: "Assets", href: "/assets", icon: Package },
-    { title: "Templates", href: "/contracts/templates", icon: FileText },
     { title: "Warranty", href: "/warranty", icon: Briefcase },
   ]},
   { title: "Reports", href: "/reports", icon: BarChart3 },
@@ -625,6 +632,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return ctxSettings.leftMenuPosition === 'Expanded';
   });
   const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [ictMenuOpen, setIctMenuOpen] = useState(false);
 
   // Apply leftMenuPosition from DB settings once they load (only if no local override)
   useEffect(() => {
@@ -1207,7 +1215,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         )}
       >
         {/* Header */}
-        <header className="sticky top-0 z-30 flex h-12 sm:h-14 items-center gap-1 sm:gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-2 sm:px-4 md:px-6 flex-shrink-0">
+        {/* Header */}
+        <header className="sticky top-0 z-30 flex h-12 sm:h-14 items-center gap-0.5 sm:gap-1 md:gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-2 sm:px-3 md:px-4 lg:px-6 flex-shrink-0 flex-wrap sm:flex-nowrap">
           {/* Spacer for mobile hamburger button */}
           <div className="w-9 sm:w-10 lg:hidden" />
 
@@ -1218,7 +1227,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hidden lg:inline-flex"
+                  className="h-8 w-8 sm:h-9 sm:w-9 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700 hidden lg:inline-flex"
                   onClick={() => setSidebarPinned((prev: boolean) => !prev)}
                 >
                   <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -1232,7 +1241,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100" onClick={() => navigate("/crm-home")}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700" onClick={() => navigate("/crm-home")}>
                   <Home className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </TooltipTrigger>
@@ -1272,7 +1281,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-amber-500 dark:text-slate-400 dark:hover:text-amber-400">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-600 hover:text-amber-600 hover:bg-amber-50 dark:text-slate-400 dark:hover:text-amber-400 dark:hover:bg-amber-950/30">
                         <Star className={cn("h-4 w-4 sm:h-5 sm:w-5", favoritesData.length > 0 && "fill-amber-400 text-amber-400")} />
                       </Button>
                     </SheetTrigger>
@@ -1355,7 +1364,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className={cn("h-8 sm:h-9 px-2 text-slate-500 dark:text-slate-400 gap-1 font-mono text-xs", timerRunning && "text-green-600 dark:text-green-400")}>
+                      <Button variant="ghost" size="sm" className={cn("h-8 sm:h-9 px-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700 gap-1 font-mono text-xs", timerRunning && "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30")}>
                         <Timer className="h-4 w-4 sm:h-5 sm:w-5" />
                         <span className="hidden sm:inline">{formatTimer(timerSeconds)}</span>
                       </Button>
@@ -1408,7 +1417,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700">
                         <AlarmClock className="h-4 w-4 sm:h-5 sm:w-5" />
                       </Button>
                     </SheetTrigger>
@@ -1457,7 +1466,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               {/* Calendar */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100" onClick={() => navigate("/calendar")}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700" onClick={() => navigate("/calendar")}>
                     <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </TooltipTrigger>
@@ -1467,7 +1476,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               {/* Messages */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100" onClick={() => navigate("/staff-chat")}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700" onClick={() => navigate("/staff-chat")}>
                     <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </TooltipTrigger>
@@ -1477,19 +1486,125 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               {/* Settings */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100" onClick={() => navigate("/settings")}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700" onClick={() => navigate("/settings")}>
                     <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent><p>Settings</p></TooltipContent>
               </Tooltip>
 
+              {/* ICT Manager Menu (only for ict_manager role) */}
+              {user?.role === "ict_manager" && (
+                <Sheet open={ictMenuOpen} onOpenChange={setIctMenuOpen}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700">
+                          <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+                        </Button>
+                      </SheetTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent><p>ICT Menu</p></TooltipContent>
+                  </Tooltip>
+                  <SheetContent side="right" className="w-[300px] p-0">
+                    {/* Header */}
+                    <div className="bg-teal-600 text-white px-4 py-4 flex items-center gap-3">
+                      <Wrench className="h-5 w-5" />
+                      <SheetTitle className="text-white m-0">ICT Manager</SheetTitle>
+                    </div>
+                    {/* Navigation Items */}
+                    <ScrollArea className="h-[calc(100vh-70px)]">
+                      <nav className="space-y-1 py-3">
+                        {NAV_ICT_MANAGER.map((item) => {
+                          const Icon = item.icon;
+                          const isExpanded = expandedItems.includes(item.title);
+                          const hasChildren = (item.children || []).length > 0;
+                          const isItemActive = isActive(item.href) || (item.children || []).some((child) => isActive(child.href));
+
+                          if (hasChildren) {
+                            return (
+                              <div key={item.title}>
+                                <button
+                                  onClick={() => toggleExpanded(item.title)}
+                                  className={cn(
+                                    "w-full flex items-center justify-between px-4 py-2 text-sm rounded-none transition-colors",
+                                    "hover:bg-teal-50 dark:hover:bg-teal-950/30",
+                                    isItemActive && "bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-300 font-medium",
+                                    "text-slate-900 dark:text-slate-100"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {Icon && <Icon className="h-4 w-4" />}
+                                    <span>{item.title}</span>
+                                  </div>
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-4 w-4 flex-shrink-0" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                                  )}
+                                </button>
+                                {isExpanded && (
+                                  <div className="mt-1 space-y-1">
+                                    {item.children?.map((child) => {
+                                      const ChildIcon = child.icon;
+                                      const isChildActive = isActive(child.href);
+                                      return (
+                                        <button
+                                          key={child.title}
+                                          onClick={() => {
+                                            if (child.href) navigate(child.href);
+                                            setIctMenuOpen(false);
+                                          }}
+                                          className={cn(
+                                            "w-full text-left px-4 py-2 text-sm flex items-center gap-3 rounded-none transition-colors",
+                                            "hover:bg-teal-50 dark:hover:bg-teal-950/30",
+                                            isChildActive && "bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-medium",
+                                            "text-slate-900 dark:text-slate-100",
+                                            "pl-12"
+                                          )}
+                                        >
+                                          {ChildIcon && <ChildIcon className="h-3.5 w-3.5" />}
+                                          {child.title}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <button
+                              key={item.title}
+                              onClick={() => {
+                                if (item.href) navigate(item.href);
+                                setIctMenuOpen(false);
+                              }}
+                              className={cn(
+                                "w-full text-left px-4 py-2 text-sm flex items-center gap-3 rounded-none transition-colors",
+                                "hover:bg-teal-50 dark:hover:bg-teal-950/30",
+                                isItemActive && "bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-300 font-medium",
+                                "text-slate-900 dark:text-slate-100"
+                              )}
+                            >
+                              {Icon && <Icon className="h-4 w-4" />}
+                              <span>{item.title}</span>
+                            </button>
+                          );
+                        })}
+                      </nav>
+                    </ScrollArea>
+                  </SheetContent>
+                </Sheet>
+              )}
+
               {/* Quick Create (Plus) */}
               <DropdownMenu>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30">
                         <Plus className="h-5 w-5 sm:h-6 sm:w-6" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -1522,7 +1637,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-700">
                         <Globe className="h-4 w-4 sm:h-5 sm:w-5" />
                       </Button>
                     </DropdownMenuTrigger>

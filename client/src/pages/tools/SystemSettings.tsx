@@ -73,7 +73,7 @@ export default function SystemSettings() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch system settings
-  const { data: fetchedSettings, isLoading: isFetchingSettings } = trpc.settings.getAll.useQuery();
+  const { data: fetchedSettings, isLoading: isFetchingSettings } = trpc.settings.getAll.useQuery({});
 
   const saveMutation = trpc.settings.set.useMutation({
     onSuccess: () => {
@@ -489,3 +489,4 @@ export default function SystemSettings() {
     </ModuleLayout>
   );
 }
+

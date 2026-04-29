@@ -220,7 +220,7 @@ export default function LocalPurchaseOrdersPage() {
           <CardTitle className="text-lg">Search & Filter</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="search">Search LPOs</Label>
               <div className="flex gap-2">
@@ -370,7 +370,7 @@ export default function LocalPurchaseOrdersPage() {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="vendor">Vendor Name *</Label>
                 <Input
@@ -492,7 +492,7 @@ export default function LocalPurchaseOrdersPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="delivery">Expected Delivery</Label>
                 <Input
@@ -559,7 +559,7 @@ export default function LocalPurchaseOrdersPage() {
 
           {selectedLPO && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">LPO Number</p>
                   <p className="font-mono font-semibold">{selectedLPO.lpoNumber}</p>

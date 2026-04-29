@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { CreditCard, Loader2 } from "lucide-react";
 
 export default function StripeConfig() {
-  const statusQuery = trpc.stripe.getStatus.useQuery();
+  const statusQuery = trpc.stripe.getStatus.useQuery({});
   const txQuery = trpc.stripe.getRecentTransactions.useQuery({ limit: 10 });
 
   if (statusQuery.isLoading || txQuery.isLoading) {
@@ -95,3 +95,4 @@ export default function StripeConfig() {
     </ModuleLayout>
   );
 }
+

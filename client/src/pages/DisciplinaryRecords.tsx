@@ -35,12 +35,12 @@ export default function DisciplinaryRecordsPage() {
   const [editing, setEditing] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
 
-  const employeesQ = trpc.employees.list.useQuery();
+  const employeesQ = trpc.employees.list.useQuery({});
   const listQ = trpc.disciplinary.list.useQuery({
     actionType: filterAction === "all" ? undefined : filterAction,
     status: filterStatus === "all" ? undefined : filterStatus,
   });
-  const statsQ = trpc.disciplinary.stats.useQuery();
+  const statsQ = trpc.disciplinary.stats.useQuery({});
   const createMut = trpc.disciplinary.create.useMutation({ onSuccess() { toast.success("Record created"); listQ.refetch(); statsQ.refetch(); closeForm(); } });
   const updateMut = trpc.disciplinary.update.useMutation({ onSuccess() { toast.success("Record updated"); listQ.refetch(); statsQ.refetch(); closeForm(); } });
   const deleteMut = trpc.disciplinary.delete.useMutation({ onSuccess() { toast.success("Record deleted"); listQ.refetch(); statsQ.refetch(); } });
@@ -211,3 +211,4 @@ export default function DisciplinaryRecordsPage() {
     </ModuleLayout>
   );
 }
+

@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { DollarSign, Loader2 } from "lucide-react";
+import { getPaymentMethodOptions } from "@/const/paymentMethods";
 
 interface ExpenseFormProps {
   onSuccess?: () => void;
@@ -34,10 +35,10 @@ export function ExpenseForm({ onSuccess, onCancel, initialData }: ExpenseFormPro
   });
 
   // Fetch Chart of Accounts
-  const { data: chartOfAccounts, isLoading: isLoadingCOA } = trpc.chartOfAccounts.list.useQuery();
+  const { data: chartOfAccounts, isLoading: isLoadingCOA } = trpc.chartOfAccounts.list.useQuery({});
 
   // Fetch Budget Allocations
-  const { data: budgetAllocations, isLoading: isLoadingBudgets } = trpc.expenses.getAvailableBudgetAllocations.useQuery();
+  const { data: budgetAllocations, isLoading: isLoadingBudgets } = trpc.expenses.getAvailableBudgetAllocations.useQuery({});
 
   const createExpenseMutation = trpc.expenses.create.useMutation({
     onSuccess: () => {
@@ -220,11 +221,11 @@ export function ExpenseForm({ onSuccess, onCancel, initialData }: ExpenseFormPro
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="check">Check</SelectItem>
-                  <SelectItem value="credit_card">Credit Card</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                  {getPaymentMethodOptions().map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

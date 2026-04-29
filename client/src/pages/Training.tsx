@@ -42,10 +42,10 @@ export default function Training() {
     location: "", isOnline: false, isMandatory: false,
   });
 
-  const programs = trpc.training.listPrograms.useQuery();
+  const programs = trpc.training.listPrograms.useQuery({});
   const programDetail = trpc.training.getProgram.useQuery({ id: selectedProgram! }, { enabled: !!selectedProgram });
-  const stats = trpc.training.stats.useQuery();
-  const employees = trpc.employees.list.useQuery();
+  const stats = trpc.training.stats.useQuery({});
+  const employees = trpc.employees.list.useQuery({});
   const utils = trpc.useUtils();
 
   const createProgram = trpc.training.createProgram.useMutation({
@@ -319,3 +319,4 @@ export default function Training() {
     </ModuleLayout>
   );
 }
+

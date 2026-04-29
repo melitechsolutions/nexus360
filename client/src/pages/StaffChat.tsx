@@ -75,7 +75,7 @@ export default function StaffChat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get current user info
-  const { data: profileData } = trpc.auth.me.useQuery();
+  const { data: profileData } = trpc.auth.me.useQuery({});
   const currentUserId = profileData?.id || "";
   const currentUserName = profileData?.name || profileData?.email || "Me";
 
@@ -245,7 +245,13 @@ export default function StaffChat() {
 
   const getPrivateChatName = (channel: any) => {
     if (channel.type !== "private") return channel.name;
-    const memberIds = (channel.members as string[]) || [];
+    // Ensure members is always an array
+    let memberIds: string[] = [];
+    if (typeof channel.members === "string") {
+      memberIds = channel.members.split(",").map((m: string) => m.trim()).filter(Boolean);
+    } else if (Array.isArray(channel.members)) {
+      memberIds = channel.members;
+    }
     const otherId = memberIds.find((id: string) => id !== currentUserId);
     if (otherId) {
       const other = members.find((m: any) => m.userId === otherId);
@@ -859,3 +865,4 @@ export default function StaffChat() {
     </ModuleLayout>
   );
 }
+

@@ -31,7 +31,7 @@ export default function CreateTicket() {
     requestedDueDate: "",
   });
 
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
 
   const createMutation = trpc.tickets.create.useMutation({
     onSuccess: (data: any) => {

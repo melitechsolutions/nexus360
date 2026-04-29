@@ -23,6 +23,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Receipt, ArrowLeft, Trash2, Download, Loader2, AlertCircle, Plus, ChevronDown, ChevronUp, Save } from "lucide-react";
 import { APP_TITLE } from "@/const";
+import { getPaymentMethodOptions } from "@/const/paymentMethods";
 import { useRequireFeature } from "@/lib/permissions";
 import { Spinner } from "@/components/ui/spinner";
 import { useCompanyInfo } from "@/hooks/useCompanyInfo";
@@ -116,10 +117,10 @@ export default function EditExpense() {
   });
 
   // Fetch available budget allocations
-  const { data: budgetAllocations = [] } = trpc.expenses.getAvailableBudgetAllocations.useQuery();
+  const { data: budgetAllocations = [] } = trpc.expenses.getAvailableBudgetAllocations.useQuery({});
 
   // Fetch Chart of Accounts
-  const { data: chartOfAccounts = [] } = trpc.chartOfAccounts.list.useQuery();
+  const { data: chartOfAccounts = [] } = trpc.chartOfAccounts.list.useQuery({});
 
   // Line item helpers
   const updateLineItem = (id: string, field: keyof ExpenseLineItem, value: any) => {
@@ -394,11 +395,11 @@ export default function EditExpense() {
                 <Select value={formData.paymentMethod} onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}>
                   <SelectTrigger className="max-w-xs"><SelectValue placeholder="Select method" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="cheque">Cheque</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    {getPaymentMethodOptions().map((method) => (
+                      <SelectItem key={method.value} value={method.value}>
+                        {method.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -664,3 +665,4 @@ export default function EditExpense() {
     </ModuleLayout>
   );
 }
+

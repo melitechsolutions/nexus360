@@ -76,7 +76,7 @@ export default function EnhancedPasswordChange() {
   });
 
   // Fetch password policy
-  const { data: policyData } = trpc.settings.getPasswordPolicy.useQuery();
+  const { data: policyData } = trpc.settings.getPasswordPolicy.useQuery({});
 
   useEffect(() => {
     if (policyData) {
@@ -588,3 +588,4 @@ export default function EnhancedPasswordChange() {
     </ModuleLayout>
   );
 }
+

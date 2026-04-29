@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Smartphone, Loader2 } from "lucide-react";
 
 export default function MpesaConfig() {
-  const statusQuery = trpc.mpesa.getStatus.useQuery();
+  const statusQuery = trpc.mpesa.getStatus.useQuery({});
   const historyQuery = trpc.mpesa.getTransactionHistory.useQuery({ limit: 10 });
 
   if (statusQuery.isLoading || historyQuery.isLoading) {
@@ -95,3 +95,4 @@ export default function MpesaConfig() {
     </ModuleLayout>
   );
 }
+

@@ -67,7 +67,7 @@ export default function UnifiedLanding() {
   });
 
   // Fetch dashboard metrics
-  const { data: rawDashboardMetrics } = trpc.dashboard.metrics.useQuery();
+  const { data: rawDashboardMetrics } = trpc.dashboard.metrics.useQuery({});
   
   // Convert frozen Drizzle objects to plain objects to avoid React error #306
   const dashboardMetrics = rawDashboardMetrics ? JSON.parse(JSON.stringify(rawDashboardMetrics)) : null;
@@ -148,7 +148,7 @@ export default function UnifiedLanding() {
         icon: <DollarSign className="w-8 h-8" />,
         href: "/payments",
         color: "from-emerald-500 to-emerald-600",
-        stats: { label: "This Month", value: `KES ${(metrics.monthlyRevenue || 0).toLocaleString()}` },
+        stats: { label: "This Month", value: `Ksh ${(metrics.monthlyRevenue || 0).toLocaleString()}` },
       },
     ];
 
@@ -536,3 +536,4 @@ export default function UnifiedLanding() {
     </DashboardLayout>
   );
 }
+

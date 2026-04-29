@@ -61,9 +61,9 @@ export default function BackupManagement() {
   // ─── Queries ───────────────────────────────────────────────
   const stats = trpc.sysAdmin.getBackupStats.useQuery(undefined, { refetchInterval: 30000 });
   const history = trpc.sysAdmin.listHistory.useQuery({ limit: 100 });
-  const schedules = trpc.sysAdmin.listSchedules.useQuery();
-  const tables = trpc.sysAdmin.listTables.useQuery();
-  const orgs = trpc.sysAdmin.listOrganizations.useQuery();
+  const schedules = trpc.sysAdmin.listSchedules.useQuery({});
+  const tables = trpc.sysAdmin.listTables.useQuery({});
+  const orgs = trpc.sysAdmin.listOrganizations.useQuery({});
 
   // ─── Mutations ─────────────────────────────────────────────
   const createBackup = trpc.sysAdmin.createBackup.useMutation();

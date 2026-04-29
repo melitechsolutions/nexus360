@@ -41,7 +41,7 @@ export default function AutomationWorkflows() {
         <div className="bg-red-50 text-red-700 p-4 rounded-lg">{error.message}</div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="bg-white p-4 rounded-lg shadow">
               <div className="text-sm text-gray-600">Total Workflows</div>
               <div className="text-2xl font-bold">{rules.length}</div>
@@ -91,7 +91,7 @@ export default function AutomationWorkflows() {
                       )}
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                     <div>
                       <div className="text-gray-600">Executions</div>
                       <div className="font-semibold">{workflow.executions ?? workflow.executionCount ?? 0}</div>

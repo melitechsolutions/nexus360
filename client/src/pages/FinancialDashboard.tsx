@@ -32,7 +32,7 @@ export default function FinancialDashboard() {
   const [isExporting, setIsExporting] = useState(false);
 
   // Fetch financial data
-  const { data: statsData, isLoading: isStatsLoading } = trpc.dashboard.stats.useQuery();
+  const { data: statsData, isLoading: isStatsLoading } = trpc.dashboard.stats.useQuery({});
   const { data: invoicesData = [], isLoading: isInvoicesLoading } = trpc.invoices.list.useQuery({ limit: 100 });
   const { data: expensesData = [], isLoading: isExpensesLoading } = trpc.expenses.list.useQuery({ limit: 100 });
 
@@ -325,3 +325,4 @@ export default function FinancialDashboard() {
     </ModuleLayout>
   );
 }
+

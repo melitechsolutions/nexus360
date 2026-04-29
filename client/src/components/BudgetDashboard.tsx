@@ -34,8 +34,8 @@ export function BudgetDashboard() {
 
   const summaryQuery = trpc.budget.dashboard.summary.useQuery({ year: selectedYear });
   const byDepartmentQuery = trpc.budget.dashboard.byDepartment.useQuery({ year: selectedYear });
-  const byProjectQuery = trpc.budget.dashboard.byProject.useQuery();
-  const alertsQuery = trpc.budget.dashboard.alerts.useQuery();
+  const byProjectQuery = trpc.budget.dashboard.byProject.useQuery({});
+  const alertsQuery = trpc.budget.dashboard.alerts.useQuery({});
 
   const summary = summaryQuery.data as BudgetSummary | undefined;
 
@@ -318,7 +318,7 @@ export function BudgetDashboard() {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                     <div>
                       <p className="text-gray-600">Budgeted</p>
                       <p className="font-semibold text-gray-900">

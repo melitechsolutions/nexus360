@@ -17,8 +17,8 @@ export default function Procurement() {
   });
 
   // Fetch procurement data from backend
-  const { data: requests = [] } = trpc.procurement.list.useQuery();
-  const { data: purchaseOrders = [] } = trpc.lpo.list.useQuery();
+  const { data: requests = [] } = trpc.procurement.list.useQuery({});
+  const { data: purchaseOrders = [] } = trpc.lpo.list.useQuery({});
   const { data: vendors = [] } = trpc.suppliers?.list?.useQuery?.() || { data: [] };
 
   // Calculate procurement metrics
@@ -164,3 +164,4 @@ export default function Procurement() {
     </ModuleLayout>
   );
 }
+

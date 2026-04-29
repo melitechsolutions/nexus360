@@ -162,6 +162,7 @@ const BecomeAPartner = React.lazy(() => import("./pages/BecomeAPartner"));
 const BookADemo = React.lazy(() => import("./pages/BookADemo"));
 const HRAutomation = React.lazy(() => import("./pages/HRAutomation"));
 const HRPayrollManagement = React.lazy(() => import("./pages/HRPayrollManagement"));
+const PayrollApprovals = React.lazy(() => import("./pages/PayrollApprovals"));
 const CreateSalaryStructure = React.lazy(() => import("./pages/CreateSalaryStructure"));
 const CreateAllowance = React.lazy(() => import("./pages/CreateAllowance"));
 const CreateDeduction = React.lazy(() => import("./pages/CreateDeduction"));
@@ -181,6 +182,10 @@ const PaymentReports = React.lazy(() => import("./pages/PaymentReports"));
 const TaxComplianceReportsPage = React.lazy(() => import("./pages/TaxComplianceReports"));
 const SalesReportsPage = React.lazy(() => import("./pages/SalesReports"));
 const FinancialReportsPage = React.lazy(() => import("./pages/FinancialReports"));
+const CustomerReportsPage = React.lazy(() => import("./pages/CustomerReports"));
+const ProjectReportsPage = React.lazy(() => import("./pages/ProjectReports"));
+const HRReportsPage = React.lazy(() => import("./pages/HRReports"));
+const PayslipManagementPage = React.lazy(() => import("./pages/PayslipManagement"));
 const ImprestsPage = React.lazy(() => import("./pages/Imprests"));
 const BudgetsPage = React.lazy(() => import("./pages/Budgets"));
 const BudgetDetails = React.lazy(() => import("./pages/BudgetDetails"));
@@ -206,6 +211,11 @@ const SystemSettings = React.lazy(() => import("./pages/tools/SystemSettings"));
 const IntegrationGuides = React.lazy(() => import("./pages/tools/IntegrationGuides"));
 const Integrations = React.lazy(() => import("./pages/Integrations"));
 const DepartmentPayrollReports = React.lazy(() => import("./pages/DepartmentPayrollReports"));
+const SalaryStructures = React.lazy(() => import("./pages/SalaryStructures"));
+const AllowancesDeductions = React.lazy(() => import("./pages/AllowancesDeductions"));
+const Benefits = React.lazy(() => import("./pages/Benefits"));
+const TaxInformation = React.lazy(() => import("./pages/TaxInformation"));
+const SubscriptionDetails = React.lazy(() => import("./pages/SubscriptionDetails"));
 const CustomReportBuilder = React.lazy(() => import("./pages/CustomReportBuilder"));
 const Communications = React.lazy(() => import("./pages/Communications"));
 const CreateCommunication = React.lazy(() => import("./pages/CreateCommunication"));
@@ -337,11 +347,13 @@ const MaintenanceAdmin = React.lazy(() => import("./pages/MaintenanceAdmin"));
 const WebsiteAdmin = React.lazy(() => import("./pages/admin/WebsiteAdmin"));
 const Tasks = React.lazy(() => import("./pages/Tasks"));
 const Leads = React.lazy(() => import("./pages/Leads"));
+const LeadsDetails = React.lazy(() => import("./pages/LeadsDetails"));
 const Subscriptions = React.lazy(() => import("./pages/Subscriptions"));
 const KnowledgeBase = React.lazy(() => import("./pages/KnowledgeBase"));
 const Warehouses = React.lazy(() => import("./pages/Warehouses"));
 const Notes = React.lazy(() => import("./pages/Notes"));
 const Timesheets = React.lazy(() => import("./pages/Timesheets"));
+const TimesheetDetails = React.lazy(() => import("./pages/TimesheetDetails"));
 const AuditLogs = React.lazy(() => import("./pages/AuditLogs"));
 
 /*
@@ -541,10 +553,10 @@ function Router() {
 
       {/* Leads Route */}
       <Route path={"/leads"} component={Leads} />
+      <Route path={"/leads/:id"} component={LeadsDetails} />
 
       {/* Subscriptions Route */}
-      <Route path={"/subscriptions"} component={Subscriptions} />
-
+      <Route path={"/subscriptions"} component={Subscriptions} />      <Route path={"\u002fsubscriptions\u002f:id"} component={SubscriptionDetails} />
       {/* Knowledge Base Route */}
       <Route path={"/knowledge-base"} component={KnowledgeBase} />
       <Route path={"/knowledgebase"} component={KnowledgeBase} />
@@ -660,8 +672,14 @@ function Router() {
       
       {/* Payroll Routes - STATIC routes BEFORE dynamic routes */}
       <Route path={"/payroll"} component={HRPayrollManagement} />
+      <Route path={"/payroll/approvals"} component={PayrollApprovals} />
+      <Route path={"/payroll/payslips"} component={PayslipManagementPage} />
       <Route path={"/payroll/kenyan"} component={KenyanPayrollCalculator} />
       <Route path={"/payroll/tax-compliance"} component={TaxComplianceReportsPage} />
+      <Route path={"/payroll/salary-structures"} component={SalaryStructures} />
+      <Route path={"/payroll/allowances-deductions"} component={AllowancesDeductions} />
+      <Route path={"/payroll/benefits"} component={Benefits} />
+      <Route path={"/payroll/tax-information"} component={TaxInformation} />
       <Route path={"/finance/reports"} component={FinancialReportsPage} />
       <Route path={"/imprests"} component={ImprestsPage} />
       <Route path={"/reports/sales"} component={SalesReportsPage} />
@@ -818,6 +836,10 @@ function Router() {
       
       {/* Report Routes */}
       <Route path={"/reports"} component={Reports} />
+      <Route path={"/reports/financial"} component={FinancialReportsPage} />
+      <Route path={"/reports/customers"} component={CustomerReportsPage} />
+      <Route path={"/reports/projects"} component={ProjectReportsPage} />
+      <Route path={"/reports/hr"} component={HRReportsPage} />
       <Route path={"/reports/:id/edit"} component={CustomReportBuilder} />
       <Route path={"/reports/:id"} component={ReportsDetails} />
       

@@ -38,7 +38,7 @@ export default function EditChartOfAccounts() {
   );
 
   // Fetch all accounts to display as parent options
-  const { data: allAccounts = [] } = trpc.chartOfAccounts.list.useQuery();
+  const { data: allAccounts = [] } = trpc.chartOfAccounts.list.useQuery({});
 
   useEffect(() => {
     if (chartOfAccounts) {

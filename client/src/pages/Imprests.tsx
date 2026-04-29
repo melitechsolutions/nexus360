@@ -69,8 +69,8 @@ export default function ImprestsPage() {
 
   // ALL HOOKS MUST BE CALLED BEFORE CONDITIONAL RETURNS
   // Queries - Fetch users/employees for dropdown
-  const { data: imprests = [], isLoading: isLoadingImprests, refetch } = trpc.imprest.list.useQuery();
-  const { data: surrenders = [], refetch: refetchSurrenders } = trpc.imprestSurrender.list.useQuery();
+  const { data: imprests = [], isLoading: isLoadingImprests, refetch } = trpc.imprest.list.useQuery({});
+  const { data: surrenders = [], refetch: refetchSurrenders } = trpc.imprestSurrender.list.useQuery({});
   const { data: employees = [] } = trpc.users.list.useQuery({ limit: 100 });
 
   // Mutations
@@ -662,3 +662,4 @@ export default function ImprestsPage() {
     </ModuleLayout>
   );
 }
+

@@ -99,7 +99,7 @@ export default function ChartOfAccountsDetails() {
             <CardDescription>Code: {account.accountCode}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-slate-600">Account Type</p>
                 <p className="font-semibold capitalize">{account.accountType}</p>

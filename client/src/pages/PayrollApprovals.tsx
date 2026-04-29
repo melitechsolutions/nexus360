@@ -71,7 +71,7 @@ export default function PayrollApprovals() {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
 
-  const { data: rawApprovals = [], isLoading } = trpc.payroll.approvals.list.useQuery();
+  const { data: rawApprovals = [], isLoading } = trpc.payroll.approvals.list.useQuery({});
   const approvals: PayrollApproval[] = JSON.parse(JSON.stringify(rawApprovals)).map((a: any) => ({
     id: a.id,
     payrollId: a.payrollId,
@@ -420,3 +420,4 @@ export default function PayrollApprovals() {
     </ModuleLayout>
   );
 }
+

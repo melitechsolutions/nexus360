@@ -200,13 +200,27 @@ export default function Payslips() {
               <hr />
               <div className="space-y-1">
                 <div className="flex justify-between"><span>Basic Salary</span><span className="font-medium">{formatAmount(payslipDetail.data.basicSalary || 0)}</span></div>
-                {(() => { try { return JSON.parse(payslipDetail.data.allowancesBreakdown || "[]"); } catch { return []; } })().map((a: any, i: number) => (
+                {(() => { 
+                  try { 
+                    const data = JSON.parse(payslipDetail.data.allowancesBreakdown || "[]");
+                    return Array.isArray(data) ? data : [];
+                  } catch { 
+                    return []; 
+                  } 
+                })().map((a: any, i: number) => (
                   <div key={i} className="flex justify-between text-green-600"><span>{a.name}</span><span>+ {formatAmount(a.amount)}</span></div>
                 ))}
                 <div className="flex justify-between font-semibold border-t pt-1"><span>Gross Pay</span><span>{formatAmount(payslipDetail.data.grossPay || 0)}</span></div>
               </div>
               <div className="space-y-1">
-                {(() => { try { return JSON.parse(payslipDetail.data.deductionsBreakdown || "[]"); } catch { return []; } })().map((d: any, i: number) => (
+                {(() => { 
+                  try { 
+                    const data = JSON.parse(payslipDetail.data.deductionsBreakdown || "[]");
+                    return Array.isArray(data) ? data : [];
+                  } catch { 
+                    return []; 
+                  } 
+                })().map((d: any, i: number) => (
                   <div key={i} className="flex justify-between text-red-600"><span>{d.name}</span><span>- {formatAmount(d.amount)}</span></div>
                 ))}
                 <div className="flex justify-between font-semibold border-t pt-1"><span>Total Deductions</span><span className="text-red-600">{formatAmount(payslipDetail.data.totalDeductions || 0)}</span></div>

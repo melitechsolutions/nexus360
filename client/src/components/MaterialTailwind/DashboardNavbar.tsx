@@ -157,14 +157,14 @@ export function DashboardNavbar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="dark:bg-slate-700" />
                 <DropdownMenuItem 
-                  className="cursor-pointer dark:text-slate-300 dark:hover:bg-slate-700"
+                  className="cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
                   onClick={() => setLocationPath("/profile")}
                 >
                   <User className="w-4 h-4 mr-2" />
                   <span>Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  className="cursor-pointer dark:text-slate-300 dark:hover:bg-slate-700"
+                  className="cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
                   onClick={() => setLocationPath("/settings")}
                 >
                   <Settings className="w-4 h-4 mr-2" />
@@ -172,7 +172,7 @@ export function DashboardNavbar() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="dark:bg-slate-700" />
                 <DropdownMenuItem 
-                  className="cursor-pointer text-red-600 dark:text-red-400 dark:hover:bg-slate-700"
+                  className="cursor-pointer text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-slate-700"
                   onClick={() => logout()}
                 >
                   <LogOut className="w-4 h-4 mr-2" />

@@ -17,7 +17,7 @@ export default function CreateBudget() {
   const [amount, setAmount] = useState("");
   const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear().toString());
 
-  const { data: departments } = trpc.departments.list.useQuery();
+  const { data: departments } = trpc.departments.list.useQuery({});
   const { code: currencyCode } = useCurrencySettings();
   const createBudgetMutation = trpc.budgets.create.useMutation({
     onSuccess: () => {

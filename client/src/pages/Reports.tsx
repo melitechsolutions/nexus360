@@ -32,14 +32,14 @@ export default function Reports() {
   const { code: currencyCode } = useCurrencySettings();
 
   // Fetch real data
-  const { data: invoices = [] } = trpc.invoices.list.useQuery();
-  const { data: clients = [] } = trpc.clients.list.useQuery();
-  const { data: payments = [] } = trpc.payments.list.useQuery();
-  const { data: expenses = [] } = trpc.expenses.list.useQuery();
-  const { data: estimates = [] } = trpc.estimates.list.useQuery();
+  const { data: invoices = [] } = trpc.invoices.list.useQuery({});
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
+  const { data: payments = [] } = trpc.payments.list.useQuery({});
+  const { data: expenses = [] } = trpc.expenses.list.useQuery({});
+  const { data: estimates = [] } = trpc.estimates.list.useQuery({});
   const { data: projectsRaw = [] } = trpc.projects.list.useQuery({});
-  const { data: timeEntriesRaw = [] } = trpc.timeEntries.list.useQuery();
-  const { data: employeesRaw = [] } = trpc.employees.list.useQuery();
+  const { data: timeEntriesRaw = [] } = trpc.timeEntries.list.useQuery({});
+  const { data: employeesRaw = [] } = trpc.employees.list.useQuery({});
 
   // Unwrap to prevent React #306
   const inv = useMemo(() => JSON.parse(JSON.stringify(invoices)) as any[], [invoices]);
@@ -660,3 +660,4 @@ export default function Reports() {
     </ModuleLayout>
   );
 }
+

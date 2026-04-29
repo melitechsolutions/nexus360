@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export default function DocumentLibrary() {
-  const docsQuery = trpc.fileStorage.listDocuments.useQuery();
+  const docsQuery = trpc.fileStorage.listDocuments.useQuery({});
   const documents = (docsQuery.data as any[]) ?? [];
 
   return (

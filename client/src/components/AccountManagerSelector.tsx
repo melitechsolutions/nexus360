@@ -23,7 +23,7 @@ export function AccountManagerSelector({ clientId, onSuccess }: AccountManagerSe
   const [selectedUserId, setSelectedUserId] = useState("");
 
   const { data: accountManager, isLoading: accountManagerLoading, refetch: refetchAccountManager } = trpc.clients.getAccountManager.useQuery(clientId);
-  const { data: users = [], isLoading: usersLoading } = trpc.users.listForAssignment.useQuery();
+  const { data: users = [], isLoading: usersLoading } = trpc.users.listForAssignment.useQuery({});
 
   const assignMutation = trpc.clients.assignAccountManager.useMutation({
     onSuccess: () => {

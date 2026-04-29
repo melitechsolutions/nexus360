@@ -258,7 +258,7 @@ export default function CreateCreditNote() {
                 <Input className="col-span-1" type="number" min="0" max="100" value={item.taxRate}
                   onChange={e => updateItem(item.id, "taxRate", parseFloat(e.target.value) || 0)} />
                 <div className="col-span-2 flex items-center text-sm font-medium">
-                  KES {item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  Ksh {item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </div>
                 <div className="col-span-1 flex items-center text-sm text-muted-foreground">
                   {item.taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -272,9 +272,9 @@ export default function CreateCreditNote() {
             ))}
 
             <div className="border-t pt-4 mt-4 space-y-1 text-right">
-              <p className="text-sm">Subtotal: <span className="font-medium">KES {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></p>
-              <p className="text-sm">Tax: <span className="font-medium">KES {totalTax.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></p>
-              <p className="text-lg font-bold">Total: KES {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              <p className="text-sm">Subtotal: <span className="font-medium">Ksh {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></p>
+              <p className="text-sm">Tax: <span className="font-medium">Ksh {totalTax.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></p>
+              <p className="text-lg font-bold">Total: Ksh {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
             </div>
           </CardContent>
         </Card>

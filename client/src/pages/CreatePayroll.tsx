@@ -97,7 +97,7 @@ export default function CreatePayroll() {
   });
   const [calculation, setCalculation] = useState<any>(null);
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
 
   // Auto-calculate when mode is "kenyan" and salary fields change
   useEffect(() => {

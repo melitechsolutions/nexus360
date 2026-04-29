@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Loader2 } from "lucide-react";
 
 const ProcurementManagerDashboard: React.FC = () => {
-  const statsQuery = trpc.procurement.getStats.useQuery();
-  const lpoQuery = trpc.lpo.list.useQuery();
+  const statsQuery = trpc.procurement.getStats.useQuery({});
+  const lpoQuery = trpc.lpo.list.useQuery({});
 
   if (statsQuery.isLoading || lpoQuery.isLoading) {
     return (
@@ -112,3 +112,4 @@ const ProcurementManagerDashboard: React.FC = () => {
 };
 
 export default ProcurementManagerDashboard;
+

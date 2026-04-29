@@ -78,8 +78,8 @@ export default function Invoices() {
   const { visibleColumns, toggleColumn, isVisible, pageSize: colPageSize, updatePageSize, reset } = useColumnVisibility(INVOICE_COLUMNS, "invoices");
 
   // Fetch real data from backend
-  const { data: invoicesData = [], isLoading: isLoadingInvoices } = trpc.invoices.list.useQuery();
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
+  const { data: invoicesData = [], isLoading: isLoadingInvoices } = trpc.invoices.list.useQuery({});
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
   const utils = trpc.useUtils();
   
   // Delete mutation
@@ -556,3 +556,4 @@ export default function Invoices() {
     </ModuleLayout>
   );
 }
+

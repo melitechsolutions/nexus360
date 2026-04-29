@@ -61,8 +61,8 @@ export default function ChartOfAccounts() {
   });
 
   const utils = trpc.useUtils();
-  const { data: accounts = [], isLoading } = trpc.chartOfAccounts.list.useQuery();
-  const { data: summaryData } = trpc.chartOfAccounts.getSummary.useQuery();
+  const { data: accounts = [], isLoading } = trpc.chartOfAccounts.list.useQuery({});
+  const { data: summaryData } = trpc.chartOfAccounts.getSummary.useQuery({});
 
   const createAccountMutation = trpc.chartOfAccounts.create.useMutation({
     onSuccess: () => {
@@ -190,7 +190,7 @@ export default function ChartOfAccounts() {
                   <DialogDescription>Add a new account to your chart of accounts</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="code">Account Code</Label>
                       <Input 

@@ -100,7 +100,7 @@ export default function Contacts() {
 
   const utils = trpc.useUtils();
 
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
   const clientsArr = Array.isArray(clients) ? clients : (clients as any)?.items ?? [];
 
   const listQuery = trpc.contacts.list.useQuery(

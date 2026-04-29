@@ -224,7 +224,7 @@ export default function ProcurementOrdersPage() {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -265,7 +265,7 @@ export default function ProcurementOrdersPage() {
           <CardTitle className="text-lg">Search & Filter</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="search">Search Orders</Label>
               <Input
@@ -415,7 +415,7 @@ export default function ProcurementOrdersPage() {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="supplier">Supplier Name *</Label>
                 <Input
@@ -546,7 +546,7 @@ export default function ProcurementOrdersPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="delivery">Expected Delivery</Label>
                 <Input
@@ -613,7 +613,7 @@ export default function ProcurementOrdersPage() {
 
           {selectedOrder && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Order Number</p>
                   <p className="font-mono font-semibold">{selectedOrder.orderNumber}</p>

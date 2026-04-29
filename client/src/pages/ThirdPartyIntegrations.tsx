@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 export default function ThirdPartyIntegrations() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const listQuery = trpc.thirdPartyIntegrations.listIntegrations.useQuery();
+  const listQuery = trpc.thirdPartyIntegrations.listIntegrations.useQuery({});
   const configureMutation = trpc.thirdPartyIntegrations.configureIntegration.useMutation({
     onSuccess: () => { toast.success("Integration configured"); listQuery.refetch(); },
     onError: (err: any) => toast.error(err.message ?? "Configure failed"),
@@ -117,3 +117,4 @@ export default function ThirdPartyIntegrations() {
     </ModuleLayout>
   );
 }
+

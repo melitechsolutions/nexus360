@@ -40,17 +40,20 @@ export default function ICTDashboard() {
   // Fetch real ICT system metrics
   const { data: systemHealthData, isLoading: healthLoading } = trpc.ictManagement.getSystemHealth.useQuery(undefined, { 
     enabled: allowed,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchOnWindowFocus: false,
+    staleTime: 60000, // Keep data fresh for 60 seconds
   });
   
   const { data: emailQueueData, isLoading: emailLoading } = trpc.ictManagement.getEmailQueueStatus.useQuery(undefined, { 
     enabled: allowed,
-    refetchInterval: 60000,
+    refetchOnWindowFocus: false,
+    staleTime: 60000,
   });
   
   const { data: activeSessionsData, isLoading: sessionsLoading } = trpc.ictManagement.getActiveSessions.useQuery(undefined, { 
     enabled: allowed,
-    refetchInterval: 45000,
+    refetchOnWindowFocus: false,
+    staleTime: 60000,
   });
 
   // Calculate system health percentage from CPU, memory, disk usage

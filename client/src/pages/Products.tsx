@@ -63,7 +63,7 @@ export default function Products() {
   const { visibleColumns, toggleColumn, isVisible, pageSize, updatePageSize, reset } = useColumnVisibility(productColumns, "products");
 
   // Fetch products from backend
-  const { data: products = [], isLoading: isLoadingProducts } = trpc.products.list.useQuery();
+  const { data: products = [], isLoading: isLoadingProducts } = trpc.products.list.useQuery({});
   const utils = trpc.useUtils();
   
   // Delete mutation
@@ -285,3 +285,4 @@ export default function Products() {
     </ModuleLayout>
   );
 }
+

@@ -53,7 +53,7 @@ export function StaffChat() {
     offset: 0,
   });
 
-  const { data: membersData, refetch: refetchMembers } = trpc.staffChat.getMembers.useQuery();
+  const { data: membersData, refetch: refetchMembers } = trpc.staffChat.getMembers.useQuery({});
 
   const sendMessageMutation = trpc.staffChat.sendMessage.useMutation({
     onSuccess: () => {
@@ -327,7 +327,7 @@ export function StaffChat() {
 
             {/* Emoji Picker */}
             {showEmojiPicker && (
-              <div className="grid grid-cols-8 gap-1 p-2 bg-gray-100 rounded">
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1 p-2 bg-gray-100 rounded">
                 {EMOJI_OPTIONS.map((emoji) => (
                   <button
                     key={emoji}

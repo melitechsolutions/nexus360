@@ -64,8 +64,8 @@ export default function EditEmployee() {
   const { data: employee } = trpc.employees.getById.useQuery(employeeId || "", {
     enabled: !!employeeId,
   });
-  const { data: departmentsData = [], isLoading: departmentsLoading } = trpc.departments.list.useQuery();
-  const { data: jobGroupsData = [], isLoading: jobGroupsLoading } = trpc.jobGroups.list.useQuery();
+  const { data: departmentsData = [], isLoading: departmentsLoading } = trpc.departments.list.useQuery({});
+  const { data: jobGroupsData = [], isLoading: jobGroupsLoading } = trpc.jobGroups.list.useQuery({});
 
   // Update form when employee data loads
   useEffect(() => {
@@ -868,3 +868,4 @@ export default function EditEmployee() {
     </ModuleLayout>
   );
 }
+

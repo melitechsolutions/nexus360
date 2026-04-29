@@ -39,7 +39,7 @@ export default function EditOpportunity() {
     enabled: !!opportunityId,
   });
 
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
 
   // Populate form when opportunity data loads
   useEffect(() => {
@@ -325,3 +325,4 @@ export default function EditOpportunity() {
     </ModuleLayout>
   );
 }
+

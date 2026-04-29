@@ -29,7 +29,7 @@ export function RolesManagementPage() {
   const queryClient = useQueryClient();
 
   // Fetch all roles
-  const { data: roles = [], isLoading: rolesLoading } = api.roles.list.useQuery();
+  const { data: roles = [], isLoading: rolesLoading } = api.roles.list.useQuery({});
 
   // Mutations for role management
   const createRoleMutation = api.roles.create.useMutation({
@@ -356,3 +356,4 @@ export function PermissionChecker({ roleId }: { roleId: string }) {
  */
 
 export default SettingsPage;
+

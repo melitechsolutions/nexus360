@@ -40,12 +40,12 @@ export default function HR() {
   const { allowed, isLoading: permissionLoading } = useRequireFeature("hr:view");
 
   // Fetch HR metrics from backend
-  const { data: employeesData = [], isLoading: employeesLoading } = trpc.employees.list.useQuery();
-  const { data: attendanceData = [], isLoading: attendanceLoading } = trpc.attendance.list.useQuery();
-  const { data: payrollData = [], isLoading: payrollLoading } = trpc.payroll.list.useQuery();
-  const { data: leaveData = [], isLoading: leaveLoading } = trpc.leave.list.useQuery();
-  const { data: departmentsData = [], isLoading: departmentsLoading } = trpc.departments.list.useQuery();
-  const { data: jobGroupsData = [], isLoading: jobGroupsLoading } = trpc.jobGroups.list.useQuery();
+  const { data: employeesData = [], isLoading: employeesLoading } = trpc.employees.list.useQuery({});
+  const { data: attendanceData = [], isLoading: attendanceLoading } = trpc.attendance.list.useQuery({});
+  const { data: payrollData = [], isLoading: payrollLoading } = trpc.payroll.list.useQuery({});
+  const { data: leaveData = [], isLoading: leaveLoading } = trpc.leave.list.useQuery({});
+  const { data: departmentsData = [], isLoading: departmentsLoading } = trpc.departments.list.useQuery({});
+  const { data: jobGroupsData = [], isLoading: jobGroupsLoading } = trpc.jobGroups.list.useQuery({});
 
   if (loading || permissionLoading) {
     return (
@@ -293,4 +293,5 @@ export default function HR() {
     </ModuleLayout>
   );
 }
+
 

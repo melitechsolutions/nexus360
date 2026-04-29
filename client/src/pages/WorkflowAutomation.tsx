@@ -101,7 +101,7 @@ export default function WorkflowAutomation() {
       status: "active",
     });
 
-  const { data: templates } = trpc.workflows.getTemplates.useQuery();
+  const { data: templates } = trpc.workflows.getTemplates.useQuery({});
 
   const { mutate: createWorkflow, isPending: isCreating } =
     trpc.workflows.create.useMutation({
@@ -657,3 +657,4 @@ export default function WorkflowAutomation() {
     </ModuleLayout>
   );
 }
+

@@ -32,7 +32,7 @@ export function ProductForm({ onSuccess, onCancel, initialData }: ProductFormPro
     status: initialData?.status || "active",
   });
 
-  const { data: categories = [] } = trpc.products.getCategories.useQuery();
+  const { data: categories = [] } = trpc.products.getCategories.useQuery({});
 
   const createProductMutation = trpc.products.create.useMutation({
     onSuccess: () => {

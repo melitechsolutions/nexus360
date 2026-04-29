@@ -115,7 +115,7 @@ export function ExportModal({ documentType, selectedIds = [], onClose }: ExportM
         <CardContent className="pt-6 space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Format</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Button
                 variant={selectedFormat === "csv" ? "default" : "outline"}
                 onClick={() => setSelectedFormat("csv")}
@@ -169,7 +169,7 @@ export function ExportTemplateSelector({
 }: {
   onSelect: (template: any) => void;
 }) {
-  const { data: templates, isLoading } = trpc.dataExport.getExportTemplates.useQuery();
+  const { data: templates, isLoading } = trpc.dataExport.getExportTemplates.useQuery({});
 
   if (isLoading) {
     return (

@@ -20,7 +20,7 @@ export default function PaymentDetails() {
 
   // Fetch payment from backend
   const { data: paymentData, isLoading } = trpc.payments.getById.useQuery(id || "");
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
   const utils = trpc.useUtils();
 
   const deletePaymentMutation = trpc.payments.delete.useMutation({
@@ -189,3 +189,4 @@ export default function PaymentDetails() {
     </ModuleLayout>
   );
 }
+

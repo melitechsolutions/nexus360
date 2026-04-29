@@ -45,7 +45,7 @@ export default function EditAllowance() {
   });
 
   // Fetch all allowances and find the one matching this id
-  const { data: allowances = [], isLoading: isLoadingData } = trpc.payroll.allowances.list.useQuery();
+  const { data: allowances = [], isLoading: isLoadingData } = trpc.payroll.allowances.list.useQuery({});
   const allowance = allowances.find((a: any) => a.id === id);
 
   useEffect(() => {
@@ -172,3 +172,4 @@ export default function EditAllowance() {
     </ModuleLayout>
   );
 }
+

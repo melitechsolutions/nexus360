@@ -55,7 +55,7 @@ export default function LeaveManagement() {
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
 
   // Fetch real data from backend - ensure we have array
-  const { data: rawData = [], isLoading } = trpc.leave.list.useQuery();
+  const { data: rawData = [], isLoading } = trpc.leave.list.useQuery({});
   const utils = trpc.useUtils();
   const deleteMutation = trpc.leave.delete.useMutation({
     onSuccess: () => { utils.leave.list.invalidate(); },
@@ -303,4 +303,5 @@ export default function LeaveManagement() {
     </ModuleLayout>
   );
 }
+
 

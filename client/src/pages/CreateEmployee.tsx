@@ -24,8 +24,8 @@ export default function CreateEmployee() {
   const utils = trpc.useUtils();
   
   // Fetch departments and job groups from backend
-  const { data: departmentsData = [], isLoading: departmentsLoading } = trpc.departments.list.useQuery();
-  const { data: jobGroupsData = [], isLoading: jobGroupsLoading } = trpc.jobGroups.list.useQuery();
+  const { data: departmentsData = [], isLoading: departmentsLoading } = trpc.departments.list.useQuery({});
+  const { data: jobGroupsData = [], isLoading: jobGroupsLoading } = trpc.jobGroups.list.useQuery({});
   
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);

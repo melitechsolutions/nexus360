@@ -98,7 +98,7 @@ function PermissionsManagement({ users, searchQuery, setSearchQuery }: {
   const [userPermissions, setUserPermissions] = useState<Record<string, Record<string, boolean>>>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data: permissionDefs } = trpc.permissions.getAll.useQuery();
+  const { data: permissionDefs } = trpc.permissions.getAll.useQuery({});
   const { data: userPerms, refetch: refetchUserPerms } = trpc.permissions.getUserPermissions.useQuery(
     selectedUserId || "",
     { enabled: !!selectedUserId }
@@ -437,22 +437,22 @@ export default function AdminManagement() {
   });
 
   // Fetch users list from backend
-  const { data: usersData = [], isLoading: usersLoading, error: usersError, refetch: refetchUsers } = trpc.users.list.useQuery();
+  const { data: usersData = [], isLoading: usersLoading, error: usersError, refetch: refetchUsers } = trpc.users.list.useQuery({});
 
   // Fetch roles and permissions
-  const { data: roles = [], isLoading: rolesLoading, refetch: refetchRoles } = trpc.settings.getRoles.useQuery();
-  const { data: permissions = [] } = trpc.settings.getPermissions.useQuery();
+  const { data: roles = [], isLoading: rolesLoading, refetch: refetchRoles } = trpc.settings.getRoles.useQuery({});
+  const { data: permissions = [] } = trpc.settings.getPermissions.useQuery({});
   
   // Fetch system settings
-  const { data: settingsData } = trpc.settings.getAll.useQuery();
+  const { data: settingsData } = trpc.settings.getAll.useQuery({});
 
   // Fetch dashboard metrics
-  const { data: metrics, isLoading: metricsLoading } = trpc.dashboard.metrics.useQuery();
+  const { data: metrics, isLoading: metricsLoading } = trpc.dashboard.metrics.useQuery({});
   
   // Fetch accounting metrics for analytics
-  const { data: invoices = [] } = trpc.invoices.list.useQuery();
-  const { data: payments = [] } = trpc.payments.list.useQuery();
-  const { data: expenses = [] } = trpc.expenses.list.useQuery();
+  const { data: invoices = [] } = trpc.invoices.list.useQuery({});
+  const { data: payments = [] } = trpc.payments.list.useQuery({});
+  const { data: expenses = [] } = trpc.expenses.list.useQuery({});
 
   // Delete user mutation
   const permanentDeleteUserMutation = trpc.users.permanentDelete.useMutation({
@@ -742,7 +742,7 @@ export default function AdminManagement() {
 
           <StatsCard
             label="Total Revenue"
-            value={<>KES {(financialData.totalRevenue || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}</>}
+            value={<>Ksh {(financialData.totalRevenue || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}</>}
             description="All time revenue"
             color="border-l-cyan-500"
             onClick={() => setLocation("/reports")}
@@ -756,7 +756,7 @@ export default function AdminManagement() {
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${financialData.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                KES {(financialData.netProfit || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}
+                Ksh {(financialData.netProfit || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-gray-500 mt-1">Revenue - Expenses</p>
             </CardContent>
@@ -1260,7 +1260,7 @@ export default function AdminManagement() {
 
               <StatsCard
                 label="Total Revenue"
-                value={<>KES {(financialData.totalRevenue || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}</>}
+                value={<>Ksh {(financialData.totalRevenue || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}</>}
                 description="All time"
                 color="border-l-green-500"
               />
@@ -1271,7 +1271,7 @@ export default function AdminManagement() {
                 </CardHeader>
                 <CardContent>
                   <div className={`text-2xl font-bold ${financialData.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    KES {(financialData.netProfit || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}
+                    Ksh {(financialData.netProfit || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Profit/Loss</p>
                 </CardContent>
@@ -1312,7 +1312,7 @@ export default function AdminManagement() {
                         <Cell fill="#10b981" />
                         <Cell fill="#ef4444" />
                       </Pie>
-                      <Tooltip formatter={(value) => `KES ${(value || 0).toLocaleString()}`} />
+                      <Tooltip formatter={(value) => `Ksh ${(value || 0).toLocaleString()}`} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
@@ -1477,13 +1477,13 @@ export default function AdminManagement() {
                   </div>
                   <div className="p-4 bg-green-50 rounded-lg">
                     <p className="text-sm text-gray-600">Total Revenue</p>
-                    <p className="text-3xl font-bold text-green-600 mt-2">KES {((financialData.totalRevenue || 0) / 1000000).toFixed(1)}M</p>
+                    <p className="text-3xl font-bold text-green-600 mt-2">Ksh {((financialData.totalRevenue || 0) / 1000).toFixed(0)}k</p>
                     <p className="text-xs text-gray-500 mt-2">All invoices combined</p>
                   </div>
                   <div className="p-4 bg-orange-50 rounded-lg">
                     <p className="text-sm text-gray-600">Avg Invoice Value</p>
                     <p className="text-3xl font-bold text-orange-600 mt-2">
-                      KES {financialData.totalInvoices > 0 ? ((financialData.totalRevenue / financialData.totalInvoices) / 1000).toFixed(0) : 0}k
+                      Ksh {financialData.totalInvoices > 0 ? ((financialData.totalRevenue / financialData.totalInvoices) / 1000).toFixed(0) : 0}k
                     </p>
                     <p className="text-xs text-gray-500 mt-2">Per document</p>
                   </div>

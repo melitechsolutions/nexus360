@@ -42,8 +42,8 @@ export default function EditService() {
   });
 
   // Fetch categories and units for dropdowns
-  const { data: categories = [] } = trpc.services.getCategories.useQuery();
-  const { data: units = [] } = trpc.services.getUnits.useQuery();
+  const { data: categories = [] } = trpc.services.getCategories.useQuery({});
+  const { data: units = [] } = trpc.services.getUnits.useQuery({});
   
   if (isLoading) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
   if (!allowed) return null;
@@ -365,3 +365,4 @@ export default function EditService() {
     </ModuleLayout>
   );
 }
+

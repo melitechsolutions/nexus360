@@ -22,6 +22,7 @@ import { Plus, Trash2, Save, Send, Printer, Loader2, ChevronDown, ChevronUp, Use
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useCurrencySettings, formatAmount } from "@/lib/currency";
+import { getPaymentMethodOptions } from "@/const/paymentMethods";
 
 interface LineItem {
   id: string;
@@ -91,15 +92,15 @@ export default function DocumentForm({
     { id: "1", sno: 1, description: "", uom: "Pcs", qty: 1, unitPrice: 0, tax: 0, discount: 0, total: 0 }
   ]);
 
-  const { data: clientsData } = trpc.clients.list.useQuery();
+  const { data: clientsData } = trpc.clients.list.useQuery({});
   const clients = useMemo(() => clientsData || [], [clientsData]);
-  const { data: projectsData } = trpc.projects.list.useQuery();
+  const { data: projectsData } = trpc.projects.list.useQuery({});
   const clientProjects = useMemo(() => {
     if (!projectsData || !clientId) return [];
     return (projectsData as any[]).filter((p: any) => p.clientId === clientId);
   }, [projectsData, clientId]);
-  const { data: companyInfo } = trpc.settings.getCompanyInfo.useQuery();
-  const { data: bankDetails } = trpc.settings.getBankDetails.useQuery();
+  const { data: companyInfo } = trpc.settings.getCompanyInfo.useQuery({});
+  const { data: bankDetails } = trpc.settings.getBankDetails.useQuery({});
   const { data: taxSettings } = trpc.settings.getByCategory.useQuery(
     { category: "tax_rates" },
     { staleTime: 5 * 60 * 1000 }
@@ -512,10 +513,11 @@ export default function DocumentForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mpesa">M-Pesa</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
+                  {getPaymentMethodOptions().map((method) => (
+                    <SelectItem key={method.value} value={method.value}>
+                      {method.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -705,3 +707,4 @@ export default function DocumentForm({
     </div>
   );
 }
+

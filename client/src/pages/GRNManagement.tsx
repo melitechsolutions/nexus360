@@ -121,7 +121,7 @@ function QualityAssessment({ grn }: { grn: any }) {
 
 // GRN Metrics
 function GRNMetrics() {
-  const { data: grns = [] } = trpc.grn.list.useQuery();
+  const { data: grns = [] } = trpc.grn.list.useQuery({});
 
   const metrics = [
     {
@@ -182,7 +182,7 @@ function CreateGRNDialog() {
     notes: "",
   });
 
-  const { refetch } = trpc.grn.list.useQuery();
+  const { refetch } = trpc.grn.list.useQuery({});
   const createMutation = trpc.grn.create.useMutation({
     onSuccess: () => {
       toast.success("GRN created successfully");
@@ -310,7 +310,7 @@ function CreateGRNDialog() {
 // GRN Table with Details
 function GRNTable() {
   const [selectedGRN, setSelectedGRN] = useState<any>(null);
-  const { data: grns = [] } = trpc.grn.list.useQuery();
+  const { data: grns = [] } = trpc.grn.list.useQuery({});
 
   const statusColors = {
     pending: "bg-gray-100 text-gray-800",
@@ -546,3 +546,4 @@ export default function GRNManagement() {
     </ModuleLayout>
   );
 }
+

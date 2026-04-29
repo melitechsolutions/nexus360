@@ -77,7 +77,7 @@ export default function CreateClient() {
   });
 
   const utils = trpc.useUtils();
-  const { data: usersData = [] } = trpc.users.list.useQuery();
+  const { data: usersData = [] } = trpc.users.list.useQuery({});
   const teamMembers = Array.isArray(usersData) ? usersData : (usersData as any)?.users || [];
 
   // Create mutation

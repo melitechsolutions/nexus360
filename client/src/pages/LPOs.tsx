@@ -79,7 +79,7 @@ export default function LPOsPage() {
   });
   
   // QUERIES AND MUTATIONS - Called before conditional returns
-  const { data: lpos = [], isLoading: isLoadingLpos, refetch } = trpc.lpo.list.useQuery();
+  const { data: lpos = [], isLoading: isLoadingLpos, refetch } = trpc.lpo.list.useQuery({});
   const { data: suppliers = [] } = trpc.suppliers.list.useQuery({ limit: 100 });
 
   // Mutations
@@ -510,3 +510,4 @@ export default function LPOsPage() {
     </ModuleLayout>
   );
 }
+

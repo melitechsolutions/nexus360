@@ -41,7 +41,7 @@ export default function CreateOrder() {
   const [isLoading, setIsLoading] = useState(false);
   const [additionalInfoOpen, setAdditionalInfoOpen] = useState(false);
 
-  const { data: rawSuppliers = [] } = trpc.suppliers.list.useQuery();
+  const { data: rawSuppliers = [] } = trpc.suppliers.list.useQuery({});
   const suppliers = JSON.parse(JSON.stringify(rawSuppliers)) as any[];
   const createLpo = trpc.lpo.create.useMutation();
 
@@ -286,7 +286,7 @@ export default function CreateOrder() {
 
                 <div className="space-y-1 flex flex-col justify-end">
                   <div className="text-sm font-semibold">
-                    Total: KES {item.total.toFixed(2)}
+                    Total: Ksh {item.total.toFixed(2)}
                   </div>
                   <Button
                     size="sm"
@@ -307,7 +307,7 @@ export default function CreateOrder() {
             <div className="text-right">
               <p className="text-gray-600 mb-2">Order Total</p>
               <p className="text-3xl font-bold text-blue-600">
-                KES {getTotalAmount().toFixed(2)}
+                Ksh {getTotalAmount().toFixed(2)}
               </p>
             </div>
           </div>

@@ -663,7 +663,7 @@ function ColumnsProps({ block, onChange }: { block: DocBlockData; onChange: (b: 
   return (
     <div className="space-y-3">
       <PropField label="Column Layout">
-        <div className="grid grid-cols-2 gap-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
           {layouts.map((l, i) => (
             <button key={i} onClick={() => { up("columns", l.cols); up("widths", l.widths); }}
               className={cn("px-2 py-1.5 text-[10px] rounded border text-center transition-colors",
@@ -1782,7 +1782,7 @@ export function DocumentBlockEditor({ value, onChange, placeholder, variables, m
               {BLOCK_CATEGORIES.map((cat) => (
                 <div key={cat.label} className="mb-3">
                   <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-2 mb-1.5">{cat.label}</h4>
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                     {cat.blocks.map((bt) => (
                       <button key={bt.type} onClick={() => addBlock(bt.type)}
                         className="flex flex-col items-center gap-1 py-2 px-1.5 hover:bg-primary/10 transition-colors rounded-lg group border border-transparent hover:border-primary/20"

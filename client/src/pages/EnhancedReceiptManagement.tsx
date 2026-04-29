@@ -82,8 +82,8 @@ export default function EnhancedReceiptManagement() {
   const [isEmailing, setIsEmailing] = useState(false);
 
   // Fetch data
-  const { data: receiptsData = [], isLoading: receiptsLoading } = trpc.receipts.list.useQuery();
-  const { data: clientsData = [] } = trpc.clients.list.useQuery();
+  const { data: receiptsData = [], isLoading: receiptsLoading } = trpc.receipts.list.useQuery({});
+  const { data: clientsData = [] } = trpc.clients.list.useQuery({});
 
   const utils = trpc.useUtils();
 
@@ -531,3 +531,4 @@ export default function EnhancedReceiptManagement() {
     </ModuleLayout>
   );
 }
+

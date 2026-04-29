@@ -21,7 +21,7 @@ export default function BiTools() {
         <BarChart3 size={32} /> Business Intelligence Tools
       </h1>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { title: "Total Records", value: wh.totalRecords?.toLocaleString() ?? "—", color: "blue" },
           { title: "ETL Jobs", value: String(jobs.total ?? 0), color: "green" },

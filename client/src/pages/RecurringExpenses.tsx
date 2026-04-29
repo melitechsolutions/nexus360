@@ -93,7 +93,7 @@ export function RecurringExpenses() {
   });
 
   // Fetch data
-  const { data: recurringList, refetch } = trpc.expenses.listRecurringExpenses.useQuery();
+  const { data: recurringList, refetch } = trpc.expenses.listRecurringExpenses.useQuery({});
 
   // Mutations
   const createMutation = trpc.expenses.createRecurringExpense.useMutation({
@@ -629,3 +629,4 @@ export function RecurringExpenses() {
 }
 
 export default RecurringExpenses;
+

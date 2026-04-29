@@ -56,8 +56,8 @@ export default function PayrollProcessing() {
   const [payrollRecords, setPayrollRecords] = useState<any[]>([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  const { data: rawEmployees = [] } = trpc.employees.list.useQuery();
-  const { data: rawPayrollData = [] } = trpc.payroll.list.useQuery();
+  const { data: rawEmployees = [] } = trpc.employees.list.useQuery({});
+  const { data: rawPayrollData = [] } = trpc.payroll.list.useQuery({});
   const employees = JSON.parse(JSON.stringify(rawEmployees));
   const payrollData: any[] = JSON.parse(JSON.stringify(rawPayrollData));
 
@@ -496,3 +496,4 @@ export default function PayrollProcessing() {
     </ModuleLayout>
   );
 }
+

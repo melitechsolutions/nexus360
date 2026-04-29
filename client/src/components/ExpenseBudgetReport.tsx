@@ -28,7 +28,7 @@ export function ExpenseBudgetReport() {
   });
 
   // Fetch available budget allocations for filter dropdown
-  const { data: budgetAllocations } = trpc.expenses.getAvailableBudgetAllocations.useQuery();
+  const { data: budgetAllocations } = trpc.expenses.getAvailableBudgetAllocations.useQuery({});
 
   const filteredReport = report?.filter((item: any) =>
     item.categoryName?.toLowerCase().includes(searchTerm.toLowerCase())

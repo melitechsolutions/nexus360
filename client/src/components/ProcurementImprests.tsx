@@ -166,7 +166,7 @@ export default function ProcurementImprestsPage() {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -218,7 +218,7 @@ export default function ProcurementImprestsPage() {
           <CardTitle className="text-lg">Search & Filter</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="search">Search Imprests</Label>
               <Input
@@ -509,7 +509,7 @@ export default function ProcurementImprestsPage() {
 
           {selectedImprest && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Imprest Number</p>
                   <p className="font-mono font-semibold">{selectedImprest.imprestNumber}</p>
@@ -522,7 +522,7 @@ export default function ProcurementImprestsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Employee</p>
                   <p className="font-semibold">{selectedImprest.employeeName}</p>

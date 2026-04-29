@@ -31,7 +31,7 @@ export default function EnhancedRolesPage() {
   const [, navigate] = useLocation();
 
   // Fetch roles from backend
-  const { data: rolesData = [], isLoading, refetch } = trpc.roles.list.useQuery();
+  const { data: rolesData = [], isLoading, refetch } = trpc.roles.list.useQuery({});
 
   // Mutations
   const updateRoleMutation = trpc.roles.update.useMutation({
@@ -168,7 +168,7 @@ import { type DashboardLayout } from "@/lib/dashboardWidgets";
 
 export function DashboardSettingsPage() {
   // Fetch user's dashboard layout
-  const { data: dashboardLayout, isLoading: isLoadingLayout } = trpc.dashboard.getLayout.useQuery();
+  const { data: dashboardLayout, isLoading: isLoadingLayout } = trpc.dashboard.getLayout.useQuery({});
 
   // Save layout mutation
   const saveDashboardMutation = trpc.dashboard.saveLayout.useMutation({
@@ -262,3 +262,4 @@ export const BACKEND_ROUTES_EXAMPLE = {
   "permissions.list": "GET /api/trpc/permissions.list",
   "permissions.getByCategory": "GET /api/trpc/permissions.getByCategory",
 };
+

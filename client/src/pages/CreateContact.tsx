@@ -40,7 +40,7 @@ export default function CreateContact() {
     clientId: presetClientId,
   });
 
-  const { data: clients = [] } = trpc.clients.list.useQuery();
+  const { data: clients = [] } = trpc.clients.list.useQuery({});
 
   const createMutation = trpc.contacts.create.useMutation({
     onSuccess: () => {

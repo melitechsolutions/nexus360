@@ -28,7 +28,7 @@ export default function HRDashboard() {
   });
 
   // Fetch dashboard metrics
-  const { data: dashboardMetrics } = trpc.dashboard.metrics.useQuery();
+  const { data: dashboardMetrics } = trpc.dashboard.metrics.useQuery({});
 
   useEffect(() => {
     if (dashboardMetrics) {
@@ -187,3 +187,4 @@ export default function HRDashboard() {
     </ModuleLayout>
   );
 }
+

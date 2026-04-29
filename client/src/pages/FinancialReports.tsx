@@ -21,7 +21,7 @@ export default function FinancialReportsPage() {
     { enabled: !!from && !!to }
   );
 
-  const bsQuery = trpc.financialReports.balanceSheet.useQuery();
+  const bsQuery = trpc.financialReports.balanceSheet.useQuery({});
   
   if (isLoading) return <div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>;
   if (!allowed) return null;
@@ -116,3 +116,4 @@ export default function FinancialReportsPage() {
     </ModuleLayout>
   );
 }
+

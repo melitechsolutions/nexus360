@@ -29,7 +29,7 @@ export default function LeaveBalancesPage() {
   const [filterType, setFilterType] = useState("all");
   const [showAllocate, setShowAllocate] = useState(false);
 
-  const employeesQ = trpc.employees.list.useQuery();
+  const employeesQ = trpc.employees.list.useQuery({});
   const summaryQ = trpc.leaveBalances.summary.useQuery({ year });
   const listQ = trpc.leaveBalances.list.useQuery({ year, leaveType: filterType === "all" ? undefined : filterType });
   const allocateMut = trpc.leaveBalances.allocate.useMutation({ onSuccess() { toast.success("Leave allocated"); listQ.refetch(); summaryQ.refetch(); setShowAllocate(false); } });
@@ -172,3 +172,4 @@ export default function LeaveBalancesPage() {
     </ModuleLayout>
   );
 }
+

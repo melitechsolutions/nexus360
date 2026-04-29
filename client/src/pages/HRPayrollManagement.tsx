@@ -42,12 +42,12 @@ export default function HRPayrollManagement() {
   const utils = trpc.useUtils();
 
   // Fetch data for different tabs
-  const { data: employees = [] } = trpc.employees.list.useQuery();
-  const { data: payrolls = [] } = trpc.payroll.list.useQuery();
-  const { data: salaryStructures = [] } = trpc.payroll.salaryStructures.list.useQuery();
-  const { data: allowances = [] } = trpc.payroll.allowances.list.useQuery();
-  const { data: deductions = [] } = trpc.payroll.deductions.list.useQuery();
-  const { data: benefits = [] } = trpc.payroll.benefits.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
+  const { data: payrolls = [] } = trpc.payroll.list.useQuery({});
+  const { data: salaryStructures = [] } = trpc.payroll.salaryStructures.list.useQuery({});
+  const { data: allowances = [] } = trpc.payroll.allowances.list.useQuery({});
+  const { data: deductions = [] } = trpc.payroll.deductions.list.useQuery({});
+  const { data: benefits = [] } = trpc.payroll.benefits.list.useQuery({});
 
   // Mutations
   const deletePayrollMutation = trpc.payroll.delete.useMutation({
@@ -592,3 +592,4 @@ export default function HRPayrollManagement() {
     </ModuleLayout>
   );
 }
+

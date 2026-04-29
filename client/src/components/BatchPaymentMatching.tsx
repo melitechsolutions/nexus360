@@ -167,7 +167,7 @@ export function BatchPaymentMatching() {
         {isExpanded && (
           <CardContent className="space-y-4">
             {/* Quick Stats */}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               <div className="bg-blue-50 p-3 rounded border border-blue-200">
                 <div className="text-sm font-medium text-blue-900">To Match</div>
                 <div className="text-2xl font-bold text-blue-600">

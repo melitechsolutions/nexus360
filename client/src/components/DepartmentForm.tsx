@@ -31,7 +31,7 @@ export function DepartmentForm({ onSuccess, onCancel, initialData, isModal = fal
     status: initialData?.status || "active",
   });
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
 
   const createDepartmentMutation = trpc.departments.create.useMutation({
     onSuccess: () => {

@@ -169,7 +169,7 @@ export default function BrandCustomization() {
 
   // Load brand config from API
   const { data: brandConfig, isLoading: isLoadingConfig } =
-    trpc.brandCustomization.getConfig.useQuery();
+    trpc.brandCustomization.getConfig.useQuery({});
 
   const saveMutation = trpc.brandCustomization.saveConfig.useMutation({
     onSuccess: () => {
@@ -1026,3 +1026,4 @@ body {
     </ModuleLayout>
   );
 }
+

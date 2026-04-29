@@ -60,7 +60,7 @@ export default function CannedResponses() {
   const [newCategoryInput, setNewCategoryInput] = useState("");
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
 
-  const { data: responses = [], isLoading, refetch } = trpc.cannedResponses.list.useQuery();
+  const { data: responses = [], isLoading, refetch } = trpc.cannedResponses.list.useQuery({});
   const createMutation = trpc.cannedResponses.create.useMutation({
     onSuccess: () => { toast.success("Response created"); setIsCreateDialogOpen(false); refetch(); },
     onError: (e) => toast.error(e.message),
@@ -312,7 +312,7 @@ export default function CannedResponses() {
             <DialogTitle>New Canned Response</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Title *</Label>
                 <Input
@@ -370,7 +370,7 @@ export default function CannedResponses() {
             <DialogTitle>Edit Canned Response</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Title *</Label>
                 <Input

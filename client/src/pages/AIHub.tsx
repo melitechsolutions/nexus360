@@ -17,7 +17,7 @@ export default function AIHub() {
   const { allowed, isLoading } = useRequireFeature('ai:access');
 
   // Check if GPT-5 API is available
-  const { data: aiStatus } = trpc.ai.checkAvailability.useQuery();
+  const { data: aiStatus } = trpc.ai.checkAvailability.useQuery({});
 
   const breadcrumbs = [
     { label: 'Dashboard', href: '/' },

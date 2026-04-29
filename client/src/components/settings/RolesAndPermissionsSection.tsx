@@ -20,8 +20,8 @@ export function RolesAndPermissionsSection() {
   const [isLoadingRole, setIsLoadingRole] = useState(false);
   const [isLoadingPermission, setIsLoadingPermission] = useState(false);
 
-  const rolesQuery = trpc.settings.getRoles.useQuery();
-  const permissionsQuery = trpc.settings.getPermissions.useQuery();
+  const rolesQuery = trpc.settings.getRoles.useQuery({});
+  const permissionsQuery = trpc.settings.getPermissions.useQuery({});
   const rolePermissionsQuery = trpc.settings.getRolePermissions.useQuery(
     { roleId: selectedRoleId },
     { enabled: !!selectedRoleId }
@@ -327,4 +327,5 @@ export function RolesAndPermissionsSection() {
     </div>
   );
 }
+
 

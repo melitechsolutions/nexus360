@@ -47,7 +47,7 @@ export default function RecruitmentPage() {
   const [filterJobStatus, setFilterJobStatus] = useState("all");
   const [filterAppStage, setFilterAppStage] = useState("all");
 
-  const statsQ = trpc.recruitment.stats.useQuery();
+  const statsQ = trpc.recruitment.stats.useQuery({});
   const postingsQ = trpc.recruitment.listPostings.useQuery({ status: filterJobStatus === "all" ? undefined : filterJobStatus });
   const applicantsQ = trpc.recruitment.listApplicants.useQuery({ stage: filterAppStage === "all" ? undefined : filterAppStage });
 
@@ -304,3 +304,4 @@ export default function RecruitmentPage() {
     </ModuleLayout>
   );
 }
+

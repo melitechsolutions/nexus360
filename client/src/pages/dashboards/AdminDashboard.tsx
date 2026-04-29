@@ -53,19 +53,19 @@ export default function AdminDashboard() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Fetch dashboard metrics from backend
-  const { data: metrics, isLoading: metricsLoading } = trpc.dashboard.metrics.useQuery();
+  const { data: metrics, isLoading: metricsLoading } = trpc.dashboard.metrics.useQuery({});
   
   // Fetch employees/staff data
-  const { data: employeesData, isLoading: employeesLoading } = trpc.employees.list.useQuery();
+  const { data: employeesData, isLoading: employeesLoading } = trpc.employees.list.useQuery({});
   
   // Fetch departments data
-  const { data: departmentsData, isLoading: departmentsLoading } = trpc.departments.list.useQuery();
+  const { data: departmentsData, isLoading: departmentsLoading } = trpc.departments.list.useQuery({});
   
   // Fetch projects data
-  const { data: projectsData, isLoading: projectsLoading } = trpc.projects.list.useQuery();
+  const { data: projectsData, isLoading: projectsLoading } = trpc.projects.list.useQuery({});
   
   // Fetch leave requests for pending approvals
-  const { data: leaveData } = trpc.leave.list.useQuery();
+  const { data: leaveData } = trpc.leave.list.useQuery({});
 
   // Convert frozen Drizzle objects to plain objects to avoid React error #306
   const metricsPlain = metrics ? JSON.parse(JSON.stringify(metrics)) : null;

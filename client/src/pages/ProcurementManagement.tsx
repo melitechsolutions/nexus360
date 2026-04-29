@@ -114,10 +114,10 @@ function ProcurementWorkflow() {
 
 // Key metrics dashboard
 function ProcurementMetrics() {
-  const { data: lpos = [] } = trpc.lpo.list.useQuery();
+  const { data: lpos = [] } = trpc.lpo.list.useQuery({});
   const { data: suppliers = [] } = trpc.suppliers.list.useQuery({});
-  const { data: deliveries = [] } = trpc.deliveryNotes.list.useQuery();
-  const { data: grns = [] } = trpc.grn.list.useQuery();
+  const { data: deliveries = [] } = trpc.deliveryNotes.list.useQuery({});
+  const { data: grns = [] } = trpc.grn.list.useQuery({});
 
   const metrics = [
     {
@@ -180,7 +180,7 @@ function LPOTable() {
     notes: "",
   });
 
-  const { data: lpos = [], refetch } = trpc.lpo.list.useQuery();
+  const { data: lpos = [], refetch } = trpc.lpo.list.useQuery({});
   const { data: suppliers = [] } = trpc.suppliers.list.useQuery({ limit: 100 });
   const createMutation = trpc.lpo.create.useMutation({
     onSuccess: () => {
@@ -432,7 +432,7 @@ function LPOTable() {
 // Delivery Notes Table
 function DeliveryNotesTable() {
   const [, setLocation] = useLocation();
-  const { data: deliveries = [] } = trpc.deliveryNotes.list.useQuery();
+  const { data: deliveries = [] } = trpc.deliveryNotes.list.useQuery({});
 
   const statusColors = {
     draft: "bg-gray-100 text-gray-800",
@@ -491,7 +491,7 @@ function DeliveryNotesTable() {
 // GRN Table
 function GRNTable() {
   const [, setLocation] = useLocation();
-  const { data: grns = [] } = trpc.grn.list.useQuery();
+  const { data: grns = [] } = trpc.grn.list.useQuery({});
 
   return (
     <div className="space-y-4">
@@ -627,3 +627,4 @@ export default function ProcurementManagement() {
     </ModuleLayout>
   );
 }
+

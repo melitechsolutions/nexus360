@@ -24,7 +24,7 @@ const WorkflowBuilder: React.FC = () => {
 
   const utils = trpc.useUtils();
   const workflowsQuery = trpc.workflows.list.useQuery({ limit: 50, offset: 0 });
-  const templatesQuery = trpc.workflows.getTemplates.useQuery();
+  const templatesQuery = trpc.workflows.getTemplates.useQuery({});
 
   const createMutation = trpc.workflows.create.useMutation({
     onSuccess: () => {
@@ -219,3 +219,4 @@ const WorkflowBuilder: React.FC = () => {
 };
 
 export default WorkflowBuilder;
+

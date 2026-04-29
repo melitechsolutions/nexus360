@@ -70,8 +70,8 @@ export default function DeductionsManagement() {
     notes: "",
   });
 
-  const { data: employees = [] } = trpc.employees.list.useQuery();
-  const { data: deductions = [] } = trpc.payroll.deductions.list.useQuery();
+  const { data: employees = [] } = trpc.employees.list.useQuery({});
+  const { data: deductions = [] } = trpc.payroll.deductions.list.useQuery({});
   const createMutation = trpc.payroll.deductions.create.useMutation({
     onSuccess: () => {
       toast.success("Deduction created successfully!");

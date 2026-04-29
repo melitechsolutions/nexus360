@@ -83,11 +83,11 @@ export default function BackupManagement() {
 
   const [statusFilter, setStatusFilter] = useState<string>("");
 
-  const statsQ = trpc.sysAdmin.getBackupStats.useQuery();
+  const statsQ = trpc.sysAdmin.getBackupStats.useQuery({});
   const historyQ = trpc.sysAdmin.listHistory.useQuery({ limit: 50, status: statusFilter || undefined });
-  const tablesQ = trpc.sysAdmin.listTables.useQuery();
-  const orgsQ = trpc.sysAdmin.listOrganizations.useQuery();
-  const schedulesQ = trpc.sysAdmin.listSchedules.useQuery();
+  const tablesQ = trpc.sysAdmin.listTables.useQuery({});
+  const orgsQ = trpc.sysAdmin.listOrganizations.useQuery({});
+  const schedulesQ = trpc.sysAdmin.listSchedules.useQuery({});
 
   const createBackup = trpc.sysAdmin.createBackup.useMutation({
     onSuccess: (data) => {
@@ -462,3 +462,4 @@ export default function BackupManagement() {
     </ModuleLayout>
   );
 }
+

@@ -18,7 +18,7 @@ export default function CreateProduct() {
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
   const [formData, setFormData] = useState({ productName: "", description: "", sku: "", category: "", unit: "pcs", unitPrice: "", costPrice: "", taxRate: "", quantity: "", minStockLevel: "", maxStockLevel: "", reorderLevel: "", reorderQuantity: "", supplier: "", location: "", imageUrl: "", status: "active" });
-  const { data: categories = [] } = trpc.products.getCategories.useQuery();
+  const { data: categories = [] } = trpc.products.getCategories.useQuery({});
   const createProductMutation = trpc.products.create.useMutation({ onSuccess: () => { toast.success("Product created successfully!"); utils.products.list.invalidate(); setFormData({ productName: "", description: "", sku: "", category: "", unit: "pcs", unitPrice: "", costPrice: "", taxRate: "", quantity: "", minStockLevel: "", maxStockLevel: "", reorderLevel: "", reorderQuantity: "", supplier: "", location: "", imageUrl: "", status: "active" }); navigate("/products"); }, onError: (error: any) => { toast.error(`Failed to create product: ${error.message}`); } });
   if (isLoading) return (<div className="flex items-center justify-center h-screen"><Spinner className="size-8" /></div>);
   if (!allowed) return null;

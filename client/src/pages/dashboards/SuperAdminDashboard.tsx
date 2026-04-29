@@ -25,6 +25,7 @@ import {
   TrendingUp,
   Clock,
   Shield,
+  Monitor,
 } from "lucide-react";
 import { ModuleLayout } from "@/components/ModuleLayout";
 import { trpc } from "@/lib/trpc";
@@ -53,10 +54,10 @@ export default function SuperAdminDashboard() {
   const [, setLocation] = useLocation();
 
   // Fetch dashboard metrics from backend
-  const { data: metrics, isLoading: metricsLoading, error: metricsError } = trpc.dashboard.metrics.useQuery();
-  const { data: dashboardStats, isLoading: statsLoading } = trpc.dashboard.stats.useQuery(undefined, { retry: 2, retryDelay: 1000 });
+  const { data: metrics, isLoading: metricsLoading, error: metricsError } = trpc.dashboard.metrics.useQuery({});
+  const { data: dashboardStats, isLoading: statsLoading } = trpc.dashboard.stats.useQuery({}, { retry: 2, retryDelay: 1000 });
   const { data: recentActivityData, isLoading: activityLoading } = trpc.dashboard.recentActivity.useQuery({ limit: 5 }, { retry: 2, retryDelay: 1000 });
-  const { data: accountingMetrics } = trpc.dashboard.accountingMetrics.useQuery(undefined, { retry: 2, retryDelay: 1000 });
+  const { data: accountingMetrics } = trpc.dashboard.accountingMetrics.useQuery({}, { retry: 2, retryDelay: 1000 });
 
   const metricsPlain = metrics ? JSON.parse(JSON.stringify(metrics)) : null;
 
@@ -169,6 +170,8 @@ export default function SuperAdminDashboard() {
     { title: "HR", description: "Human resources management", icon: UserCog, href: "/hr", borderColor: "border-l-rose-500", color: "text-rose-600", bgColor: "bg-rose-50 dark:bg-rose-950" },
     { title: "Approvals", description: "Manage approval workflows", icon: CheckSquare, href: "/approvals", borderColor: "border-l-lime-500", color: "text-lime-500", bgColor: "bg-lime-50 dark:bg-lime-950" },
     { title: "Communications", description: "Email, SMS, and messaging", icon: Mail, href: "/communications", borderColor: "border-l-indigo-500", color: "text-indigo-500", bgColor: "bg-indigo-50 dark:bg-indigo-950" },
+    { title: "CRM", description: "Customer relationship management", icon: Users, href: "/crm", borderColor: "border-l-violet-500", color: "text-violet-500", bgColor: "bg-violet-50 dark:bg-violet-950" },
+    { title: "ICT Management", description: "System administration & monitoring", icon: Settings, href: "/admin/ict-dashboard", borderColor: "border-l-cyan-500", color: "text-cyan-500", bgColor: "bg-cyan-50 dark:bg-cyan-950" },
   ];
 
   return (

@@ -34,8 +34,8 @@ export default function AuditLogs() {
     search: search || undefined,
     action: actionFilter !== "all" ? actionFilter : undefined,
   });
-  const { data: rawStats } = trpc.activityTrail.getStats.useQuery();
-  const { data: actions = [] } = trpc.activityTrail.getActions.useQuery();
+  const { data: rawStats } = trpc.activityTrail.getStats.useQuery({});
+  const { data: actions = [] } = trpc.activityTrail.getActions.useQuery({});
 
   const rawLogs = Array.isArray(rawData) ? rawData : (rawData as any)?.activities || [];
   const logs: any[] = JSON.parse(JSON.stringify(rawLogs));

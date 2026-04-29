@@ -65,9 +65,9 @@ export default function Timesheets() {
   const utils = trpc.useUtils();
   const { data: rawEntries = [], isLoading } = trpc.timeEntries.list.useQuery({});
   const entries = JSON.parse(JSON.stringify(rawEntries));
-  const { data: rawProjects = [] } = trpc.projects.list.useQuery();
+  const { data: rawProjects = [] } = trpc.projects.list.useQuery({});
   const projectsList = JSON.parse(JSON.stringify(rawProjects));
-  const { data: rawEmployees = [] } = trpc.employees.list.useQuery();
+  const { data: rawEmployees = [] } = trpc.employees.list.useQuery({});
   const employeesList = JSON.parse(JSON.stringify(rawEmployees));
 
   const projectMap = useMemo(() => {
@@ -489,3 +489,4 @@ export default function Timesheets() {
     </ModuleLayout>
   );
 }
+

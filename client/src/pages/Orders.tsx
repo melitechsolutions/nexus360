@@ -76,7 +76,7 @@ export default function OrdersPage() {
   });
 
   // Queries
-  const { data: orders = [], isLoading, refetch } = trpc.procurementMgmt.orderList.useQuery();
+  const { data: orders = [], isLoading, refetch } = trpc.procurementMgmt.orderList.useQuery({});
   const { data: suppliers = [] } = trpc.suppliers.list.useQuery({ limit: 100 });
 
   // Mutations
@@ -648,3 +648,4 @@ export default function OrdersPage() {
     </ModuleLayout>
   );
 }
+

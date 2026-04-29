@@ -56,6 +56,39 @@ export interface ThemeConfig {
   bodyColorDark?: string;
   mutedColorDark?: string;
   
+  // Button Styling
+  buttonBgColorLight?: string;
+  buttonBgColorDark?: string;
+  buttonBorderRadius?: string;
+  buttonPadding?: string;
+  buttonFontSize?: string;
+  buttonBorderColor?: string;
+  buttonHoverBg?: string;
+  
+  // Navigation & Sidebar
+  navBackgroundLight?: string;
+  navBackgroundDark?: string;
+  navTextColorLight?: string;
+  navTextColorDark?: string;
+  sidebarBackgroundLight?: string;
+  sidebarBackgroundDark?: string;
+  sidebarTextColorLight?: string;
+  sidebarTextColorDark?: string;
+  sidebarAccentColor?: string;
+  navBorderColor?: string;
+  
+  // Sidebar Styling
+  sidebarStyle?: string;
+  sidebarWidth?: string;
+  sidebarCollapsedWidth?: string;
+  sidebarIconSize?: string;
+  
+  // Border & Spacing
+  borderRadius?: string;
+  borderColor?: string;
+  borderColorLight?: string;
+  borderColorDark?: string;
+  
   // Additional customizations
   [key: string]: any;
 }
@@ -342,6 +375,83 @@ export function ThemeCustomizationProvider({ children }: ThemeProviderProps) {
       // If it's a plain number (e.g. "8"), append "px"; otherwise use as-is (e.g. "0.65rem")
       const radiusValue = /^\d+(\.\d+)?$/.test(val) ? `${val}px` : val;
       root.style.setProperty('--radius', radiusValue);
+    }
+
+    // ====== Button Styling ======
+    if (config.buttonBgColorLight) {
+      root.style.setProperty('--button-bg-light', config.buttonBgColorLight);
+    }
+    if (config.buttonBgColorDark) {
+      root.style.setProperty('--button-bg-dark', config.buttonBgColorDark);
+    }
+    if (config.buttonBorderRadius) {
+      root.style.setProperty('--button-radius', config.buttonBorderRadius);
+    }
+    if (config.buttonPadding) {
+      root.style.setProperty('--button-padding', config.buttonPadding);
+    }
+    if (config.buttonFontSize) {
+      root.style.setProperty('--button-font-size', config.buttonFontSize);
+    }
+    if (config.buttonBorderColor) {
+      root.style.setProperty('--button-border', config.buttonBorderColor);
+    }
+    if (config.buttonHoverBg) {
+      root.style.setProperty('--button-hover', config.buttonHoverBg);
+    }
+
+    // ====== Navigation Styling ======
+    if (config.navBackgroundLight) {
+      root.style.setProperty('--nav-bg-light', config.navBackgroundLight);
+    }
+    if (config.navBackgroundDark) {
+      root.style.setProperty('--nav-bg-dark', config.navBackgroundDark);
+    }
+    if (config.navTextColorLight) {
+      root.style.setProperty('--nav-text-light', config.navTextColorLight);
+    }
+    if (config.navTextColorDark) {
+      root.style.setProperty('--nav-text-dark', config.navTextColorDark);
+    }
+    if (config.navBorderColor) {
+      root.style.setProperty('--nav-border', config.navBorderColor);
+    }
+
+    // ====== Sidebar Styling ======
+    if (config.sidebarBackgroundLight) {
+      root.style.setProperty('--sidebar-bg-light', config.sidebarBackgroundLight);
+    }
+    if (config.sidebarBackgroundDark) {
+      root.style.setProperty('--sidebar-bg-dark', config.sidebarBackgroundDark);
+    }
+    if (config.sidebarTextColorLight) {
+      root.style.setProperty('--sidebar-text-light', config.sidebarTextColorLight);
+    }
+    if (config.sidebarTextColorDark) {
+      root.style.setProperty('--sidebar-text-dark', config.sidebarTextColorDark);
+    }
+    if (config.sidebarAccentColor) {
+      root.style.setProperty('--sidebar-accent-color', config.sidebarAccentColor);
+    }
+    if (config.sidebarWidth) {
+      root.style.setProperty('--sidebar-width', config.sidebarWidth);
+    }
+    if (config.sidebarCollapsedWidth) {
+      root.style.setProperty('--sidebar-collapsed-width', config.sidebarCollapsedWidth);
+    }
+    if (config.sidebarIconSize) {
+      root.style.setProperty('--sidebar-icon-size', config.sidebarIconSize);
+    }
+
+    // ====== Border & Spacing ======
+    if (config.borderColor) {
+      root.style.setProperty('--border', config.borderColor);
+    }
+    if (config.borderColorLight) {
+      root.style.setProperty('--border-light', config.borderColorLight);
+    }
+    if (config.borderColorDark) {
+      root.style.setProperty('--border-dark', config.borderColorDark);
     }
   };
 

@@ -115,7 +115,7 @@ export default function Profile() {
   };
 
   const utils = trpc.useUtils();
-  const { data: profileData, isLoading: isProfileLoading } = trpc.users.getMyProfile.useQuery();
+  const { data: profileData, isLoading: isProfileLoading } = trpc.users.getMyProfile.useQuery({});
   const updateProfileMutation = trpc.users.updateMyProfile.useMutation({
     async onSuccess() {
       await utils.users.getMyProfile.invalidate();
@@ -340,4 +340,5 @@ export default function Profile() {
     </ModuleLayout>
   );
 }
+
 

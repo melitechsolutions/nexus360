@@ -103,7 +103,7 @@ export default function EnterpriseTenantsManagement() {
     offset: 0,
   });
 
-  const { data: pricingTiers = [], isLoading: tiersLoading } = trpc.enterpriseTenants.getPricingTiers.useQuery();
+  const { data: pricingTiers = [], isLoading: tiersLoading } = trpc.enterpriseTenants.getPricingTiers.useQuery({});
 
   // Mutations
   const updateMutation = trpc.enterpriseTenants.update.useMutation({
@@ -548,3 +548,4 @@ export default function EnterpriseTenantsManagement() {
     </ModuleLayout>
   );
 }
+
